@@ -1,0 +1,15 @@
+{
+  "name": "common",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Demos common module",
+  "author": "Pixano Authors <pixano@cea.fr>",
+  "homepage": "",
+  "license": "CECILL-C",
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "lit-element": "^2.2.1"
+  }
+}

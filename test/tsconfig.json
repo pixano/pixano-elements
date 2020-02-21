@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.common.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pixano/core*": ["../packages/core/src*"],
+      "@pixano/graphics-3d*": ["../packages/graphics-3d/src*"]
+    },
+    "lib": ["es2017", "dom"],
+    "types": ["@types/jest"]
+  },
+  "references": [
+    {"path": "../packages/core"},
+    {"path": "../packages/graphics-3d"}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "pixano-elements",
+  "private": true,
+  "devDependencies": {
+    "http-server": "0.12.0",
+    "lerna": "^3.20.2",
+    "typedoc": "^0.16.10",
+    "typedoc-plugin-lerna-packages": "^0.3.0"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "watch": "lerna run watch --parallel",
+    "clean": "lerna run clean",
+    "test": "lerna run test",
+    "docs": "rm -rf docs && typedoc packages && sed -i 's/index.html/globals.html/g' docs/globals.html && rm docs/index.html"
+  }
+}
