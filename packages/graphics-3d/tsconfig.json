@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.common.json",
+  "compilerOptions": {
+    "lib": ["esnext.array", "es2018", "dom"],
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "lib",
+    "noImplicitAny": false
+  },
+  "include": [
+    "src/*.ts"
+  ]
+}

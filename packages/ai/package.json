@@ -1,0 +1,30 @@
+{
+  "name": "@pixano/ai",
+  "version": "0.1.0",
+  "description": "AI tools for annotations",
+  "author": "Pixano Authors <pixano@cea.fr>",
+  "homepage": "",
+  "license": "CECILL-C",
+  "main": "lib/ai.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --watch",
+    "clean": "tsc --build --clean"
+  },
+  "devDependencies": {
+    "@tensorflow-models/coco-ssd": "^2.0.1",
+    "@tensorflow/tfjs-converter": "^1.4.0",
+    "@tensorflow/tfjs-core": "^1.4.0"
+  }
+}

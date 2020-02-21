@@ -1,0 +1,23 @@
+{
+  "name": "@pixano/graphics-2d",
+  "version": "0.1.0",
+  "description": "Pixano graphics 2d module",
+  "author": "Pixano Authors <pixano@cea.fr>",
+  "homepage": "",
+  "license": "CECILL-C",
+  "main": "lib/index.js",
+  "devDependencies": {
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "@pixano/ai": "^0.1.0",
+    "@pixano/core": "^0.1.0",
+    "lit-element": "^2.2.1",
+    "pixi.js": "^5.2.0"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --watch",
+    "clean": "tsc --build --clean"
+  }
+}

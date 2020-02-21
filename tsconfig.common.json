@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    // Code generation options
+    "lib": ["es2017", "dom"],
+    "module": "commonjs",
+    "target": "es2015",
+    "experimentalDecorators": true,
+    // Static analysis
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true, // temp
+    "types": [],  // necessary to prevent automatic inclusion
+    // Build options
+    "sourceMap": true,
+    "declaration": true,
+    "skipLibCheck": true,  // don't report errors from dependencies
+  },
+  "compileOnSave": true,
+}

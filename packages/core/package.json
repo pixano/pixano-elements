@@ -1,0 +1,22 @@
+{
+  "name": "@pixano/core",
+  "version": "0.1.0",
+  "description": "Pixano core module",
+  "author": "Pixano Authors <pixano@cea.fr>",
+  "license": "CECILL-C",
+  "main": "lib/index.js",
+  "devDependencies": {
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "@material/mwc-dialog": "^0.13.0",
+    "@material/mwc-slider": "^0.13.0",
+    "lit-element": "^2.2.1",
+    "on-change": "^1.6.2"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --watch",
+    "clean": "tsc --build --clean"
+  }
+}

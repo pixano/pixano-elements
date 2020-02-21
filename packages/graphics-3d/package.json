@@ -1,0 +1,22 @@
+{
+  "name": "@pixano/graphics-3d",
+  "version": "0.1.0",
+  "description": "Pixano graphics-3d module",
+  "author": "Pixano Authors <pixano@cea.fr>",
+  "homepage": "",
+  "license": "CECILL-C",
+  "main": "lib/index.js",
+  "devDependencies": {
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "@pixano/core": "^0.1.0",
+    "lit-element": "^2.2.1",
+    "three": "^0.112.1"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --watch",
+    "clean": "tsc --build --clean"
+  }
+}
