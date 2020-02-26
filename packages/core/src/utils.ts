@@ -2,7 +2,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 export function searchSorted<T>(arr: T[], value: T) {
     for (let i=0; i<arr.length; i++) {
@@ -20,11 +20,10 @@ export function colorToRGBA(color: string) {
     // Examples:
     // colorToRGBA('red')  # [255, 0, 0, 255]
     // colorToRGBA('#f00') # [255, 0, 0, 255]
-    var cvs, ctx;
-    cvs = document.createElement('canvas');
+    const cvs = document.createElement('canvas');
     cvs.height = 1;
     cvs.width = 1;
-    ctx = cvs.getContext('2d')!;
+    const ctx = cvs.getContext('2d')!;
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
     return ctx.getImageData(0, 0, 1, 1).data;
@@ -45,8 +44,6 @@ export function colorToHex(color: string) {
     // colorToHex('red')            # '#ff0000'
     // colorToHex('rgb(255, 0, 0)') # '#ff0000'
     const rgba = colorToRGBA(color);
-    const hex = [0,1,2].map(
-        function(idx) { return byteToHex(rgba[idx]); }
-        ).join('');
-    return "#"+hex;
+    const hex = [0,1,2].map((idx) => byteToHex(rgba[idx])).join('');
+    return "#" + hex;
 }

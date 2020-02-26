@@ -3,13 +3,14 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { LitElement, css, html, customElement, property} from 'lit-element';
 import { PxnRenderer } from './renderer-2d';
 import { ViewControls } from './view-controls';
 import { MaskHandler } from './mask-handler';
-import { GMask, MaskVisuMode } from './shapes-2d';
+import { GMask } from './shapes-2d';
+import { MaskVisuMode } from './mask';
 import { Mode } from './mask-handler';
 
 const fullscreen = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.414 18.586l2.586-2.586v8h-8l2.586-2.586-5.172-5.172 2.828-2.828 5.172 5.172zm-13.656-8l2.828-2.828-5.172-5.172 2.586-2.586h-8v8l2.586-2.586 5.172 5.172zm10.828-8l-2.586-2.586h8v8l-2.586-2.586-5.172 5.172-2.828-2.828 5.172-5.172zm-8 13.656l-2.828-2.828-5.172 5.172-2.586-2.586v8h8l-2.586-2.586 5.172-5.172z"/></svg>`;
@@ -34,7 +35,7 @@ public image: string | null = null;
 public mask: ImageData | null = null;
 
 @property({type: Boolean})
-public disablefullscreen: Boolean = false;
+public disablefullscreen: boolean = false;
 
 @property({type: String})
 public mode: Mode = Mode.SELECT_INSTANCE;
@@ -160,7 +161,7 @@ public setMask(buffer: string) {
 }
 
 public setEmpty() {
-  if(this.renderer.imageWidth == 0 || this.renderer.imageHeight == 0) {
+  if (this.renderer.imageWidth === 0 || this.renderer.imageHeight === 0) {
     return;
   }
 
@@ -171,7 +172,7 @@ public setEmpty() {
 
 /**
  * Called after the element’s DOM has been updated the first time
- * @param changedProperty 
+ * @param changedProperty
  */
 protected firstUpdated() {
   this.renderer.setContainer(this.canvasElement);
@@ -189,7 +190,7 @@ get imageElement() {
 
 /**
  * Called on every property change
- * @param changedProperty 
+ * @param changedProperty
  */
 protected updated(changedProperties: any) {
 
@@ -198,18 +199,17 @@ protected updated(changedProperties: any) {
     const htmlImageElement = new Image();
     htmlImageElement.onload = () => {
       if (htmlImageElement !== null) {
-        // WARNING: automatic resizing needed 
+        // WARNING: automatic resizing needed
         this.renderer.resize();
         this.renderer.image = htmlImageElement;
-        if (this.newMaskLoaded) {
-        } else {
+        if (!this.newMaskLoaded) {
           this.setEmpty();
         }
       }
     }
     htmlImageElement.src = this.image;
   }
-  
+
   if (changedProperties.has('mask') && this.mask && this.mask instanceof ImageData) {
     this.newMaskLoaded = true;
     const maxId = this._graphicMask.initialize(this.mask);
@@ -222,9 +222,9 @@ protected updated(changedProperties: any) {
   if (changedProperties.has('maskVisuMode') && this.maskVisuMode) {
     this._graphicMask.maskVisuMode = this.maskVisuMode;
     this.maskHandler.updateTempBrushGraphic();
-    const cur_mask  = this._graphicMask.getValue();
-    if (cur_mask instanceof ImageData) {
-      this._graphicMask.setValue(cur_mask);
+    const curMask  = this._graphicMask.getValue();
+    if (curMask instanceof ImageData) {
+      this._graphicMask.setValue(curMask);
     }
   }
 }
@@ -260,7 +260,7 @@ public fillSelectionWithClass(newClass: number) {
  */
 public setOpacity(opacity: number){
   this.renderer.labelLayer.alpha = opacity;
-  //this.maskHandler.brushFilter.alpha = this.renderer.labelLayer.alpha;
+  // this.maskHandler.brushFilter.alpha = this.renderer.labelLayer.alpha;
   this.maskHandler.updateTempBrushGraphic();
 
 }

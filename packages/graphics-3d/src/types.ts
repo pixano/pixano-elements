@@ -2,7 +2,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 /** Minimal interface exposed by cuboid objects. */
 export interface Cuboid {
@@ -13,4 +13,6 @@ export interface Cuboid {
   size: number[];
   // rotation around z axis (trigometric)
   heading: number;
+  // color
+  color?: number;
 }

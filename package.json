@@ -13,6 +13,6 @@
     "watch": "lerna run watch --parallel",
     "clean": "lerna run clean",
     "test": "lerna run test",
-    "docs": "rm -rf docs && typedoc packages && sed -i 's/index.html/globals.html/g' docs/globals.html && rm docs/index.html"
+    "docs": "rm -rf docs && typedoc packages && grep -rl 'index.html' docs/* | xargs -i@ sed -i 's/index.html/docs.html/g' @ && rm docs/index.html && mv docs/globals.html docs/index.html"
   }
 }

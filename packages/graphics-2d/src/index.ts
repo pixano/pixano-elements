@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { Polygon } from './pxn-polygon';
 import { Rectangle } from './pxn-rectangle';

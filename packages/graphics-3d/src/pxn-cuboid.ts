@@ -2,12 +2,13 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { ObservableSet, observable } from "@pixano/core";
 import { css, customElement, html, LitElement } from 'lit-element';
 import { ModeManager } from "./cuboid-manager";
-import { CuboidSetManager, GroundPlot, PointCloudPlot } from "./plots";
+import { GroundPlot, PointCloudPlot } from './plots';
+import { CuboidSetManager } from "./cuboid-set-manager";
 import { SceneView } from './scene-view';
 import { Cuboid } from "./types";
 import { normalizeAngle } from './utils';
@@ -70,17 +71,17 @@ export class CuboidEditor extends LitElement {
   static get styles() {
     return [
       css`
-      :host {        
+      :host {
         width: 100%;
         height: 100%;
         min-height: 300px;
         min-width: 100px;
         position: relative;
-        display: block; 
+        display: block;
       }
-      #root { 
+      #root {
         width: 100%;
-        height: 100%; 
+        height: 100%;
         position: relative;
         background-color: black;
         background-repeat: no-repeat;
@@ -89,7 +90,7 @@ export class CuboidEditor extends LitElement {
       }
       /* Medium Devices, Desktops */
       @media only screen and (min-width : 992px) {
-        #root { 
+        #root {
           min-height: 600px;
           max-height: 100vh;
         }
@@ -128,7 +129,6 @@ export class CuboidEditor extends LitElement {
     return this.pclPlot.positionBuffer;
   }
   set pcl(value: Float32Array) {
-    console.debug("overwriting pcl");
     this.pclPlot.positionBuffer = value;
     this.viewer.render();
   }
@@ -169,7 +169,6 @@ export class CuboidEditor extends LitElement {
   set editableCuboids(value) {
     this._editableCuboids.clear();
     value = value || [];
-    console.log('value', value)
     for (const v of value) {
       this._editableCuboids.add(observable(v));
     }
@@ -197,7 +196,9 @@ export class CuboidEditor extends LitElement {
    * @deprecated add directly to {@link CuboidEditor#editableCuboids}.
    */
   addAnnotation(annotation: Cuboid) {
-    this.editableCuboids.add(observable(annotation));
+    const newObj = observable(annotation);
+    this.editableCuboids.add(newObj);
+    return newObj;
   }
 
   /**
@@ -206,12 +207,10 @@ export class CuboidEditor extends LitElement {
    */
   protected defaultOnKeyDown(e: KeyboardEvent) {
     if (e.key === " " && this.editTarget !== null) {
-      console.debug("rotating object by 90°");
       this.editTarget.heading = this.editTarget.heading - Math.PI / 2;
       this.dispatchEvent(new CustomEvent('update', { detail: this.editTarget }));
 
     } else if (e.key === 'Escape') {
-      console.debug('Escape');
       this.mode = null;
       this.editTarget = null;
 
@@ -220,7 +219,7 @@ export class CuboidEditor extends LitElement {
       this.editableCuboids.delete(this.editTarget!);
       this.dispatchEvent(new CustomEvent('delete', { detail: annotation }));
 
-    } else if (e.key == 'c') {
+    } else if (e.key === 'c') {
       this.mode = 'create';
     }
   }

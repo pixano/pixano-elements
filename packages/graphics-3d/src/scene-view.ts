@@ -2,7 +2,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import * as THREE from 'three';
 
@@ -97,9 +97,7 @@ export class SceneView {
   public onResize() {
     // To be called when the parent changes.
     const parent = this.domElement.parentElement;
-
     if (parent) {
-      console.log('parent', parent.clientWidth, parent.clientHeight)
       this.renderer.setSize(parent.clientWidth, parent.clientHeight);
       if (this.camera instanceof THREE.PerspectiveCamera) {
         this.camera.aspect = parent.clientWidth / parent.clientHeight;
