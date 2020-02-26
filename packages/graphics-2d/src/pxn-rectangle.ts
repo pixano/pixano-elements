@@ -37,7 +37,7 @@ export class RectanglesManager extends ShapesManager {
         super.setMode(mode);
         if (mode === 'create') {
             this.renderer.objects.forEach((o) => {
-                this.applyMode(o);
+                this.applyInteractionsToShape(o);
             });
         }
     }

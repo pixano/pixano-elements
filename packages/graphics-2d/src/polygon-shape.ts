@@ -53,6 +53,13 @@ export class PolygonShape extends Shape {
         this.applyMidnodeListeners();
     }
 
+    removeNodeListeners() {
+        this.midnodeListeners.clear();
+        this.nodeListeners.clear();
+        this.applyMidnodeListeners();
+        this.applyNodeListeners();
+    }
+
     applyMidnodeListeners() {
         this.midnodes.forEach((n, idx) => {
             n.removeAllListeners();
@@ -78,15 +85,15 @@ export class PolygonShape extends Shape {
             n.interactive = false;
             n.buttonMode = false;
             this.nodeListeners.forEach((v, type) => {
-            n.interactive = true;
-            n.buttonMode = true;
-            n.on(type, (evt: any) => {
-                evt.nodeIdx = idx;
                 n.interactive = true;
                 n.buttonMode = true;
-                n.cursor = 'grab';
-                v(evt);
-            });
+                n.on(type, (evt: any) => {
+                    evt.nodeIdx = idx;
+                    n.interactive = true;
+                    n.buttonMode = true;
+                    n.cursor = 'grab';
+                    v(evt);
+                });
             })
         });
     }
@@ -191,7 +198,6 @@ export class PolygonShape extends Shape {
     public isValid(): boolean {
         if (this.data.geometry.vertices.length < 6)  return false;
         if (!isValid(this.data.geometry.vertices)) {
-            console.warn('Polygon invalid.');
             return false;
         } else {
             const bounds = this.bounds;
