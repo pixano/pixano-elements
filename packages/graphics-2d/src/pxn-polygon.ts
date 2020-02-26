@@ -13,16 +13,6 @@ import { ShapeData } from './types';
 import { observable } from '@pixano/core';
 import { insertMidNode } from './utils';
 
-function getFlattenVertices(s: ShapeData["geometry"]): number[][] {
-    if (s.type === 'multi_polygon') {
-        return s.mvertices!.map((v) => {
-            return v;
-        }) as number[][];
-    } else {
-        return [s.vertices];
-    }
-}
-
 /**
  * Inherit Canvas2d to handle polygons.
  */
@@ -46,6 +36,16 @@ export class Polygon extends Canvas2d {
      * multi polygon.
      */
     merge() {
+        function getFlattenVertices(s: ShapeData["geometry"]): number[][] {
+            if (s.type === 'multi_polygon') {
+                return s.mvertices!.map((v) => {
+                    return v;
+                }) as number[][];
+            } else {
+                return [s.vertices];
+            }
+        }
+
         if (this.shManager.targetShapes.size > 1) {
             const shapes = [...this.shManager.targetShapes];
             // split all selected groups
@@ -118,9 +118,8 @@ class PolygonsManager extends ShapesManager {
         super.setMode(mode);
         if (mode === 'create') {
             this.renderer.stage.interactive = true;
-            // this.renderer.stage.removeAllListeners();
             this.renderer.objects.forEach((o) => {
-                this.applyMode(o);
+                this.applyInteractionsToShape(o);
             });
         } else {
             const shape = this.tmpShape as PolygonShape;
@@ -132,6 +131,26 @@ class PolygonsManager extends ShapesManager {
         }
     }
 
+    /**
+     * Extend shape interactions to
+     * polygon shape with vertex nodes.
+     * @param s Shape
+     */
+    protected applyInteractionsToShape(s: Shape) {
+        super.applyInteractionsToShape(s);
+        if (this.mode === 'update'){
+            if ( s.state === Decoration.Nodes) {
+                this.applyNodeState(s as PolygonShape);
+            }
+        } 
+    }
+
+    /**
+     * Apply interaction to polygon shape
+     * according to the current mode and the
+     * state of the shape (selected, w/o nodes).
+     * @param obj 
+     */
     protected applyNodeState(obj: PolygonShape) {
         obj.controls.forEach((c) => {
             c.interactive = false;
@@ -152,43 +171,17 @@ class PolygonsManager extends ShapesManager {
     protected toggle(obj: PolygonShape): PolygonShape {
         if (obj.state === Decoration.Box) {
             obj.state = Decoration.Nodes;
-            this.applyNodeState(obj);
         } else if (obj.state === Decoration.Nodes) {
             obj.state = Decoration.Box;
         }
+        this.applyInteractionsToShape(obj);
         obj.draw();
         return obj;
     }
 
-    protected applyMode(s: Shape) {
-        if (this.mode === 'update') {
-            s.interactive = true;
-            s.removeAllListeners('pointerdown');
-            s.on('pointerdown', this.onObjectDown.bind(this));
-            // const selType = this.targetIds.size <= 1 ? Decoration.Box: Decoration.Contour;
-            // // only one is selected
-            // this.renderer.objects.forEach((o) => {
-            //     if (this.targetIds.has(o.data.id)) {
-            //         o.state = selType;
-            //         if (selType === Decoration.Box) {
-            //             o.controls.forEach((c, idx) => {
-            //                 c.removeAllListeners();
-            //                 c.on('pointerdown', (evt: any) => {
-            //                     evt.stopPropagation();
-            //                     evt.idx = idx;
-            //                     this.onControlDown(evt);
-            //                 });
-            //             });
-            //         }
-            //     } else {
-            //         o.state = Decoration.None;
-            //     }
-            //     o.draw();
-            // });
-        } else if (this.mode === 'create') {
-            s.interactive = false;
-            s.removeAllListeners('pointerdown');
-        }
+    protected resetInteractionsToShape(s: Shape) {
+        super.resetInteractionsToShape(s);
+        (s as PolygonShape).removeNodeListeners();
     }
 
     protected onKeyDownCreate = (event: KeyboardEvent) => {

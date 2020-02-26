@@ -13,8 +13,8 @@ import { DrawingCross } from './drawing-cross';
 import { Shape, Decoration, CONTROL_POINTS } from './shape';
 
 export {
-  Brush,
   CONTROL_POINTS,
+  Brush,
   Decoration,
   DrawingCross,
   GMask,

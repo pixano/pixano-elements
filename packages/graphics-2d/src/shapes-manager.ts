@@ -81,28 +81,53 @@ export class ShapesManager extends PIXIContainer {
         this.renderer.stage.on('pointerupoutside', this.onRootUp.bind(this));
         this.shapes = shapes;
         this.interactive = true;
-        observe(this.targetShapes, () => {
-            const selType = this.targetShapes.size <= 1 ? Decoration.Box: Decoration.Contour;
-            // only one is selected
-            this.renderer.objects.forEach((o) => {
-                if (this.targetShapes.has(o.data)) {
-                    o.state = selType;
-                    if (selType === Decoration.Box) {
+        observe(this.targetShapes, (prop: string, value?: any) => {
+            switch(prop) {
+                case 'add': {
+                    // add new selection
+                    this.targetShapes.forEach((s) => {
+                        const o = this.getTargetObject(s as ShapeData)!;
+                        const decorator = !this.targetShapes.has(o.data) ? Decoration.None :
+                                            this.targetShapes.size > 2 ? Decoration.Contour : Decoration.Box;
                         this.renderer.bringToFront(o);
-                        o.controls.forEach((c, idx) => {
-                            c.removeAllListeners();
-                            c.on('pointerdown', (evt: any) => {
-                                evt.stopPropagation();
-                                evt.idx = idx;
-                                this.onControlDown(evt);
-                            });
-                        });
-                    }
-                } else {
-                    o.state = Decoration.None;
+                        o.state = decorator;
+                        this.applyInteractionsToShape(o);
+                        o.draw();
+                    });
+                    break;
                 }
-                o.draw();
-            });
+                case 'set': {
+                    // set all selected shapes at once
+                    this.renderer.objects.forEach((o) => {
+                        const decorator = !this.targetShapes.has(o.data) ? Decoration.None :
+                                            this.targetShapes.size > 2 ? Decoration.Contour : Decoration.Box;
+                        if (this.targetShapes.has(o.data)) {
+                            this.renderer.bringToFront(o);
+                        }
+                        o.state = decorator;
+                        this.applyInteractionsToShape(o);
+                        o.draw();
+                    });
+                    break;
+                }
+                case 'delete': {
+                    // remove selection
+                    const o = this.getTargetObject(value as ShapeData)!;
+                    o.state = Decoration.None;
+                    this.applyInteractionsToShape(o);
+                    o.draw();
+                    break;
+                }
+                case 'clear': {
+                    // remove all selection
+                    this.renderer.objects.forEach((o) => {
+                        o.state = Decoration.None;
+                        this.applyInteractionsToShape(o);
+                        o.draw();
+                    });
+                    break;
+                }
+            }
         });
         // listen global changes on the set of shapes:
         // add a new shape, delete a shape, initialize set.
@@ -111,7 +136,7 @@ export class ShapesManager extends PIXIContainer {
                 case 'add': {
                     const obj = dataToShape(value as ShapeData);
                     this.renderer.add(obj);
-                    this.applyMode(obj);
+                    this.applyInteractionsToShape(obj);
                     break;
                 }
                 case 'set': {
@@ -119,9 +144,8 @@ export class ShapesManager extends PIXIContainer {
                     this.renderer.clearObjects();
                     shapes.forEach((s) => {
                         const obj = this.renderer.add(dataToShape(s));
-                        this.applyInteractions(obj);
+                        this.setInteractionsToShape(obj);
                     });
-                    // console.timeEnd('t1');
                     break;
                 }
                 case 'delete': {
@@ -153,47 +177,53 @@ export class ShapesManager extends PIXIContainer {
             this.cross.scaleY = this.renderer.imageHeight;
             this.cross.draw();
         }
-        this.renderer.objects.forEach((o) => {
-            this.applyMode(o);
-        });
+        this.renderer.objects.forEach(this.applyInteractionsToShape.bind(this));
     }
 
-    protected applyInteractions(s: Shape) {
+    /**
+     * Set interactions to a new shape
+     * according to the current mode.
+     * @param s Shape
+     */
+    protected setInteractionsToShape(s: Shape) {
         if (this.mode === 'update') {
             s.interactive = true;
             s.on('pointerdown', this.onObjectDown.bind(this));
         }
     }
 
-    protected applyMode(s: Shape) {
+    /**
+     * Remove all interactions from shape.
+     * @param s Shape
+     */
+    protected resetInteractionsToShape(s: Shape) {
+        s.interactive = false;
+        s.buttonMode = false;
+        s.removeAllListeners('pointerdown');
+    }
+
+    /**
+     * Set interactions to a shape
+     * according to the current mode.
+     * @param s Shape
+     */
+    protected applyInteractionsToShape(s: Shape) {
+        this.resetInteractionsToShape(s);
         if (this.mode === 'update') {
             s.interactive = true;
-            s.removeAllListeners('pointerdown');
             s.on('pointerdown', this.onObjectDown.bind(this));
-            // const selType = this.targetIds.size <= 1 ? Decoration.Box: Decoration.Contour;
-            // only one is selected
-            // this.renderer.objects.forEach((o) => {
-            //     if (this.targetIds.has(o.data.id)) {
-            //         o.state = selType;
-            //         // box controllers
-            //         if (selType === Decoration.Box) {
-            //             o.controls.forEach((c, idx) => {
-            //                 c.removeAllListeners();
-            //                 c.on('pointerdown', (evt: any) => {
-            //                     evt.stopPropagation();
-            //                     evt.idx = idx;
-            //                     this.onControlDown(evt);
-            //                 });
-            //             });
-            //         }
-            //     } else {
-            //         o.state = Decoration.None;
-            //     }
-            //     // o.draw();
-            // });
-        } else if (this.mode === 'create') {
-            s.interactive = false;
-            s.removeAllListeners('pointerdown');
+            if (s.state === Decoration.Box) {
+                this.renderer.bringToFront(s);
+                s.controls.forEach((c, idx) => {
+                    c.on('pointerdown', (evt: any) => {
+                        evt.stopPropagation();
+                        evt.idx = idx;
+                        this.onControlDown(evt);
+                    });
+                });
+            } else if (s.state === Decoration.None) {
+                // ?
+            }
         }
     }
 
@@ -226,7 +256,7 @@ export class ShapesManager extends PIXIContainer {
     }
 
     protected onRootUp() {
-        // To implement
+        // For each custom shape manager to implement
     }
 
     protected onObjectDown(evt: PIXI.interaction.InteractionEvent) {
@@ -270,8 +300,7 @@ export class ShapesManager extends PIXIContainer {
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
         if (this.mode === 'update') {
             const shape = (evt as any).shape;
-            const id = shape.id;
-            if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.activeObjectId === id) {
+            if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
                 const newPos = evt.data.getLocalPosition(this.renderer.stage);
                 let dxN = (newPos.x - this.startPosition.x) / this.renderer.imageWidth;
                 let dyN = (newPos.y - this.startPosition.y) / this.renderer.imageHeight;
@@ -311,6 +340,10 @@ export class ShapesManager extends PIXIContainer {
         return null;
     }
 
+    protected getTargetObject(s: ShapeData) {
+        return this.renderer.objects.find((o) => o.data.id === s.id);
+    }
+
     private onObjectUp() {
         if (this.mode === 'update') {
             this.isDragging = false;
@@ -319,7 +352,6 @@ export class ShapesManager extends PIXIContainer {
                 this.reclick = false;
                 this.toggle(obj);
             }
-            // this.activeObjectId = '';
             if (obj) {
                 obj.removeAllListeners('pointermove');
                 obj.removeAllListeners('pointerupoutside');
