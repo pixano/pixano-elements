@@ -4,6 +4,15 @@
         "tslint:recommended"
     ],
     "jsRules": {},
-    "rules": {},
+    "rules": {
+        "no-console": [
+            true,
+            "debug",
+            "time",
+            "timeEnd",
+            "log"
+        ],
+        "no-bitwise": false
+    },
     "rulesDirectory": []
 }

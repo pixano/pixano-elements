@@ -38,7 +38,7 @@ export class SmartRectangle extends Rectangle {
   async firstUpdated() {
     super.firstUpdated();
     await (this.shManager as SmartRectanglesManager).load();
-    console.log("Model loaded.");
+    console.info("Model loaded.");
     this.dispatchEvent(new Event("ready"));
   }
 
@@ -51,7 +51,7 @@ export class SmartRectangle extends Rectangle {
 }
 
 interface ObjectLiteral {
-  [key: string]: any;
+  [key: string]: (evt: any) => void;
 }
 
 /**
@@ -91,6 +91,7 @@ class SmartRectanglesManager extends RectanglesManager {
       });
     }
     if (mode === "smart-create") {
+      this.cross.visible = false;
       this.roi.visible = true;
       this.updateRoi();
       window.addEventListener("keydown", this.keyHandlers.SMART_KEYDOWN, false);
@@ -168,7 +169,7 @@ class SmartRectanglesManager extends RectanglesManager {
           this.shapes.add(shape);
         }
       } else {
-        console.log("No detection");
+        console.info("No detection");
       }
     }
   }

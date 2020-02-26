@@ -1,0 +1,16 @@
+.DS_Store
+.tsbuildinfo
+.vscode
+node_modules
+/build
+/coverage
+/lerna-debug.log
+/gh-pages
+packages/*/lib
+/packages/*/*.js
+/packages/*/*.js.map
+/packages/*/*.d.ts
+/packages/*/src/*-css.ts
+*package-lock.json
+*-bundle.js
+*tsconfig.tsbuildinfo

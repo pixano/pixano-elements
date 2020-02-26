@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
@@ -15,11 +15,9 @@ import { insertMidNode } from './utils';
 
 function getFlattenVertices(s: ShapeData["geometry"]): number[][] {
     if (s.type === 'multi_polygon') {
-        const sub_vertices = s.mvertices!;
-        const v: number[][] = sub_vertices.map((v) => {
+        return s.mvertices!.map((v) => {
             return v;
-        });
-        return v;
+        }) as number[][];
     } else {
         return [s.vertices];
     }
@@ -50,7 +48,7 @@ export class Polygon extends Canvas2d {
     merge() {
         if (this.shManager.targetShapes.size > 1) {
             const shapes = [...this.shManager.targetShapes];
-            // split all selected groups  
+            // split all selected groups
             const newAnn: ShapeData = shapes.reduce((prev, curr) => {
                 // update geometry
                 const currVertices = getFlattenVertices(curr.geometry);
@@ -67,7 +65,7 @@ export class Polygon extends Canvas2d {
                 geometry: {
                     mvertices: [],
                     vertices: [],
-                    type: 'multi_polygon'       
+                    type: 'multi_polygon'
                 }
             });
             this.shapes.add(observable(newAnn));
@@ -208,10 +206,10 @@ class PolygonsManager extends ShapesManager {
             case 'Escape': {
                 // abort creation of the shape
                 this.isCreating = false;
-                if (this.updated) {
+                if (this.updated && this.tmpShape) {
                     this.updated = false;
-                    this.removeChild(<Shape>this.tmpShape);
-                    (<Shape>this.tmpShape).destroy();
+                    this.removeChild(this.tmpShape);
+                    this.tmpShape.destroy();
                     this.tmpShape = null;
                     break;
                 }
@@ -253,14 +251,14 @@ class PolygonsManager extends ShapesManager {
             } else {
                 // start new polygon
                 this.emit('creating-polygon');
-                const data = observable(<ShapeData>{
+                const data = observable({
                     id: 'tmp',
                     geometry: {
                         vertices: [this.mouseX, this.mouseY, this.mouseX, this.mouseY],
                         type: 'polygon'
                     },
                     color: 'red'
-                });
+                } as ShapeData);
                 this.tmpShape = new PolygonShape(data) as PolygonShape;
                 window.addEventListener('keydown', this.onKeyDownCreate.bind(this), false);
                 this.addChild(this.tmpShape);
@@ -349,7 +347,6 @@ class PolygonsManager extends ShapesManager {
     }
 
     public onNodeMove(evt: any) {
-        
         if (this.isNodeTranslating) {
             const newPos = evt.data.getLocalPosition(this.parent);
             let xN = newPos.x / this.renderer.imageWidth;

@@ -9,12 +9,11 @@ import onChange from 'on-change';
 import { searchSorted } from './utils';
 
 export type Observer = (op: string, ...args:any[]) => any;
-interface Observable {}  // convenience common denominator type
 
 // Class properties -----------------------------------------------------------
 
-const observers = new WeakMap<Object, Observer[]>();
-const observersOrder = new WeakMap<Object, number[]>();
+const observers = new WeakMap<object, Observer[]>();
+const observersOrder = new WeakMap<object, number[]>();
 
 /**
  * Wrap an object to make its properties observable. - Observers will be notified of
@@ -43,7 +42,7 @@ export function observable<T extends object>(obj: T): T {
  *  - when an element is deleted with arguments 'delete' and the element
  *  - when the set is cleared with argument 'clear'
  */
-export class ObservableSet<T> extends Set<T> implements Observable {
+export class ObservableSet<T> extends Set<T> {
     constructor(...args:any[]) {  // TODO: call add to initialize items
         super(...args);
 
@@ -100,7 +99,7 @@ export class ObservableSet<T> extends Set<T> implements Observable {
  *  - when an element is deleted with arguments 'delete' and the element
  *  - when the set is cleared with argument 'clear'
  */
-export class ObservableMap<K,T> extends Map<K,T> implements Observable {
+export class ObservableMap<K,T> extends Map<K,T> {
     constructor(...args:any[]) {  // TODO: call add to initialize items
         super(...args);
         observers.set(this, []);
@@ -131,9 +130,9 @@ export class ObservableMap<K,T> extends Map<K,T> implements Observable {
         return success;
     }
 
-    init(items: Array<[K,T]>) {
+    init(items: [K,T][]) {
         super.clear();
-        for (let item of items) {
+        for (const item of items) {
             super.set(item[0], item[1]);
         }
         for (const cb of [...observers.get(this)!]) {
@@ -154,16 +153,16 @@ export class ObservableMap<K,T> extends Map<K,T> implements Observable {
  * along the observed.
  */
 export function observe(target: object, observer: Observer, order=10): Observer {
-  const observers_ = observers.get(target);
-  const observersOrder_ = observersOrder.get(target);
-  if (!observers_ || !observersOrder_) {
+  const _observers = observers.get(target);
+  const _observersOrder = observersOrder.get(target);
+  if (!_observers || !_observersOrder) {
       throw new Error("object is not observable. "
         + "If you meant to observe its properties, use `observable` first.");
   }
 
-  const i = searchSorted(observersOrder_, order);
-  observers_.splice(i, 0, observer);
-  observersOrder_.splice(i, 0, order);
+  const i = searchSorted(_observersOrder, order);
+  _observers.splice(i, 0, observer);
+  _observersOrder.splice(i, 0, order);
 
   return observer;
 }
@@ -174,14 +173,14 @@ export function observe(target: object, observer: Observer, order=10): Observer 
  * @param observer
  */
 export function unobserve(target: object, observer: Observer) {
-  const observers_ = observers.get(target);
-  const observersOrder_ = observersOrder.get(target);
+  const _observers = observers.get(target);
+  const _observersOrder = observersOrder.get(target);
 
-  if (observers_ && observersOrder_) {
-    const i = observers_.indexOf(observer);
+  if (_observers && _observersOrder) {
+    const i = _observers.indexOf(observer);
     if (i >= 0) {
-      observers_.splice(i, 1);
-      observersOrder_.splice(i, 1);
+        _observers.splice(i, 1);
+        _observersOrder.splice(i, 1);
     }
   }
 }

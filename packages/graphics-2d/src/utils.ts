@@ -2,15 +2,15 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 
 /**
- * Convert a hex color number into an [R, G, B] array 
+ * Convert a hex color number into an [R, G, B] array
  * @param hex hexadecimal color number
  */
 export const hexToRgb255 = (hex: number) => {
-    let out = [0,0,0];
+    const out = [0,0,0];
     out[0] = (hex >> 16 & 0xFF);
     out[1] = (hex >> 8 & 0xFF);
     out[2] = (hex & 0xFF);
@@ -32,11 +32,10 @@ export function colorToRGBA(color: string): Uint8ClampedArray {
     // Examples:
     // colorToRGBA('red')  # [255, 0, 0, 255]
     // colorToRGBA('#f00') # [255, 0, 0, 255]
-    var cvs, ctx;
-    cvs = document.createElement('canvas');
+    const cvs = document.createElement('canvas');
     cvs.height = 1;
     cvs.width = 1;
-    ctx = cvs.getContext('2d')!;
+    const ctx = cvs.getContext('2d')!;
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
     return ctx.getImageData(0, 0, 1, 1).data;

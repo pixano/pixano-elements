@@ -3,11 +3,12 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { PxnRenderer } from './renderer-2d';
-import { GMask, PolygonShape, Brush, fuseId, unfuseId, getPolygonExtrema, 
-         extremaUnion} from './shapes-2d';
+import { GMask, PolygonShape, Brush} from './shapes-2d';
+import { fuseId, unfuseId, getPolygonExtrema,
+         extremaUnion} from './mask';
 import { BlobExtractor } from './blob-extractor';
 import { Container as PIXIContainer, Graphics as PIXIGraphics, Point, Filter as PIXIFilter} from 'pixi.js'
 import { rectifyFisheyeFromPolyline } from './rectify-border'
@@ -25,7 +26,7 @@ export enum Mode {
 }
 
 interface ObjectLiteral {
-    [key: string]: any;
+    [key: string]: (evt: any) => void;
 }
 
 interface DensePolygon {
@@ -53,7 +54,7 @@ export class MaskHandler extends PIXIContainer {
 
     public rectifyBorderContainer = new PIXIContainer();
 
-    // temporary polygon 
+    // temporary polygon
     public tempContours = new PIXIContainer();
 
     private densePolygons: DensePolygon[] = new Array();
@@ -67,7 +68,7 @@ export class MaskHandler extends PIXIContainer {
     public targetClass: number = 1;
 
     // border line nodes in [y, x] order.
-    private rectifyBorderPolyline: Array<[number, number]>= new Array();
+    private rectifyBorderPolyline: [number, number][]= new Array();
 
     private autoContours: boolean = true;
 
@@ -77,8 +78,7 @@ export class MaskHandler extends PIXIContainer {
         this.renderer = renderer;
         this.gmask = gmask;
         this.selectedId = selectedId;
-
-        //this.brushMoveContainer.filters = [this.brushFilter]
+        // this.brushMoveContainer.filters = [this.brushFilter]
         this.updateTempBrushGraphic()
 
 
@@ -171,21 +171,21 @@ export class MaskHandler extends PIXIContainer {
             case Mode.RECTIFY_BORDER: {
                 this.setRectifyBorderHandler();
                 break;
-            }           
+            }
         }
     }
 
     protected onBrushKey(event: KeyboardEvent) {
-        if (event.code == "NumpadAdd") {
+        if (event.code === "NumpadAdd") {
             this.brush.brushSize += 1;
             this.brush.brushCursor.width += 1;
             this.brush.brushCursor.height += 1;
-        }  else if (event.code == "NumpadSubtract") {
+        }  else if (event.code === "NumpadSubtract") {
             if (this.brush.brushSize > 1) {
                 this.brush.brushSize -= 1;
                 this.brush.brushCursor.width -= 1;
                 this.brush.brushCursor.height -= 1;
-            }          
+            }
         } else if (event.key === 'Escape') {
             this.deselect();
         }
@@ -212,8 +212,8 @@ export class MaskHandler extends PIXIContainer {
         }
     }
 
-    protected applyBrush() {    
-        this.gmask.updateByPolygonTemp(this.brush.getPolygon(), this.selectedId);         
+    protected applyBrush() {
+        this.gmask.updateByPolygonTemp(this.brush.getPolygon(), this.selectedId);
     }
 
     protected onPointerUpBrush() {
@@ -224,7 +224,6 @@ export class MaskHandler extends PIXIContainer {
             this.densePolygons = [...newPolys];
             this.updateDisplayedSelection();
         }
-        
         this.brush.resetMoveExtrema();
         this.brush.isActive = false;
         this.brushMoveContainer.removeChildren();
@@ -255,12 +254,11 @@ export class MaskHandler extends PIXIContainer {
     protected setBrushHandler() {
         this.brush.addChild(this.brush.brushCursor)
         this.updateTempBrushGraphic()
-        
         this.renderer.stage.on("pointermove", this.pointerHandlers.BRUSH_MOVE);
         this.renderer.stage.on("mousedown", this.pointerHandlers.BRUSH_CLICK);
         this.renderer.stage.on("mouseupoutside", this.pointerHandlers.BRUSH_RELEASE);
-        window.addEventListener('keydown', this.keyHandlers.BRUSH_KEY, false);     
-        this.renderer.stage.interactive = true;  
+        window.addEventListener('keydown', this.keyHandlers.BRUSH_KEY, false);
+        this.renderer.stage.interactive = true;
     }
 
     protected setRectifyBorderHandler() {
@@ -272,7 +270,7 @@ export class MaskHandler extends PIXIContainer {
     }
 
     protected onRectifyBorderKey(event: KeyboardEvent) {
-        if (event.key == "Enter") {
+        if (event.key === "Enter") {
             if (this.rectifyBorderPolyline.length >= 2) {
                 this.rectifyBorder(this.rectifyBorderPolyline);
                 this.rectifyBorderPolyline = new Array();
@@ -319,7 +317,7 @@ export class MaskHandler extends PIXIContainer {
 
     protected rectifyBorder(polyline: any[]) {
         const res = rectifyFisheyeFromPolyline(this.gmask.getValue()!, polyline);
-        const newMask = res["correctedMask"];
+        const newMask = res.correctedMask;
         this.gmask.setValue(newMask);
 
         if (this.autoContours){
@@ -357,15 +355,15 @@ export class MaskHandler extends PIXIContainer {
 
     /**
      * Draw dashed polygons to contour graphics
-     * @param polygon 
+     * @param polygon
      */
     protected drawDashedPolygon(polygon: Point[]) {
         const dashed = false;
         if (dashed) {
             for(let i = 0; i< polygon.length; i++){
-                let p1 = polygon[i];
+                const p1 = polygon[i];
                 let p2;
-                if(i == polygon.length-1) {
+                if(i === polygon.length-1) {
                     p2 = polygon[0];
                 }
                 else {
@@ -409,11 +407,11 @@ export class MaskHandler extends PIXIContainer {
             polygon.destroy();
             this.tempContours.removeChildren();
 
-            if (this.mode == Mode.CREATE_INSTANCE || this.mode == Mode.ADD_TO_INSTANCE || this.mode == Mode.REMOVE_FROM_INSTANCE) {
+            if (this.mode === Mode.CREATE_INSTANCE || this.mode === Mode.ADD_TO_INSTANCE || this.mode === Mode.REMOVE_FROM_INSTANCE) {
                 let fillType = 'add';
                 let extrema = getPolygonExtrema(vertices);
 
-                if (this.mode == Mode.CREATE_INSTANCE) {
+                if (this.mode === Mode.CREATE_INSTANCE) {
                     const cls = this.gmask.clsMap.get(this.targetClass);
                     if (cls && cls[3]) {
                         const newIds = this.gmask.getNextId();
@@ -421,14 +419,13 @@ export class MaskHandler extends PIXIContainer {
                     } else if (cls) {
                         // semantic class
                         this.selectedId = [0, 0, this.targetClass];
-                    }               
+                    }
                 } else {
                     extrema = extremaUnion(extrema, this.getDensePolysExtrema());
-                    if (this.mode == Mode.REMOVE_FROM_INSTANCE)
+                    if (this.mode === Mode.REMOVE_FROM_INSTANCE)
                         fillType = 'remove';
-                }                    
-                
-                this.gmask.updateByPolygon(vertices, this.selectedId, fillType); 
+                }
+                this.gmask.updateByPolygon(vertices, this.selectedId, fillType);
                 const newPolys = this.getPolygons(this.selectedId, extrema);
                 this.densePolygons = [...newPolys];
             }
@@ -497,8 +494,8 @@ export class MaskHandler extends PIXIContainer {
 
     protected onPointerDownSelectInstance(evt: PIXI.interaction.InteractionEvent) {
         const newPos = evt.data.getLocalPosition(this.renderer.stage);
-        let x = Math.floor(newPos.x);
-        let y = Math.floor(newPos.y);
+        const x = Math.floor(newPos.x);
+        const y = Math.floor(newPos.y);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (Math.max(...id) === 0) {
             this.deselect();
@@ -513,8 +510,8 @@ export class MaskHandler extends PIXIContainer {
 
     protected onPointerDownLockClass(evt: PIXI.interaction.InteractionEvent){
         const newPos = evt.data.getLocalPosition(this.renderer.stage);
-        let x = Math.floor(newPos.x);
-        let y = Math.floor(newPos.y);
+        const x = Math.floor(newPos.x);
+        const y = Math.floor(newPos.y);
         const cls = this.gmask.pixelId(x + y * this.gmask.canvas.width)[2]
         this.gmask.lockClass(cls);
     }
@@ -527,17 +524,12 @@ export class MaskHandler extends PIXIContainer {
 
         this.densePolygons.forEach((poly) => {
             poly.data.forEach((pt) => {
-                if (pt.x < xMin)
-                    xMin = pt.x
-                if (pt.x > xMax)
-                    xMax = pt.x
-        
-                if (pt.y < yMin)
-                    yMin = pt.y
-                if (pt.y > yMax)
-                    yMax = pt.y
-                });           
+                if (pt.x < xMin) xMin = pt.x
+                if (pt.x > xMax) xMax = pt.x
+                if (pt.y < yMin) yMin = pt.y
+                if (pt.y > yMax) yMax = pt.y
             });
+        });
         return [xMin, yMin, xMax, yMax];
     }
 
@@ -553,12 +545,10 @@ export class MaskHandler extends PIXIContainer {
         canvas.height = this.renderer.imageHeight;
         const ctx = canvas.getContext('2d')!;
         polygons.forEach((poly) => {
-
             if (poly.type === 'external')
                 ctx.fillStyle = `rgb(1, 0, 0)`; // Foreground
             else
                 ctx.fillStyle = 'rgb(0, 0, 0)'; // Background
-                                
             const data = poly.data;
 
             ctx.beginPath();
@@ -576,7 +566,7 @@ export class MaskHandler extends PIXIContainer {
 
     /**
      * Returns all blobs contours of a mask whose id is equal to targetId
-     * @param imageData a mask stored in an ImageData object, a pixel has 4 channels [id1, id2, cls, 'not used'] 
+     * @param imageData a mask stored in an ImageData object, a pixel has 4 channels [id1, id2, cls, 'not used']
      * where 'id1' and 'id2' represent the instance id and 'cls' the class id.
      * @param targetId the id of the blobs to be found
      * @param extrema (optional) the box research zone [xMin, yMin, xMax, yMax]
@@ -584,7 +574,6 @@ export class MaskHandler extends PIXIContainer {
      * the type of the contour ('external' or 'internal') and contour_points are the contour pixels (a pixel is a dict {x:x_value, y:y_value}))
      */
     protected blobExtraction(imageData: ImageData, targetId: [number, number, number], extrema?: number[]) {
-        const t0 = performance.now();
         const data = new Array(imageData.width * imageData.width);
 
         if (!extrema) {
@@ -596,24 +585,21 @@ export class MaskHandler extends PIXIContainer {
             const [xMin, yMin, xMax, yMax] = extrema;
             for (let x = xMin; x < xMax; x++){
                 for (let y = yMin; y < yMax; y++ ){
-                    let i = x + y * imageData.width;
+                    const i = x + y * imageData.width;
                     data[i] = fuseId(getPixelId(imageData, i))
                 }
             }
         }
         const blobExtractor = new BlobExtractor(imageData.width, imageData.height, data, undefined, extrema);
         blobExtractor.extract(fuseId(targetId));
-        //console.log("blobs", blobExtractor.blobs )
 
         const newPolys: DensePolygon[] = [];
-        for (let [, blob] of blobExtractor.blobs) {
+        for (const [, blob] of blobExtractor.blobs) {
             blob.contours.forEach((contour: any) => {
                 const arr = convertIndexToDict(contour.points, this.gmask.canvas.width + 1);
                 newPolys.push({type: contour.type, data: arr});
             });
         }
-        const t1 = performance.now()
-        console.log("Blob extraction done in", t1 - t0, "ms")
         return newPolys;
     }
 
@@ -624,7 +610,6 @@ export class MaskHandler extends PIXIContainer {
      * @param extrema (optional) the box research zone [xMin, yMin, xMax, yMax]
      */
     protected getPolygons(targetId: [number, number, number], extrema?: number[]): DensePolygon[] {
-        const t0 = performance.now();
         const blobs = this.gmask.getBlobs(targetId, extrema);
         const newPolys: DensePolygon[] = [];
         for (const [, blob] of blobs) {
@@ -633,26 +618,19 @@ export class MaskHandler extends PIXIContainer {
                 newPolys.push({type: contour.type, data: arr});
             });
         }
-        const t1 = performance.now();
-        console.log("Blob extraction done in", t1 - t0, "ms")
         return newPolys;
     }
 
 
     /**
      * Remove all blobs with number of pixels below 'blobMinSize'
-     * @param blobMinSize 
+     * @param blobMinSize
      */
-    public filterAll(blobMinSize: number){
-        const tic = performance.now()
-        console.log("Filtering")
-
-        const allfusedIds = this.gmask.getAllFusedIds()     
+    public filterAll(blobMinSize: number) {
+        const allfusedIds = this.gmask.getAllFusedIds();
         allfusedIds.forEach((id) => {
             this.filterId(unfuseId(id), blobMinSize)
-        })
-        const toc = performance.now()
-        console.log("Filtering done in", toc - tic, "ms");
+        });
         if (this.mode === Mode.SELECT_INSTANCE) {
             const newPolys = this.getPolygons(this.selectedId);
             this.densePolygons = [...newPolys];
@@ -664,12 +642,11 @@ export class MaskHandler extends PIXIContainer {
     /**
      * Remove all blobs of selected id with number of pixels below 'blobMinSize'
      * @param targetId the id of the blobs to be found
-     * @param blobMinSize 
+     * @param blobMinSize
      */
     protected filterId(targetId: [number, number, number], blobMinSize: number){
         const blobs = this.gmask.getBlobs(targetId)
-
-        for (let [,blob] of blobs){
+        for (const [,blob] of blobs){
             if (blob.nbPixels < blobMinSize) {
                 blob.contours.forEach(contour => {
                     const arr = convertIndexToDict(contour.points, this.gmask.canvas.width + 1);
@@ -680,25 +657,22 @@ export class MaskHandler extends PIXIContainer {
                         this.gmask.updateByPolygon(arr, targetId, 'add')
                     }
                 });
-            }   
-        }       
+            }
+        }
     }
 }
 
-    
 /**
  * Convert an array of points stored using row order into an array of pixels (pixel format : {x:x_value, y:y_value})
  * @param indexes an array of points stored row order, indexes[0] => x=0,y=0, indexes[1] => x=1,y=0, ...
  * @param width the width of the image
  */
 export function convertIndexToDict(indexes: number[], width: number): Point[] {
-    let points: Point[] = []
-    indexes.forEach(idx => {
-        let y = idx /  width | 0;
-        let x = idx % width;
-        points.push(new Point(x,y))
+    return indexes.map((idx) => {
+        const y = idx /  width | 0;
+        const x = idx % width;
+        return new Point(x, y);
     });
-    return points;
 }
 /**
  * Returns all pixels of the straight line between p1 and p2
@@ -706,24 +680,24 @@ export function convertIndexToDict(indexes: number[], width: number): Point[] {
  * @param p2 pixel format : {x:x_value, y:y_value}
  */
 export function calcStraightLine (p1: Point, p2: Point): Point[] {
-    let coordinatesArray: Point[] = [];
+    const coordinatesArray: Point[] = [];
     // Translate coordinates
     let x1 = p1.x;
     let y1 = p1.y;
-    let x2 = p2.x;
-    let y2 = p2.y;
+    const x2 = p2.x;
+    const y2 = p2.y;
     // Define differences and error check
-    let dx = Math.abs(x2 - x1);
-    let dy = Math.abs(y2 - y1);
-    let sx = (x1 < x2) ? 1 : -1;
-    let sy = (y1 < y2) ? 1 : -1;
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const sx = (x1 < x2) ? 1 : -1;
+    const sy = (y1 < y2) ? 1 : -1;
     let err = dx - dy;
     // Set first coordinates
     coordinatesArray.push(new Point(x1,y1));
 
     // Main loop
-    while (!((x1 == x2) && (y1 == y2))) {
-        let e2 = err << 1;
+    while (!((x1 === x2) && (y1 === y2))) {
+        const e2 = err << 1;
         if (e2 > -dy) {
             err -= dy;
             x1 += sx;
@@ -745,16 +719,10 @@ export function calcStraightLine (p1: Point, p2: Point): Point[] {
  * @param ctType a string, whether 'external' or 'internal' to indicated the contour type
  */
 export function densifyPolygon(polygon: Point[], ctType='external'): DensePolygon{
-    let densePoly: Point[] = [];
+    const densePoly: Point[] = [];
     for(let i = 0; i < polygon.length; i++){
-        let p1 = polygon[i];
-        let p2;
-        if(i == polygon.length - 1) {
-            p2 = polygon[0];
-        }
-        else {
-            p2 = polygon[i+1];
-        }
+        const p1 = polygon[i];
+        const p2 = i === polygon.length - 1 ? polygon[0] : polygon[i+1];
         const linePixels = calcStraightLine(p1, p2);
         densePoly.push(...linePixels.slice(0, -1));
     }
@@ -769,31 +737,22 @@ export function densifyPolygon(polygon: Point[], ctType='external'): DensePolygo
 export function isClockwise(polygon: Point[]): boolean{
     let sum = 0;
     for(let i = 0; i < polygon.length; i++){
-        let p1 = polygon[i];
-        let p2;
-        if(i == polygon.length - 1) {
-            p2 = polygon[0];
-        }
-        else {
-            p2 = polygon[i+1];
-        }
+        const p1 = polygon[i];
+        const p2 = i === polygon.length - 1 ? polygon[0] : polygon[i+1];
         sum += (p2.x - p1.x)*(p2.y + p1.y);
     }
-    if (sum >= 0)
-        return false;
-    else
-        return true;
+    return sum < 0;
 }
 
 
 export function getPixelId(data: ImageData, idx: number) : [number, number, number] {
-    const id_1 = data.data[idx * 4];
-    const id_2 = data.data[idx * 4 + 1];
+    const id1 = data.data[idx * 4];
+    const id2 = data.data[idx * 4 + 1];
     const cls = data.data[idx * 4 + 2];
-    return [id_1, id_2, cls];
+    return [id1, id2, cls];
 }
 
-let frag = `
+const frag = `
     varying vec2 vTextureCoord;
 
     uniform sampler2D uSampler;
@@ -805,7 +764,7 @@ let frag = `
 }
 `;
 
-let vert = `
+const vert = `
     attribute vec2 aVertexPosition;
     attribute vec2 aTextureCoord;
 

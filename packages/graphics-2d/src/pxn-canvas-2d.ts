@@ -4,7 +4,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { LitElement, html, css, customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
@@ -36,9 +36,9 @@ export class ViewControlsObjects extends ViewControls {
     this.updateNodeSize();
   }
   updateNodeSize() {
-    this.viewer.objects.forEach((o) => {
-      if (o.data.geometry.type != 'graph') {
-        o.nodeContainer.children.forEach((o) => {
+    this.viewer.objects.forEach((obj) => {
+      if (obj.data.geometry.type !== 'graph') {
+        obj.nodeContainer.children.forEach((o) => {
           o.scale.x = 1.5 / this.viewer.stage.scale.x;
           o.scale.y = 1.5 / this.viewer.stage.scale.y;
         });
@@ -71,7 +71,7 @@ export class Canvas2d extends LitElement {
   public hideLabels: boolean = false;
 
   @property({type: Boolean})
-  public disablefullscreen: Boolean = false;
+  public disablefullscreen: boolean = false;
 
   // background color
   public color: string = "#f3f3f5";
@@ -164,33 +164,32 @@ export class Canvas2d extends LitElement {
                     user-select: none; /* Non-prefixed version, currently
                                           supported by Chrome, Opera and Firefox */
       }
-      
+
       #snackbar.show {
         visibility: visible;
         -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
         animation: fadein 0.5s, fadeout 0.5s 2.5s;
       }
-      
+
       @-webkit-keyframes fadein {
-        from {bottom: 0; opacity: 0;} 
+        from {bottom: 0; opacity: 0;}
         to {bottom: 30px; opacity: 1;}
       }
-      
+
       @keyframes fadein {
         from {bottom: 0; opacity: 0;}
         to {bottom: 30px; opacity: 1;}
       }
-      
+
       @-webkit-keyframes fadeout {
-        from {bottom: 30px; opacity: 1;} 
-        to {bottom: 0; opacity: 0;}
-      }
-      
-      @keyframes fadeout {
         from {bottom: 30px; opacity: 1;}
         to {bottom: 0; opacity: 0;}
       }
-      `
+
+      @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+      }`
     ];
   }
 
@@ -211,7 +210,7 @@ export class Canvas2d extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    // A classic event listener will not be automatically destroyed by lit-element, 
+    // A classic event listener will not be automatically destroyed by lit-element,
     // This will introduce memory leaks and weird bugs.
     window.removeEventListener('keydown', this.keyBinding);
   }
@@ -276,7 +275,7 @@ export class Canvas2d extends LitElement {
     // console.time('t1');
     // encapsulate object in Proxy
     // to observe its property changes.
-    this._shapes.set((<any>value).map(observable));
+    this._shapes.set((value as any).map(observable));
   }
 
   public zoomIn() {
@@ -296,7 +295,7 @@ export class Canvas2d extends LitElement {
    * @param event [keyBoardEvent]
    */
   public keyBinding: EventListener =  (evt: Event) => {
-    const event = <KeyboardEvent>evt;
+    const event = evt as KeyboardEvent;
     switch (event.key) {
       case 'Tab': {
         this.onTabulation.bind(this)(event);
@@ -385,10 +384,7 @@ export class Canvas2d extends LitElement {
       if (this.image) {
         htmlImageElement.onload = () => {
           if (htmlImageElement !== null) {
-            // WARNING: automatic resizing needed
-            // TODO: remove the necessity of it.
-            // this.renderer.resize();
-            this.renderer.image = htmlImageElement;          
+            this.renderer.image = htmlImageElement;
           }
         }
         htmlImageElement.src = this.image;
@@ -396,7 +392,7 @@ export class Canvas2d extends LitElement {
         this.renderer.image = htmlImageElement;
       }
     }
-    if (changedProperties.has('hideLabels') && this.hideLabels != undefined) {
+    if (changedProperties.has('hideLabels') && this.hideLabels !== undefined) {
       this.renderer.showObjects = !this.hideLabels;
     }
     if (changedProperties.has('mode') && this.mode) {

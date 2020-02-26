@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { LitElement, html, css, customElement, property} from 'lit-element';
 import "@material/mwc-slider/mwc-slider";
@@ -76,7 +76,7 @@ export class PlaybackControl extends LitElement {
     }
 
     onNavigationKey(evt: KeyboardEvent) {
-      if ((evt.key == 'ArrowRight' || evt.key == 'ArrowLeft') &&
+      if ((evt.key === 'ArrowRight' || evt.key === 'ArrowLeft') &&
             this.shadowRoot!.activeElement === this.slider) {
         evt.stopPropagation();
       }
@@ -88,10 +88,10 @@ export class PlaybackControl extends LitElement {
       setTimeout(() => {
         this.enableNavigation = true;
       }, 100);
-      if (evt.key == 'ArrowRight') {
+      if (evt.key === 'ArrowRight') {
         this.setNext();
       }
-      if (evt.key == 'ArrowLeft') {
+      if (evt.key === 'ArrowLeft') {
         this.setBefore();
       }
     }
@@ -105,7 +105,7 @@ export class PlaybackControl extends LitElement {
 
     disconnectedCallback() {
       super.disconnectedCallback();
-      // A classic global event listener is not be automatically destroyed by lit-element, 
+      // A classic global event listener is not be automatically destroyed by lit-element,
       // Removing it to prevent memory leaks and weird bugs.
       window.removeEventListener('keydown', this.onNavigationKeyBind);
     }

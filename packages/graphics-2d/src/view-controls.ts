@@ -3,12 +3,12 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { PxnRenderer } from './renderer-2d';
 
 interface ObjectLiteral {
-    [key: string]: Function;
+    [key: string]: (evt: any) => void;
 }
 
 export class ViewControls {
@@ -55,8 +55,8 @@ export class ViewControls {
             }
         } else {
           // Chrome
-          //@ts-ignore
-          if (evt.wheelDelta != undefined) {
+          // @ts-ignore
+          if (evt.wheelDelta !== undefined) {
             return - w / 70;
           }
           return - w / 3;             // IE/Safari

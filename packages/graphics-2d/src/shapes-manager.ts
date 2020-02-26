@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { PxnRenderer } from './renderer-2d';
 import { Shape, DrawingCross } from './shapes-2d';
@@ -106,10 +106,10 @@ export class ShapesManager extends PIXIContainer {
         });
         // listen global changes on the set of shapes:
         // add a new shape, delete a shape, initialize set.
-        observe(shapes, (prop: String, value?: any) => {
+        observe(shapes, (prop: string, value?: any) => {
             switch(prop) {
                 case 'add': {
-                    const obj = dataToShape(<ShapeData>value);
+                    const obj = dataToShape(value as ShapeData);
                     this.renderer.add(obj);
                     this.applyMode(obj);
                     break;
@@ -125,7 +125,7 @@ export class ShapesManager extends PIXIContainer {
                     break;
                 }
                 case 'delete': {
-                    this.renderer.remove(<string>value.id);
+                    this.renderer.remove(value.id as string);
                     this.targetShapes.clear();
                     break;
                 }
@@ -226,16 +226,18 @@ export class ShapesManager extends PIXIContainer {
     }
 
     protected onRootUp() {
+        // To implement
     }
 
     protected onObjectDown(evt: PIXI.interaction.InteractionEvent) {
         // default behaviour is
         // cancel action if pointer is right or middle
-        if ((<PointerEvent>evt.data.originalEvent).button === 2 || (<PointerEvent>evt.data.originalEvent).button === 1) {
+        const button = (evt.data.originalEvent as PointerEvent).button;
+        if ( button === 2 || button === 1) {
             return;
         }
         if (this.mode === 'update') {
-            const shape = (<any>evt).shape as ShapeData;
+            const shape = (evt as any).shape as ShapeData;
             const id = shape.id;
             this.startPosition = evt.data.getLocalPosition(this.renderer.stage);
             this.activeObjectId = id;
@@ -247,7 +249,6 @@ export class ShapesManager extends PIXIContainer {
             obj.on('pointermove', this.onObjectMove.bind(this));
             obj.on('pointerupoutside', this.onObjectUp.bind(this));
             if (this.targetShapes.has(shape) && !evt.data.originalEvent.shiftKey) {
-                
                 // already contains target
                 if (this.targetShapes.size === 1) {
                     this.reclick = true;
@@ -268,17 +269,17 @@ export class ShapesManager extends PIXIContainer {
 
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
         if (this.mode === 'update') {
-            const shape = (<any>evt).shape;
+            const shape = (evt as any).shape;
             const id = shape.id;
-            if ((<PointerEvent>evt.data.originalEvent).pressure && this.isDragging && this.activeObjectId === id) {
+            if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.activeObjectId === id) {
                 const newPos = evt.data.getLocalPosition(this.renderer.stage);
                 let dxN = (newPos.x - this.startPosition.x) / this.renderer.imageWidth;
                 let dyN = (newPos.y - this.startPosition.y) / this.renderer.imageHeight;
-                const bounds = this.globalBounds();
-                const dbottom = 1 - bounds[3];
-                const dtop = bounds[1];
-                const dright = 1 - bounds[2];
-                const dleft = bounds[0];
+                const bb = this.globalBounds();
+                const dbottom = 1 - bb[3];
+                const dtop = bb[1];
+                const dright = 1 - bb[2];
+                const dleft = bb[0];
                 dyN = Math.min(dbottom, dyN);
                 dyN = Math.max(-dtop, dyN);
                 dxN = Math.min(dright, dxN);
@@ -333,7 +334,7 @@ export class ShapesManager extends PIXIContainer {
 
     protected onControlDown(evt: PIXI.interaction.InteractionEvent) {
         this.isScaling = true;
-        //@ts-ignore
+        // @ts-ignore
         const idx = evt.idx;
         this.activeControlIdx = idx;
         this.updated = false;
@@ -375,12 +376,12 @@ export class ShapesManager extends PIXIContainer {
             let anchorY = 1;
             let ctrlX = 1;
             let ctrlY = 1;
-            if (CONTROL_POINTS[this.activeControlIdx].x != 0.5) {
+            if (CONTROL_POINTS[this.activeControlIdx].x !== 0.5) {
                 anchorX = xMin + Math.abs(CONTROL_POINTS[this.activeControlIdx].x - 1) * (xMax - xMin);
                 ctrlX = xMin + CONTROL_POINTS[this.activeControlIdx].x * (xMax - xMin);
                 rx = (xN - anchorX) / (ctrlX - anchorX);
             }
-            if (CONTROL_POINTS[this.activeControlIdx].y != 0.5) {
+            if (CONTROL_POINTS[this.activeControlIdx].y !== 0.5) {
                 anchorY = yMin + Math.abs(CONTROL_POINTS[this.activeControlIdx].y - 1) * (yMax - yMin);
                 ctrlY = yMin + CONTROL_POINTS[this.activeControlIdx].y * (yMax - yMin);
                 ry = (yN - anchorY) / (ctrlY - anchorY);
@@ -392,12 +393,12 @@ export class ShapesManager extends PIXIContainer {
             if (rx < 0 || ry < 0) {
                 // reverse coords order
                 if (rx <= 0) {
-                    this.activeControlIdx = CONTROL_POINTS.findIndex((c) => c.y == CONTROL_POINTS[this.activeControlIdx].y &&
-                                                                            c.x == Math.abs(CONTROL_POINTS[this.activeControlIdx].x - 1));
+                    this.activeControlIdx = CONTROL_POINTS.findIndex((c) => c.y === CONTROL_POINTS[this.activeControlIdx].y &&
+                                                                            c.x === Math.abs(CONTROL_POINTS[this.activeControlIdx].x - 1));
                 }
                 if (ry <= 0) {
-                    this.activeControlIdx = CONTROL_POINTS.findIndex((c) => c.x == CONTROL_POINTS[this.activeControlIdx].x &&
-                                                                            c.y == Math.abs(CONTROL_POINTS[this.activeControlIdx].y - 1));
+                    this.activeControlIdx = CONTROL_POINTS.findIndex((c) => c.x === CONTROL_POINTS[this.activeControlIdx].x &&
+                                                                            c.y === Math.abs(CONTROL_POINTS[this.activeControlIdx].y - 1));
                 }
             }
             this.targetShapes.forEach((obj: ShapeData) => {
@@ -413,9 +414,9 @@ export class ShapesManager extends PIXIContainer {
                     obj.geometry.vertices = ch;
                 }
                 obj.geometry.vertices = [...obj.geometry.vertices.map((c, idx) => {
-                    if (idx % 2 === 0 && rx != 1) {
+                    if (idx % 2 === 0 && rx !== 1) {
                         return (c - anchorX) * rx + anchorX;
-                    } else if (idx % 2 === 1 && ry != 1) {
+                    } else if (idx % 2 === 1 && ry !== 1) {
                        return (c - anchorY) * ry + anchorY;
                     } else {
                         return c;
@@ -427,7 +428,7 @@ export class ShapesManager extends PIXIContainer {
     }
 
     public onControlUp() {
-        if (this.initialControlIdx != -1) {
+        if (this.initialControlIdx !== -1) {
             const obj = this.getFirstTargetObject();
             if (obj) {
                 obj.controls[this.initialControlIdx].removeAllListeners('pointermove');

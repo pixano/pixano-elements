@@ -3,14 +3,13 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapesManager } from './shapes-manager';
 import { RectangleShape } from './shapes-2d';
 import { observable } from '@pixano/core';
-
 
 /**
  * Inherit Canvas2d to handle rectangles.
@@ -103,7 +102,7 @@ export class RectanglesManager extends ShapesManager {
 
     public createRectangle() {
         const shape = this.tmpShape as RectangleShape;
-        const v: number[] = shape.data.geometry.vertices; 
+        const v: number[] = shape.data.geometry.vertices;
         const xmin = Math.min(v[0], v[2]);
         const xmax = Math.max(v[0], v[2]);
         const ymin = Math.min(v[1], v[3]);
