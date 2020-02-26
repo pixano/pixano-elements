@@ -34,13 +34,13 @@ npx serve demos/rectangle
 
 ### Components overview
 
-| Component | Status |
-| ----------| -------|
-| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | v0.1.0 |
-| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 |
-| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 |
-| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 |
-| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) |  v0.1.0 |
+| Component | Status | Demo |
+| ----------| -------| -----|
+| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | v0.1.0 | [link](http://pixano.cea.fr/bounding-box/) |
+| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/polygon/) |
+| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/pixelwise/) |
+| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/smart-annotation/) |
+| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) |  v0.1.0 | [link](http://pixano.cea.fr/3d-bounding-box/) |
 
 ### Contributing
 
