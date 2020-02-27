@@ -163,11 +163,17 @@ export class ShapesManager extends PIXIContainer {
         this.setMode(this.mode);
     }
 
+    /**
+     * Handle new mode set:
+     * 1. Reset canvas to "mode-free" (no interaction)
+     * 2. Apply interactions of new mode
+     * @param mode string
+     */
     public setMode(mode: string) {
         this.mode = mode;
-        if (this.mode === 'update') {
-            this.cross.visible = false;
-        } else if (this.mode === 'create') {
+        this.cross.visible = false; 
+        if (this.mode === 'create') {
+            this.renderer.stage.interactive = true;
             this.targetShapes.clear();
             this.cross.visible = true;
             const pos = this.renderer.mouse;
@@ -177,6 +183,13 @@ export class ShapesManager extends PIXIContainer {
             this.cross.scaleY = this.renderer.imageHeight;
             this.cross.draw();
         }
+        const shape = this.tmpShape as Shape;
+        if (shape) {
+            this.removeChild(shape);
+            shape.destroy();
+            this.tmpShape = null;
+        }
+        // handle new mode for each shape
         this.renderer.objects.forEach(this.applyInteractionsToShape.bind(this));
     }
 
@@ -205,6 +218,8 @@ export class ShapesManager extends PIXIContainer {
     /**
      * Set interactions to a shape
      * according to the current mode.
+     * 1. Remove all interactions of the shape
+     * 2. Apply interactions of new mode for the shape
      * @param s Shape
      */
     protected applyInteractionsToShape(s: Shape) {
@@ -221,8 +236,6 @@ export class ShapesManager extends PIXIContainer {
                         this.onControlDown(evt);
                     });
                 });
-            } else if (s.state === Decoration.None) {
-                // ?
             }
         }
     }

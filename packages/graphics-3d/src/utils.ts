@@ -422,7 +422,7 @@ export function fitToPts(positions: number[][]) {
     const rminbystep = 0.5 + (rmin / rstep);
     let nradius = Math.floor(diag / rstep);
     if (diag < rstep) nradius=1;
-    // console.log('nradius', nradius, center);
+
     const sinbyrstep: number[] = [];
     const cosbyrstep: number[] = [];
     for(let a = 0; a < nangles; a++){

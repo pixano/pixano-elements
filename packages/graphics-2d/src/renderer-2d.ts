@@ -260,8 +260,8 @@ export class PxnRenderer extends PIXI.Application {
         this.objects.push(s);
         s.scaleX = this.image.width || 100;
         s.scaleY = this.image.height || 100;
-        s.draw();
         this.labelLayer.addChild(s);
+        s.draw();
         return s;
     }
 
