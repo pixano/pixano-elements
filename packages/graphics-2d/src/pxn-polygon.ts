@@ -114,23 +114,6 @@ class PolygonsManager extends ShapesManager {
 
     private isMidNodeTranslating: boolean = false;
 
-    public setMode(mode: string) {
-        super.setMode(mode);
-        if (mode === 'create') {
-            this.renderer.stage.interactive = true;
-            this.renderer.objects.forEach((o) => {
-                this.applyInteractionsToShape(o);
-            });
-        } else {
-            const shape = this.tmpShape as PolygonShape;
-            if (shape) {
-                this.removeChild(shape);
-                shape.destroy();
-                this.tmpShape = null;
-            }
-        }
-    }
-
     /**
      * Extend shape interactions to
      * polygon shape with vertex nodes.

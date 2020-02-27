@@ -33,14 +33,6 @@ export class Rectangle extends Canvas2d {
  * Inherit ShapesManager to handle rectangle shapes.
  */
 export class RectanglesManager extends ShapesManager {
-    public setMode(mode: string) {
-        super.setMode(mode);
-        if (mode === 'create') {
-            this.renderer.objects.forEach((o) => {
-                this.applyInteractionsToShape(o);
-            });
-        }
-    }
 
     protected onRootDown(evt: any) {
         super.onRootDown(evt);

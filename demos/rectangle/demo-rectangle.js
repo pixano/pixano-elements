@@ -52,7 +52,6 @@ class DemoRectangle extends LitElement {
 
   fullScreen() {
     if (document.fullscreenEnabled) {
-      console.log('should request full screen')
       this.shadowRoot.querySelector('main').requestFullscreen();
     }
   }

@@ -37,12 +37,10 @@ export class ViewControlsObjects extends ViewControls {
   }
   updateNodeSize() {
     this.viewer.objects.forEach((obj) => {
-      if (obj.data.geometry.type !== 'graph') {
-        obj.nodeContainer.children.forEach((o) => {
-          o.scale.x = 1.5 / this.viewer.stage.scale.x;
-          o.scale.y = 1.5 / this.viewer.stage.scale.y;
-        });
-      }
+      obj.nodeContainer.children.forEach((o) => {
+        o.scale.x = 1.5 / this.viewer.stage.scale.x;
+        o.scale.y = 1.5 / this.viewer.stage.scale.y;
+      });
     });
   }
 }

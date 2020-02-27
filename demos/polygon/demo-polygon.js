@@ -40,7 +40,6 @@ class DemoPolygon extends LitElement {
   }
 
   fullScreen() {
-    console.log('should request full screen')
     if (document.fullscreenEnabled) {
       this.shadowRoot.querySelector('main').requestFullscreen();
     }

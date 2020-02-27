@@ -41,7 +41,6 @@ class DemoSegmentation extends LitElement {
     window.addEventListener('keydown', (evt) => {
       // change target class
       if (!isNaN(evt.key)) {
-        console.log('new class', parseInt(evt.key));
         this.element.targetClass = parseInt(evt.key);
       }
     })
