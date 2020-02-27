@@ -1,15 +1,47 @@
 # <img src="images/pixano_logo.png" alt="Pixano" height="100"/>
 
+Pixano Elements
+===============
+[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/) [![Current Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/pixano/pixano-elements)
 
-| [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)  |
-| ------ |
 
 Pixano Elements - Re-usable web components dedicated to data annotation tasks.
 
+> IMPORTANT: The Pixano Web Components are a work in progress and subject to major changes until 1.0 release.
+
+## Requirements
+
+For development, you will only need Node.js installed in your environement.
+
+- #### Node installation on Windows
+
+  Just go on [official Node.js website](https://nodejs.org/) and download the installer.
+Also, be sure to have `git` available in your PATH, `npm` might need it (You can find git [here](https://git-scm.com/)).
+
+- #### Node installation on Ubuntu
+
+  You can install nodejs and npm easily with apt install, just run the following commands.
+    ```bash
+      sudo apt install nodejs
+      sudo apt install npm
+    ```
+
+- #### Other Operating Systems
+  You can find more information about the installation on the [official Node.js website](https://nodejs.org/) and the [official NPM website](https://npmjs.org/).
+
+If the installation was successful, you should be able to run the following command.
+
+```bash
+node --version
+# v8.11.3
+
+npm --version
+# 6.1.0
+```
 
 ## Quick start
 
-Install npm on your computer then run:
+Once npm is installed on your computer, run:
 
 ```bash
 npm i
@@ -17,16 +49,10 @@ npm run bootstrap
 npm run build
 ```
 
-To automatically rebuild the project when source files are changed:
-
-```bash
-npm run watch
-```
 
 ### Run demos
 
 To run the demos locally, build the project and serve one of the demo folders:
-(update lerna.json if demo not present)
 
 ```bash
 npx serve demos/rectangle
