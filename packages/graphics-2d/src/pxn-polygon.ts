@@ -164,7 +164,9 @@ class PolygonsManager extends ShapesManager {
 
     protected resetInteractionsToShape(s: Shape) {
         super.resetInteractionsToShape(s);
-        (s as PolygonShape).removeNodeListeners();
+        if (s instanceof PolygonShape) {
+            (s as PolygonShape).removeNodeListeners();
+        }
     }
 
     protected onKeyDownCreate = (event: KeyboardEvent) => {
