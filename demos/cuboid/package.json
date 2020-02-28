@@ -15,13 +15,13 @@
     "watch": "webpack --config webpack.config.js --watch"
   },
   "devDependencies": {
+    "source-map-loader": "^0.2.4",
     "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10",
-    "source-map-loader": "^0.2.4"
+    "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "lit-element": "^2.2.1",
+    "@pixano/graphics-3d": "^0.1.0",
     "common": "^0.1.0",
-    "@pixano/graphics-3d": "^0.1.0"
+    "lit-element": "^2.2.1"
   }
 }
