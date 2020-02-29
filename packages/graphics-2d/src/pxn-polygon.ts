@@ -125,14 +125,14 @@ class PolygonsManager extends ShapesManager {
             if ( s.state === Decoration.Nodes) {
                 this.applyNodeState(s as PolygonShape);
             }
-        } 
+        }
     }
 
     /**
      * Apply interaction to polygon shape
      * according to the current mode and the
      * state of the shape (selected, w/o nodes).
-     * @param obj 
+     * @param obj shape
      */
     protected applyNodeState(obj: PolygonShape) {
         obj.controls.forEach((c) => {

@@ -8,6 +8,7 @@
 
 import { LitElement, html, css, customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
+import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { PxnRenderer } from './renderer-2d';
 import { ShapeData } from './types';
 import { ShapesManager } from './shapes-manager';
@@ -288,6 +289,37 @@ export class Canvas2d extends LitElement {
     this.renderer.resize();
   }
 
+    /**
+   * Copy selected cuboid in clipboard
+   */
+  copy() {
+    if (this.shManager.targetShapes.size) {
+      copyClipboard(JSON.stringify([...this.shManager.targetShapes]));
+    }
+  }
+
+  /**
+   * Paste copied cuboid
+   */
+  paste() {
+    pasteClipboard().then((text) => {
+      if (text) {
+        const value = JSON.parse(text);
+        if (value instanceof Array) {
+          value.forEach((v) => {
+            const shape = observable({
+              ...v,
+              id: Math.random().toString(36).substring(7)
+            } as ShapeData)
+    
+            // Add new object to the list of annotations
+            this.shapes.add(shape);
+          })
+        }
+      }
+    });
+  }
+
   /**
    * General keyboard event handling
    * @param event [keyBoardEvent]
@@ -312,6 +344,18 @@ export class Canvas2d extends LitElement {
       case 'Escape': {
         this.shManager.targetShapes.clear();
         break;
+      } 
+      case 'c': {
+        if (event.ctrlKey) {
+          this.copy();
+        }
+        break;
+      }
+      case 'v': {
+        if (event.ctrlKey) {
+          this.paste();
+        }
+        break;  
       }
     }
   }

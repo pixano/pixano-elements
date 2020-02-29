@@ -171,7 +171,7 @@ export class ShapesManager extends PIXIContainer {
      */
     public setMode(mode: string) {
         this.mode = mode;
-        this.cross.visible = false; 
+        this.cross.visible = false;
         if (this.mode === 'create') {
             this.renderer.stage.interactive = true;
             this.targetShapes.clear();
