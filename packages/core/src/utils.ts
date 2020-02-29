@@ -225,10 +225,22 @@ export function colorAnyToHexNumber(color: string): number {
         color = color.slice(1);
         if (color.length === 3) {
             color = color.split('')
-                         .map((hex) => hex + hex)
+                         .map((h) => h + h)
                          .join('');
         }
         return parseInt(color, 16);
     }
     return 0X000000;
+}
+
+export function copyClipboard(newClip: string) {
+    navigator.clipboard.writeText(newClip).then(() => {
+      /* clipboard successfully set */
+    }, () => {
+      /* clipboard write failed */
+    });
+}
+
+export function pasteClipboard(): Promise<string> {
+    return navigator.clipboard.readText();
 }

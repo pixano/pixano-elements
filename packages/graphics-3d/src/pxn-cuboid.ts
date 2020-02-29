@@ -5,6 +5,7 @@
  */
 
 import { ObservableSet, observable } from "@pixano/core";
+import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { css, customElement, html, LitElement } from 'lit-element';
 import { ModeManager } from "./cuboid-manager";
 import { GroundPlot, PointCloudPlot } from './plots';
@@ -202,6 +203,33 @@ export class CuboidEditor extends LitElement {
   }
 
   /**
+   * Copy selected cuboid in clipboard
+   */
+  copy() {
+    if (this.editTarget) {
+      copyClipboard(JSON.stringify(this.editTarget));
+    }
+  }
+
+  /**
+   * Paste copied cuboid
+   */
+  paste() {
+    pasteClipboard().then((text) => {
+      if (text) {
+        const cuboid = observable({
+          ...JSON.parse(text),
+          id: Math.random().toString(36).substring(7)
+        } as Cuboid)
+
+        // Add new object to the list of annotations
+        this.editableCuboids.add(cuboid);
+        this.dispatchEvent(new CustomEvent("create", { detail: cuboid}));
+      }
+    });
+  }
+
+  /**
    * Default keybindings
    * @param e Keyboard event
    */
@@ -219,8 +247,14 @@ export class CuboidEditor extends LitElement {
       this.editableCuboids.delete(this.editTarget!);
       this.dispatchEvent(new CustomEvent('delete', { detail: annotation }));
 
-    } else if (e.key === 'c') {
+    } else if (e.key === 'n') {
       this.mode = 'create';
+
+    } else if (e.key === 'c' && e.ctrlKey) {
+      this.copy();
+
+    } else if (e.key === 'v' && e.ctrlKey) {
+      this.paste();
     }
   }
 }
