@@ -39,23 +39,12 @@ npm --version
 # 6.1.0
 ```
 
-## Quick start
+## Install
 
-Once npm is installed on your computer, run:
+Install a component from NPM:
 
-```bash
-npm i
-npm run bootstrap
-npm run build
 ```
-
-
-### Run demos
-
-To run the demos locally, build the project and serve one of the demo folders:
-
-```bash
-npx serve demos/rectangle
+npm install @pixano/graphics-2d
 ```
 
 ### Components overview
@@ -69,6 +58,22 @@ npx serve demos/rectangle
 | [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) |  v0.1.0 | [link](http://pixano.cea.fr/3d-bounding-box/) |
 
 ### Contributing
+
+Clone and setup the repo:
+
+```bash
+git clone https://github.com/pixano/pixano-elements.git
+cd pixano-elements
+npm i
+npm run bootstrap
+npm run build
+```
+
+To run the demos locally, serve one of the demo folders:
+
+```bash
+npx serve demos/rectangle
+```
 
 Please follow [tslint](https://palantir.github.io/tslint/) for your contributions:
 
