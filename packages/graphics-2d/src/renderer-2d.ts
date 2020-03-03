@@ -55,6 +55,10 @@ export class PxnRenderer extends PIXI.Application {
 
     public labelLayer = new PIXI.Container();
 
+    private _brightness: number = 1;
+
+    private filter: PIXI.filters.ColorMatrixFilter = new PIXI.filters.ColorMatrixFilter();
+
     get imageWidth() {
         return Math.round(this.htmlImageElement.width);
     }
@@ -76,6 +80,14 @@ export class PxnRenderer extends PIXI.Application {
         this.stage.addChildAt(this.backgroundSprite, 0);
         this.stage.addChild(this.labelLayer);
         this.stage.interactive = true;
+        const colorMatrix = [
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+          ];
+        
+        this.filter.matrix = colorMatrix;
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
 
@@ -133,6 +145,16 @@ export class PxnRenderer extends PIXI.Application {
 
     get image() {
         return this.htmlImageElement;
+    }
+
+    get brightness() {
+        return this._brightness;
+    }
+
+    set brightness(brightness: number) {
+        this._brightness = brightness;
+        this.filter.brightness(this._brightness, false);
+        this.backgroundSprite.filters = [this.filter];
     }
 
     /**
