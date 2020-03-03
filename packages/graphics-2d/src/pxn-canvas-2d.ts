@@ -357,6 +357,14 @@ export class Canvas2d extends LitElement {
         }
         break;  
       }
+      case 'm': {
+        this.renderer.brightness -= 0.1;
+        break;
+      }
+      case 'p': {
+        this.renderer.brightness += 0.1;
+        break;
+      }
     }
   }
 
