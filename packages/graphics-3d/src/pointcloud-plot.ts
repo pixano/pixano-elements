@@ -45,7 +45,7 @@ export class PointCloudPlot extends THREE.Points implements Destructible {
       geometry.setAttribute('color', new THREE.BufferAttribute(colorBuffer, 3));
 
       const material = new THREE.PointsMaterial({
-        vertexColors: THREE.VertexColors,
+        vertexColors: true,
         opacity: 1,
         size: 1.7,
         fog: false,

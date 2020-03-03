@@ -9,9 +9,13 @@ import * as THREE from 'three';
 
 /** Combination of a scene, a camera, a renderer and the rendered canvas. */
 export class SceneView {
+
   readonly scene : THREE.Scene;
+
   private _camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+
   private renderer: THREE.WebGLRenderer;
+
   private renderPending: boolean = false;
 
   /** The canvas element that shows the rendering result. */
@@ -119,7 +123,9 @@ export class SceneView {
    const canvasBounds = this.renderer.domElement.getBoundingClientRect();
    const mouse = new THREE.Vector2();
    const raycaster = new THREE.Raycaster();
-   raycaster.linePrecision = 0.0;
+   // linePrecision is deprecated:
+   // raycaster.linePrecision = 0.0;
+   raycaster.params.Line!.threshold = 0.0;
    mouse.x = (x - canvasBounds.left) / canvasBounds.width * 2 - 1;
    mouse.y = - (y - canvasBounds.top) / canvasBounds.height * 2 + 1;
    raycaster.setFromCamera(mouse, this.camera);
