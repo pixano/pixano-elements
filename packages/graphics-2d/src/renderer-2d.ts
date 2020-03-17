@@ -86,7 +86,6 @@ export class PxnRenderer extends PIXI.Application {
             0, 0, 1, 0, 0,
             0, 0, 0, 1, 0,
         ];
-        this.backgroundSprite.filters = [this.filter];
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
 
