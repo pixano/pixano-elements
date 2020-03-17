@@ -180,6 +180,9 @@ protected firstUpdated() {
 
 set imageElement(htmlImageElement: HTMLImageElement) {
   this.renderer.image = htmlImageElement;
+  if (!this.newMaskLoaded) {
+    this.setEmpty();
+  }
   this.maskHandler.deselect();
 }
 
