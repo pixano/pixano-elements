@@ -350,7 +350,6 @@ class PolygonsManager extends ShapesManager {
         this.isNodeTranslating = false;
         if (this.updated) {
             if (obj && !obj.isValid()) {
-                // cancel update;
                 console.warn('Invalid polygon. Node creation cancelled.');
                 obj.data.geometry.vertices = [...this.cachedShape!.geometry.vertices];
             } else {
@@ -371,6 +370,7 @@ class PolygonsManager extends ShapesManager {
         const shape = this.tmpShape as PolygonShape;
         shape.popNode();
         if (!shape.isValid()) {
+            console.warn('Invalid polygon. Polygon creation cancelled.');
             this.removeChild(shape);
             shape.destroy();
             this.tmpShape = null;
