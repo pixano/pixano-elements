@@ -80,14 +80,13 @@ export class PxnRenderer extends PIXI.Application {
         this.stage.addChildAt(this.backgroundSprite, 0);
         this.stage.addChild(this.labelLayer);
         this.stage.interactive = true;
-        const colorMatrix = [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-          ];
-        
-        this.filter.matrix = colorMatrix;
+        this.filter.matrix = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 1, 0,
+        ];
+        this.backgroundSprite.filters = [this.filter];
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
 
@@ -112,7 +111,6 @@ export class PxnRenderer extends PIXI.Application {
       // prevent memory leak
       this.backgroundSprite.texture.destroy(true);
       this.backgroundSprite = new PIXI.Sprite(texture);
-      // this.backgroundSprite.visible = false; // DEBUG
       this.computeDrawableArea(this.canvasWidth, this.canvasHeight, img.width, img.height);
       if (img.width !== this.htmlImageElement.width ||
           img.height !== this.htmlImageElement.height) {
@@ -141,6 +139,7 @@ export class PxnRenderer extends PIXI.Application {
           o.scaleX = this.image.width;
           o.scaleY = this.image.height;
       });
+      this.backgroundSprite.filters = [this.filter];
     }
 
     get image() {
@@ -317,4 +316,3 @@ export class PxnRenderer extends PIXI.Application {
         super.destroy(true, {children: true, texture: true, baseTexture: true})
     }
 }
-
