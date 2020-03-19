@@ -2,7 +2,7 @@
 
 Pixano Elements
 ===============
-[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/) [![Current Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/pixano/pixano-elements)
+[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/) [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d)
 
 
 Pixano Elements - Re-usable web components dedicated to data annotation tasks.
@@ -39,36 +39,41 @@ npm --version
 # 6.1.0
 ```
 
-## Quick start
+## Install
 
-Once npm is installed on your computer, run:
+Install a component from NPM:
 
-```bash
-npm i
-npm run bootstrap
-npm run build
 ```
-
-
-### Run demos
-
-To run the demos locally, build the project and serve one of the demo folders:
-
-```bash
-npx serve demos/rectangle
+npm install @pixano/graphics-2d
 ```
 
 ### Components overview
 
 | Component | Status | Demo |
 | ----------| -------| -----|
-| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | v0.1.0 | [link](http://pixano.cea.fr/bounding-box/) |
-| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/polygon/) |
-| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/pixelwise/) |
-| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  v0.1.0 | [link](http://pixano.cea.fr/smart-annotation/) |
-| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) |  v0.1.0 | [link](http://pixano.cea.fr/3d-bounding-box/) |
+| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/bounding-box/) |
+| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/polygon/) |
+| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/pixelwise/) |
+| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/smart-annotation/) |
+| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [link](http://pixano.cea.fr/3d-bounding-box/) |
 
 ### Contributing
+
+Clone and setup the repo:
+
+```bash
+git clone https://github.com/pixano/pixano-elements.git
+cd pixano-elements
+npm i
+npm run bootstrap
+npm run build
+```
+
+To run the demos locally, serve one of the demo folders:
+
+```bash
+npx serve demos/rectangle
+```
 
 Please follow [tslint](https://palantir.github.io/tslint/) for your contributions:
 
