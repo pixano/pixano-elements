@@ -91,6 +91,10 @@ To create a new component, check our [tutorial](./documentation/how_to_create_a_
 
 When the code is ready for code review, please request a merge in github with comment 'Ready for code review' with the associated issue number.
 
+## Change log
+
+[Releases](https://github.com/pixano/pixano-elements/releases)
+
 # License
 
 Pixano is released under the [CeCILL-C](LICENSE.txt) license, a free software license

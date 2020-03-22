@@ -73,7 +73,7 @@ export abstract class Shape extends PIXIContainer {
     }
 
     getDimension(object?: PIXIContainer): {width: number, height: number} {
-      object = object || this; 
+      object = object || this;
       if (object.parent) {
         return this.getDimension(object.parent);
       } else {

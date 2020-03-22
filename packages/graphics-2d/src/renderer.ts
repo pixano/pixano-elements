@@ -134,7 +134,7 @@ export class Renderer extends PIXI.Application {
 
     get mouse() {
         const mouse = this.stage.toLocal(this.renderer.plugins.interaction.mouse.global);
-        let pt = {x: Math.round(mouse.x), y: Math.round(mouse.y)};
+        const pt = {x: Math.round(mouse.x), y: Math.round(mouse.y)};
         pt.x = Math.min(Math.max(0, pt.x), this.imageWidth);
         pt.y = Math.min(Math.max(0, pt.y), this.imageHeight);
         return pt;
@@ -170,7 +170,6 @@ export class Renderer extends PIXI.Application {
         this.resize();
     }
 
-    
     /**
      * Return normalized coordinate in the image system
      * @param x absolute x coordinate in the html canvas system
@@ -213,12 +212,11 @@ export class Renderer extends PIXI.Application {
 
     public getPosition(data: PIXI.interaction.InteractionData): {x: number, y: number} {
         const mouseData = data.getLocalPosition(this.stage);
-        let pt = {x: Math.round(mouseData.x), y: Math.round(mouseData.y)};
+        const pt = {x: Math.round(mouseData.x), y: Math.round(mouseData.y)};
         pt.x = Math.min(Math.max(0, pt.x), this.imageWidth);
         pt.y = Math.min(Math.max(0, pt.y), this.imageHeight);
         return pt;
     }
-    
 
     /**
      * Compute drawable area based on canvas dimensions and image size.

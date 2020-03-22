@@ -83,7 +83,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     this.boundingBoxCreator = new PixelToBoundingBox();
     this.renderer.stage.addChild(this.roi);
     this.keyHandlers = {
-      SMART_KEYDOWN: this.onSmartKeydown.bind(this) 
+      SMART_KEYDOWN: this.onSmartKeydown.bind(this)
     };
   }
 

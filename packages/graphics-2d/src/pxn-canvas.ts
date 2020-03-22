@@ -197,7 +197,9 @@ export class Canvas extends LitElement {
    * Handle copy keyboard event
    * Return the string you want to copy
    */
-  protected onCopy(): string | void {}
+  protected onCopy(): string | void {
+    // Implement your own onCopy method.
+  }
 
   /**
    * Handle paste of copied string.
@@ -209,7 +211,9 @@ export class Canvas extends LitElement {
   /**
    * Invoked on image change.
    */
-  protected onImageChanged() {}
+  protected onImageChanged() {
+    // Implement your own onImageChanged method.
+  }
 
   /**
    * General keyboard event handling
@@ -229,9 +233,9 @@ export class Canvas extends LitElement {
         if (event.ctrlKey) {
           pasteClipboard().then((str) => {
             if (str) this.onPaste(str);
-          });          
+          });
         }
-        break;  
+        break;
       }
       case 'm': {
         this.renderer.brightness -= 0.1;

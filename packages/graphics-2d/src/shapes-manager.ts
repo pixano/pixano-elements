@@ -217,7 +217,7 @@ export class ShapesUpdateController extends Controller {
             if (dx === 0 && dy === 0) {
                 return;
             }
-            
+
             if (!this.updated) {
                 // remove temporarily interaction & decoration from other scene objects
                 // this.renderer.objects.forEach((o) => { if (!this.targetShapes.has(o.data)) o.interactive = false; });
@@ -477,7 +477,9 @@ export abstract class ShapeCreateController extends Controller {
         this.cross.draw();
     }
 
-    protected onRootUp() {};
+    protected onRootUp() {
+        // Implement your own onRootUp method when inheriting.
+    };
 }
 
 /**

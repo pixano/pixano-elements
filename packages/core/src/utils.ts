@@ -255,12 +255,12 @@ export function intersectionOverUnion(box1: number[], box2: number[]) {
     const ymin1 = Math.min(box1[1], box1[3]);
     const xmax1 = Math.max(box1[0], box1[2]);
     const ymax1 = Math.max(box1[1], box1[3]);
-  
+
     const xmin2 = Math.min(box2[0], box2[2]);
     const ymin2 = Math.min(box2[1], box2[3]);
     const xmax2 = Math.max(box2[0], box2[2]);
     const ymax2 = Math.max(box2[1], box2[3]);
-  
+
     const area1 = (ymax1 - ymin1) * (xmax1 - xmin1);
     const area2 = (ymax2 - ymin2) * (xmax2 - xmin2);
     if (area1 <= 0 || area2 <= 0) {
@@ -270,18 +270,18 @@ export function intersectionOverUnion(box1: number[], box2: number[]) {
     const intersectionXmin = Math.max(xmin1, xmin2);
     const intersectionYmax = Math.min(ymax1, ymax2);
     const intersectionXmax = Math.min(xmax1, xmax2);
-  
+
     const intersectionArea =
       Math.max(intersectionYmax - intersectionYmin, 0.0) *
       Math.max(intersectionXmax - intersectionXmin, 0.0);
-  
+
     return intersectionArea / (area1 + area2 - intersectionArea);
 }
 
 export const isEqual = (value: any, other: any) => {
 
 	// Get the value type
-	var type = Object.prototype.toString.call(value);
+	const type = Object.prototype.toString.call(value);
 
 	// If the two objects are not the same type, return false
 	if (type !== Object.prototype.toString.call(other)) return false;
@@ -290,8 +290,8 @@ export const isEqual = (value: any, other: any) => {
 	if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;
 
 	// Compare the length of the length of the two items
-	var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
-	var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
+	const valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
+	const otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
 	if (valueLen !== otherLen) return false;
 
 	// Compare two items
@@ -315,7 +315,7 @@ export const isEqual = (value: any, other: any) => {
 				if (item1.toString() !== item2.toString()) return false;
 			} else {
 				if (item1 !== item2) return false;
-			} 
+			}
         }
         return false;
 	};
