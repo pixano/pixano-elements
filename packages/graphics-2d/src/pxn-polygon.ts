@@ -321,7 +321,6 @@ class PolygonCreateController extends ShapeCreateController {
                 this.tmpShape.scaleX = this.renderer.imageWidth;
                 this.tmpShape.scaleY = this.renderer.imageHeight;
                 this.tmpShape.draw();
-                
             }
         }
     }
