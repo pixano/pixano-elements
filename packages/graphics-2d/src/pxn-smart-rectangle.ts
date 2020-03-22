@@ -25,11 +25,11 @@ export class SmartRectangle extends Rectangle {
 
   constructor() {
     super();
-    this.shManager.setController('smart-create', new SmartRectanglesCreateController(this.renderer, this.shapes));
+    this.shManager.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
   }
 
   get smartController() {
-    return (this.shManager.modes['smart-create'] as SmartRectanglesCreateController);
+    return (this.shManager.modes['smart-create'] as SmartRectangleCreateController);
   }
 
   public roiUp() {
@@ -65,7 +65,7 @@ export class SmartRectangle extends Rectangle {
 /**
  * Inherit RectanglesManager to handle smart rectangle creation.
  */
-class SmartRectanglesCreateController extends ShapeCreateController {
+class SmartRectangleCreateController extends ShapeCreateController {
 
   private boundingBoxCreator: PixelToBoundingBox;
 
