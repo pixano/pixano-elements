@@ -5,11 +5,7 @@
  * @license CECILL-C
  */
 
-import { PxnRenderer } from './renderer-2d';
-
-interface ObjectLiteral {
-    [key: string]: (evt: any) => void;
-}
+import { Renderer } from './renderer';
 
 export class ViewControls {
 
@@ -19,23 +15,28 @@ export class ViewControls {
 
     private isPanning: boolean = false;
 
-    protected viewer: PxnRenderer;
+    protected viewer: Renderer;
 
-    private handlers: ObjectLiteral = {};
+    private handlers: {
+        [key: string]: (evt: any) => void;
+    } = {};
 
-    constructor(viewer?: PxnRenderer) {
-        this.viewer = viewer || new PxnRenderer();
+    constructor(viewer?: Renderer) {
+        this.viewer = viewer || new Renderer();
         // necessity to store listener as variable
         // to keep ability to removelistener
         this.handlers = {
             PANDOWN: this.onPanInit.bind(this),
             PANMOVE: this.onPan.bind(this),
             PANUP: this.onPanUp.bind(this),
+            EDGEMOVE: this.onEdgeMove.bind(this)
+
         };
         if (viewer) {
             this.viewer.view.addEventListener('wheel', this.onWheel.bind(this), {passive: false});
             this.viewer.stage.interactive = true;
             this.viewer.stage.on('pointerdown', this.handlers.PANDOWN);
+            this.viewer.stage.on('pointermove', this.handlers.EDGEMOVE);
         }
     }
 
@@ -140,11 +141,10 @@ export class ViewControls {
      * @param x normalized x
      * @param y normalized y
      */
-    public onPan(evt: any) {
+    public onPan(evt: PIXI.interaction.InteractionEvent) {
         if (this.isPanning) {
-            const mouseData = evt.data.getLocalPosition(this.viewer.stage);
-            const x = mouseData.x / this.viewer.imageWidth;
-            const y = mouseData.y / this.viewer.imageHeight;
+            const pos = this.viewer.getPosition(evt.data);
+            const {x, y} = this.viewer.normalize(pos);
             const deltaX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx - this.initX;
             const deltaY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy - this.initY;
             this.initX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
@@ -159,6 +159,39 @@ export class ViewControls {
             // this.viewer.canvasHeight / this.viewer.stage.scale.y);
             // this.viewer.render();
         }
+    }
+
+    public onEdgeMove(evt: PIXI.interaction.InteractionEvent) {
+        if (this.viewer.s <= 1) {
+            return;
+        }
+        const {x, y} = evt.data.global;
+        let transX = 0;
+        let transY = 0;
+        const threshX = 0.05 * this.viewer.canvasWidth;
+        const threshY = 0.05 * this.viewer.canvasHeight;
+        const speed = 2;
+        if (this.viewer.canvasWidth - x < threshX && x < this.viewer.canvasWidth) {
+            transX = -speed;
+        } else if (x < threshX && x > 0) {
+            transX = speed;
+        }
+        if (this.viewer.canvasHeight - y < threshY && y < this.viewer.canvasHeight) {
+            transY = -speed;
+        } else if (y < threshY && y > 0) {
+            transY = speed;
+        }
+        this.viewer.sx = this.viewer.stage.position.x + transX - this.viewer.rx * this.viewer.s;
+        this.viewer.sy = this.viewer.stage.position.y + transY - this.viewer.ry * this.viewer.s;
+        const stageX = this.viewer.rx * this.viewer.s + this.viewer.sx;
+        const stageY = this.viewer.ry * this.viewer.s + this.viewer.sy;
+        // scale-independant minimal pixel distance between image to canvas border
+        const thresh = 10;
+        if (stageX + this.viewer.stage.width < thresh || stageY + this.viewer.stage.height < thresh
+            || this.viewer.canvasWidth - stageX < thresh || this.viewer.canvasHeight - stageY < thresh) {
+            return;
+        }
+        this.viewer.stage.position.set(stageX, stageY);
     }
 
     /**

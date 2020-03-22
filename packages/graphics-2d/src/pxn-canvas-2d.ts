@@ -6,15 +6,13 @@
  * @license CECILL-C
  */
 
-import { LitElement, html, css, customElement, property } from 'lit-element';
+import { customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
-import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
-import { PxnRenderer } from './renderer-2d';
 import { ShapeData } from './types';
 import { ShapesManager } from './shapes-manager';
 import { ViewControls } from './view-controls';
 import { observable } from '@pixano/core';
-
+import { Canvas } from './pxn-canvas';
 
 /**
  * Possible modes to be used in this class.
@@ -24,8 +22,6 @@ export enum Mode {
   Update = 'update',
   None = 'none'
 }
-
-const fullscreen = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.414 18.586l2.586-2.586v8h-8l2.586-2.586-5.172-5.172 2.828-2.828 5.172 5.172zm-13.656-8l2.828-2.828-5.172-5.172 2.586-2.586h-8v8l2.586-2.586 5.172 5.172zm10.828-8l-2.586-2.586h8v8l-2.586-2.586-5.172 5.172-2.828-2.828 5.172-5.172zm-8 13.656l-2.828-2.828-5.172 5.172-2.586-2.586v8h8l-2.586-2.586 5.172-5.172z"/></svg>`;
 
 /**
  * Inherit ViewControls to add node scaling
@@ -37,8 +33,8 @@ export class ViewControlsObjects extends ViewControls {
     this.updateNodeSize();
   }
   updateNodeSize() {
-    this.viewer.objects.forEach((obj) => {
-      obj.nodeContainer.children.forEach((o) => {
+    this.viewer.labelLayer.children.forEach((obj: any) => {
+      obj.nodeContainer.children.forEach((o: any) => {
         o.scale.x = 1.5 / this.viewer.stage.scale.x;
         o.scale.y = 1.5 / this.viewer.stage.scale.y;
       });
@@ -54,37 +50,14 @@ export class ViewControlsObjects extends ViewControls {
  * @fires CustomEvent#delete upon creating an new object { detail: ids[] }
  */
 @customElement('pxn-canvas-2d' as any)
-export class Canvas2d extends LitElement {
-
-  // input image path
-  @property({type: String})
-  public image: string | null = null;
+export class Canvas2d extends Canvas {
 
   // input mode type
   @property({type: String, reflect: true})
   public mode: string = Mode.Update;
 
-  // whether to display or not the labels
-  // on the image
-  @property({type: Boolean})
-  public hideLabels: boolean = false;
-
-  @property({type: Boolean})
-  public disablefullscreen: boolean = false;
-
-  // background color
-  public color: string = "#f3f3f5";
-
+  // set of 2d shapes to be drawn by the element
   private _shapes: ObservableSet<ShapeData>;
-
-  // renderer class
-  // html view is added on firstUpdated
-  protected renderer: PxnRenderer = new PxnRenderer({color: this.color});
-
-  // map of 2d shapes with their unique id.
-  // 2d shapes are observed to keep display synchronized.
-  // and to dispatch events.
-  // protected shapes: ObservableMap<string, ObservableShapeData> = new ObservableMap();
 
   // manager that handles interaction with the
   // stage and the shapes.
@@ -94,127 +67,15 @@ export class Canvas2d extends LitElement {
   // panning with right pointer and zoom.
   protected viewControls: ViewControlsObjects = new ViewControlsObjects(this.renderer);
 
-  static get styles() {
-    return [
-      css`
-      :host {
-        width: 100%;
-        height: 100%;
-        min-width: 100px;
-        position: relative;
-        display: block;
-      }
-      .canvas-container {
-        height: 100%;
-        width: 100%;
-        position: relative;
-        background-repeat: no-repeat;
-        margin: 0px;
-        overflow: hidden;
-      }
-      .corner {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        position: absolute;
-        right: 0px;
-        z-index: 1;
-        display: flex;
-        color: black;
-        background: #ffffff2e;
-        padding: 10px;
-        border-radius: 50%;
-        margin: 5px;
-        cursor: pointer;
-        height: auto;
-        width: 20px;
-        font-size: 18px;
-        -webkit-transition: all 0.5s ease;
-          -moz-transition: all 0.5s ease;
-            -o-transition: all 0.5s ease;
-            -ms-transition: all 0.5s ease;
-                transition: all 0.5s ease;
-      }
-      .corner:hover {
-        background: white;
-      }
-      #snackbar {
-        visibility: hidden;
-        min-width: 250px;
-        margin-left: -125px;
-        background-color: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 2px;
-        padding: 16px;
-        position: fixed;
-        z-index: 1;
-        left: 50%;
-        bottom: 30px;
-        font-size: 17px;
-        -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none; /* Safari */
-             -khtml-user-select: none; /* Konqueror HTML */
-               -moz-user-select: none; /* Old versions of Firefox */
-                -ms-user-select: none; /* Internet Explorer/Edge */
-                    user-select: none; /* Non-prefixed version, currently
-                                          supported by Chrome, Opera and Firefox */
-      }
-
-      #snackbar.show {
-        visibility: visible;
-        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        animation: fadein 0.5s, fadeout 0.5s 2.5s;
-      }
-
-      @-webkit-keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
-      }
-
-      @keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
-      }
-
-      @-webkit-keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
-      }
-
-      @keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
-      }`
-    ];
-  }
-
   constructor() {
     super();
     this._shapes = new ObservableSet<ShapeData>();
-    this.shManager = this.createShapeManager();
+    this.shManager = new ShapesManager(this.renderer, this._shapes);
     this.initShapeManagerListeners();
     this.initShapeEventsListener();
-    this.addEventListener('keydown', this.keyBinding);
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    // set global window event listeners on connection
-    window.addEventListener('keydown', this.keyBinding);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    // A classic event listener will not be automatically destroyed by lit-element,
-    // This will introduce memory leaks and weird bugs.
-    window.removeEventListener('keydown', this.keyBinding);
-  }
-
-  // osbervable set of selected shape ids.
+  // observable set of selected shape ids.
   get selectedShapeIds() {
     const lis = [...this.shManager.targetShapes.values()];
     return lis.map((s) => s.id);
@@ -231,30 +92,18 @@ export class Canvas2d extends LitElement {
     }
   }
 
-  get imageWidth() {
-    return this.renderer.imageWidth;
-  }
-
-  get imageHeight() {
-    return this.renderer.imageHeight;
-  }
-
-  set imageElement(htmlImageElement: HTMLImageElement) {
-    this.renderer.image = htmlImageElement;
-  }
-
-  get imageElement() {
-    return this.renderer.htmlImageElement;
-  }
-
+  /**
+   * Create a manager of the shapes
+   */
   protected createShapeManager() {
     const shManager = new ShapesManager(this.renderer,
       this._shapes);
-    return shManager
+    return shManager;
   }
 
   protected initShapeManagerListeners() {
-    this.shManager.on('update', (ids: string[]) => {
+    this.shManager.addEventListener('update', (evt: any) => {
+      const ids = evt.detail;
       this.notifyUpdate(ids);
     });
   }
@@ -277,54 +126,38 @@ export class Canvas2d extends LitElement {
     this._shapes.set((value as any).map(observable));
   }
 
-  public zoomIn() {
-    this.viewControls.zoomIn();
-  }
-
-  public zoomOut() {
-    this.viewControls.zoomOut();
-  }
-
-  public resize() {
-    this.renderer.resize();
-  }
-
-    /**
-   * Copy selected cuboid in clipboard
+  /**
+   * Copy selected shapes in clipboard
    */
-  copy() {
+  onCopy(): string | void {
     if (this.shManager.targetShapes.size) {
-      copyClipboard(JSON.stringify([...this.shManager.targetShapes]));
+      return JSON.stringify([...this.shManager.targetShapes]);
     }
   }
 
   /**
-   * Paste copied cuboid
+   * Paste copied stuff
    */
-  paste() {
-    pasteClipboard().then((text) => {
-      if (text) {
-        const value = JSON.parse(text);
-        if (value instanceof Array) {
-          value.forEach((v) => {
-            const shape = observable({
-              ...v,
-              id: Math.random().toString(36).substring(7)
-            } as ShapeData)
-    
-            // Add new object to the list of annotations
-            this.shapes.add(shape);
-          })
-        }
-      }
-    });
+  onPaste(text: string) {
+    const value = JSON.parse(text);
+    if (value instanceof Array) {
+      value.forEach((v) => {
+        const shape = observable({
+          ...v,
+          id: Math.random().toString(36).substring(7)
+        } as ShapeData)
+        // Add new object to the list of annotations
+        this.shapes.add(shape);
+      })
+    }
   }
 
   /**
    * General keyboard event handling
    * @param event [keyBoardEvent]
    */
-  public keyBinding: EventListener =  (evt: Event) => {
+  public keyBinding (evt: Event) {
+    super.keyBinding(evt);
     const event = evt as KeyboardEvent;
     switch (event.key) {
       case 'Tab': {
@@ -332,37 +165,12 @@ export class Canvas2d extends LitElement {
         break;
       }
       case 'Delete': {
-        this.selectedShapeIds.forEach((i) => {
-          const sh = this.shManager.getShape(i);
-          if (sh) {
-            this.shapes.delete(sh);
-          }
-        });
+        this.shManager.targetShapes.forEach((s) => this.shapes.delete(s));
         this.shManager.targetShapes.clear();
         break;
       }
       case 'Escape': {
         this.shManager.targetShapes.clear();
-        break;
-      } 
-      case 'c': {
-        if (event.ctrlKey) {
-          this.copy();
-        }
-        break;
-      }
-      case 'v': {
-        if (event.ctrlKey) {
-          this.paste();
-        }
-        break;  
-      }
-      case 'm': {
-        this.renderer.brightness -= 0.1;
-        break;
-      }
-      case 'p': {
-        this.renderer.brightness += 0.1;
         break;
       }
     }
@@ -428,23 +236,7 @@ export class Canvas2d extends LitElement {
    * @param changedProperty
    */
   protected updated(changedProperties: any) {
-    if (changedProperties.has('image') && this.image != null) {
-      const htmlImageElement = new Image();
-      htmlImageElement.crossOrigin = "Anonymous";
-      if (this.image) {
-        htmlImageElement.onload = () => {
-          if (htmlImageElement !== null) {
-            this.renderer.image = htmlImageElement;
-          }
-        }
-        htmlImageElement.src = this.image;
-      } else {
-        this.renderer.image = htmlImageElement;
-      }
-    }
-    if (changedProperties.has('hideLabels') && this.hideLabels !== undefined) {
-      this.renderer.showObjects = !this.hideLabels;
-    }
+    super.updated(changedProperties);
     if (changedProperties.has('mode') && this.mode) {
       this.shManager.setMode(this.mode);
       this.dispatchEvent(new Event('mode'));
@@ -501,44 +293,4 @@ export class Canvas2d extends LitElement {
      */
     this.dispatchEvent(new CustomEvent('delete', { detail: ids}));
   }
-
-  /**
-   * Return HTML canvas element where labels are drawn
-   */
-  protected get canvasElement(): HTMLDivElement {
-    return this.shadowRoot!.getElementById("canvas") as HTMLDivElement;
-  }
-
-  /**
-   * Render canvas fullscreen.
-   */
-  protected fullScreen() {
-    if (document.fullscreenEnabled) {
-      this.canvasElement.requestFullscreen();
-    }
-  }
-
-  /**
-   * Render the element template.
-   */
-  render(){
-    /**
-     * `render` must return a lit-html `TemplateResult`.
-     *
-     * To create a `TemplateResult`, tag a JavaScript template literal
-     * with the `html` helper function:
-     */
-    return html`
-      ${this.disablefullscreen ? html``: html`
-        <p class="corner" @click=${this.fullScreen} title="Fullscreen">${fullscreen}</p>`}
-      <div id="canvas" class="canvas-container" oncontextmenu="return false;"></div>
-      <div id="snackbar">Some text some message..</div>
-    `;
-  }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-      'pxn-canvas-2d': Canvas2d;
-    }
 }

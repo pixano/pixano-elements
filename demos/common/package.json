@@ -10,6 +10,6 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "lit-element": "^2.2.1"
+    "lit-element": "^2.3.1"
   }
 }

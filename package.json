@@ -2,19 +2,19 @@
   "name": "pixano-elements",
   "private": true,
   "devDependencies": {
-    "http-server": "0.12.0",
+    "es-dev-server": "^1.45.2",
     "lerna": "^3.20.2",
     "typedoc": "^0.16.10",
-    "typedoc-plugin-lerna-packages": "^0.3.0",
-    "serve": "^11.3.0"
+    "typedoc-plugin-lerna-packages": "^0.3.0"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap --hoist --strict --force-local",
     "build": "lerna run build",
     "watch": "lerna run watch --parallel",
     "clean": "lerna run clean",
     "test": "lerna run test",
     "serve": "serve",
+    "start": "es-dev-server --preserve-symlinks --node-resolve --open ",
     "docs": "rm -rf docs && typedoc packages && grep -rl 'index.html' docs/* | xargs -i@ sed -i 's/index.html/docs.html/g' @ && rm docs/index.html && mv docs/globals.html docs/index.html"
   }
 }

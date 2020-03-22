@@ -39,13 +39,15 @@ npm --version
 # 6.1.0
 ```
 
-## Install
+## Usage
 
-Install a component from NPM:
+The Pixano Elements are divided into `packages`. Each package can be installed independantly from [NPM](https://www.npmjs.com/) using the following command:
 
 ```
 npm install @pixano/graphics-2d
 ```
+
+Each package can contain multiple web components which are regrouped by affinity.
 
 ### Components overview
 
@@ -57,7 +59,7 @@ npm install @pixano/graphics-2d
 | [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/smart-annotation/) |
 | [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [link](http://pixano.cea.fr/3d-bounding-box/) |
 
-### Contributing
+## Contributing
 
 Clone and setup the repo:
 
@@ -82,6 +84,8 @@ tslint -c tslint.json packages/**/src/*.ts
 ```
 
 Remember to documenting the code using JSDoc style comments.
+
+To create a new component, check our [tutorial](./documentation/how_to_create_a_new_component.md).
 
 ### Request a merge
 

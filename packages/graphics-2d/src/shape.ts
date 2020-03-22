@@ -7,7 +7,7 @@
 
 import { Container as PIXIContainer, Graphics as PIXIGraphics,
     Circle as PIXICircle } from 'pixi.js';
-import { observe } from '@pixano/core';
+import { observe, unobserve } from '@pixano/core';
 import { ShapeData } from './types';
 import { colorToHex } from './utils';
 
@@ -57,16 +57,32 @@ export abstract class Shape extends PIXIContainer {
 
     public hex: number = 0X000000;
 
+    public onChangeBind: (prop: string) => void;
+
     constructor(data: ShapeData) {
         super();
         this.addChild(this.area);
         this.addChild(this.box);
         this.addChild(this.nodeContainer);
         this.data = data;
-        observe(data, this.onChange.bind(this));
+        this.onChangeBind = this.onChange.bind(this);
+        observe(data, this.onChangeBind);
         this.updateColorHex();
         this.controls = new Array(8).fill(null).map(() => new PIXIGraphics());
         this.controls.forEach((n) => this.nodeContainer.addChild(n));
+    }
+
+    getDimension(object?: PIXIContainer): {width: number, height: number} {
+      object = object || this; 
+      if (object.parent) {
+        return this.getDimension(object.parent);
+      } else {
+        try {
+          return {width: Math.floor(object.width / object.scale.x), height: Math.floor(object.height / object.scale.y)};
+        } catch(err) {
+          return {width: 1, height: 1};
+        }
+      }
     }
 
     updateColorHex() {
@@ -179,4 +195,9 @@ export abstract class Shape extends PIXIContainer {
     }
 
     public abstract draw(): void;
+
+    destroy() {
+      super.destroy();
+      unobserve(this.data, this.onChangeBind);
+    }
 }

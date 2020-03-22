@@ -8,8 +8,17 @@ import { Observer, observable, ObservableMap, ObservableSet, observe, unobserve 
 import { PlaybackControl } from './playback-control';
 import { Destructible } from './types';
 import { BasicEventTarget } from './event-emitter';
+import * as utils from './utils';
 
-export { Destructible, Observer, observable, ObservableMap, ObservableSet, observe, unobserve, BasicEventTarget };
+export { Destructible,
+         Observer,
+         observable,
+         ObservableMap,
+         ObservableSet,
+         observe,
+         unobserve,
+         BasicEventTarget,
+         utils };
 
 declare global {
   interface HTMLElementTagNameMap {

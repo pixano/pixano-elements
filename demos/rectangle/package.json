@@ -6,7 +6,7 @@
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
   "license": "CECILL-C",
-  "main": "demo-rectangle.js",
+  "main": "my-demo.js",
   "repository": {
     "type": "git",
     "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
@@ -23,6 +23,6 @@
   "dependencies": {
     "@pixano/graphics-2d": "^0.1.0",
     "common": "^0.1.0",
-    "lit-element": "^2.2.1"
+    "lit-element": "^2.3.1"
   }
 }

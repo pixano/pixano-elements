@@ -25,7 +25,7 @@ export const upload = html`<svg xmlns="http://www.w3.org/2000/svg" width="20" he
 export const increase = html`<svg enable-background="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><path d="m16 7h-8c-0.6 0-1 0.4-1 1v8c0 0.6 0.4 1 1 1h8c0.6 0 1-0.4 1-1v-8c0-0.6-0.4-1-1-1zm0 9h-8v-8h8v8z"/><polygon points="5.2 6.7 6.8 5.2 3.9 2.3 6 0 0 0 0 6 2.3 3.9"/><polygon points="17.7 0 19.9 2.3 17 5.2 18.5 6.7 21.6 3.8 24 6 24 0"/><polygon points="18.8 17 17.2 18.5 20.1 21.6 18 24 24 24 24 17.7 21.7 19.9"/><polygon points="5.5 17 2.4 19.9 0 17.8 0 24 6.3 24 4.1 21.6 7 18.6"/></svg>`;
 export const decrease = html`<svg enable-background="new 0 0 24 24" version="1.1" viewBox="0 0 24 24" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"><path d="M17,8c0-0.6-0.4-1-1-1H8C7.4,7,7,7.4,7,8v8c0,0.6,0.4,1,1,1h8c0.6,0,1-0.4,1-1V8z M16,16H8V8h8V16z"/><polygon points="0.8 7 7 7 7 0.7 4.6 2.8 1.6 0 0 1.5 2.9 4.6"/><polygon points="21.2 4.6 24 1.6 22.5 0 19.4 2.9 17 0.8 17 7 23.3 7"/><polygon points="23.2 17 17 17 17 23.3 19.4 21.2 22.4 24 24 22.5 21.1 19.4"/><polygon points="2.8 19.4 0 22.4 1.5 24 4.6 21.1 7 23.3 7 17 0.7 17"/></svg>`;
 export const demoStyles = css`
-main {
+  main {
     display: flex;
     height: 100%;
     width: 100%;

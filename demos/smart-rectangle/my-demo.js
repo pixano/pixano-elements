@@ -103,7 +103,7 @@ const colorMap = {
   'toothbrush': 'red0'
 }
 
-class DemoSmartRectangle extends LitElement {
+class MyDemo extends LitElement {
   static get styles() {
     return [demoStyles, css`
       main {
@@ -241,4 +241,4 @@ class DemoSmartRectangle extends LitElement {
   }
 }
 
-customElements.define('demo-smart-rectangle', DemoSmartRectangle);
+customElements.define('my-demo', MyDemo);

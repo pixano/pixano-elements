@@ -244,3 +244,93 @@ export function copyClipboard(newClip: string) {
 export function pasteClipboard(): Promise<string> {
     return navigator.clipboard.readText();
 }
+
+/**
+ * Compute IOU between two boxes sorted as [l, t, r, b]
+ * @param box1 Coordinates of the first box
+ * @param box2 Coordinates of the second boxe
+ */
+export function intersectionOverUnion(box1: number[], box2: number[]) {
+    const xmin1 = Math.min(box1[0], box1[2]);
+    const ymin1 = Math.min(box1[1], box1[3]);
+    const xmax1 = Math.max(box1[0], box1[2]);
+    const ymax1 = Math.max(box1[1], box1[3]);
+  
+    const xmin2 = Math.min(box2[0], box2[2]);
+    const ymin2 = Math.min(box2[1], box2[3]);
+    const xmax2 = Math.max(box2[0], box2[2]);
+    const ymax2 = Math.max(box2[1], box2[3]);
+  
+    const area1 = (ymax1 - ymin1) * (xmax1 - xmin1);
+    const area2 = (ymax2 - ymin2) * (xmax2 - xmin2);
+    if (area1 <= 0 || area2 <= 0) {
+      return 0.0;
+    }
+    const intersectionYmin = Math.max(ymin1, ymin2);
+    const intersectionXmin = Math.max(xmin1, xmin2);
+    const intersectionYmax = Math.min(ymax1, ymax2);
+    const intersectionXmax = Math.min(xmax1, xmax2);
+  
+    const intersectionArea =
+      Math.max(intersectionYmax - intersectionYmin, 0.0) *
+      Math.max(intersectionXmax - intersectionXmin, 0.0);
+  
+    return intersectionArea / (area1 + area2 - intersectionArea);
+}
+
+export const isEqual = (value: any, other: any) => {
+
+	// Get the value type
+	var type = Object.prototype.toString.call(value);
+
+	// If the two objects are not the same type, return false
+	if (type !== Object.prototype.toString.call(other)) return false;
+
+	// If items are not an object or array, return false
+	if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;
+
+	// Compare the length of the length of the two items
+	var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
+	var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
+	if (valueLen !== otherLen) return false;
+
+	// Compare two items
+	const compare = (item1: any, item2: any) => {
+
+		// Get the object type
+		const itemType = Object.prototype.toString.call(item1);
+
+		// If an object or array, compare recursively
+		if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+			if (!isEqual(item1, item2)) return false;
+		}
+		// Otherwise, do a simple comparison
+		else {
+			// If the two items are not the same type, return false
+			if (itemType !== Object.prototype.toString.call(item2)) return false;
+
+			// Else if it's a function, convert to a string and compare
+			// Otherwise, just compare
+			if (itemType === '[object Function]') {
+				if (item1.toString() !== item2.toString()) return false;
+			} else {
+				if (item1 !== item2) return false;
+			} 
+        }
+        return false;
+	};
+	// Compare properties
+	if (type === '[object Array]') {
+		for (let i = 0; i < valueLen; i++) {
+			if (compare(value[i], other[i]) === false) return false;
+		}
+	} else {
+		for (const key in value) {
+			if (value.hasOwnProperty(key)) {
+				if (compare(value[key], other[key]) === false) return false;
+			}
+		}
+	}
+	// If nothing failed, return true
+	return true;
+}

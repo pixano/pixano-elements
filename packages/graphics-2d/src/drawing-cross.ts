@@ -7,7 +7,7 @@
 
 import { Graphics as PIXIGraphics } from 'pixi.js';
 
-export class DrawingCross extends PIXIGraphics{
+export class DrawingCross extends PIXIGraphics {
 
     public cx: number = 0;
     public cy: number = 0;

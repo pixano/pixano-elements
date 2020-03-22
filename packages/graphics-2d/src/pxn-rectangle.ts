@@ -7,7 +7,7 @@
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
-import { ShapesManager } from './shapes-manager';
+import { ShapeCreateController } from './shapes-manager';
 import { RectangleShape } from './shapes-2d';
 import { observable } from '@pixano/core';
 
@@ -16,83 +16,76 @@ import { observable } from '@pixano/core';
  */
 @customElement('pxn-rectangle' as any)
 export class Rectangle extends Canvas2d {
-    protected createShapeManager() {
-        const shManager = new RectanglesManager(this.renderer, this.shapes);
-        return shManager;
+    constructor() {
+        super();
+        this.shManager.setController('create', new RectangleCreateController(this.renderer, this.shapes));
     }
 
     protected initShapeManagerListeners() {
         super.initShapeManagerListeners();
-        this.shManager.on('creating-rectangle', () => {
+        this.shManager.addEventListener('creating-rectangle', () => {
             this.showTooltip('Drag and release to end rectangle.')
         });
     }
 }
 
 /**
- * Inherit ShapesManager to handle rectangle shapes.
+ * Inherit ShapeCreateController to handle creation of rectangle shapes.
  */
-export class RectanglesManager extends ShapesManager {
+export class RectangleCreateController extends ShapeCreateController {
 
-    protected onRootDown(evt: any) {
-        super.onRootDown(evt);
-        if (this.mode === 'create') {
-            this.isCreating = true;
-            const mouseData = evt.data.getLocalPosition(this.renderer.stage);
-            this.mouseX = mouseData.x  / this.renderer.imageWidth;
-            this.mouseY = mouseData.y  / this.renderer.imageHeight;
-            this.mouseX = Math.max(Math.min(this.mouseX, 1), 0);
-            this.mouseY = Math.max(Math.min(this.mouseY, 1), 0);
-            const data = observable({
-                id: 'tmp',
-                color: 'red',
-                geometry: {
-                    vertices: [this.mouseX, this.mouseY, this.mouseX, this.mouseY],
-                    type: 'rectangle'
-                }
-            });
-            this.tmpShape = new RectangleShape(data) as RectangleShape;
-            this.addChild(this.tmpShape);
-            this.tmpShape.scaleX = this.renderer.imageWidth;
-            this.tmpShape.scaleY = this.renderer.imageHeight;
-            this.tmpShape.draw();
-            this.renderer.stage.on('pointerupoutside', this.onRootUp.bind(this));
-        }
+    protected updated: boolean = false;
+
+    protected onRootDown(evt: PIXI.interaction.InteractionEvent) {
+        this.isCreating = true;
+        this.mouse = this.renderer.getPosition(evt.data);
+        const pt = this.renderer.normalize(this.mouse);
+        const data = observable({
+            id: 'tmp',
+            color: 'red',
+            geometry: {
+                vertices: [pt.x, pt.y, pt.x, pt.y],
+                type: 'rectangle'
+            }
+        });
+        this.tmpShape = new RectangleShape(data) as RectangleShape;
+        this.renderer.stage.addChild(this.tmpShape);
+        this.tmpShape.scaleX = this.renderer.imageWidth;
+        this.tmpShape.scaleY = this.renderer.imageHeight;
+        this.tmpShape.draw();
     }
 
-    protected onRootMove(evt: any) {
+    protected onRootMove(evt: PIXI.interaction.InteractionEvent) {
         super.onRootMove(evt);
-        if (this.mode === 'create') {
-            const mouseData = evt.data.getLocalPosition(this.renderer.stage);
-            this.mouseX = mouseData.x  / this.renderer.imageWidth;
-            this.mouseY = mouseData.y  / this.renderer.imageHeight;
-            this.mouseX = Math.max(Math.min(this.mouseX, 1), 0);
-            this.mouseY = Math.max(Math.min(this.mouseY, 1), 0);
-            if (this.isCreating) {
-                const shape = this.tmpShape as RectangleShape;
-                if (shape) {
-                    if (!this.updated) {
-                        this.updated = true;
-                    }
-                    shape.data.geometry.vertices[3] = this.mouseY;
-                    shape.data.geometry.vertices[2] = this.mouseX;
+        const mouse = this.renderer.getPosition(evt.data);
+        if (mouse.x === this.mouse.x && mouse.y === this.mouse.y) {
+            return;
+        }
+        this.mouse = mouse;
+        if (this.isCreating) {
+            const shape = this.tmpShape as RectangleShape;
+            if (shape) {
+                if (!this.updated) {
+                    this.updated = true;
                 }
+                const pt = this.renderer.normalize(this.mouse);
+                shape.data.geometry.vertices[3] = pt.y;
+                shape.data.geometry.vertices[2] = pt.x;
             }
         }
     }
 
     protected onRootUp() {
-        super.onRootUp();
         if (this.isCreating) {
             this.isCreating = false;
             if (this.updated) {
-                this.updated = false;
                 this.createRectangle();
             }
         }
     }
 
     public createRectangle() {
+        this.updated = false;
         const shape = this.tmpShape as RectangleShape;
         const v: number[] = shape.data.geometry.vertices;
         const xmin = Math.min(v[0], v[2]);
@@ -101,15 +94,9 @@ export class RectanglesManager extends ShapesManager {
         const ymax = Math.max(v[1], v[3]);
         shape.data.id = Math.random().toString(36).substring(7);
         shape.data.geometry.vertices = [xmin, ymin, xmax, ymax];
-        this.shapes.add(shape.data);
-        this.removeChild(shape);
+        this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-      'pxn-rectangle': Rectangle;
+        this.shapes.add(shape.data);
     }
 }
