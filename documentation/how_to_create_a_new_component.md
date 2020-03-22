@@ -176,7 +176,7 @@ export class HttpPolygon extends Polygon {
 /**
  * Inherit RectanglesManager to handle smart rectangle creation.
  */
-class SmartRectanglesCreateController extends ShapeCreateController {
+class SmartPolygonCreateController extends ShapeCreateController {
 
   protected onRootDown(evt: any) {
     const click = this.renderer.getPosition(evt.data);
