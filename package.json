@@ -1,6 +1,7 @@
 {
   "name": "pixano-elements",
   "private": true,
+  "version": "0.2.0",
   "devDependencies": {
     "es-dev-server": "^1.45.2",
     "lerna": "^3.20.2",
