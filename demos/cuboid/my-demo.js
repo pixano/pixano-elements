@@ -16,7 +16,7 @@ const colormap = [
   0xf032e6, 0xd2f53c, 0xfabebe, 0x008080, 0xe6beff, 0xaa6e28, 0xfffac8,
   0x800000, 0xaaffc3, 0x808000, 0xffd7b4, 0x000080, 0x808080];
 
-class DemoCuboid extends LitElement {
+class MyDemo extends LitElement {
 
   static get properties() {
     return {
@@ -85,4 +85,4 @@ class DemoCuboid extends LitElement {
   }
 }
 
-customElements.define('demo-cuboid', DemoCuboid);
+customElements.define('my-demo', MyDemo);

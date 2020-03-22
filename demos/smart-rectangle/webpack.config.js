@@ -2,10 +2,10 @@ const path = require('path');
 
 module.exports = {
   mode: 'development',
-  entry: path.resolve(__dirname, './demo-smart-rectangle.js'),
+  entry: path.resolve(__dirname, './my-demo.js'),
   output: {
     path: path.resolve(__dirname),
-    filename: 'demo-smart-rectangle-bundle.js'
+    filename: 'my-demo-bundle.js'
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js']

@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     // Code generation options
-    "lib": ["es2017", "dom"],
-    "module": "commonjs",
-    "target": "es2015",
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "target": "es2017",
     "experimentalDecorators": true,
     // Static analysis
     "strict": true,
@@ -11,12 +10,20 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true, // temp
-    "types": [],  // necessary to prevent automatic inclusion
+    "noImplicitAny": true,
     // Build options
     "sourceMap": true,
     "declaration": true,
     "skipLibCheck": true,  // don't report errors from dependencies
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "plugins": [
+      {
+        "name": "ts-lit-plugin",
+        "strict": true,
+      }
+    ]
   },
   "compileOnSave": true,
 }

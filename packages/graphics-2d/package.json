@@ -7,13 +7,13 @@
   "license": "CECILL-C",
   "main": "lib/index.js",
   "devDependencies": {
-    "typescript": "^3.7.2"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@pixano/ai": "^0.1.0",
     "@pixano/core": "^0.1.0",
-    "lit-element": "^2.2.1",
-    "pixi.js": "^5.2.0"
+    "lit-element": "^2.3.1",
+    "pixi.js": "^5.2.1"
   },
   "scripts": {
     "build": "tsc --build",

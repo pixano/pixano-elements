@@ -4,8 +4,8 @@
  * @license CECILL-C
 */
 
-import { html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d';
+import { html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
   create_pencil,
@@ -13,41 +13,30 @@ import { demoStyles,
   zoomOut } from 'common/shared-styles';
 
 const colors = [
-  'blue', 'green', 'purple',
+  'red', 'blue', 'green', 'purple',
   'yellow', 'pink', 'orange', 'tan'
 ];
 
-class DemoRectangle extends LitElement {
+class MyDemo extends LitElement {
   static get styles() {
     return demoStyles;
   }
 
   static get properties() {
     return {
-      image: {type: String}
+      mode: { type: String},
+      image: { type: String }
     };
   }
   constructor() {
     super();
-    this.image = 'image.jpg';
+    this.mode = 'update'; // overwrite default mode param of element
+    this.image = "image.jpg";
     window.addEventListener('keydown', (evt) => {
       if (evt.key == 'Alt') {
         this.element.mode = this.element.mode === 'update' ? 'create': 'update';
       }
     });
-  }
-
-  get rightPanel() {
-    return html`
-      <div class="right-panel">
-        <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
-        <div class="icons">
-          <p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
-          <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
-          <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
-        </div>
-      </div>
-    `;
   }
 
   fullScreen() {
@@ -56,13 +45,26 @@ class DemoRectangle extends LitElement {
     }
   }
 
+  get rightPanel() {
+    return html`
+      <div class="right-panel">
+        <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
+        <div class="icons">
+          <p class="icon" title="Add polygon" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
+          <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+          <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     return html`
         <main>
-          <pxn-rectangle  image="${this.image}"
-                          disablefullscreen
-                          @create=${this.onCreate}>
-          </pxn-rectangle>
+          <pxn-polygon  image="${this.image}"
+                        disablefullscreen
+                        @create=${this.onCreate}>
+          </pxn-polygon>
           ${this.rightPanel}
         </main>`;
   }
@@ -73,10 +75,9 @@ class DemoRectangle extends LitElement {
     this.element.mode = 'update';
   }
 
-
   get element() {
-    return this.shadowRoot.querySelector('pxn-rectangle');
+    return this.shadowRoot.querySelector('pxn-polygon');
   }
 }
 
-customElements.define('demo-rectangle', DemoRectangle);
+customElements.define('my-demo', MyDemo);

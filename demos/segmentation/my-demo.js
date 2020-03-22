@@ -22,7 +22,7 @@ import { demoStyles,
   zoomOut,
   opacity } from 'common/shared-styles';
 
-class DemoSegmentation extends LitElement {
+class MyDemo extends LitElement {
   static get styles() {
     return demoStyles;
   }
@@ -125,4 +125,4 @@ class DemoSegmentation extends LitElement {
   
 }
 
-customElements.define('demo-segmentation', DemoSegmentation);
+customElements.define('my-demo', MyDemo);

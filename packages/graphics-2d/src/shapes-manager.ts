@@ -5,54 +5,55 @@
  * @license CECILL-C
  */
 
-import { PxnRenderer } from './renderer-2d';
+import { Renderer } from './renderer';
 import { Shape, DrawingCross } from './shapes-2d';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
 import { dataToShape } from './adapter';
 import { Decoration, CONTROL_POINTS } from './shapes-2d';
-import { Container as PIXIContainer } from 'pixi.js';
 import { bounds } from './utils';
 
-/**
- * Manage set of interactive shapes
- */
-export class ShapesManager extends PIXIContainer {
-    protected renderer: PxnRenderer;
+abstract class Controller extends EventTarget {
+    abstract activate(): void;
+    abstract deactivate(): void;
+    public reset() {
+        this.deactivate();
+        this.activate();
+    }
+    protected pointerHandlers: {
+        [key: string]: (evt: any) => void;
+    } = {};
+}
 
-    protected shapes: ObservableSet<ShapeData>;
+export class ShapesUpdateController extends Controller {
 
     public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
 
-    protected mode: string = 'update';
+    public graphics: Set<Shape> = new Set();
 
-    private startPosition: any = {};
+    public cachedShape: ShapeData | null = null;
 
-    protected activeObjectId: string = '';
-
-    private reclick: boolean = false;
+    private activeObjectId: string = '';
 
     private isDragging: boolean = false;
 
-    protected isCreating: boolean = false;
-
     private isScaling: boolean = false;
 
-    private activeControlIdx: number = -1;
+    private _updated: boolean = false;
+
+    private reclick: boolean = false;
 
     private initialControlIdx: number = -1;
 
-    protected _updated: boolean = false;
+    private activeControlIdx: number = -1;
 
-    protected mouseX: number = -1;
+    protected renderer: Renderer;
 
-    protected mouseY: number = -1;
+    protected previousPos: {x: number, y: number} = {x: 0, y: 0};
 
-    protected tmpShape: Shape | null = null;
-
-    protected cachedShape: ShapeData | null = null;
-
-    protected cross: DrawingCross = new DrawingCross();
+    protected pointerHandlers = {
+        POINTERDOWN: this.onRootDown.bind(this)
+    };
 
     set updated(updated: boolean) {
         this._updated = updated;
@@ -70,206 +71,90 @@ export class ShapesManager extends PIXIContainer {
         return this._updated;
     }
 
-    constructor(renderer: PxnRenderer = new PxnRenderer(),
-                shapes: ObservableSet<ShapeData> = new ObservableSet()) {
+    constructor(renderer: Renderer, graphics: Set<Shape>, targetShapes: ObservableSet<ShapeData>) {
         super();
         this.renderer = renderer;
-        this.renderer.stage.addChild(this);
-        this.addChild(this.cross);
-        this.renderer.stage.on('pointerdown', this.onRootDown.bind(this));
-        this.renderer.stage.on('pointermove', this.onRootMove.bind(this));
-        this.renderer.stage.on('pointerupoutside', this.onRootUp.bind(this));
-        this.shapes = shapes;
-        this.interactive = true;
+        this.graphics = graphics;
+        this.targetShapes = targetShapes;
         observe(this.targetShapes, (prop: string, value?: any) => {
             switch(prop) {
+                case 'set':
                 case 'add': {
                     // add new selection
-                    this.targetShapes.forEach((s) => {
-                        const o = this.getTargetObject(s as ShapeData)!;
+                    this.graphics.forEach((o) => {
                         const decorator = !this.targetShapes.has(o.data) ? Decoration.None :
                                             this.targetShapes.size > 2 ? Decoration.Contour : Decoration.Box;
-                        this.renderer.bringToFront(o);
                         o.state = decorator;
-                        this.applyInteractionsToShape(o);
-                        o.draw();
-                    });
-                    break;
-                }
-                case 'set': {
-                    // set all selected shapes at once
-                    this.renderer.objects.forEach((o) => {
-                        const decorator = !this.targetShapes.has(o.data) ? Decoration.None :
-                                            this.targetShapes.size > 2 ? Decoration.Contour : Decoration.Box;
-                        if (this.targetShapes.has(o.data)) {
-                            this.renderer.bringToFront(o);
+                        if (o.state === Decoration.Box) {
+                            o.controls.forEach((c, idx) => {
+                                c.removeAllListeners();
+                                c.on('pointerdown', (evt: any) => {
+                                    evt.stopPropagation();
+                                    evt.idx = idx;
+                                    this.onControlDown(evt);
+                                });
+                            });
                         }
-                        o.state = decorator;
-                        this.applyInteractionsToShape(o);
                         o.draw();
                     });
+                    const sel = this.getFirstGraphic();
+                    if (sel) {
+                        this.renderer.bringToFront(sel);
+                    }
                     break;
                 }
                 case 'delete': {
                     // remove selection
-                    const o = this.getTargetObject(value as ShapeData)!;
-                    o.state = Decoration.None;
-                    this.applyInteractionsToShape(o);
+                    const o = this.getTargetGraphic(value as ShapeData)!;
+                    this.decorateTo(o, Decoration.None);
                     o.draw();
                     break;
                 }
                 case 'clear': {
                     // remove all selection
-                    this.renderer.objects.forEach((o) => {
-                        o.state = Decoration.None;
-                        this.applyInteractionsToShape(o);
+                    this.graphics.forEach((o) => {
+                        this.decorateTo(o, Decoration.None);
                         o.draw();
                     });
                     break;
                 }
             }
         });
-        // listen global changes on the set of shapes:
-        // add a new shape, delete a shape, initialize set.
-        observe(shapes, (prop: string, value?: any) => {
-            switch(prop) {
-                case 'add': {
-                    const obj = dataToShape(value as ShapeData);
-                    this.renderer.add(obj);
-                    this.applyInteractionsToShape(obj);
-                    break;
-                }
-                case 'set': {
-                    // set all objects at once
-                    this.renderer.clearObjects();
-                    shapes.forEach((s) => {
-                        const obj = this.renderer.add(dataToShape(s));
-                        this.setInteractionsToShape(obj);
-                    });
-                    break;
-                }
-                case 'delete': {
-                    this.renderer.remove(value.id as string);
-                    this.targetShapes.clear();
-                    break;
-                }
-                case 'clear': {
-                    this.renderer.clearObjects();
-                    this.targetShapes.clear();
-                    break;
-                }
-            }
+    }
+
+    public decorateTo(obj: Shape, state: Decoration) {
+        obj.state = state;
+    }
+
+    public activate() {
+        // handle update mode for each shape
+        this.graphics.forEach((s) => {
+            s.interactive = true;
+            s.buttonMode = true;
+            s.on('pointerdown', this.onObjectDown.bind(this));
         });
-        this.setMode(this.mode);
+        this.renderer.stage.interactive = true;
+        this.renderer.stage.on('pointerdown', this.pointerHandlers.POINTERDOWN);
     }
 
-    /**
-     * Handle new mode set:
-     * 1. Reset canvas to "mode-free" (no interaction)
-     * 2. Apply interactions of new mode
-     * @param mode string
-     */
-    public setMode(mode: string) {
-        this.mode = mode;
-        this.cross.visible = false;
-        if (this.mode === 'create') {
-            this.renderer.stage.interactive = true;
-            this.targetShapes.clear();
-            this.cross.visible = true;
-            const pos = this.renderer.mouse;
-            this.cross.cx = Math.max(0, Math.min(pos.x, this.renderer.imageWidth));
-            this.cross.cy = Math.max(0, Math.min(pos.y, this.renderer.imageHeight));
-            this.cross.scaleX = this.renderer.imageWidth;
-            this.cross.scaleY = this.renderer.imageHeight;
-            this.cross.draw();
-        }
-        const shape = this.tmpShape as Shape;
-        if (shape) {
-            this.removeChild(shape);
-            shape.destroy();
-            this.tmpShape = null;
-        }
-        // handle new mode for each shape
-        this.renderer.objects.forEach(this.applyInteractionsToShape.bind(this));
-    }
-
-    /**
-     * Set interactions to a new shape
-     * according to the current mode.
-     * @param s Shape
-     */
-    protected setInteractionsToShape(s: Shape) {
-        if (this.mode === 'update') {
-            s.interactive = true;
-            s.on('pointerdown', this.onObjectDown.bind(this));
-        }
-    }
-
-    /**
-     * Remove all interactions from shape.
-     * @param s Shape
-     */
-    protected resetInteractionsToShape(s: Shape) {
-        s.interactive = false;
-        s.buttonMode = false;
-        s.removeAllListeners('pointerdown');
-    }
-
-    /**
-     * Set interactions to a shape
-     * according to the current mode.
-     * 1. Remove all interactions of the shape
-     * 2. Apply interactions of new mode for the shape
-     * @param s Shape
-     */
-    protected applyInteractionsToShape(s: Shape) {
-        this.resetInteractionsToShape(s);
-        if (this.mode === 'update') {
-            s.interactive = true;
-            s.on('pointerdown', this.onObjectDown.bind(this));
-            if (s.state === Decoration.Box) {
-                this.renderer.bringToFront(s);
-                s.controls.forEach((c, idx) => {
-                    c.on('pointerdown', (evt: any) => {
-                        evt.stopPropagation();
-                        evt.idx = idx;
-                        this.onControlDown(evt);
-                    });
-                });
-            }
-        }
-    }
-
-    public getShape(id: string) {
-        return [...this.shapes].find((s) => s.id === id);
+    public deactivate() {
+        this.targetShapes.clear();
+        this.graphics.forEach((s) => {
+            s.interactive = false;
+            s.buttonMode = false;
+            s.removeAllListeners('pointerdown');
+        });
+        this.renderer.stage.removeListener('pointerdown', this.pointerHandlers.POINTERDOWN);
+        this.renderer.stage.interactive = false;
     }
 
     protected onRootDown(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
             return;
         }
-        if (this.mode === 'update') {
-            if (this.targetShapes.size) {
-                this.targetShapes.clear();
-            }
+        if (this.targetShapes.size) {
+            this.targetShapes.clear();
         }
-    }
-
-    protected onRootMove(evt: any) {
-        if (evt.data.originalEvent.buttons === 2 || evt.data.originalEvent.buttons === 4) {
-            return;
-        } else if (this.mode === 'create') {
-            const pos = evt.data.getLocalPosition(this.renderer.stage);
-            this.cross.scaleX = this.renderer.imageWidth;
-            this.cross.scaleY = this.renderer.imageHeight;
-            this.cross.cx = Math.min(this.renderer.imageWidth, Math.max(0, Math.round(pos.x)));
-            this.cross.cy = Math.min(this.renderer.imageHeight, Math.max(0, Math.round(pos.y)));
-            this.cross.draw();
-        }
-    }
-
-    protected onRootUp() {
-        // For each custom shape manager to implement
     }
 
     protected onObjectDown(evt: PIXI.interaction.InteractionEvent) {
@@ -279,61 +164,70 @@ export class ShapesManager extends PIXIContainer {
         if ( button === 2 || button === 1) {
             return;
         }
-        if (this.mode === 'update') {
-            const shape = (evt as any).shape as ShapeData;
-            const id = shape.id;
-            this.startPosition = evt.data.getLocalPosition(this.renderer.stage);
-            this.activeObjectId = id;
-            this.isDragging = true;
-            this.updated = false;
-            // direct update of targets
-            // should trigger related observer
-            const obj = this.renderer.objects.find((o) => o.data.id === shape.id)!;
-            obj.on('pointermove', this.onObjectMove.bind(this));
-            obj.on('pointerupoutside', this.onObjectUp.bind(this));
-            if (this.targetShapes.has(shape) && !evt.data.originalEvent.shiftKey) {
-                // already contains target
-                if (this.targetShapes.size === 1) {
-                    this.reclick = true;
-                }
-                return;
-            } else if (evt.data.originalEvent.shiftKey) {
-                if (!this.targetShapes.has(shape)) {
-                    this.targetShapes.add(shape);
-                } else {
-                    this.targetShapes.delete(shape);
-                }
-            } else if (!this.targetShapes.has(shape)) {
-                this.reclick = false;
-                this.targetShapes.set([shape]);
+        const shape = (evt as any).shape as ShapeData;
+        const id = shape.id;
+        this.previousPos = this.renderer.getPosition(evt.data);
+        this.activeObjectId = id;
+        this.isDragging = true;
+        this.updated = false;
+        // direct update of targets
+        // should trigger related observer
+        const obj = [...this.graphics].find((o) => o.data === shape);
+        if (!obj) {
+            return;
+        }
+        obj.on('pointermove', this.onObjectMove.bind(this));
+        obj.on('pointerupoutside', this.onObjectUp.bind(this));
+        if (this.targetShapes.has(shape) && !evt.data.originalEvent.shiftKey) {
+            // already contains target
+            if (this.targetShapes.size === 1) {
+                this.reclick = true;
             }
+            return;
+        } else if (evt.data.originalEvent.shiftKey) {
+            if (!this.targetShapes.has(shape)) {
+                this.targetShapes.add(shape);
+            } else {
+                this.targetShapes.delete(shape);
+            }
+        } else if (!this.targetShapes.has(shape)) {
+            this.reclick = false;
+            this.targetShapes.set([shape]);
         }
     }
 
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
-        if (this.mode === 'update') {
-            const shape = (evt as any).shape;
-            if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
-                const newPos = evt.data.getLocalPosition(this.renderer.stage);
-                let dxN = (newPos.x - this.startPosition.x) / this.renderer.imageWidth;
-                let dyN = (newPos.y - this.startPosition.y) / this.renderer.imageHeight;
-                const bb = this.globalBounds();
-                const dbottom = 1 - bb[3];
-                const dtop = bb[1];
-                const dright = 1 - bb[2];
-                const dleft = bb[0];
-                dyN = Math.min(dbottom, dyN);
-                dyN = Math.max(-dtop, dyN);
-                dxN = Math.min(dright, dxN);
-                dxN = Math.max(-dleft, dxN);
-                if (!this.updated) {
-                    // remove temporarily interaction & decoration from other scene objects
-                    this.renderer.objects.forEach((o) => { if (!this.targetShapes.has(o.data)) o.interactive = false; });
-                    this.updated = true;
-                }
-                this.renderer.objects.forEach((o) => { if (this.targetShapes.has(o.data)) o.translate(dxN, dyN); });
-                this.startPosition = newPos;
+        const shape = (evt as any).shape;
+        if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
+            const mouse = this.renderer.getPosition(evt.data);
+            if (mouse.x === this.previousPos.x && mouse.y === this.previousPos.y) {
+                return;
             }
+            let dx = (mouse.x - this.previousPos.x) / this.renderer.imageWidth;
+            let dy = (mouse.y - this.previousPos.y) / this.renderer.imageHeight;
+            const bb = this.globalBounds();
+            const dbottom = 1 - bb[3];
+            const dtop = bb[1];
+            const dright = 1 - bb[2];
+            const dleft = bb[0];
+            dy = Math.min(dbottom, dy);
+            dy = Math.max(-dtop, dy);
+            dx = Math.min(dright, dx);
+            dx = Math.max(-dleft, dx);
+            if (dx === 0 && dy === 0) {
+                return;
+            }
+            
+            if (!this.updated) {
+                // remove temporarily interaction & decoration from other scene objects
+                // this.renderer.objects.forEach((o) => { if (!this.targetShapes.has(o.data)) o.interactive = false; });
+                this.updated = true;
+            }
+            this.targetShapes.forEach(({geometry}) => {
+                geometry.vertices = geometry.vertices
+                                        .map((v, idx) => (idx%2) ? v + dy : v + dx);
+            });
+            this.previousPos = mouse;
         }
     }
 
@@ -341,40 +235,26 @@ export class ShapesManager extends PIXIContainer {
         return obj;
     }
 
-    protected getFirstTarget() {
-        return this.targetShapes.values().next().value;
-    }
-
-    protected getFirstTargetObject() {
-        const s = this.targetShapes.values().next().value;
-        if (s) {
-            return this.renderer.objects.find((o) => o.data.id === s.id);
-        }
-        return null;
-    }
-
-    protected getTargetObject(s: ShapeData) {
-        return this.renderer.objects.find((o) => o.data.id === s.id);
-    }
-
     private onObjectUp() {
-        if (this.mode === 'update') {
-            this.isDragging = false;
-            const obj = this.getFirstTargetObject();
-            if (obj && this.reclick && !this.updated) {
-                this.reclick = false;
-                this.toggle(obj);
-            }
-            if (obj) {
-                obj.removeAllListeners('pointermove');
-                obj.removeAllListeners('pointerupoutside');
-                this.renderer.objects.forEach((o) => { if (!this.targetShapes.has(o.data)) o.interactive = true; });
-                if (this.updated) {
-                    this.updated = false;
-                    this.emit('update', [...this.targetShapes].map((t) => t.id));
-                }
+        this.isDragging = false;
+        const obj = this.getFirstGraphic();
+        if (obj && this.reclick && !this.updated) {
+            this.reclick = false;
+            this.toggle(obj);
+        }
+        if (obj) {
+            obj.removeAllListeners('pointermove');
+            obj.removeAllListeners('pointerupoutside');
+            // this.renderer.objects.forEach((o) => { if (!this.targetShapes.has(o.data)) o.interactive = true; });
+            if (this.updated) {
+                this.updated = false;
+                this.emitUpdate();
             }
         }
+    }
+
+    protected emitUpdate() {
+        this.dispatchEvent(new CustomEvent('update', { detail: [...this.targetShapes].map((data) => data.id)}));
     }
 
     protected onControlDown(evt: PIXI.interaction.InteractionEvent) {
@@ -384,7 +264,7 @@ export class ShapesManager extends PIXIContainer {
         this.activeControlIdx = idx;
         this.updated = false;
         this.initialControlIdx = idx;
-        const obj = this.getFirstTargetObject();
+        const obj = this.getFirstGraphic();
         if (obj) {
             obj.controls[this.activeControlIdx].on('pointermove', (e: any) => {
                 e.stopPropagation();
@@ -398,8 +278,8 @@ export class ShapesManager extends PIXIContainer {
         }
     }
 
-    public onControlMove(evt: any) {
-        if (this.isScaling && evt.idx === this.activeControlIdx) {
+    public onControlMove(evt: PIXI.interaction.InteractionEvent) {
+        if (this.isScaling && (evt as any).idx === this.activeControlIdx) {
             if (!this.updated) {
                 // this.emit('start-update', this.selectToJson());
                 this.updated = true;
@@ -409,7 +289,7 @@ export class ShapesManager extends PIXIContainer {
             let yMin = 1;
             let yMax = 0;
             [xMin, yMin, xMax, yMax] = this.globalBounds();
-            const mouseData = evt.data.getLocalPosition(this.renderer.stage);
+            const mouseData = this.renderer.getPosition(evt.data);
             let xN = mouseData.x  / this.renderer.imageWidth;
             let yN = mouseData.y  / this.renderer.imageHeight;
             xN = Math.min(1, Math.max(0, xN));
@@ -446,19 +326,19 @@ export class ShapesManager extends PIXIContainer {
                                                                             c.y === Math.abs(CONTROL_POINTS[this.activeControlIdx].y - 1));
                 }
             }
-            this.targetShapes.forEach((obj: ShapeData) => {
+            this.targetShapes.forEach((data) => {
                 if (rx < 0 || ry < 0) {
                     // reverse coords order
-                    const coords = obj.geometry.vertices;
+                    const coords = data.geometry.vertices;
                     let ch: number[] = [];
                     for (let index = coords.length - 2; index >= 0; index -= 2) {
                         const x = (rx < 0) ? coords[index] : coords[coords.length - 2 - index];
                         const y = (ry < 0) ? coords[index + 1] : coords[coords.length - 1 - index]
                         ch = ch.concat( [x, y] );
                     }
-                    obj.geometry.vertices = ch;
+                    data.geometry.vertices = ch;
                 }
-                obj.geometry.vertices = [...obj.geometry.vertices.map((c, idx) => {
+                data.geometry.vertices = [...data.geometry.vertices.map((c, idx) => {
                     if (idx % 2 === 0 && rx !== 1) {
                         return (c - anchorX) * rx + anchorX;
                     } else if (idx % 2 === 1 && ry !== 1) {
@@ -474,7 +354,7 @@ export class ShapesManager extends PIXIContainer {
 
     public onControlUp() {
         if (this.initialControlIdx !== -1) {
-            const obj = this.getFirstTargetObject();
+            const obj = this.getFirstGraphic();
             if (obj) {
                 obj.controls[this.initialControlIdx].removeAllListeners('pointermove');
                 obj.controls[this.initialControlIdx].removeAllListeners('pointerupoutside');
@@ -483,7 +363,7 @@ export class ShapesManager extends PIXIContainer {
                 this.initialControlIdx = -1;
                 if (this.updated) {
                     this.updated = false;
-                    this.emit('update', [...this.targetShapes].map((t) => t.id));
+                    this.emitUpdate();
                 }
             }
         }
@@ -492,7 +372,7 @@ export class ShapesManager extends PIXIContainer {
     /**
      * Get global bounds of multiple shapes.
      */
-    private globalBounds() {
+    protected globalBounds() {
         let xMin = 1;
         let yMin = 1;
         let xMax = 0;
@@ -505,5 +385,195 @@ export class ShapesManager extends PIXIContainer {
             if (bb[3] > yMax) { yMax = bb[3]; }
         });
         return [xMin, yMin, xMax, yMax];
+    }
+
+    protected getTargetGraphic(s: ShapeData) {
+        return [...this.graphics].find((o) => o.data === s);
+    }
+
+    protected getFirstGraphic() {
+        const s = this.targetShapes.values().next().value;
+        if (s) {
+            return [...this.graphics].find((o) => o.data === s);
+        }
+        return null;
+    }
+
+    protected getShape(id: string) {
+        return [...this.targetShapes].find((s) => s.id === id);
+    }
+}
+
+export abstract class ShapeCreateController extends Controller {
+
+    protected renderer: Renderer;
+
+    protected shapes: ObservableSet<ShapeData>;
+
+    protected cross: DrawingCross = new DrawingCross();
+
+    protected tmpShape: Shape | null = null;
+
+    protected isCreating: boolean = false;
+
+    protected mouse: {x: number, y: number} = {x: 0, y: 0};
+
+    constructor(renderer: Renderer, shapes: ObservableSet<ShapeData>) {
+        super();
+        this.renderer = renderer;
+        this.shapes = shapes;
+        this.renderer.stage.addChild(this.cross);
+        this.pointerHandlers = {
+            ROOTDOWN: this.onRootDown.bind(this),
+            ROOTMOVE: this.onRootMove.bind(this),
+            ROOTUP: this.onRootUp.bind(this)
+        }
+    }
+
+    public activate() {
+        this.renderer.stage.interactive = true;
+        this.cross.visible = true;
+        const pos = this.renderer.mouse;
+        this.cross.cx = pos.x;
+        this.cross.cy = pos.y;
+        this.cross.scaleX = this.renderer.imageWidth;
+        this.cross.scaleY = this.renderer.imageHeight;
+        this.cross.draw();
+        this.renderer.stage.interactive = true;
+        this.renderer.stage.on('pointerdown', this.pointerHandlers.ROOTDOWN);
+        this.renderer.stage.on('pointermove', this.pointerHandlers.ROOTMOVE);
+        this.renderer.stage.on('pointerupoutside', this.pointerHandlers.ROOTUP);
+    }
+
+    public deactivate() {
+        this.renderer.stage.interactive = false;
+        this.cross.visible = false;
+        const shape = this.tmpShape as Shape;
+        if (shape) {
+            this.renderer.stage.removeChild(shape);
+            shape.destroy();
+            this.tmpShape = null;
+        }
+        this.renderer.stage.removeListener('pointerdown', this.pointerHandlers.ROOTDOWN);
+        this.renderer.stage.removeListener('pointermove', this.pointerHandlers.ROOTMOVE);
+        this.renderer.stage.removeListener('pointerupoutside', this.pointerHandlers.ROOTUP);
+    }
+
+    protected abstract onRootDown(evt: PIXI.interaction.InteractionEvent): void;
+
+    protected onRootMove(evt: PIXI.interaction.InteractionEvent) {
+        const pointer = (evt.data.originalEvent as PointerEvent);
+        if (pointer.buttons === 2 || pointer.buttons === 4) {
+            return;
+        }
+        const mouse = this.renderer.getPosition(evt.data);
+        if (mouse.x === this.cross.cx && mouse.y === this.cross.cy) {
+            return;
+        }
+        this.cross.scaleX = this.renderer.imageWidth;
+        this.cross.scaleY = this.renderer.imageHeight;
+        this.cross.cx = mouse.x;
+        this.cross.cy = mouse.y;
+        this.cross.draw();
+    }
+
+    protected onRootUp() {};
+}
+
+/**
+ * Manage set of interactive shapes
+ */
+export class ShapesManager extends EventTarget {
+    protected renderer: Renderer;
+
+    protected shapes: ObservableSet<ShapeData>;
+
+    public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
+
+    public graphics: Set<Shape> = new Set();
+
+    public mode: string = 'update';
+
+    public modes: {
+        [key: string]: Controller;
+    };
+
+    constructor(renderer: Renderer = new Renderer(),
+                shapes: ObservableSet<ShapeData> = new ObservableSet()) {
+        super();
+        this.renderer = renderer;
+        this.shapes = shapes;
+        this.modes = {
+            update: new ShapesUpdateController(this.renderer, this.graphics, this.targetShapes)
+        };
+
+        // new ShapeCreateController(this.renderer)
+        // listen global changes on the set of shapes:
+        // add a new shape, delete a shape, initialize set.
+        observe(shapes, (prop: string, value?: any) => {
+            switch(prop) {
+                case 'set':
+                case 'add': {
+                    value = [value];
+                    if (prop === 'set') {
+                        // reset all objects at once
+                        this.renderer.clearLabels();
+                        this.graphics.clear();
+                        value = shapes;
+                    }
+                    value.forEach((s: ShapeData) => {
+                        const obj = dataToShape(s);
+                        this.graphics.add(obj);
+                        obj.scaleX = this.renderer.imageWidth;
+                        obj.scaleY = this.renderer.imageHeight;
+                        this.renderer.labelLayer.addChild(obj);
+                        obj.draw();
+                    });
+                    // reapply controller to new objects
+                    this.modes[this.mode].reset();
+                    break;
+                }
+                case 'delete': {
+                    const obj = [...this.graphics].find(({data}) => data === value);
+                    if (obj) {
+                        this.graphics.delete(obj);
+                        this.renderer.labelLayer.removeChild(obj);
+                        this.targetShapes.clear();
+                    }
+                    break;
+                }
+                case 'clear': {
+                    this.renderer.clearLabels();
+                    this.targetShapes.clear();
+                    break;
+                }
+            }
+        });
+        this.modes[this.mode].activate();
+    }
+
+    public setController(mode: string, controller: Controller) {
+        if (mode === this.mode && this.modes[mode]) {
+            // remove active base controller
+            this.modes[mode].deactivate();
+            this.modes[mode] = controller;
+            this.modes[mode].activate();
+        } else {
+            this.modes[mode] = controller;
+        }
+    }
+
+    /**
+     * Handle new mode set:
+     * 1. Reset canvas to "mode-free" (no interaction)
+     * 2. Apply interactions of new mode
+     * @param mode string
+     */
+    public setMode(mode: string) {
+        if (mode !== this.mode) {
+            this.modes[this.mode].deactivate();
+            this.modes[mode].activate();
+            this.mode = mode;
+        }
     }
 }

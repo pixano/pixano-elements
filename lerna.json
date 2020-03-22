@@ -4,12 +4,7 @@
     "packages/ai",
     "packages/graphics-3d",
     "packages/graphics-2d",
-    "demos/rectangle",
-    "demos/smart-rectangle",
-    "demos/polygon",
-    "demos/cuboid",
-    "demos/segmentation",
-    "demos/common"
+    "demos/*"
   ],
   "command": {
     "bootstrap": {

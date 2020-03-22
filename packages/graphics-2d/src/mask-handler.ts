@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { PxnRenderer } from './renderer-2d';
+import { Renderer } from './renderer';
 import { GMask, PolygonShape, Brush} from './shapes-2d';
 import { fuseId, unfuseId, getPolygonExtrema,
          extremaUnion} from './mask';
@@ -25,17 +25,13 @@ export enum Mode {
     REMOVE_FROM_INSTANCE = 'remove_from_instance'
 }
 
-interface ObjectLiteral {
-    [key: string]: (evt: any) => void;
-}
-
 interface DensePolygon {
     type: string; // external or internal
     data: any[]; // list of {x, y} dict
 }
 
 export class MaskHandler extends PIXIContainer {
-    protected renderer: PxnRenderer;
+    protected renderer: Renderer;
 
     protected mode: Mode = Mode.SELECT_INSTANCE;
 
@@ -59,9 +55,13 @@ export class MaskHandler extends PIXIContainer {
 
     private densePolygons: DensePolygon[] = new Array();
 
-    private keyHandlers: ObjectLiteral;
+    private keyHandlers: {
+        [key: string]: (evt: any) => void;
+    };
 
-    private pointerHandlers: ObjectLiteral;
+    private pointerHandlers: {
+        [key: string]: (evt: any) => void;
+    };
 
     public selectedId: [number, number, number];
 
@@ -72,7 +72,7 @@ export class MaskHandler extends PIXIContainer {
 
     private autoContours: boolean = true;
 
-    constructor(renderer: PxnRenderer = new PxnRenderer(),
+    constructor(renderer: Renderer = new Renderer(),
                 gmask: GMask = new GMask(), selectedId: [number, number, number] = [0, 0, 0]) {
         super();
         this.renderer = renderer;

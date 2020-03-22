@@ -14,13 +14,15 @@ export class RectangleShape extends Shape {
     }
 
     draw() {
+      const width = this.scaleX;
+      const height = this.scaleY;
       this.area.clear();
       this.area.beginFill(this.hex, 0.15);
       this.area.lineStyle(1, this.hex, 1, 0.5, true);
-      const left = Math.round(this.data.geometry.vertices[0] * this.scaleX);
-      const right = Math.round(this.data.geometry.vertices[2] * this.scaleX);
-      const top = Math.round(this.data.geometry.vertices[1] * this.scaleY);
-      const bottom = Math.round(this.data.geometry.vertices[3] * this.scaleY);
+      const left = Math.round(this.data.geometry.vertices[0] * width);
+      const right = Math.round(this.data.geometry.vertices[2] * width);
+      const top = Math.round(this.data.geometry.vertices[1] * height);
+      const bottom = Math.round(this.data.geometry.vertices[3] * height);
       this.area.drawRect(
           0, 0,
           right - left,
