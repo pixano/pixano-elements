@@ -72,15 +72,18 @@ export abstract class Shape extends PIXIContainer {
         this.controls.forEach((n) => this.nodeContainer.addChild(n));
     }
 
-    getDimension(object?: PIXIContainer): {width: number, height: number} {
+    getHigherParent(object?: PIXIContainer): PIXIContainer | null {
       object = object || this;
       if (object.parent) {
-        return this.getDimension(object.parent);
+        return this.getHigherParent(object.parent);
       } else {
         try {
-          return {width: Math.floor(object.width / object.scale.x), height: Math.floor(object.height / object.scale.y)};
+          const sx = object.scale.x;
+          if (sx) {
+            return object;
+          } return null;
         } catch(err) {
-          return {width: 1, height: 1};
+          return null;
         }
       }
     }
