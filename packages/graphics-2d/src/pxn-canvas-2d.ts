@@ -70,15 +70,21 @@ export class Canvas2d extends Canvas {
   constructor() {
     super();
     this._shapes = new ObservableSet<ShapeData>();
+    // Create a manager of the shapes
     this.shManager = new ShapesManager(this.renderer, this._shapes);
     this.initShapeManagerListeners();
-    this.initShapeEventsListener();
+    this.initShapeSetObserver();
   }
 
   // observable set of selected shape ids.
   get selectedShapeIds() {
     const lis = [...this.shManager.targetShapes.values()];
     return lis.map((s) => s.id);
+  }
+
+  // observable set of selected shapes.
+  get selectedShapes() {
+    return [...this.shManager.targetShapes];
   }
 
   set selectedShapeIds(ids: string[]) {
@@ -90,15 +96,6 @@ export class Canvas2d extends Canvas {
         this.shManager.targetShapes.add(shape);
       }
     }
-  }
-
-  /**
-   * Create a manager of the shapes
-   */
-  protected createShapeManager() {
-    const shManager = new ShapesManager(this.renderer,
-      this._shapes);
-    return shManager;
   }
 
   protected initShapeManagerListeners() {
@@ -195,7 +192,7 @@ export class Canvas2d extends Canvas {
     }
   }
 
-  protected initShapeEventsListener() {
+  protected initShapeSetObserver() {
     // Trigger notification on shape
     // selection(s) changed.
     observe(this.shManager.targetShapes, () => {

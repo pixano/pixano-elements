@@ -138,7 +138,9 @@ export class ShapesUpdateController extends Controller {
     }
 
     public deactivate() {
-        this.targetShapes.clear();
+        if (this.targetShapes.size) {
+            this.targetShapes.clear();
+        }
         this.graphics.forEach((s) => {
             s.interactive = false;
             s.buttonMode = false;
@@ -500,6 +502,8 @@ export class ShapesManager extends EventTarget {
         [key: string]: Controller;
     };
 
+    protected bindControllers: any;
+
     constructor(renderer: Renderer = new Renderer(),
                 shapes: ObservableSet<ShapeData> = new ObservableSet()) {
         super();
@@ -508,6 +512,9 @@ export class ShapesManager extends EventTarget {
         this.modes = {
             update: new ShapesUpdateController(this.renderer, this.graphics, this.targetShapes)
         };
+        this.bindControllers = (evt: any) => {
+            this.dispatchEvent(new CustomEvent(evt.type, { detail: evt.detail }));
+        }
 
         // new ShapeCreateController(this.renderer)
         // listen global changes on the set of shapes:
@@ -546,7 +553,9 @@ export class ShapesManager extends EventTarget {
                 }
                 case 'clear': {
                     this.renderer.clearLabels();
-                    this.targetShapes.clear();
+                    if (this.targetShapes.size) {
+                        this.targetShapes.clear();
+                    }
                     break;
                 }
             }
@@ -558,11 +567,14 @@ export class ShapesManager extends EventTarget {
         if (mode === this.mode && this.modes[mode]) {
             // remove active base controller
             this.modes[mode].deactivate();
+            this.modes[mode].removeEventListener('update', this.bindControllers);
             this.modes[mode] = controller;
             this.modes[mode].activate();
+            this.modes[mode].addEventListener('update', this.bindControllers);
         } else {
             this.modes[mode] = controller;
         }
+        return this;
     }
 
     /**
@@ -574,8 +586,11 @@ export class ShapesManager extends EventTarget {
     public setMode(mode: string) {
         if (mode !== this.mode) {
             this.modes[this.mode].deactivate();
+            this.modes[this.mode].removeEventListener('update', this.bindControllers);
             this.modes[mode].activate();
+            this.modes[mode].addEventListener('update', this.bindControllers);
             this.mode = mode;
+            
         }
     }
 }
