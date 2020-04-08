@@ -5,7 +5,7 @@
  */
 
 
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { TransformControls } from './transform-controls';
 import { BasicEventTarget } from '@pixano/core';
 import { SceneView } from './scene-view';
 import { Cuboid } from './types';
@@ -73,20 +73,11 @@ export class EditModeController extends BasicEventTarget {
 
     toggleMode() {
         if ( this.objControls.mode === "translate" ) {
-            this.objControls.mode = "rotate";
-            this.objControls.showX = false;
-			this.objControls.showY = false;
-			this.objControls.showZ = true;
+            this.objControls.setMode('rotate');
         } else if ( this.objControls.mode === "rotate" ) {
-            this.objControls.mode = "scale";
-            this.objControls.showX = true;
-			this.objControls.showY = true;
-			this.objControls.showZ = true;
+            this.objControls.setMode('scale');
         } else if ( this.objControls.mode === "scale" ) {
-            this.objControls.mode = "translate";
-            this.objControls.showX = true;
-			this.objControls.showY = true;
-			this.objControls.showZ = false;
+            this.objControls.setMode('translate');
         }
     }
 
