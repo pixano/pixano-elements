@@ -59,3 +59,36 @@ class MyDemocuboid extends LitElement {
 customElements.define('my-demo-cuboid', MyDemocuboid);
 ```
 
+## API
+
+### Properties/Attributes
+
+#### pxn-cuboid-editor
+
+| Name             | Type           | Default  | Description
+| ---------------- | -------------- | -------- |------------
+| `pcl`            | `Float32Array` | `null `  | Point cloud as one-dimensional array in the XYZ order
+| `editableCuboids` | `Set<Cuboid>` | `[]` | Cuboids rendered in the scene
+| `editTarget` | `Cuboid|null` | `null` | Selected cuboid
+| `cameraMode` | `orthographic|perspective` | `perspective` | Camera type
+
+### Methods
+
+#### pxn-cuboid-editor
+
+| Name               | Description       |
+| ------------------ | ----------------- |
+| `rotate() => void` | Rotate selected cuboid by 90°   |
+| `swap() => void`   | Swap selected cuboid coordinates |
+
+### Shortcuts
+
+#### pxn-cuboid-editor
+
+| Key          | Description      |
+| ------------ | ---------------- |
+| `n`          | `Switch to create mode` |
+| `Escape`     | `Unselect shapes` |
+| `Delete`     | `Delete selected shapes` |
+| `Ctrl+C`     | `Copy in clipboard currently selected cuboid` |
+| `Ctrl+V`     | `Create new cuboid (with new id) from the clipboard content` |

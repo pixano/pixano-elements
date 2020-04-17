@@ -153,6 +153,7 @@ export abstract class Shape extends PIXIContainer {
     public on<T extends Shape>(event: string, fn: (evt: any) => void, context?: any): T {
       this.area.on(event, (evt: any) => {
         if (event === 'pointerdown' || event === 'pointermove') {
+          // stop bubbling
           evt.stopPropagation();
         }
         evt.shape = this.data;

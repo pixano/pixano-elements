@@ -78,6 +78,7 @@ export class PlaybackControl extends LitElement {
     onNavigationKey(evt: KeyboardEvent) {
       if ((evt.key === 'ArrowRight' || evt.key === 'ArrowLeft') &&
             this.shadowRoot!.activeElement === this.slider) {
+        // stop bubbling
         evt.stopPropagation();
       }
       if (!this.enableNavigation) {
@@ -119,6 +120,7 @@ export class PlaybackControl extends LitElement {
       this.slider.addEventListener("keydown", (event: KeyboardEvent) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
+          // stop bubbling
           event.stopPropagation();
         }
       });
