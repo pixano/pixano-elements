@@ -20,7 +20,6 @@ export interface Contour {
   type: string;
 }
 
-
 export class BlobExtractor {
 
     private width: number;
@@ -33,7 +32,7 @@ export class BlobExtractor {
     private withExtrema = false;
     private extrema: number[]
 
-    private augData: number[];
+    private imgData: ImageData;
     public blobs: Map<number, RegBlob> = new Map();
     public label: number[];
     private augLabel: number[];
@@ -43,17 +42,16 @@ export class BlobExtractor {
     static MARKED = -2;
     static CONNEXITY = 4;
 
-    public targetId: number;
+    public targetId: [number, number, number] = [0, 0, 0];
 
-    constructor(width: number, height: number, data?: number[], augData?: number[], vertexExtrema?: number[]) {
-        this.width = width;
-        this.height = height;
-        this.augW = width + 2;
-        this.augH = height + 2
-        data = data || [];
+    constructor(data: ImageData, vertexExtrema?: number[]) {
+        this.width = data.width;
+        this.height = data.height;
+        this.augW = data.width + 2;
+        this.augH = data.height + 2;
         let [xMin, yMin, xMax, yMax] = [0,0,0,0]
         if (vertexExtrema){
-            [xMin, yMin, xMax, yMax] = vertexExtrema
+            [xMin, yMin, xMax, yMax] = vertexExtrema;
             xMax = xMax - 1;
             yMax = yMax - 1
             this.extrema = [xMin, yMin, xMax, yMax]
@@ -67,16 +65,18 @@ export class BlobExtractor {
 
         this.label = new Array(this.width * this.height);
 
-        if (augData)
-          this.augData = augData;
-        else
-          this.augData = this.addBorders(data);
+        // Pad image with zero on all borders
+        const canvas = document.createElement('canvas') as HTMLCanvasElement;
+        canvas.width = this.augW;
+        canvas.height = this.augH;
+        const ctx = canvas.getContext('2d')!;
+        ctx.putImageData(data, 1, 1, 0, 0, data.width, data.height);
+        this.imgData = ctx.getImageData(0, 0, this.augW, this.augH);
 
         if (vertexExtrema)
           this.extrema = [xMin, yMin + 1, xMax + 2, yMax + 1];
 
         this.augLabel = new Array(this.max);
-        this.targetId = 0;
     }
 
     /**
@@ -248,7 +248,7 @@ export class BlobExtractor {
             if (T < 0 || T >= this.max)
               continue;
 
-            if (this.augData[T] === this.targetId)
+            if (this.isEqual(T))
               return {T, q};
 
             this.augLabel[T] = BlobExtractor.MARKED;
@@ -326,7 +326,7 @@ export class BlobExtractor {
      * @param targetId the target id of the blobs to find
      * @param needLabel whether we need the computed mask
      */
-    public extract(targetId: number, needLabel: boolean = false) {
+    public extract(targetId: [number, number, number], needLabel: boolean = false) {
         this.targetId = targetId;
         for (let i = this.extrema[0]; i <= this.extrema[2]; i++){
           for (let j = this.extrema[1]; j <= this.extrema[3]; j++){
@@ -341,11 +341,11 @@ export class BlobExtractor {
           do {
             const offset = y * this.augW + x;
             // We skip white pixels or previous labeled pixels
-            if (this.augData[offset] !== this.targetId)
+            if (!this.isEqualXY(x, y))
                 continue;
 
             // Step 1 - P not labelled, and above pixel is white
-            if (this.augData[offset - this.augW] !== this.targetId && this.augLabel[offset] === BlobExtractor.UNSET) {
+            if (!this.isEqualXY(x, y-1) && this.augLabel[offset] === BlobExtractor.UNSET) {
                 // P must be external contour
                 this.blobs.set(c, new RegBlob(c));
                 const [contour, nbPixels] = this.contourTracing(offset, c, true);
@@ -355,7 +355,7 @@ export class BlobExtractor {
             }
 
             // Step 2 - Below pixel is white, and unmarked
-            if (this.augData[offset + this.augW] !== this.targetId && this.augLabel[offset + this.augW] === BlobExtractor.UNSET) {
+            if (!this.isEqualXY(x, y+1) && this.augLabel[offset + this.augW] === BlobExtractor.UNSET) {
                 // Use previous pixel label, unless this is already labelled
                 let n = this.augLabel[offset - 1];
                 if (this.augLabel[offset] !== BlobExtractor.UNSET)
@@ -389,5 +389,18 @@ export class BlobExtractor {
                 }
             }
         }
+    }
+
+    isEqualXY(x: number, y: number) {
+      const offset = y * this.augW + x;
+      return this.imgData.data[4 * offset + 0] === this.targetId[0]
+          && this.imgData.data[4 * offset + 1] === this.targetId[1]
+          && this.imgData.data[4 * offset + 2] === this.targetId[2];
+    }
+
+    isEqual(offset: number) {
+      return this.imgData.data[4 * offset + 0] === this.targetId[0]
+          && this.imgData.data[4 * offset + 1] === this.targetId[1]
+          && this.imgData.data[4 * offset + 2] === this.targetId[2];
     }
 }

@@ -99,10 +99,11 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create_instance'}>${create_pencil}</p>
-          <p class="icon" title="Select" @click=${() => this.element.mode = 'select_instance'}>${magic_select}</p>
-          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'remove_from_instance'}>${subtract}</p>
-          <p class="icon" title="Union" @click=${() => this.element.mode = 'add_to_instance'}>${union}</p>
+          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
+          <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magic_select}</p>
+          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'update-remove'}>${subtract}</p>
+          <p class="icon" title="Union" @click=${() => this.element.mode = 'update-add'}>${union}</p>
+          <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
           <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
           <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
         </div>       
@@ -113,7 +114,7 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation image="${this.image}" .mask="${this.mask}" disablefullscreen>
+          <pxn-segmentation image="${this.image}" .mask="${this.mask}" disablefullscreen showroi>
           </pxn-segmentation>
           ${this.rightPanel}
         </main>`;

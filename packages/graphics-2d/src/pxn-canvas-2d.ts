@@ -10,7 +10,6 @@ import { customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
 import { ShapesManager } from './shapes-manager';
-import { ViewControls } from './view-controls';
 import { observable } from '@pixano/core';
 import { Canvas } from './pxn-canvas';
 
@@ -24,30 +23,13 @@ export enum Mode {
 }
 
 /**
- * Inherit ViewControls to add node scaling
- * depending on zoom level.
- */
-export class ViewControlsObjects extends ViewControls {
-  public onWheel(evt: WheelEvent) {
-    super.onWheel(evt);
-    this.updateNodeSize();
-  }
-  updateNodeSize() {
-    this.viewer.labelLayer.children.forEach((obj: any) => {
-      obj.nodeContainer.children.forEach((o: any) => {
-        o.scale.x = 1.5 / this.viewer.stage.scale.x;
-        o.scale.y = 1.5 / this.viewer.stage.scale.y;
-      });
-    });
-  }
-}
-
-/**
  * Parent class that displays image with
  * 2d shapes. Can be easily inherited.
  * @fires CustomEvent#create upon creating an new object { detail: Shape }
  * @fires CustomEvent#update upon updating an object { detail: ids[] }
  * @fires CustomEvent#delete upon creating an new object { detail: ids[] }
+ * @fires CustomEvent#selection upon selection of objects { detail: ids[] }
+ * @fires CustomEvent#mode upon interactive mode change { detail: string }
  */
 @customElement('pxn-canvas-2d' as any)
 export class Canvas2d extends Canvas {
@@ -63,10 +45,6 @@ export class Canvas2d extends Canvas {
   // stage and the shapes.
   protected shManager: ShapesManager;
 
-  // controller of the view enabling
-  // panning with right pointer and zoom.
-  protected viewControls: ViewControlsObjects = new ViewControlsObjects(this.renderer);
-
   constructor() {
     super();
     this._shapes = new ObservableSet<ShapeData>();
@@ -74,17 +52,20 @@ export class Canvas2d extends Canvas {
     this.shManager = new ShapesManager(this.renderer, this._shapes);
     this.initShapeManagerListeners();
     this.initShapeSetObserver();
+    this.viewControls.addEventListener('zoom', () => {
+      this.renderer.labelLayer.children.forEach((obj: any) => {
+        obj.nodeContainer.children.forEach((o: any) => {
+          o.scale.x = 1.5 / this.renderer.stage.scale.x;
+          o.scale.y = 1.5 / this.renderer.stage.scale.y;
+        });
+      });
+    });
   }
 
   // observable set of selected shape ids.
   get selectedShapeIds() {
     const lis = [...this.shManager.targetShapes.values()];
     return lis.map((s) => s.id);
-  }
-
-  // observable set of selected shapes.
-  get selectedShapes() {
-    return [...this.shManager.targetShapes];
   }
 
   set selectedShapeIds(ids: string[]) {
@@ -96,6 +77,11 @@ export class Canvas2d extends Canvas {
         this.shManager.targetShapes.add(shape);
       }
     }
+  }
+
+  // observable set of selected shapes.
+  get selectedShapes() {
+    return [...this.shManager.targetShapes];
   }
 
   protected initShapeManagerListeners() {

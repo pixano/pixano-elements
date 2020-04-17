@@ -9,8 +9,9 @@ import { Container as PIXIContainer,
     Sprite as PIXISprite, Texture as PIXITexture,
     Point} from 'pixi.js';
 import { BlobExtractor, RegBlob } from './blob-extractor';
+import { fuseId, unfuseId, isInside, getPolygonExtrema } from './mask-utils';
 
-const LOCKED_CLASS_COLOR = [200, 200, 200, 255];
+const LOCKED_CLASS_COLOR: [number, number, number] = [200, 200, 200];
 const MASK_ALPHA_VALUE = 255;
 
 const DISTINCT_COLORS: [number, number, number][] = [[230, 25, 75], [60, 180, 75], [255, 225, 25], [0, 130, 200],
@@ -23,63 +24,12 @@ export enum MaskVisuMode {
     INSTANCE = 'INSTANCE',
 }
 
-export function fuseId(id: [number, number, number]): number{
-    return 256 * 256 * id[0] + 256 * id[1] + id[2];
-}
-
-export function isInside(pt: Point, vs: Point[]): boolean {
-    const x = pt.x;
-    const y = pt.y;
-    let inside = false;
-    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-        const intersect = ((vs[i].y > y) !== (vs[j].y > y))
-            && (x < (vs[j].x - vs[i].x) * (y - vs[i].y) / (vs[j].y - vs[i].y) + vs[i].x);
-        if (intersect) inside = !inside;
-    }
-    return inside;
-}
-
-export function  unfuseId(fId: number): [number, number, number] {
-    let left = fId;
-    const id1 = Math.floor(left / (256 * 256));
-    left = left - 256 * 256 * id1;
-    const id2 = Math.floor(left / 256)
-    left = left - 256 * id2;
-    return [id1, id2, left];
-}
-
-export function getPolygonExtrema(polygon: Point[]): number[] {
-    let xMin = 100000;
-    let xMax = 0;
-    let yMin = 10000;
-    let yMax = 0;
-
-    polygon.forEach((pt) => {
-      if (pt.x < xMin) xMin = pt.x
-      if (pt.x > xMax) xMax = pt.x
-      if (pt.y < yMin) yMin = pt.y
-      if (pt.y > yMax) yMax = pt.y
-    });
-    return [xMin, yMin, xMax, yMax];
-};
-
-export function extremaUnion(extrema: number[], extrema2: number[]): number[]{
-    let [xMin, yMin, xMax, yMax] = extrema;
-    const [xMin2, yMin2, xMax2, yMax2] = extrema2;
-    if (xMin2 < xMin) xMin = xMin2;
-    if (yMin2 < yMin) yMin = yMin2;
-    if (xMax2 > xMax) xMax = xMax2;
-    if (yMax2 > yMax) yMax = yMax2;
-    return [xMin, yMin, xMax, yMax];
-}
-
 export class GMask extends PIXIContainer {
 
     public colorMask: PIXISprite = new PIXISprite();
 
-    private lockedClasses: Set<number> = new Set();
-
-    private maxId = 0;
+    // fused ids that cannot be edited
+    public lockedInstances: Set<number> = new Set();
 
     // contains colored mask
     public canvas: HTMLCanvasElement;
@@ -93,14 +43,15 @@ export class GMask extends PIXIContainer {
     // original mask
     public orig: ImageData | null = null;
 
-    // original mask with list form
-    private augFusedMask: number[] = [];
-
     private tempPixels: ImageData | null = null;
 
     public maskVisuMode: MaskVisuMode = MaskVisuMode.INSTANCE;
 
-    // [id1, id2, clsIdx, isInstance (instance = 1, semantic = 0)]
+    // set of all instance ids
+    // [id1, id2, cls] => id = id1 + 256 * id2 + 256 * 256 * cls
+    public fusedIds: Set<number> = new Set();
+
+    // [r, g, b, isInstance (instance = 1, semantic = 0)]
     public clsMap: Map<number, [number, number, number, number]> = new Map([
       [0, [0,0,0,0]],
       [1, [255,0,0,0]],
@@ -120,15 +71,14 @@ export class GMask extends PIXIContainer {
      * @param maskArray
      * @returns maximum mask id
      */
-    public initialize(maskArray: ImageData): [number, number] {
+    public initialize(maskArray: ImageData) {
         this.canvas.width = maskArray.width;
         this.canvas.height = maskArray.height;
         this.colorMask.destroy();
         this.colorMask = new PIXISprite(PIXITexture.from(this.canvas));
-        this.augFusedMask = new Array((this.canvas.width + 1) * (this.canvas.height + 1));
         this.removeChildren();
         this.addChild(this.colorMask);
-        return this.setValue(maskArray);
+        this.setValue(maskArray);
     }
 
     setBase64(buffer: string) {
@@ -142,7 +92,6 @@ export class GMask extends PIXIContainer {
         self.canvas.height = img.height;
         self.colorMask.destroy();
         self.colorMask = new PIXISprite(PIXITexture.from(self.canvas));
-        self.augFusedMask = new Array((self.canvas.width + 1) * (self.canvas.height + 1));
         self.removeChildren();
         self.addChild(self.colorMask);
         self.canvas.getContext('2d')!.drawImage(img, 0, 0, img.width, img.height);
@@ -157,36 +106,33 @@ export class GMask extends PIXIContainer {
         this.canvas.height = h;
         this.colorMask.destroy();
         this.colorMask = new PIXISprite(PIXITexture.from(this.canvas));
-        this.augFusedMask = new Array((this.canvas.width + 1) * (this.canvas.height + 1));
         this.removeChildren();
         this.addChild(this.colorMask);
-        const maskArray = new ImageData(w, h);
-        return this.setValue(maskArray);
+        this.orig = new ImageData(w, h);
+        this.fusedIds.clear();
+        // empty color
+        const ctx = this.canvas.getContext('2d')!;
+        ctx.putImageData(new ImageData(w, h), 0, 0, 0, 0, this.canvas.width, this.canvas.height);
+        this.colorMask.texture.update();
     }
 
-    public getNextId(): [number, number]{
-        this.maxId++;
-        return [Math.floor(this.maxId / 256), this.maxId % 256];
+    public getNextId(): [number, number] {
+        // remove class notion from ids
+        const instanceIds = new Set([...this.fusedIds].map((i) => Math.floor(i % (256 * 256))));
+        const newId = new Array(256*256 - 1).findIndex((_,v) => !instanceIds.has(v + 1)) + 1;
+        console.log('getNextId', newId);
+        return [newId % 256, Math.floor(newId / 256)];
     }
 
     public getValue(): ImageData | null {
         return this.orig;
     }
 
-    public getAllFusedIds(): Set<number> {
-        const allfusedIds = new Set<number>()
-        this.augFusedMask.forEach((fId) => {
-            if (!allfusedIds.has(fId))
-            allfusedIds.add(fId)
-        });
-        return allfusedIds;
-    }
-
     public pixelToColor(id1: number, id2: number, cls: number): [number, number, number] {
         if (cls === 0)
             return [0, 0, 0];
         if (this.maskVisuMode === MaskVisuMode.INSTANCE) {
-            const id = 65536 * cls + 256 * id1 + id2;
+            const id = id1 + 256 * id2 * 65536 * cls;
             return DISTINCT_COLORS[id % DISTINCT_COLORS.length];
         }
         if (this.maskVisuMode === MaskVisuMode.SEMANTIC) {
@@ -207,22 +153,29 @@ export class GMask extends PIXIContainer {
      * [2] => class
      * [3] => not used
      */
-    public setValue(maskArray: ImageData): [number, number] {
+    public setValue(maskArray: ImageData) {
         this.orig = maskArray;
+        this.fusedIds.clear();
+        for (let x = 0; x < this.canvas.width; x++) {
+            for (let y = 0; y < this.canvas.height; y++) {
+                const [id1, id2, cls] = this.pixelId(x + y * this.canvas.width);
+                this.fusedIds.add(fuseId([id1, id2, cls]));
+            }
+        }
+        this.recomputeColor();
+    }
+
+    public recomputeColor() {
         const ctx = this.canvas.getContext('2d')!;
         const pixels = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        this.maxId = 0;
-
         for (let x = 0; x < this.canvas.width; x++) {
             for (let y = 0; y < this.canvas.height; y++) {
                 const i = x + y * this.canvas.width
                 const [id1, id2, cls] = this.pixelId(i);
-                this.augFusedMask[i + this.canvas.width + 3 + 2*y] = fuseId([id1, id2, cls]);
-                const id = id1 * 256 + id2;
-                if (id > this.maxId){
-                    this.maxId = id
-                }
-                const color = this.pixelToColor(id1, id2, cls);
+                const fId = fuseId([id1, id2, cls]);
+                this.fusedIds.add(fId);
+                let color = this.pixelToColor(id1, id2, cls);
+                color = this.lockedInstances.has(fId) ? LOCKED_CLASS_COLOR : color;
                 const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
                 pixels.data[i * 4] = color[0];
                 pixels.data[i * 4 + 1] = color[1];
@@ -231,8 +184,7 @@ export class GMask extends PIXIContainer {
             }
         }
         ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
-        this.colorMask.texture.update()
-        return [Math.floor(this.maxId / 256), this.maxId % 256];
+        this.colorMask.texture.update();
     }
 
     public pixelId(pos: number): [number, number, number]{
@@ -254,12 +206,12 @@ export class GMask extends PIXIContainer {
                     const idx = x + y * this.canvas.width;
                     const pixId = this.pixelId(idx);
                     if (fuseId(pixId) !== fusedId) {
-                    const pixFusedId = fuseId(pixId);
-                    const prev = foundIds.get(pixFusedId);
-                    if (prev)
-                        foundIds.set(pixFusedId, prev + 1);
-                    else
-                        foundIds.set(pixFusedId, 1);
+                        const pixFusedId = fuseId(pixId);
+                        const prev = foundIds.get(pixFusedId);
+                        if (prev)
+                            foundIds.set(pixFusedId, prev + 1);
+                        else
+                            foundIds.set(pixFusedId, 1);
                     }
                     else {
                         insideIndexes.push(idx)
@@ -268,13 +220,13 @@ export class GMask extends PIXIContainer {
                 else if (x >= 0 && x < this.canvas.width && y >= 0 && y < this.canvas.height) {
                     const idx = x + y * this.canvas.width;
                     const pixId = this.pixelId(idx);
-                    if (fuseId(pixId) !== fusedId){
-                    const pixFusedId = fuseId(pixId);
-                    const prev = aroundIds.get(pixFusedId);
-                    if (prev)
-                        aroundIds.set(pixFusedId, prev + 1);
-                    else
-                        aroundIds.set(pixFusedId, 1);
+                    if (fuseId(pixId) !== fusedId) {
+                        const pixFusedId = fuseId(pixId);
+                        const prev = aroundIds.get(pixFusedId);
+                        if (prev)
+                            aroundIds.set(pixFusedId, prev + 1);
+                        else
+                            aroundIds.set(pixFusedId, 1);
                     }
                 }
             }
@@ -299,101 +251,74 @@ export class GMask extends PIXIContainer {
       this.colorMask.texture.update();
     }
 
-    public updateByPolygonTemp(polygon: Point[], id: [number, number, number], fillType='add'){
-        const [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
-        if (fillType === 'add') {
-            const [id1, id2, cls] = id;
-            const color = this.pixelToColor(id1, id2, cls);
-            const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
-            const displ = this.lockedClasses.has(cls) ? LOCKED_CLASS_COLOR : [...color, alpha];
-            for (let x = xMin; x <= xMax; x++){
-                for (let y = yMin; y <= yMax; y++) {
-                    if (isInside(new Point(x,y), polygon)){
-                        const idx = (x + y * this.canvas.width) * 4;
-                        if (!this.lockedClasses.has(this.orig!.data[idx + 2])) {
-                            this.orig!.data[idx] = id1;
-                            this.orig!.data[idx + 1] = id2;
-                            this.orig!.data[idx + 2] = cls;
-                            this.orig!.data[idx + 3] = 255;
-                            this.augFusedMask[idx / 4 + this.canvas.width + 3 + 2 * y] = fuseId(id);
-                        }
-                        this.tempPixels!.data[idx] = displ[0];
-                        this.tempPixels!.data[idx + 1] = displ[1];
-                        this.tempPixels!.data[idx + 2] = displ[2];
-                        this.tempPixels!.data[idx + 3] = displ[3];
-                    }
+    public updateByMask(mask: Float32Array, pos: {x: number, y: number}) {
+        const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
+        const size = Math.sqrt(mask.length);
+        const treshold = 0.35;
+        for (let x = 0; x <= size; x++) {
+            for (let y = 0; y <= size; y++) {
+                const idx = (x + pos.x - 0.5 * size + (y + pos.y - 0.5 * size) * this.canvas.width) * 4;
+                if (mask[y * size + x] > treshold) {
+                    this.orig!.data[idx] = 1;
+                    this.orig!.data[idx + 1] = 0;
+                    this.orig!.data[idx + 2] = 2;
+                    this.orig!.data[idx + 3] = 255;
+                    pixels.data[idx] = 255;
+                    pixels.data[idx + 1] = 255;
+                    pixels.data[idx + 2] = 0;
+                    pixels.data[idx + 3] = 255;
                 }
             }
         }
-        else if (fillType === 'remove'){
-            const [[rId1, rId2, rCls], insidePoints] = this.getMajorId(polygon, [xMin, xMax, yMin, yMax], id);
-            const color = this.pixelToColor(rId1, rId2, rCls);
-            const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
-            const displ = this.lockedClasses.has(rCls) ? LOCKED_CLASS_COLOR : [...color, alpha];
-            insidePoints.forEach((idx) => {
-                if (!this.lockedClasses.has(this.orig!.data[idx * 4 + 2])) {
-                    const y = Math.floor(idx / this.canvas.width);
-                    this.orig!.data[idx * 4] = rId1;
-                    this.orig!.data[idx * 4 + 1] = rId2;
-                    this.orig!.data[idx * 4 + 2] = rCls;
-                    this.orig!.data[idx * 4 + 3] = 255;
-                    const fId = fuseId([rId1, rId2, rCls]);
-                    this.augFusedMask[idx + this.canvas.width + 3 + 2 * y] = fId;
-                }
-                this.tempPixels!.data[idx * 4] = displ[0];
-                this.tempPixels!.data[idx * 4 + 1] = displ[1];
-                this.tempPixels!.data[idx * 4 + 2] = displ[2];
-                this.tempPixels!.data[idx * 4 + 3] = displ[3];
-            });
-        }
+        this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
+        this.colorMask.texture.update();
     }
 
     public updateByPolygon(polygon: Point[], id: [number, number, number], fillType='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
         const [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
+        if (this.lockedInstances.has(fuseId(id))) {
+            // do not update locked instances
+            return;
+        }
         if (fillType === 'add') {
             const [id1, id2, cls] = id;
             const color = this.pixelToColor(id1, id2, cls);
             const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
-            const displ = this.lockedClasses.has(cls) ? LOCKED_CLASS_COLOR : [...color, alpha];
             for (let x = xMin; x <= xMax; x++) {
                 for (let y = yMin; y <= yMax; y++) {
                     if (isInside(new Point(x,y), polygon)){
-                        const idx = (x + y * this.canvas.width) * 4;
-                        if (!this.lockedClasses.has(this.orig!.data[idx + 2])) {
-                            this.orig!.data[idx] = id1;
-                            this.orig!.data[idx + 1] = id2;
-                            this.orig!.data[idx + 2] = cls;
-                            this.orig!.data[idx + 3] = 255;
-                            this.augFusedMask[idx / 4 + this.canvas.width + 3 + 2 * y] = fuseId(id);
+                        const idx = (x + y * this.canvas.width);
+                        const pixId = this.pixelId(idx);
+                        if (!this.lockedInstances.has(fuseId(pixId))) {
+                            this.orig!.data[4 * idx] = id1;
+                            this.orig!.data[4 * idx + 1] = id2;
+                            this.orig!.data[4 * idx + 2] = cls;
+                            this.orig!.data[4 * idx + 3] = 255;
+                            pixels.data[4 * idx] = color[0];
+                            pixels.data[4 * idx + 1] = color[1];
+                            pixels.data[4 * idx + 2] = color[2];
+                            pixels.data[4 * idx + 3] = alpha;
                         }
-                        pixels.data[idx] = displ[0];
-                        pixels.data[idx + 1] = displ[1];
-                        pixels.data[idx + 2] = displ[2];
-                        pixels.data[idx + 3] = displ[3];
                     }
                 }
             }
-        }
-        else if (fillType === 'remove'){
+        } else if (fillType === 'remove') {
             const [[rId1, rId2, rCls], insidePoints] = this.getMajorId(polygon, [xMin, xMax, yMin, yMax], id);
             const color = this.pixelToColor(rId1, rId2, rCls);
             const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
-            const displ = this.lockedClasses.has(rCls) ? LOCKED_CLASS_COLOR : [...color, alpha];
             insidePoints.forEach((idx) => {
-                if (!this.lockedClasses.has(this.orig!.data[idx * 4 + 2])) {
-                    const y = Math.floor(idx / this.canvas.width);
+                const pixId = this.pixelId(idx);
+                if (!this.lockedInstances.has(fuseId(pixId))) {
                     this.orig!.data[idx * 4] = rId1;
                     this.orig!.data[idx * 4 + 1] = rId2;
                     this.orig!.data[idx * 4 + 2] = rCls;
                     this.orig!.data[idx * 4 + 3] = 255;
-                    const fId = fuseId([rId1, rId2, rCls]);
-                    this.augFusedMask[idx + this.canvas.width + 3 + 2 * y] = fId;
+                    pixels.data[idx * 4] = color[0];
+                    pixels.data[idx * 4 + 1] = color[1];
+                    pixels.data[idx * 4 + 2] = color[2];
+                    pixels.data[idx * 4 + 3] = alpha;
                 }
-                pixels.data[idx * 4] = displ[0];
-                pixels.data[idx * 4 + 1] = displ[1];
-                pixels.data[idx * 4 + 2] = displ[2];
-                pixels.data[idx * 4 + 3] = displ[3];
             })
         }
         this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
@@ -401,8 +326,8 @@ export class GMask extends PIXIContainer {
     }
 
     public getBlobs(id: [number, number, number], extrema? : number[]): Map<number, RegBlob> {
-        const blobExtractor = new BlobExtractor(this.canvas.width, this.canvas.height, undefined, this.augFusedMask, extrema);
-        blobExtractor.extract(fuseId(id));
+        const blobExtractor = new BlobExtractor(this.orig!, extrema);
+        blobExtractor.extract(id);
         return blobExtractor.blobs;
     }
 
@@ -419,17 +344,20 @@ export class GMask extends PIXIContainer {
         }
     }
 
-    public updateValue(maskArray: ImageData, id: [number, number, number], fillType='unite'){
+    public updateValue(maskArray: ImageData, id: [number, number, number], fillType='unite') {
+        if (this.lockedInstances.has(fuseId(id))) {
+            // do not update locked instances
+            return;
+        }
         const [id1, id2, cls] = id;
         const fusedId = fuseId(id)
         const ctx = this.canvas.getContext('2d')!;
         const pixels = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const color = this.pixelToColor(id1, id2, cls);
         const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
-        const displ = this.lockedClasses.has(cls) ? LOCKED_CLASS_COLOR : [...color, alpha];
-
         for (let i = 0; i < this.canvas.width * this.canvas.height; i++) {
-            if (!this.lockedClasses.has(this.orig!.data[i * 4 + 2]) && maskArray.data[i * 4] === 1) {
+            const pixId = this.pixelId(i);
+            if (!this.lockedInstances.has(fuseId(pixId)) && maskArray.data[i * 4] === 1) {
                 const idx = i * 4;
                 if ((fillType === 'replace' || fillType === 'unite')
                     || fillType === 'subtract' && fuseId(this.pixelId(i)) === fusedId) {
@@ -437,50 +365,10 @@ export class GMask extends PIXIContainer {
                     this.orig!.data[idx + 1] = id2;
                     this.orig!.data[idx + 2] = cls;
                     this.orig!.data[idx + 3] = 255;
-                }
-                pixels.data[idx] = displ[0];
-                pixels.data[idx + 1] = displ[1];
-                pixels.data[idx + 2] = displ[2];
-                pixels.data[idx + 3] = displ[3];
-            }
-        }
-        ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
-        this.colorMask.texture.update();
-    }
-
-    /**
-     * Lock a class (or unlock if already locked)
-     * @param cls class id
-     */
-    public lockClass(cls: number){
-        const ctx = this.canvas.getContext('2d')!;
-        const pixels = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        if (this.lockedClasses.has(cls)) {
-            this.lockedClasses.delete(cls);
-            for (let i = 0; i < this.canvas.width * this.canvas.height; i++) {
-                const idx = i * 4;
-                const pixId1 = this.orig!.data[idx];
-                const pixId2 = this.orig!.data[idx + 1];
-                const pixCls = this.orig!.data[idx + 2];
-                if (pixCls === cls) {
-                    const color = this.pixelToColor(pixId1, pixId2, pixCls);
-                    const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
                     pixels.data[idx] = color[0];
                     pixels.data[idx + 1] = color[1];
                     pixels.data[idx + 2] = color[2];
                     pixels.data[idx + 3] = alpha;
-                }
-            }
-        } else {
-            this.lockedClasses.add(cls);
-            for (let i = 0; i < this.canvas.width * this.canvas.height; i++) {
-                const idx = i * 4;
-                const pixCls = this.orig!.data[idx + 2];
-                if (pixCls === cls){
-                    pixels.data[idx] = LOCKED_CLASS_COLOR[0];
-                    pixels.data[idx + 1] = LOCKED_CLASS_COLOR[1];
-                    pixels.data[idx + 2] = LOCKED_CLASS_COLOR[2];
-                    pixels.data[idx + 3] = LOCKED_CLASS_COLOR[3];
                 }
             }
         }

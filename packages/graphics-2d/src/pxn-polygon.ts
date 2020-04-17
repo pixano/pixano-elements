@@ -133,10 +133,12 @@ class PolygonsUpdateController extends ShapesUpdateController {
         super.decorateTo(obj, state);
         if (state === Decoration.Nodes) {
             obj.addNodeListener('pointerdown', (evt: any) => {
+                // stop bubbling
                 evt.stopPropagation();
                 this.onNodeDown(evt);
             });
             obj.addMidnodeListener('pointerdown', (evt: any) => {
+                // stop bubbling
                 evt.stopPropagation();
                 this.onMidNodeDown(evt);
             });
