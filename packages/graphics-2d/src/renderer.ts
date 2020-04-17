@@ -170,6 +170,10 @@ export class Renderer extends PIXI.Application {
         this.resize();
     }
 
+    public setBackgroundColor(color: string) {
+        this.renderer.backgroundColor = parseInt(colorToHex(color).replace(/^#/, ''), 16);
+    }
+
     /**
      * Return normalized coordinate in the image system
      * @param x absolute x coordinate in the html canvas system

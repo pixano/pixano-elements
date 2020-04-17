@@ -31,12 +31,16 @@ export class Canvas extends LitElement {
   @property({type: Boolean})
   public disablefullscreen: boolean = false;
 
+  @property({type: String})
   // background color
   public color: string = "#f3f3f5";
 
   // renderer class
   // html view is added on firstUpdated
   protected renderer: Renderer = new Renderer({color: this.color});
+
+  @property({type: Number})
+  public zoom: number = this.renderer.s;
 
   // controller of the view enabling
   // panning with right pointer and zoom.
@@ -69,18 +73,22 @@ export class Canvas extends LitElement {
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
-        position: absolute;
         right: 0px;
-        z-index: 1;
+        margin-bottom: 10px;
+        margin-left: 10px;
+        margin-right: 10px;
         display: flex;
+        position: absolute;
+        margin-top: 10px;
+        height: 24px;
+        width: 24px;
+        z-index: 1;
         color: black;
-        background: #ffffff2e;
+        background: white;
+        fill: #79005D;
         padding: 10px;
         border-radius: 50%;
-        margin: 5px;
         cursor: pointer;
-        height: auto;
-        width: 20px;
         font-size: 18px;
         -webkit-transition: all 0.5s ease;
           -moz-transition: all 0.5s ease;
@@ -89,7 +97,9 @@ export class Canvas extends LitElement {
                 transition: all 0.5s ease;
       }
       .corner:hover {
-        background: white;
+        background: #79005D;
+        fill: white;
+        color: white;
       }
       #snackbar {
         visibility: hidden;
@@ -138,12 +148,27 @@ export class Canvas extends LitElement {
       @keyframes fadeout {
         from {bottom: 30px; opacity: 1;}
         to {bottom: 0; opacity: 0;}
+      }
+      #zoom {
+        right: 70px;
+        font-size: 15px;
+        font-weight: bold;
+        text-align: center;
+        background: #79005D;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .hidden {
+        opacity: 0;
       }`
     ];
   }
 
   constructor() {
     super();
+    this.viewControls.addEventListener("zoom", (evt:any) => {this.zoom = evt.detail});
   }
 
   connectedCallback() {
@@ -298,6 +323,9 @@ export class Canvas extends LitElement {
     if (changedProperties.has('hideLabels') && this.hideLabels !== undefined) {
       this.renderer.showLabels = !this.hideLabels;
     }
+    if (changedProperties.has('color')) {
+      this.renderer.setBackgroundColor(this.color);
+    }
   }
 
   /**
@@ -327,10 +355,13 @@ export class Canvas extends LitElement {
      * with the `html` helper function:
      */
     return html`
-      ${this.disablefullscreen ? html``: html`
-        <p class="corner" @click=${this.fullScreen} title="Fullscreen">${fullscreen}</p>`}
+      <div id="zoom" class="corner ${this.zoom > 1 ? '': 'hidden'}">x${this.zoom.toFixed(1)}</div>
+      ${
+        this.disablefullscreen ? html``: html`
+        <p class="corner" @click=${this.fullScreen} title="Fullscreen">${fullscreen}</p>`
+      }
       <div id="canvas" class="canvas-container" oncontextmenu="return false;"></div>
-      <div id="snackbar">Some text some message..</div>
+      <div id="snackbar"></div>
     `;
   }
 }
