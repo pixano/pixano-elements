@@ -7,11 +7,9 @@
 
 import { Renderer } from './renderer';
 
-export class ViewControls {
+export class ViewControls extends EventTarget {
 
-    private initX: number = -1;
-
-    private initY: number = -1;
+    private init: {x: number, y: number} = {x: 0, y: 0};
 
     private isPanning: boolean = false;
 
@@ -22,6 +20,7 @@ export class ViewControls {
     } = {};
 
     constructor(viewer?: Renderer) {
+        super();
         this.viewer = viewer || new Renderer();
         // necessity to store listener as variable
         // to keep ability to removelistener
@@ -38,6 +37,10 @@ export class ViewControls {
             this.viewer.stage.on('pointerdown', this.handlers.PANDOWN);
             this.viewer.stage.on('pointermove', this.handlers.EDGEMOVE);
         }
+    }
+
+    public triggerOnZoom() {
+        this.dispatchEvent(new CustomEvent('zoom', { detail: this.viewer.s }))
     }
 
     /**
@@ -97,12 +100,14 @@ export class ViewControls {
         this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
+        this.triggerOnZoom();
     }
 
     public zoomIn() {
         this.viewer.s *= 1.1;
         this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
+        this.triggerOnZoom();
     }
 
     public zoomOut() {
@@ -116,6 +121,7 @@ export class ViewControls {
         this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
+        this.triggerOnZoom();
     }
 
     /**
@@ -125,11 +131,11 @@ export class ViewControls {
      */
     public onPanInit(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
-            const mouseData = evt.data.getLocalPosition(this.viewer.stage);
-            const x = mouseData.x / this.viewer.imageWidth;
-            const y = mouseData.y / this.viewer.imageHeight;
-            this.initX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
-            this.initY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
+            const pos = this.viewer.getPosition(evt.data);
+            const x = pos.x / this.viewer.imageWidth;
+            const y = pos.y / this.viewer.imageHeight;
+            this.init.x = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
+            this.init.y = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
             this.isPanning = true;
             this.viewer.stage.on('pointermove', this.handlers.PANMOVE);
             this.viewer.stage.on('pointerupoutside', this.handlers.PANUP);
@@ -143,12 +149,13 @@ export class ViewControls {
      */
     public onPan(evt: PIXI.interaction.InteractionEvent) {
         if (this.isPanning) {
+            evt.stopPropagation();
             const pos = this.viewer.getPosition(evt.data);
             const {x, y} = this.viewer.normalize(pos);
-            const deltaX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx - this.initX;
-            const deltaY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy - this.initY;
-            this.initX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
-            this.initY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
+            const deltaX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx - this.init.x;
+            const deltaY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy - this.init.y;
+            this.init.x = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
+            this.init.y = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
             this.viewer.sx = this.viewer.stage.position.x + deltaX - this.viewer.rx * this.viewer.s;
             this.viewer.sy = this.viewer.stage.position.y + deltaY - this.viewer.ry * this.viewer.s;
             this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);

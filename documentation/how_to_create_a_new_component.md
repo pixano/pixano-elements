@@ -4,11 +4,11 @@ This tutorial walks you through the process of building a new web component, whe
 
 ## Prerequisites
 
-We use [Lit Element](https://lit-element.polymer-project.org/) for easy building of Web Components. If you are not familiar with this tool, please follow their [tutorial](https://lit-element.polymer-project.org/try).
+- We use [Lit Element](https://lit-element.polymer-project.org/) for easy building of Web Components. If you are not familiar with this tool, please follow their [tutorial](https://lit-element.polymer-project.org/try).
 
-We use the rendering library [PixiJS](https://www.pixijs.com/) to create rich, interactive 2d graphics elements. If you intend to edit the interactions on the canvas, please follow their [tutorial](https://github.com/kittykatattack/learningPixi).
+- We use the rendering library [PixiJS](https://www.pixijs.com/) to create rich, interactive 2d graphics elements. If you intend to edit the interactions on the canvas, please follow their [tutorial](https://github.com/kittykatattack/learningPixi).
 
-We use the rendering library [ThreeJS](https://threejs.org/) to create 3d scenes. If you intend to edit the 3d scene, please follow their [tutorial](https://threejs.org/docs/#manual/en/introduction/Useful-links).
+- We use the rendering library [ThreeJS](https://threejs.org/) to create 3d scenes. If you intend to edit the 3d scene, please follow their [tutorial](https://threejs.org/docs/#manual/en/introduction/Useful-links).
 
 ## From scratch
 

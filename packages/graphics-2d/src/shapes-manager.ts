@@ -12,18 +12,7 @@ import { ShapeData } from './types';
 import { dataToShape } from './adapter';
 import { Decoration, CONTROL_POINTS } from './shapes-2d';
 import { bounds } from './utils';
-
-abstract class Controller extends EventTarget {
-    abstract activate(): void;
-    abstract deactivate(): void;
-    public reset() {
-        this.deactivate();
-        this.activate();
-    }
-    protected pointerHandlers: {
-        [key: string]: (evt: any) => void;
-    } = {};
-}
+import { Controller } from './base-controller';
 
 export class ShapesUpdateController extends Controller {
 
@@ -89,6 +78,7 @@ export class ShapesUpdateController extends Controller {
                             o.controls.forEach((c, idx) => {
                                 c.removeAllListeners();
                                 c.on('pointerdown', (evt: any) => {
+                                    // stop bubbling
                                     evt.stopPropagation();
                                     evt.idx = idx;
                                     this.onControlDown(evt);
@@ -269,11 +259,13 @@ export class ShapesUpdateController extends Controller {
         const obj = this.getFirstGraphic();
         if (obj) {
             obj.controls[this.activeControlIdx].on('pointermove', (e: any) => {
+                // stop bubbling
                 e.stopPropagation();
                 e.idx = this.activeControlIdx;
                 this.onControlMove(e);
             });
             obj.controls[this.activeControlIdx].on('pointerupoutside', (e: any) => {
+                // stop bubbling
                 e.stopPropagation();
                 this.onControlUp();
             });
@@ -590,7 +582,6 @@ export class ShapesManager extends EventTarget {
             this.modes[mode].activate();
             this.modes[mode].addEventListener('update', this.bindControllers);
             this.mode = mode;
-            
         }
     }
 }

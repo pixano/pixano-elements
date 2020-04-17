@@ -6,10 +6,9 @@
  */
 
 import { customElement, property} from 'lit-element';
-import { MaskHandler } from './mask-handler';
+import { MaskManager, CreateController } from './mask-manager';
 import { GMask } from './shapes-2d';
 import { MaskVisuMode } from './mask';
-import { Mode } from './mask-handler';
 import { Canvas } from './pxn-canvas';
 
 /**
@@ -27,46 +26,46 @@ export class Segmentation extends Canvas {
   public mask: ImageData | null = null;
 
   @property({type: String})
-  public mode: Mode = Mode.SELECT_INSTANCE;
+  public mode: 'select' | 'update' | 'create' = 'select';
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
 
-  public opacity: number = 0.35;
+  public opacity: number = 0.60;
 
   protected selectedId: [number, number, number] = [0,0,0];
 
   // container of mask
   // never destroyed
-  private _graphicMask: GMask = new GMask();
+  protected _graphicMask: GMask = new GMask();
 
   private newMaskLoaded: boolean = false;
 
-  protected maskHandler = new MaskHandler(this.renderer,
+  protected maskManager = new MaskManager(this.renderer,
                                           this._graphicMask,
                                           this.selectedId);
+  @property({type: Boolean})
+  public showroi : boolean = (this.maskManager.modes.create as CreateController).showRoi;
 
   constructor() {
     super();
     this.renderer.labelLayer.addChild(this._graphicMask);
     this.renderer.labelLayer.alpha = this.opacity;
-    this.maskHandler.brushFilter.alpha = this.opacity;
-    this.renderer.stage.addChild(this.maskHandler);
 
-    this.maskHandler.on('update', () => {
+    this.maskManager.addEventListener('update', () => {
       this.dispatchEvent(new Event('update'));
     });
-    this.maskHandler.on('selection', (id: string) => {
-      this.dispatchEvent(new CustomEvent('selection', { detail: id }));
+    this.maskManager.addEventListener('selection', (evt: any) => {
+      this.dispatchEvent(new CustomEvent('selection', { detail: evt.detail }));
     });
   }
 
   get targetClass() {
-    return this.maskHandler.targetClass;
+    return this.maskManager.targetClass.value;
   }
 
   set targetClass(clsIdx: number) {
-    this.maskHandler.targetClass = clsIdx;
+    this.maskManager.targetClass.value = clsIdx;
   }
 
   get clsMap() {
@@ -93,17 +92,15 @@ export class Segmentation extends Canvas {
     if (this.renderer.imageWidth === 0 || this.renderer.imageHeight === 0) {
       return;
     }
-    const maxId = this._graphicMask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
-    this.maskHandler.selectedId = [maxId[0], maxId[1], this.maskHandler.targetClass]
+    this._graphicMask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
+    this.maskManager.selectedId.value = [-1, -1, -1];
   }
 
   protected onImageChanged() {
-    this.maskHandler.deselect();
     if (!this.newMaskLoaded) {
       this.setEmpty();
     }
   }
-
 
   /**
    * Called on every property change
@@ -114,38 +111,46 @@ export class Segmentation extends Canvas {
 
     if (changedProperties.has('mask') && this.mask && this.mask instanceof ImageData) {
       this.newMaskLoaded = true;
-      const maxId = this._graphicMask.initialize(this.mask);
-      this.maskHandler.selectedId = [maxId[0], maxId[1], this.maskHandler.targetClass];
+      this._graphicMask.initialize(this.mask);
+      this.maskManager.selectedId.value = [-1, -1, -1];
     }
     if (changedProperties.has('mode') && this.mode) {
-      this.maskHandler.setMode(this.mode);
+      this.maskManager.setMode(this.mode);
     }
 
     if (changedProperties.has('maskVisuMode') && this.maskVisuMode) {
       this._graphicMask.maskVisuMode = this.maskVisuMode;
-      this.maskHandler.updateTempBrushGraphic();
       const curMask  = this._graphicMask.getValue();
       if (curMask instanceof ImageData) {
-        this._graphicMask.setValue(curMask);
+        this._graphicMask.recomputeColor();
       }
+    }
+
+    if (changedProperties.has('showroi')) {
+      const controller = this.maskManager.modes.create as CreateController;
+      controller.showRoi = this.showroi;
     }
   }
 
   public fillSelection() {
-    this.maskHandler.fillSelection(this.maskHandler.selectedId);
+    if (this.maskManager.selectedId.value) {
+      this.maskManager.fillSelection(this.maskManager.selectedId.value);
+    }
   }
 
   public fillSelectionWithClass(newClass: number) {
-    const currClass = this.maskHandler.selectedId[2];
-    let newId: [number, number, number] = [ this.maskHandler.selectedId[0],  this.maskHandler.selectedId[1], newClass];
-    if (this.clsMap.get(newClass)![3] && !this.clsMap.get(currClass)![3]) {
-      // new class is instance and was semantic before: new instance idx
-      const nextIdx = this._graphicMask.getNextId();
-      newId = [nextIdx[0], nextIdx[1], newId[2]];
-    } else if (!this.clsMap.get(newClass)![3]) {
-      newId = [0, 0, newId[2]];
+    if (this.maskManager.selectedId.value) {
+      const currClass = this.maskManager.selectedId.value[2];
+      let newId: [number, number, number] = [ this.maskManager.selectedId.value[0],  this.maskManager.selectedId.value[1], newClass];
+      if (this.clsMap.get(newClass)![3] && !this.clsMap.get(currClass)![3]) {
+        // new class is instance and was semantic before: new instance idx
+        const nextIdx = this._graphicMask.getNextId();
+        newId = [nextIdx[0], nextIdx[1], newId[2]];
+      } else if (!this.clsMap.get(newClass)![3]) {
+        newId = [0, 0, newId[2]];
+      }
+      this.maskManager.fillSelection(newId);
     }
-    this.maskHandler.fillSelection(newId);
   }
 
   /**
@@ -154,8 +159,6 @@ export class Segmentation extends Canvas {
    */
   public setOpacity(opacity: number){
     this.renderer.labelLayer.alpha = opacity;
-    // this.maskHandler.brushFilter.alpha = this.renderer.labelLayer.alpha;
-    this.maskHandler.updateTempBrushGraphic();
 
   }
 
@@ -173,14 +176,12 @@ export class Segmentation extends Canvas {
       this.renderer.backgroundSprite.visible = true;
       this.renderer.labelLayer.alpha = this.opacity;
     }
-    this.maskHandler.updateTempBrushGraphic();
-
   }
 
   /**
    * Remove little blobs
    */
-  public filterLittle() {
-    this.maskHandler.filterAll(10)
+  public filterLittle(numPixels: number = 10) {
+    this.maskManager.filterAll(numPixels)
   }
 }

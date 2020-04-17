@@ -71,10 +71,6 @@ class SmartRectangleCreateController extends ShapeCreateController {
 
   private roi: PIXIGraphics = new PIXIGraphics();
 
-  private keyHandlers: {
-    [key: string]: (evt: any) => void;
-  }
-
   constructor(
     renderer: Renderer = new Renderer(),
     shapes: ObservableSet<ShapeData> = new ObservableSet()
