@@ -92,6 +92,8 @@ export class ViewControls extends EventTarget {
         } else if (this.viewer.s < this.viewer.smin) {
             // center placeholder if zoom is minimal
             this.viewer.s = this.viewer.smin;
+            this.viewer.computeDrawableArea(this.viewer.canvasWidth, this.viewer.canvasHeight,
+                this.viewer.imageWidth, this.viewer.imageHeight);
             this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
             this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
         }
@@ -107,6 +109,7 @@ export class ViewControls extends EventTarget {
         this.viewer.s *= 1.1;
         this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
+        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);        
         this.triggerOnZoom();
     }
 
@@ -131,11 +134,10 @@ export class ViewControls extends EventTarget {
      */
     public onPanInit(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
-            const pos = this.viewer.getPosition(evt.data);
-            const x = pos.x / this.viewer.imageWidth;
-            const y = pos.y / this.viewer.imageHeight;
-            this.init.x = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
-            this.init.y = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
+            const mouseData = evt.data.getLocalPosition(this.viewer.stage);
+            const {x, y} = this.viewer.normalize(mouseData);
+            this.init.x = x;
+            this.init.y = y;
             this.isPanning = true;
             this.viewer.stage.on('pointermove', this.handlers.PANMOVE);
             this.viewer.stage.on('pointerupoutside', this.handlers.PANUP);
@@ -150,22 +152,24 @@ export class ViewControls extends EventTarget {
     public onPan(evt: PIXI.interaction.InteractionEvent) {
         if (this.isPanning) {
             evt.stopPropagation();
-            const pos = this.viewer.getPosition(evt.data);
-            const {x, y} = this.viewer.normalize(pos);
-            const deltaX = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx - this.init.x;
-            const deltaY = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy - this.init.y;
-            this.init.x = x * (this.viewer.rw * this.viewer.s) + this.viewer.rx * this.viewer.s + this.viewer.sx;
-            this.init.y = y * (this.viewer.rh * this.viewer.s) + this.viewer.ry * this.viewer.s + this.viewer.sy;
-            this.viewer.sx = this.viewer.stage.position.x + deltaX - this.viewer.rx * this.viewer.s;
-            this.viewer.sy = this.viewer.stage.position.y + deltaY - this.viewer.ry * this.viewer.s;
-            this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
-            // fill complete scene
-            // this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
-            // -this.viewer.stage.position.y / this.viewer.stage.scale.y,
-            // this.viewer.canvasWidth / this.viewer.stage.scale.x,
-            // this.viewer.canvasHeight / this.viewer.stage.scale.y);
-            // this.viewer.render();
+            const mouseData = evt.data.getLocalPosition(this.viewer.stage);
+            const {x, y} = this.viewer.normalize(mouseData);
+            const deltaX = 0.5 * (x - this.init.x) * this.viewer.rw;
+            const deltaY = 0.5 * (y - this.init.y) * this.viewer.rh;
+            this.viewer.rx += deltaX;
+            this.viewer.ry += deltaY;
+            this.viewer.stage.position.x = this.viewer.rx * this.viewer.s + this.viewer.sx;
+            this.viewer.stage.position.y = this.viewer.ry * this.viewer.s + this.viewer.sy;
         }
+    }
+
+    /**
+     * Check root is positioned within view
+     */
+    public onPanUp() {
+        this.isPanning = false;
+        this.viewer.stage.removeListener('pointermove', this.handlers.PANMOVE);
+        this.viewer.stage.removeListener('pointerupoutside', this.handlers.PANUP);
     }
 
     public onEdgeMove(evt: PIXI.interaction.InteractionEvent) {
@@ -188,8 +192,8 @@ export class ViewControls extends EventTarget {
         } else if (y < threshY && y > 0) {
             transY = speed;
         }
-        this.viewer.sx = this.viewer.stage.position.x + transX - this.viewer.rx * this.viewer.s;
-        this.viewer.sy = this.viewer.stage.position.y + transY - this.viewer.ry * this.viewer.s;
+        this.viewer.rx += transX;
+        this.viewer.ry += transY;
         const stageX = this.viewer.rx * this.viewer.s + this.viewer.sx;
         const stageY = this.viewer.ry * this.viewer.s + this.viewer.sy;
         // scale-independant minimal pixel distance between image to canvas border
@@ -199,33 +203,5 @@ export class ViewControls extends EventTarget {
             return;
         }
         this.viewer.stage.position.set(stageX, stageY);
-    }
-
-    /**
-     * Check root is positioned within view
-     */
-    public onPanUp() {
-        this.isPanning = false;
-        this.viewer.stage.removeListener('pointermove', this.handlers.PANMOVE);
-        this.viewer.stage.removeListener('pointerupoutside', this.handlers.PANUP);
-        // scale-independant minimal pixel distance between image to canvas border
-        // const thresh = 10;
-        // if (this.viewer.stage.position.x + this.viewer.stage.width < thresh
-        //     || this.viewer.canvasWidth - this.viewer.stage.position.x < thresh
-        //     || this.viewer.canvasHeight - this.viewer.stage.position.y < thresh
-        //     || this.viewer.stage.position.y + this.viewer.stage.height < thresh) {
-        //     this.viewer.s = this.viewer.smin;
-        //     this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
-        //     this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
-        //     this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth, this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
-        //     this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
-        //     this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
-        //         -this.viewer.stage.position.y / this.viewer.stage.scale.y,
-        //         this.viewer.canvasWidth / this.viewer.stage.scale.x,
-        //         this.viewer.canvasHeight / this.viewer.stage.scale.y);
-        // }
-        // important to re-render stuff even if the root fits the view
-        // in order to update hitareas
-        // this.viewer.render();
     }
 }
