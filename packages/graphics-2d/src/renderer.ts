@@ -95,11 +95,6 @@ export class Renderer extends PIXI.Application {
             this.sy = 0.5 * (1 - this.s) * this.rh;
         }
         this.htmlImageElement = img;
-        // this.objects.forEach((o) => {
-        //     o.scaleX = img.width;
-        //     o.scaleY = img.height;
-        //     o.draw();
-        // })
         if (this.stage.children.length > 0) {
             this.stage.removeChildAt(0);
         }
@@ -111,10 +106,6 @@ export class Renderer extends PIXI.Application {
             -this.stage.position.y / this.stage.scale.y,
             this.canvasWidth / this.stage.scale.x,
             this.canvasHeight / this.stage.scale.y);
-        // this.objects.forEach((o: Shape) => {
-        //     o.scaleX = this.image.width;
-        //     o.scaleY = this.image.height;
-        // });
         this.backgroundSprite.filters = [this.filter];
     }
 
@@ -257,9 +248,9 @@ export class Renderer extends PIXI.Application {
             this.ry = 0;
         }
         // remember pan (?)
-        // if sx and sy are set to 0
+        // if sx and sy are set to 0 (default)
         // use existing value
-        if (!this.sx && !this.sy) {
+        if (this.sx === 0 && this.sy === 0) {
             this.sx = 0.5 * (1 - this.s) * this.rw;
             this.sy = 0.5 * (1 - this.s) * this.rh;
         }
