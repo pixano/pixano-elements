@@ -71,6 +71,12 @@ customElements.define('my-demo-cuboid', MyDemocuboid);
 | `editableCuboids` | `Set<Cuboid>` | `[]` | Cuboids rendered in the scene
 | `editTarget` | `Cuboid|null` | `null` | Selected cuboid
 | `cameraMode` | `orthographic|perspective` | `perspective` | Camera type
+| `mode`       | `InteractionMode*` | `edit` | Sets the canvas interaction mode. Use `none` for no interactions at all.
+
+*InteractionMode is a string with the following possible values:
+```ts
+type InteractiveMode =  "edit" | "create" | "none";
+```
 
 ### Methods
 
@@ -92,3 +98,5 @@ customElements.define('my-demo-cuboid', MyDemocuboid);
 | `Delete`     | `Delete selected shapes` |
 | `Ctrl+C`     | `Copy in clipboard currently selected cuboid` |
 | `Ctrl+V`     | `Create new cuboid (with new id) from the clipboard content` |
+| `+`          | `Scale up size of points in pointcloud` |
+| `-`          | `Scale down size of points in pointcloud` |

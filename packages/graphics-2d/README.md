@@ -66,17 +66,29 @@ customElements.define('my-demo-rectangle', MyDemoRectangle);
 | `hideLabels  `   | `boolean`      | `false`  | When `true`, hides the label layer.
 | `color`          | `string `      | `#f3f3f5`| Background color
 | `zoom     `      | `number`       | `0.95`(readonly) | Zoom value
-| `noninteractive` | `boolean`      | `false` | When `true`, disables pointer events. Used for display-only annotations.
 
 #### pxn-canvas-2d
 
 Note: `pxn-canvas-2d` inherits from `pxn-canvas`.
 
-| Name        | Type           | Default  | Description
-| ----------- | -------------- | -------- |------------
-| `mode`      | `string`       | `update `  | Sets the canvas interaction mode.
-| `shapes`    | `ShapeData[]|ShapeData[]` | `[] `  | Sets the canvas shapes to be displayed.
-| `selectedShapeIds` | `string[]` | `[]` | List of selected shape ids
+| Name        | Type                | Default  | Description
+| ----------- | ------------------- | -------- |------------
+| `mode`      | `InteractionMode*`  | `edit `  | Sets the canvas interaction mode. Use `none` for no interactions at all.
+| `shapes`    | `ShapeData[]|Set<ShapeData>` | `[] `  | Sets the canvas shapes to be displayed.
+| `selectedShapeIds` | `string[]`   | `[]` | List of selected shape ids
+
+*InteractionMode depends on the element:
+```ts
+// pxn-rectangle | pxn-polygon
+type InteractiveMode =  'edit' | 'create' | 'none';
+
+// pxn-segmentation
+type InteractiveMode =  'select' | 'edit-add' | 'edit-remove' | 'create' | 'none';
+
+// pxn-smart-rectangle
+type InteractiveMode =  'edit' | 'create' | 'smart-create' | 'none';
+```
+
 
 #### pxn-rectangle
 
@@ -93,6 +105,7 @@ Note: `pxn-segmentation` inherits from `pxn-canvas` so all properties in `pxn-ca
 | Name             | Type           | Default  | Description
 | ---------------- | -------------- | -------- |------------
 | `mask`           | `ImageData*|null` | `null `  | Segmentation mask to be drawn
+| `mode`           | `select | update | create | none` | `select` | Sets the canvas interaction mode. Use `none` for no interactions at all.
 | `maskVisuMode`   | `SEMANTIC|INSTANCE` | `SEMANTIC` | Display of colors by class (use given map class <=> color) or instance (random color based on instance index)
 | `showroi` | `boolean` | `false` | Show ROI helper when creating a new mask instance.
 

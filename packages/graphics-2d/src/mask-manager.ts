@@ -58,7 +58,6 @@ export class EditionController extends Controller {
     }
 
     activate() {
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('mousedown', this.pointerHandlers.CREATE_POLYGON);
         this.renderer.stage.on('pointermove', this.pointerHandlers.TEMP_POLYGON);
         this.contours.visible = true;
@@ -192,7 +191,6 @@ export class SelectController extends Controller {
     }
 
     activate() {
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('mousedown', this.pointerHandlers.SELECTION_PICKER);
         window.addEventListener('keydown', this.keyHandlers.KEY_SELECTION, false);
         this.contours.visible = true;
@@ -276,7 +274,6 @@ export class LockController extends Controller {
     }
 
     activate() {
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('mousedown', this.pointerHandlers.LOCK_DOWN);
     }
 
@@ -337,7 +334,6 @@ export class CreateController extends Controller {
     }
 
     activate() {
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('mousedown', this.pointerHandlers.CREATE_POLYGON);
         this.renderer.stage.on('pointermove', this.pointerHandlers.TEMP_POLYGON);
         this.initRoi();
@@ -464,8 +460,8 @@ export class MaskManager extends EventTarget {
         this.modes = {
             'create': new CreateController(this.renderer, this.gmask, this.targetClass, this.dispatchEvent.bind(this)),
             'select': new SelectController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'update-add': new EditionAddController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'update-remove': new EditionRemoveController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
+            'edit-add': new EditionAddController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
+            'edit-remove': new EditionRemoveController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
             'lock': new LockController(this.renderer, this.gmask)
         };
         this.modes[this.mode].activate();
@@ -491,8 +487,14 @@ export class MaskManager extends EventTarget {
      */
     public setMode(mode: string) {
         if (mode !== this.mode) {
-            this.modes[this.mode].deactivate();
-            this.modes[mode].activate();
+            if (this.modes[this.mode]) {
+                // Restore default state
+                this.modes[this.mode].deactivate();
+            }
+            if (this.modes[mode]) {
+                // Set up new mode state
+                this.modes[mode].activate();  
+            }
             this.mode = mode;
         }
     }

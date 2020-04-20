@@ -101,8 +101,8 @@ class MyDemo extends LitElement {
         <div class="icons">
           <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
           <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magic_select}</p>
-          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'update-remove'}>${subtract}</p>
-          <p class="icon" title="Union" @click=${() => this.element.mode = 'update-add'}>${union}</p>
+          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
+          <p class="icon" title="Union" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
           <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
           <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
           <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
