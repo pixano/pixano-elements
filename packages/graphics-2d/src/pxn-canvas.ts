@@ -31,8 +31,8 @@ export class Canvas extends LitElement {
   @property({type: Boolean})
   public disablefullscreen: boolean = false;
 
-  @property({type: String})
   // background color
+  @property({type: String})
   public color: string = "#f3f3f5";
 
   // renderer class
