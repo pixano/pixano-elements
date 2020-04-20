@@ -7,7 +7,7 @@
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
-import { ShapesUpdateController, ShapeCreateController } from './shapes-manager';
+import { ShapesEditController, ShapeCreateController } from './shapes-manager';
 import { PolygonShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
 import { observable } from '@pixano/core';
@@ -22,7 +22,7 @@ export class Polygon extends Canvas2d {
     constructor() {
         super();
         this.shManager.setController('create', new PolygonCreateController(this.renderer, this.shapes));
-        this.shManager.setController('update', new PolygonsUpdateController(this.renderer,
+        this.shManager.setController('edit', new PolygonsEditController(this.renderer,
                                                     this.shManager.graphics, this.shManager.targetShapes));
     }
 
@@ -102,7 +102,7 @@ export class Polygon extends Canvas2d {
     }
 }
 
-class PolygonsUpdateController extends ShapesUpdateController {
+class PolygonsEditController extends ShapesEditController {
 
     private activeNodeIdx: number = -1;
 
