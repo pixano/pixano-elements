@@ -14,6 +14,9 @@ import { Cuboid } from './types';
 import { EditModeController } from './edit-controller';
 import { CreateModeController } from './create-controller';
 
+// edit mode can either be active (target != null) or inactive (target == null)
+export type InteractiveMode = "edit" | "create" | "none";
+
 /** Edit mode manager - Handles mode switching and monitors neceassary events */
 export class ModeManager {
     private viewer: SceneView;
@@ -30,6 +33,7 @@ export class ModeManager {
     private orbitControls: OrbitControls;
     private navigating = false;
 
+    private _mode: InteractiveMode = "edit";
     private editMode: EditModeController | null = null;
     private editing = false;  // mousedown
     private updatePending = false;  // mousedown+drag
@@ -37,13 +41,6 @@ export class ModeManager {
     private pclPlot: () => PointCloudPlot;
 
     private createMode: CreateModeController | null = null;
-
-    /** 'edit', 'create' or null depending on the currently active mode. */
-    get mode() {
-        if (this.editMode) { return 'edit'; }
-        if (this.createMode) { return 'create'; }
-        return null;
-    }
 
     constructor(
             viewer: SceneView, eventTarget: EventTarget,
@@ -83,7 +80,7 @@ export class ModeManager {
                     this.viewer.render();
                 }
             }
-          })
+        });
 
         // mouse movement to have the mouse position ready when needed
         this.mouseMoveListener = (evt: MouseEvent) => { this.lastMouseMouseEvt = evt; };
@@ -101,18 +98,17 @@ export class ModeManager {
                 evt.clientX, evt.clientY, ...this.annotationPlots.plotsMap.values())[0] as CuboidPlot;
             const target = plot ? this.annotationPlots.annotationsMap.get(plot)! : null;
             if (this.editMode && !target) {
-                this.setMode();
-                this.editTarget = target;
+                this.editTarget = null;
+                this.mode = "edit";
             } else if (this.editMode && target && target !== this.editTarget) {
-                this.setMode();
                 this.editTarget = target;
-                this.setMode("edit");
+                this.mode = 'edit'
             } else if (this.editMode && target && target === this.editTarget) {
                 this.editMode.toggleMode();
                 this.viewer.render();
-            } else if (!this.editMode && target) {
+            } else if (this.mode === 'edit' && !this.editMode && target) {
                 this.editTarget = target;
-                this.setMode('edit');
+                this.mode = 'edit';
             }
         };
 
@@ -128,12 +124,12 @@ export class ModeManager {
                 }, Infinity);
                 this.observers.set(value!, observer);
             } else if (op === "delete") {
-                this.setMode();
+                this.mode = this.mode;
                 this.editTarget = null;
                 unobserve(value, this.observers.get(value)!);
                 this.observers.delete(value!);
             } else if (op === "clear") {
-                if (this.editMode) { this.setMode() };
+                if (this.editMode) { this.mode = this.mode; };
                 this.editTarget = null;
                 for (const [target, observer] of this.observers.entries()) {
                     if (target !== annotations) {  // unobserve cuboids
@@ -171,12 +167,17 @@ export class ModeManager {
         }
     }
 
+    /** 'edit', 'create' or null depending on the currently active mode. */
+    get mode(): InteractiveMode {
+        return this._mode;
+    }
+
     /** Switch to another mode -
-     *  @param mode 'edit', 'create' or null
+     *  @param mode 'edit', 'create' or 'none'
      */
-    setMode(mode: string | null = null) {
+    set mode(mode: InteractiveMode) {
         // Restore default state
-        if (this.editMode)  {
+        if (this._mode === "edit" && this.editMode)  {
             this.editMode.destroy();
             this.editMode = null;
 
@@ -189,7 +190,7 @@ export class ModeManager {
             this.eventTarget.dispatchEvent(new CustomEvent("selection", { detail: [] }));
         }
 
-        if (this.createMode)  {
+        if (this._mode === "create" && this.createMode)  {
             this.createMode.destroy();
             this.createMode = null;
         }
@@ -202,30 +203,29 @@ export class ModeManager {
         this.editing = false;
 
         if (mode === "edit") {
-            if (!this.editTarget) {
-                throw new Error("cannot go into edit mode without a target");
+            if (this.editTarget) {
+                // Set up edit mode
+                const targetPlot = this.annotationPlots.plotsMap.get(this.editTarget)!;
+                this.editMode = new EditModeController(this.viewer, this.editTarget, targetPlot);
+
+                this.editMode.addEventListener("start", () => {
+                    this.orbitControls.enabled = false;
+                    this.editing = true;
+                });
+                this.editMode.addEventListener("change", () => { this.updatePending = true; });
+                this.editMode.addEventListener("stop", () => {
+                    this.orbitControls.enabled = true;
+                    if (this.updatePending) {
+                        this.eventTarget.dispatchEvent(new CustomEvent("update", { detail: this.editTarget }));
+                    }
+                    this.updatePending = false;
+                });
+
+                // notify about switch to editing mode
+                this.eventTarget.dispatchEvent(new CustomEvent("selection", { detail: [ this.editTarget ] }));
+            } else {
+                // edit without target is just select mode
             }
-
-            // Set up edit mode
-            const targetPlot = this.annotationPlots.plotsMap.get(this.editTarget)!;
-            this.editMode = new EditModeController(this.viewer, this.editTarget, targetPlot);
-
-            this.editMode.addEventListener("start", () => {
-                this.orbitControls.enabled = false;
-                this.editing = true;
-            });
-            this.editMode.addEventListener("change", () => { this.updatePending = true; });
-            this.editMode.addEventListener("stop", () => {
-                this.orbitControls.enabled = true;
-                if (this.updatePending) {
-                    this.eventTarget.dispatchEvent(new CustomEvent("update", { detail: this.editTarget }));
-                }
-                this.updatePending = false;
-            });
-
-            // notify about switch to editing mode
-            this.eventTarget.dispatchEvent(new CustomEvent("selection", { detail: [ this.editTarget ] }));
-
         // Activate creation
         } else if (mode === "create") {
             this.orbitControls.enabled = false;
@@ -234,12 +234,14 @@ export class ModeManager {
                 this.lastMouseMouseEvt, this.pclPlot);
             this.createMode.addEventListener('create', (evt: CustomEvent) => {
                 this.editTarget = evt.detail;
-                this.setMode("edit");
+                this.mode = 'edit';
                 this.eventTarget.dispatchEvent(evt);
             });
         }
 
         this.viewer.render();
+        this._mode = mode;
+        this.eventTarget.dispatchEvent(new CustomEvent('mode', {detail: mode}));
     }
 }
 

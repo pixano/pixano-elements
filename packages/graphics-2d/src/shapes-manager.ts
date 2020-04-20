@@ -14,7 +14,7 @@ import { Decoration, CONTROL_POINTS } from './shapes-2d';
 import { bounds } from './utils';
 import { Controller } from './base-controller';
 
-export class ShapesUpdateController extends Controller {
+export class ShapesEditController extends Controller {
 
     public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
 
@@ -123,7 +123,6 @@ export class ShapesUpdateController extends Controller {
             s.buttonMode = true;
             s.on('pointerdown', this.onObjectDown.bind(this));
         });
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('pointerdown', this.pointerHandlers.POINTERDOWN);
     }
 
@@ -137,7 +136,6 @@ export class ShapesUpdateController extends Controller {
             s.removeAllListeners('pointerdown');
         });
         this.renderer.stage.removeListener('pointerdown', this.pointerHandlers.POINTERDOWN);
-        this.renderer.stage.interactive = false;
     }
 
     protected onRootDown(evt: any) {
@@ -425,7 +423,6 @@ export abstract class ShapeCreateController extends Controller {
     }
 
     public activate() {
-        this.renderer.stage.interactive = true;
         this.cross.visible = true;
         const pos = this.renderer.mouse;
         this.cross.cx = pos.x;
@@ -433,14 +430,12 @@ export abstract class ShapeCreateController extends Controller {
         this.cross.scaleX = this.renderer.imageWidth;
         this.cross.scaleY = this.renderer.imageHeight;
         this.cross.draw();
-        this.renderer.stage.interactive = true;
         this.renderer.stage.on('pointerdown', this.pointerHandlers.ROOTDOWN);
         this.renderer.stage.on('pointermove', this.pointerHandlers.ROOTMOVE);
         this.renderer.stage.on('pointerupoutside', this.pointerHandlers.ROOTUP);
     }
 
     public deactivate() {
-        this.renderer.stage.interactive = false;
         this.cross.visible = false;
         const shape = this.tmpShape as Shape;
         if (shape) {
@@ -488,7 +483,7 @@ export class ShapesManager extends EventTarget {
 
     public graphics: Set<Shape> = new Set();
 
-    public mode: string = 'update';
+    public mode: string = 'edit';
 
     public modes: {
         [key: string]: Controller;
@@ -502,7 +497,7 @@ export class ShapesManager extends EventTarget {
         this.renderer = renderer;
         this.shapes = shapes;
         this.modes = {
-            update: new ShapesUpdateController(this.renderer, this.graphics, this.targetShapes)
+            edit: new ShapesEditController(this.renderer, this.graphics, this.targetShapes)
         };
         this.bindControllers = (evt: any) => {
             this.dispatchEvent(new CustomEvent(evt.type, { detail: evt.detail }));
@@ -571,16 +566,22 @@ export class ShapesManager extends EventTarget {
 
     /**
      * Handle new mode set:
-     * 1. Reset canvas to "mode-free" (no interaction)
+     * 1. Reset canvas to default "mode-free" (no interaction)
      * 2. Apply interactions of new mode
      * @param mode string
      */
     public setMode(mode: string) {
         if (mode !== this.mode) {
-            this.modes[this.mode].deactivate();
-            this.modes[this.mode].removeEventListener('update', this.bindControllers);
-            this.modes[mode].activate();
-            this.modes[mode].addEventListener('update', this.bindControllers);
+            if (this.modes[this.mode]) {
+                // Restore default state
+                this.modes[this.mode].deactivate();
+                this.modes[this.mode].removeEventListener('update', this.bindControllers);
+            }
+            if (this.modes[mode]) {
+                // Set up new mode state
+                this.modes[mode].activate();
+                this.modes[mode].addEventListener('update', this.bindControllers);   
+            }
             this.mode = mode;
         }
     }

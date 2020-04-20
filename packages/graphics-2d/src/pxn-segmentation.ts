@@ -26,7 +26,7 @@ export class Segmentation extends Canvas {
   public mask: ImageData | null = null;
 
   @property({type: String})
-  public mode: 'select' | 'update' | 'create' = 'select';
+  public mode: 'select' | 'edit-add' | 'edit-remove' | 'create' = 'select';
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
