@@ -63,10 +63,10 @@ customElements.define('my-demo-rectangle', MyDemoRectangle);
 
 | Name             | Type           | Default  | Description
 | ---------------- | -------------- | -------- |------------
-| `image      `    | `string|null` | `null `  | Sets the image url to be rendered on canvas.
-| `hideLabels  `   | `boolean`      | `false`  | When `true`, hides the label layer.
+| `image`          | `string|null` | `null `  | Sets the image url to be rendered on canvas.
+| `hideLabels`     | `boolean`      | `false`  | When `true`, hides the label layer.
 | `color`          | `string `      | `#f3f3f5`| Background color
-| `zoom     `      | `number`       | `0.95`(readonly) | Zoom value
+| `zoom`           | `number`       | `0.95`(readonly) | Zoom value
 
 #### pxn-canvas-2d
 
@@ -231,8 +231,8 @@ None
 | Event Name | Detail              | Description
 | ---------- | ------------------- | -----------
 | `create`   | `ShapeDataDetail`   | Fired when a shape has been created.
-| `update  ` | `ShapeDataIdxDetail`| Fired when a shapes update has been made.
-| `delete  ` | `ShapeDataIdxDetail`| Fired when shapes are deleted. Detail is the list of the deleted shape ids.
+| `update`   | `ShapeDataIdxDetail`| Fired when a shapes update has been made.
+| `delete`   | `ShapeDataIdxDetail`| Fired when shapes are deleted. Detail is the list of the deleted shape ids.
 | `selection`| `ShapeDatasDetail`  | Fired when shapes are selected.
 | `mode`     | `ModeDetail`        | Fired when user interaction mode changed
 
