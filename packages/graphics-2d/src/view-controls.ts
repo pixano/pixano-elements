@@ -109,7 +109,7 @@ export class ViewControls extends EventTarget {
         this.viewer.s *= 1.1;
         this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
-        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);        
+        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
     }
 

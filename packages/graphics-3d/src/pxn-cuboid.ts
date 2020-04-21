@@ -53,7 +53,6 @@ export class CuboidEditor extends LitElement {
     this.modeManager = new ModeManager(
         this.viewer, this, this.editableCuboids,
         this.cuboidPlots, this.groundPlot, this.getPcl.bind(this));
-    
     this.mode = this.modeManager.mode;
     window.addEventListener("keydown", this.defaultOnKeyDown.bind(this));
   }

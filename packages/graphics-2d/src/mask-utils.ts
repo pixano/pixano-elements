@@ -159,3 +159,26 @@ export function getDensePolysExtrema(densePolygons: DensePolygon[]): number[]{
     });
     return [xMin, yMin, xMax, yMax];
 }
+
+export const distinctColors: [number, number, number][] = [
+    [230, 25, 75], // 0 red-pink
+    [60, 180, 75], // 1 green
+    [255, 225, 25], // 2 yellow
+    [0, 130, 200], // 3 blue
+    [245, 130, 48], // 4 orange
+    [145, 30, 180], // 5 purple
+    [70, 240, 240], // 6 cyan
+    [240, 50, 230], // 7 pink-purple
+    [210, 245, 60], // 8 yellow-green
+    [250, 190, 190], // 9 light pink
+    [0, 128, 128], // 10 blue green
+    [230, 190, 255], // 11 light purple
+    [170, 110, 40], // 12 brown
+    [255, 250, 200], // 13 light yellow green
+    [128, 0, 0], // 14 dark red
+    [170, 255, 195], // 15 green fluo
+    [128, 128, 0], // 16 dark green-brown
+    [255, 215, 180], // 17 beige
+    [0, 0, 128], // 18 dark blue
+    [128, 128, 128] // 19 grey
+];
