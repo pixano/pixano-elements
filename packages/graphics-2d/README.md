@@ -31,7 +31,7 @@ class MyDemoRectangle extends LitElement {
     // the new rectangle.
     const newObj = evt.detail;
     newObj.color = colors[this.element.shapes.size % colors.length];
-    this.element.mode = 'update';
+    this.element.mode = 'edit';
   }
 
   get element() {
