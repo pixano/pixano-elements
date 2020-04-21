@@ -32,7 +32,7 @@ class MyDemo extends LitElement {
     this.image = 'image.jpg';
     window.addEventListener('keydown', (evt) => {
       if (evt.key == 'Alt') {
-        this.element.mode = this.element.mode === 'update' ? 'create': 'update';
+        this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
       }
     });
   }
@@ -70,7 +70,7 @@ class MyDemo extends LitElement {
   onCreate(evt) {
     const newObj = evt.detail;
     newObj.color = colors[Math.floor(Math.random() * colors.length)];
-    this.element.mode = 'update';
+    this.element.mode = 'edit';
   }
 
 

@@ -131,7 +131,7 @@ class MyDemo extends LitElement {
     window.addEventListener("keydown", evt => {
       if (evt.key == "Alt") {
         this.element.mode =
-          this.element.mode === "update" ? "create" : "update";
+          this.element.mode === "edit" ? "create" : "edit";
       }
     });
   }
