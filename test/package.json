@@ -7,7 +7,7 @@
     "jest": "^24.9.0",
     "@types/jest": "^24.0.23",
     "ts-jest": "^24.2.0",
-    "@pixano/core": "^0.2.0"
+    "@pixano/core": "^0.2.1"
   },
   "scripts": {
     "test": "jest --config=jest.config.js"
