@@ -237,10 +237,13 @@ export class TransformControls extends Object3D {
 		this.domElement.removeEventListener( "touchleave", this.onPointerUpBind );
 
 		this.traverse( ( child ) => {
-			//@ts-ignore
-			if ( child.geometry ) child.geometry.dispose();
-			//@ts-ignore
-			if ( child.material ) child.material.dispose();
+			if ( child instanceof Mesh || child instanceof Line) {
+				child.geometry.dispose();
+			}
+
+			if ( child instanceof Mesh || child instanceof Line) {
+				(child.material as THREE.Material).dispose();
+			}
 
 		} );
 	}
@@ -259,7 +262,7 @@ export class TransformControls extends Object3D {
 					propValue = value;
 					scope.plane[ propName ] = value;
 					scope.gizmo[ propName ] = value;
-					scope.dispatchEvent( { type: propName + "-changed", value: value } );
+					scope.dispatchEvent( { type: `${propName}-changed`, value } );
 					scope.dispatchEvent( scope.changeEvent );
 				}
 			}
@@ -312,7 +315,7 @@ export class TransformControls extends Object3D {
 		if ( ( pointer.button === 0 || pointer.button === undefined ) && this.axis !== null ) {
 
 			this.ray.setFromCamera( pointer, this.camera );
-			var planeIntersect = this.ray.intersectObjects( [ this.plane ], true )[ 0 ] || false;
+			const planeIntersect = this.ray.intersectObjects( [ this.plane ], true )[ 0 ] || false;
 			if ( planeIntersect ) {
 				let space = this.space;
 				if ( this.mode === 'scale' ) {
@@ -321,7 +324,7 @@ export class TransformControls extends Object3D {
 					space = 'world';
 				}
 				if ( space === 'local' && this.mode === 'rotate' ) {
-					var snap = this.rotationSnap;
+					const snap = this.rotationSnap;
 					if ( this.axis === 'X' && snap ) this.object.rotation.x = Math.round( this.object.rotation.x / snap ) * snap;
 					if ( this.axis === 'Y' && snap ) this.object.rotation.y = Math.round( this.object.rotation.y / snap ) * snap;
 					if ( this.axis === 'Z' && snap ) this.object.rotation.z = Math.round( this.object.rotation.z / snap ) * snap;
@@ -339,9 +342,9 @@ export class TransformControls extends Object3D {
 				this.pointStart.copy( planeIntersect.point ).sub( this.worldPositionStart );
 
 				// set direction of gizmos for scaling
-				this.xDirection = this.gizmo.gizmo[ "scale" ].children.find((c) => c.name === 'X')!.scale.x > 0;
-				this.yDirection = this.gizmo.gizmo[ "scale" ].children.find((c) => c.name === 'Y')!.scale.y > 0;
-				this.zDirection = this.gizmo.gizmo[ "scale" ].children.find((c) => c.name === 'Z')!.scale.z > 0;
+				this.xDirection = this.gizmo.gizmo.scale.children.find((c) => c.name === 'X')!.scale.x > 0;
+				this.yDirection = this.gizmo.gizmo.scale.children.find((c) => c.name === 'Y')!.scale.y > 0;
+				this.zDirection = this.gizmo.gizmo.scale.children.find((c) => c.name === 'Z')!.scale.z > 0;
 
 			}
 			this.dragging = true;
@@ -352,10 +355,10 @@ export class TransformControls extends Object3D {
 
 	pointerMove ( pointer ) {
 
-		var axis = this.axis;
-		var mode = this.mode;
-		var object = this.object;
-		var space = this.space;
+		const axis = this.axis;
+		const mode = this.mode;
+		const object = this.object;
+		let space = this.space;
 
 		if ( mode === 'scale' ) {
 			space = 'local';
@@ -366,9 +369,9 @@ export class TransformControls extends Object3D {
 		if ( object === undefined || axis === null || this.dragging === false || ( pointer.button !== undefined && pointer.button !== 0 ) ) return;
 
 		this.ray.setFromCamera( pointer, this.camera );
-		var planeIntersect = this.ray.intersectObjects( [ this.plane ], true )[ 0 ] || false;
-		//@ts-ignore
-		if ( planeIntersect === false ) return;
+		const  planeIntersect = this.ray.intersectObjects( [ this.plane ], true )[ 0 ];
+
+		if ( !planeIntersect ) return;
 
 		this.pointEnd.copy( planeIntersect.point ).sub( this.worldPositionStart );
 
@@ -468,7 +471,7 @@ export class TransformControls extends Object3D {
 				}
 				this.offset.applyQuaternion( this.quaternionStart ).divide( this.parentScale );
 				object.position.copy( this.positionStart ).add(this.offset.multiplyScalar(0.5));
-				
+
 			} else {
 				// colored scale box
 				// fix box center while rescaling
@@ -508,7 +511,7 @@ export class TransformControls extends Object3D {
 		} else if ( mode === 'rotate' ) {
 
 			this.offset.copy( this.pointEnd ).sub( this.pointStart );
-			var ROTATION_SPEED = 20 / this.worldPosition.distanceTo( this._tempVector.setFromMatrixPosition( this.camera.matrixWorld ) );
+			const ROTATION_SPEED = 20 / this.worldPosition.distanceTo( this._tempVector.setFromMatrixPosition( this.camera.matrixWorld ) );
 
 			if ( axis === 'E' ) {
 				this.rotationAxis.copy( this.eye );
@@ -569,8 +572,8 @@ export class TransformControls extends Object3D {
 				button: event.button
 			};
 		} else {
-			var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
-			var rect = this.domElement.getBoundingClientRect();
+			const pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
+			const rect = this.domElement.getBoundingClientRect();
 			return {
 				x: ( pointer.clientX - rect.left ) / rect.width * 2 - 1,
 				y: - ( pointer.clientY - rect.top ) / rect.height * 2 + 1,
@@ -657,7 +660,8 @@ class TransformControlsGizmo extends Object3D {
 			depthWrite: false,
 			transparent: true,
 			side: DoubleSide,
-			fog: false
+			fog: false,
+			opacity: 0.4
 		} );
 
 		const gizmoLineMaterial = new LineBasicMaterial( {
@@ -665,8 +669,10 @@ class TransformControlsGizmo extends Object3D {
 			depthWrite: false,
 			transparent: true,
 			linewidth: 1,
-			fog: false
+			fog: false,
+			opacity: 0.4
 		} );
+
 		// Make unique material for each axis/color
 		const matInvisible = gizmoMaterial.clone();
 		matInvisible.opacity = 0.15;
@@ -723,7 +729,6 @@ class TransformControlsGizmo extends Object3D {
 		matLineYellowTransparent.opacity = 0.25;
 
 		// reusable geometry
-
 		const arrowGeometry = new CylinderBufferGeometry( 0, 0.05, 0.2, 12, 1, false );
 
 		const scaleHandleGeometry = new BoxBufferGeometry( 0.125, 0.125, 0.125 );
@@ -920,26 +925,26 @@ class TransformControlsGizmo extends Object3D {
 			]
 		};
 
-		this.add( this.gizmo[ "translate" ] = this.setupGizmo( gizmoTranslate ) );
-		this.add( this.gizmo[ "rotate" ] = this.setupGizmo( gizmoRotate ) );
-		this.add( this.gizmo[ "scale" ] = this.setupGizmo( gizmoScale ) );
-		this.add( this.picker[ "translate" ] = this.setupGizmo( pickerTranslate ) );
-		this.add( this.picker[ "rotate" ] = this.setupGizmo( pickerRotate ) );
-		this.add( this.picker[ "scale" ] = this.setupGizmo( pickerScale ) );
-		this.add( this.helper[ "translate" ] = this.setupGizmo( helperTranslate ) );
-		this.add( this.helper[ "rotate" ] = this.setupGizmo( helperRotate ) );
-		this.add( this.helper[ "scale" ] = this.setupGizmo( helperScale ) );
+		this.add( this.gizmo.translate = this.setupGizmo( gizmoTranslate ) );
+		this.add( this.gizmo.rotate = this.setupGizmo( gizmoRotate ) );
+		this.add( this.gizmo.scale = this.setupGizmo( gizmoScale ) );
+		this.add( this.picker.translate = this.setupGizmo( pickerTranslate ) );
+		this.add( this.picker.rotate = this.setupGizmo( pickerRotate ) );
+		this.add( this.picker.scale = this.setupGizmo( pickerScale ) );
+		this.add( this.helper.translate = this.setupGizmo( helperTranslate ) );
+		this.add( this.helper.rotate = this.setupGizmo( helperRotate ) );
+		this.add( this.helper.scale = this.setupGizmo( helperScale ) );
 
 		// Pickers should be hidden always
-		this.picker[ "translate" ].visible = false;
-		this.picker[ "rotate" ].visible = false;
-		this.picker[ "scale" ].visible = false;
+		this.picker.translate.visible = false;
+		this.picker.rotate.visible = false;
+		this.picker.scale.visible = false;
 	}
 
 	CircleGeometry ( radius, arc ) {
 		const geometry = new BufferGeometry( );
 		const vertices: number[] = [];
-		for ( var i = 0; i <= 64 * arc; ++ i ) {
+		for ( let i = 0; i <= 64 * arc; ++ i ) {
 			vertices.push( 0, Math.cos( i / 32 * Math.PI ) * radius, Math.sin( i / 32 * Math.PI ) * radius );
 		}
 		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
@@ -954,11 +959,10 @@ class TransformControlsGizmo extends Object3D {
 	}
 
 	// Creates an Object3D with gizmos described in custom hierarchy definition.
-	setupGizmo ( gizmoMap ) {
+	setupGizmo ( gizmoMap: {[key: string]: any[]} ) {
 
 		const gizmo = new Object3D();
-	
-		for ( const name in gizmoMap ) {
+		for ( const name of Object.keys(gizmoMap) ) {
 			for ( let i = gizmoMap[ name ].length; i --; ) {
 
 				const object = gizmoMap[ name ][ i ][ 0 ].clone();
@@ -996,31 +1000,27 @@ class TransformControlsGizmo extends Object3D {
 
 	updateMatrixWorld () {
 
-		var space = this.space;
+		let space = this.space;
 
 		if ( this.mode === 'scale' ) space = 'local'; // scale always oriented to local rotation
 
-		var quaternion = space === "local" ? this.worldQuaternion : this.identityQuaternion;
+		const quaternion = space === "local" ? this.worldQuaternion : this.identityQuaternion;
 
 		// Show only gizmos for current transform mode
+		this.gizmo.translate.visible = this.mode === "translate";
+		this.gizmo.rotate.visible = this.mode === "rotate";
+		this.gizmo.scale.visible = this.mode === "scale";
+		this.helper.translate.visible = this.mode === "translate";
+		this.helper.rotate.visible = this.mode === "rotate";
+		this.helper.scale.visible = this.mode === "scale";
 
-		this.gizmo[ "translate" ].visible = this.mode === "translate";
-		this.gizmo[ "rotate" ].visible = this.mode === "rotate";
-		this.gizmo[ "scale" ].visible = this.mode === "scale";
-		this.helper[ "translate" ].visible = this.mode === "translate";
-		this.helper[ "rotate" ].visible = this.mode === "rotate";
-		this.helper[ "scale" ].visible = this.mode === "scale";
 
+		let handles: Gizmo[] = [];
+		handles = handles.concat( this.picker[ this.mode ].children as Gizmo[] );
+		handles = handles.concat( this.gizmo[ this.mode ].children as Gizmo[] );
+		handles = handles.concat( this.helper[ this.mode ].children as Gizmo[] );
 
-		let handles: Object3D[] = [];
-		handles = handles.concat( this.picker[ this.mode ].children );
-		handles = handles.concat( this.gizmo[ this.mode ].children );
-		handles = handles.concat( this.helper[ this.mode ].children );
-
-		for ( let i = 0; i < handles.length; i ++ ) {
-
-			const handle = handles[ i ] as any;
-
+		for ( const handle of handles ) {
 			// hide aligned to camera
 			handle.visible = true;
 			handle.rotation.set( 0, 0, 0 );
@@ -1209,24 +1209,31 @@ class TransformControlsGizmo extends Object3D {
 			handle.visible = handle.visible && ( handle.name.indexOf( "E" ) === - 1 || ( this.showX && this.showY && this.showZ ) );
 
 			// highlight selected axis
-			handle.material._opacity = handle.material._opacity || handle.material.opacity;
-			handle.material._color = handle.material._color || handle.material.color.clone();
-			handle.material.color.copy( handle.material._color );
-			handle.material.opacity = handle.material._opacity;
-
-			if ( ! this.enabled ) {
-				handle.material.opacity *= 0.5;
-				handle.material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
-			} else if ( this.axis ) {
-				if ( handle.name === this.axis ) {
-					handle.material.opacity = 1.0;
-					handle.material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
-				} else if ( this.axis.split( '' ).some( ( a ) => handle.name === a ) ) {
-					handle.material.opacity = 1.0;
-					handle.material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
-				} else {
-					handle.material.opacity *= 0.25;
-					handle.material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
+			const material = handle instanceof Mesh ? handle.material as MeshBasicMaterial :
+							 handle instanceof Line ? handle.material as LineBasicMaterial : null;
+			if (material) {
+				// keep original opacity stored in _opacity
+				// keep original color stored in _color
+				(material as any)._opacity = (material as any)._opacity || material.opacity;
+				(material as any)._color = (material as any)._color || material.color.clone();
+				material.color.copy( (material as any)._color );
+				material.opacity = (material as any)._opacity;
+				if ( ! this.enabled ) {
+					material.opacity *= 0.5;
+					material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
+				} else if ( this.axis ) {
+					if ( handle.name === this.axis ) {
+						// mouse is over handle
+						material.opacity = 1.0;
+						// uncomment to darken color
+						// material.color.lerp( new Color( 1, 1, 1 ), 0.5 );
+					} else if ( this.axis.split( '' ).some( ( a ) => handle.name === a ) ) {
+						// mouse intersects multiple of handles
+						material.opacity = 0.4;
+					} else {
+						// mouse is out handle but close
+						material.opacity = 0.4;
+					}
 				}
 			}
 		}
@@ -1265,7 +1272,7 @@ class TransformControlsPlane extends Mesh {
 
 	updateMatrixWorld () {
 
-		let space = this.space;
+		const space = this.space;
 		this.position.copy( this.worldPosition );
 
 		if ( this.mode === 'scale' ) this.space = 'local'; // scale always oriented to local rotation
@@ -1326,4 +1333,8 @@ class TransformControlsPlane extends Mesh {
 		}
 		super.updateMatrixWorld();
 	}
+}
+
+interface Gizmo extends Object3D {
+	tag: string;
 }

@@ -68,12 +68,27 @@ customElements.define('my-demo-cuboid', MyDemocuboid);
 | Name             | Type           | Default  | Description
 | ---------------- | -------------- | -------- |------------
 | `pcl`            | `Float32Array` | `null `  | Point cloud as one-dimensional array in the XYZ order
-| `editableCuboids` | `Set<Cuboid>` | `[]` | Cuboids rendered in the scene
+| `editableCuboids` | `Set<Cuboid*>` | `[]` | Cuboids rendered in the scene
 | `editTarget` | `Cuboid|null` | `null` | Selected cuboid
 | `cameraMode` | `orthographic|perspective` | `perspective` | Camera type
-| `mode`       | `InteractionMode*` | `edit` | Sets the canvas interaction mode. Use `none` for no interactions at all.
+| `mode`       | `InteractionMode**` | `edit` | Sets the canvas interaction mode. Use `none` for no interactions at all.
 
-*InteractionMode is a string with the following possible values:
+*Cuboid format:
+```ts
+interface Cuboid {
+  id: string;
+  // x, y, z
+  position: number[];
+  // length, width, height
+  size: number[];
+  // rotation around z axis (trigometric)
+  heading: number;
+  // optional color
+  color?: number;
+}
+```
+
+**InteractionMode is a string with the following possible values:
 ```ts
 type InteractiveMode =  "edit" | "create" | "none";
 ```
@@ -86,6 +101,29 @@ type InteractiveMode =  "edit" | "create" | "none";
 | ------------------ | ----------------- |
 | `rotate() => void` | Rotate selected cuboid by 90°   |
 | `swap() => void`   | Swap selected cuboid coordinates |
+
+### Events
+
+#### pxn-canvas-2d
+
+| Event Name | Detail           | Description
+| ---------- | ---------------- | -----------
+| `create`   | `EditionDetail`  | Fired when a shape has been created.
+| `update  ` | `EditionDetail`  | Fired when a shapes update has been made.
+| `delete  ` | `EditionDetail`  | Fired when shapes are deleted. Detail is the list of the deleted shape ids.
+| `selection`| `SelectionDetail`| Fired when shapes are selected.
+| `mode`     | `InteractionMode`| Fired when user interaction mode changed
+
+```ts
+interface EditionDetail {
+  // cuboid being created/edited/deleted
+  detail: Cuboid;
+}
+interface SelectionDetail {
+  // cuboids being selected
+  detail: Cuboid[];
+}
+```
 
 ### Shortcuts
 

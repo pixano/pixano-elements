@@ -9,15 +9,10 @@ import { Container as PIXIContainer,
     Sprite as PIXISprite, Texture as PIXITexture,
     Point} from 'pixi.js';
 import { BlobExtractor, RegBlob } from './blob-extractor';
-import { fuseId, unfuseId, isInside, getPolygonExtrema } from './mask-utils';
+import { fuseId, unfuseId, isInside, getPolygonExtrema, distinctColors } from './mask-utils';
 
 const LOCKED_CLASS_COLOR: [number, number, number] = [200, 200, 200];
 const MASK_ALPHA_VALUE = 255;
-
-const DISTINCT_COLORS: [number, number, number][] = [[230, 25, 75], [60, 180, 75], [255, 225, 25], [0, 130, 200],
-  [245, 130, 48], [145, 30, 180], [70, 240, 240], [240, 50, 230], [210, 245, 60],
-  [250, 190, 190], [0, 128, 128], [230, 190, 255], [170, 110, 40], [255, 250, 200],
-  [128, 0, 0], [170, 255, 195], [128, 128, 0], [255, 215, 180], [0, 0, 128], [128, 128, 128]];
 
 export enum MaskVisuMode {
     SEMANTIC = 'SEMANTIC',
@@ -120,7 +115,6 @@ export class GMask extends PIXIContainer {
         // remove class notion from ids
         const instanceIds = new Set([...this.fusedIds].map((i) => Math.floor(i % (256 * 256))));
         const newId = new Array(256*256 - 1).findIndex((_,v) => !instanceIds.has(v + 1)) + 1;
-        console.log('getNextId', newId);
         return [newId % 256, Math.floor(newId / 256)];
     }
 
@@ -132,8 +126,8 @@ export class GMask extends PIXIContainer {
         if (cls === 0)
             return [0, 0, 0];
         if (this.maskVisuMode === MaskVisuMode.INSTANCE) {
-            const id = id1 + 256 * id2 * 65536 * cls;
-            return DISTINCT_COLORS[id % DISTINCT_COLORS.length];
+            const id = fuseId([id1, id2, cls]);
+            return distinctColors[id % distinctColors.length];
         }
         if (this.maskVisuMode === MaskVisuMode.SEMANTIC) {
             const c = this.clsMap.get(cls);
