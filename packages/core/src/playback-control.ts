@@ -31,6 +31,7 @@ export class PlaybackControl extends LitElement {
             overflow: hidden;
             width: 100%;
             height: 50px;
+            z-index: 1;
             -webkit-touch-callout: none; /* iOS Safari */
             -webkit-user-select: none; /* Safari */
              -khtml-user-select: none; /* Konqueror HTML */
