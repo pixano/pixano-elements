@@ -580,7 +580,7 @@ export class ShapesManager extends EventTarget {
             if (this.modes[mode]) {
                 // Set up new mode state
                 this.modes[mode].activate();
-                this.modes[mode].addEventListener('update', this.bindControllers);   
+                this.modes[mode].addEventListener('update', this.bindControllers);
             }
             this.mode = mode;
         }

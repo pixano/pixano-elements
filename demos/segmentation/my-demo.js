@@ -43,11 +43,15 @@ class MyDemo extends LitElement {
       if (!isNaN(evt.key)) {
         this.element.targetClass = parseInt(evt.key);
       }
+      if (evt.key === 's') {
+        // print mask
+        console.log('Mask', this.element.getMask());
+      }
     })
   }
 
   firstUpdated() {
-    const readMaskFromFile = false;
+    const readMaskFromFile = true;
     if (readMaskFromFile){
       const inputMask = new Image();
       inputMask.onload = () => {
@@ -67,7 +71,7 @@ class MyDemo extends LitElement {
         }
         this.mask = pixels;
       }
-      inputMask.src = 'mask.png';
+      inputMask.src = 'download2.png';
     }
     else {
       const canvas = document.createElement('canvas');
