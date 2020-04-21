@@ -90,7 +90,7 @@ customElements.define('my-demo', MyDemo);
 ```json
 {
     "name": "demo-my-element",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "private": true,
     "description": "Demo",
     "scripts": {
@@ -103,7 +103,7 @@ customElements.define('my-demo', MyDemo);
         "webpack-cli": "^3.3.10"
     },
     "dependencies": {
-        "@pixano/graphics-2d": "^0.2.0",
+        "@pixano/graphics-2d": "^0.2.1",
         "@webcomponents/webcomponentsjs": "^2.4.3",
         "lit-element": "^2.3.1"
     }
