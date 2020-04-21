@@ -114,7 +114,7 @@ export class ModeManager {
 
         this.viewer.domElement.addEventListener('mouseup', this.mouseUpListener);
 
-        // Track exernal events on annotations
+        // Track external events on annotations
         const observer1 = observe(annotations, (op, value?) => {
             if (op === "add") {
                 const observer = observe(value!, cubOp => {
@@ -124,8 +124,8 @@ export class ModeManager {
                 }, Infinity);
                 this.observers.set(value!, observer);
             } else if (op === "delete") {
-                this.mode = this.mode;
                 this.editTarget = null;
+                this.mode = this.mode;
                 unobserve(value, this.observers.get(value)!);
                 this.observers.delete(value!);
             } else if (op === "clear") {

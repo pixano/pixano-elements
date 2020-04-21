@@ -5,6 +5,7 @@ Set of web components for image and video annotations.
 ## Import 
 
 ```javascript
+// import all 2d elements
 import "@pixano/graphics-2d";
 // or a specific element
 import "@pixano/graphics-2d/lib/pxn-rectangle";
@@ -45,8 +46,8 @@ class MyDemoRectangle extends LitElement {
     <pxn-rectangle image="image.jpg" @create=${this.onCreate}></pxn-rectangle>
     <div>
         <button @click=${() => this.element.mode = 'create'}>Add</button>
-        <button @click=${() => this.element.viewControls.zoomIn()}>+</button>
-        <button @click=${() => this.element.viewControls.zoomOut()}>-</button>
+        <button @click=${() => this.element.zoomIn()}>+</button>
+        <button @click=${() => this.element.zoomOut()}>-</button>
     </div>`;
   }
 }
@@ -74,7 +75,7 @@ Note: `pxn-canvas-2d` inherits from `pxn-canvas`.
 | Name        | Type                | Default  | Description
 | ----------- | ------------------- | -------- |------------
 | `mode`      | `InteractionMode*`  | `edit `  | Sets the canvas interaction mode. Use `none` for no interactions at all.
-| `shapes`    | `ShapeData[]|Set<ShapeData>` | `[] `  | Sets the canvas shapes to be displayed.
+| `shapes`    | `ShapeData**[]` | `[] `  | Sets the canvas shapes to be displayed.
 | `selectedShapeIds` | `string[]`   | `[]` | List of selected shape ids
 
 *InteractionMode depends on the element:
@@ -87,6 +88,45 @@ type InteractiveMode =  'select' | 'edit-add' | 'edit-remove' | 'create' | 'none
 
 // pxn-smart-rectangle
 type InteractiveMode =  'edit' | 'create' | 'smart-create' | 'none';
+```
+
+**The 2d shapes have the following format:
+```ts
+// 2d shape
+interface ShapeData {
+  // unique id
+  id: string;
+  // geometry of the shape
+  geometry: Geometry;
+  // optional color to be displayed
+  color?: string;
+  // category string for smart elements
+  // that automatically assign category
+  category?: string;
+}
+
+// 2d shape generic geometry format
+interface Geometry {
+  // flatten array of geometry normalized vertices
+  // e.g. rectangle: [x_left, y_top, x_right, y_bottom]
+  // e.g. polygon: [x1, y1, x2, y2, ...]
+  // e.g. multi_polygon: []
+  vertices: number[];
+  // edges: [[0,1],[0,2]...]
+  edges?: [number, number][];
+  // edges: [true,false...]
+  visibles?: boolean[];
+  // geometry type: rectangle | polygon | multi_polygon
+  type: GeometryType;
+  // dimension
+  dim?: number;
+  // in case of multi polygon
+  // array of array of vertices
+  // e.g. multi_polygon: [[x1, y1, x2, y2...], [x'1, y'1, ...]]
+  mvertices?: number[][];
+}
+
+type GeometryType = 'rectangle' | 'polygon' | 'multi_polygon';
 ```
 
 
@@ -117,6 +157,10 @@ interface ImageData {
   // R: instance index from 1 to 255 (0 is for background or semantic classes)
   // G: additional instance index if #instances > 255 (often equals to 0)
   // B: class index
+  // E.g.: Person class corresponds to idx 2 / Car of idx 3
+  // All the pixels of a new person A will have a [1, 0, 2] value
+  // All the pixels of a new car B will have a [2, 0, 3] value
+  // All the pixels of a new person C will have a [3, 0, 2] value
   data: Uint8ClampedArray;
   height: number;
   width: number;
@@ -125,7 +169,7 @@ interface ImageData {
 
 #### pxn-smart-rectangle
 
-Note: `pxn-smart-rectangle` inherits from `pxn-rectangle` so all properties in `pxn-rectangle` will be available on `pxn-smart-rectangle`.
+Note: `pxn-smart-rectangle` inherits from `pxn-rectangle` so all properties in `pxn-rectangle` will be available on `pxn-smart-rectangle`. Its additional interaction mode consists in clicking on a pixel in the image cropping its context of given size and automatically generate the best fitted box in the area. Detector used is SSD mobilenet trained on MsCOCO. Generated boxes are assigned MsCOCO's categories.
 
 | Name             | Type           | Default  | Description
 | ---------------- | -------------- | -------- |------------
@@ -184,17 +228,29 @@ None
 
 #### pxn-canvas-2d
 
-| Event Name | Detail        | Description
-| ---------- | ------------- | -----------
-| `create`   | `ShapeData`   | Fired when a shape has been created.
-| `update  ` | `string[]`    | Fired when a shapes update has been made.
-| `delete  ` | `string[]`    | Fired when shapes are deleted. Detail is the list of the deleted shape ids.
-| `selection`| `ShapeData[]` | Fired when shapes are selected.
-| `mode`| `string` | Fired when user interaction mode changed
+| Event Name | Detail              | Description
+| ---------- | ------------------- | -----------
+| `create`   | `ShapeDataDetail`   | Fired when a shape has been created.
+| `update  ` | `ShapeDataIdxDetail`| Fired when a shapes update has been made.
+| `delete  ` | `ShapeDataIdxDetail`| Fired when shapes are deleted. Detail is the list of the deleted shape ids.
+| `selection`| `ShapeDatasDetail`  | Fired when shapes are selected.
+| `mode`     | `ModeDetail`        | Fired when user interaction mode changed
 
 ```ts
-interface ShapeData {
-  index: number;
+interface ShapeDataDetail {
+  detail: ShapeData;
+}
+
+interface ShapeDatasDetail {
+  detail: ShapeData[];
+}
+
+interface ShapeDataIdxDetail {
+  detail: string[];
+}
+
+interface ModeDetail {
+  detail: InteractionMode;
 }
 ```
 
