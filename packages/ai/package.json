@@ -1,10 +1,15 @@
 {
   "name": "@pixano/ai",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "AI tools for annotations",
   "author": "Pixano Authors <pixano@cea.fr>",
   "license": "CECILL-C",
   "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pixano/pixano-elements.git",
+    "directory": "packages/ai"
+  },
   "devDependencies": {
     "typescript": "^3.8.3"
   },
