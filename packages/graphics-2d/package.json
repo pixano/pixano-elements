@@ -1,6 +1,6 @@
 {
   "name": "@pixano/graphics-2d",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Pixano graphics 2d module",
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
@@ -15,8 +15,8 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@pixano/ai": "^0.2.2",
-    "@pixano/core": "^0.2.2",
+    "@pixano/ai": "^0.2.3",
+    "@pixano/core": "^0.2.3",
     "lit-element": "^2.3.1",
     "pixi.js": "^5.2.1"
   },

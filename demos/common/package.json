@@ -1,6 +1,6 @@
 {
   "name": "common",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "description": "Demos common module",
   "author": "Pixano Authors <pixano@cea.fr>",
