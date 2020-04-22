@@ -77,19 +77,11 @@ To run the demos locally, serve one of the demo folders:
 npx serve demos/rectangle
 ```
 
-Please follow [tslint](https://palantir.github.io/tslint/) for your contributions:
-
-```
-tslint -c tslint.json packages/**/src/*.ts
-```
-
-Remember to documenting the code using JSDoc style comments.
+### Getting started
 
 To create a new component, check our [tutorial](./documentation/how_to_create_a_new_component.md).
 
-### Request a merge
-
-When the code is ready for code review, please request a merge in github with comment 'Ready for code review' with the associated issue number.
+Please follow our [coding guidelines](./documentation/coding_guidelines.md) for your contributions.
 
 ## Change log
 
