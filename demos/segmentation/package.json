@@ -1,16 +1,12 @@
 {
   "name": "demo-segmentation",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "Demo for segmentation",
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
   "license": "CECILL-C",
   "main": "my-demo.js",
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
-  },
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch"
@@ -21,8 +17,8 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.2.1",
-    "common": "^0.2.1",
+    "@pixano/graphics-2d": "^0.2.2",
+    "common": "^0.2.2",
     "lit-element": "^2.3.1"
   }
 }
