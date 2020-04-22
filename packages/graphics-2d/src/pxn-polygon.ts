@@ -102,6 +102,9 @@ export class Polygon extends Canvas2d {
     }
 }
 
+/**
+ * Polygon interaction controls for polygon edition
+ */
 class PolygonsEditController extends ShapesEditController {
 
     private activeNodeIdx: number = -1;
@@ -259,13 +262,16 @@ class PolygonCreateController extends ShapeCreateController {
 
     private isDbClick: number = -1;
 
+    /**
+     * Handle keyboard events
+     */
     protected onKeyDownCreate = (event: KeyboardEvent) => {
         switch (event.key) {
             case 'Enter': {
                 // close path and create object
                 this.isCreating = false;
                 this.createPolygon();
-                window.removeEventListener('keydown', this.onKeyDownCreate.bind(this), false);
+                window.removeEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
                 break;
             }
             case 'Escape': {
@@ -277,7 +283,7 @@ class PolygonCreateController extends ShapeCreateController {
                     this.tmpShape = null;
                     break;
                 }
-                window.removeEventListener('keydown', this.onKeyDownCreate.bind(this), false);
+                window.removeEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
                 break;
             }
             case 'Backspace': {
@@ -288,6 +294,10 @@ class PolygonCreateController extends ShapeCreateController {
                 }
             }
         }
+    }
+
+    protected keyHandlers = {
+        CREATEDOWN: this.onKeyDownCreate.bind(this)
     }
 
     protected onRootDown(evt: PIXI.interaction.InteractionEvent) {
@@ -318,7 +328,7 @@ class PolygonCreateController extends ShapeCreateController {
                     color: 'red'
                 } as ShapeData);
                 this.tmpShape = new PolygonShape(data) as PolygonShape;
-                window.addEventListener('keydown', this.onKeyDownCreate.bind(this), false);
+                window.addEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
                 this.renderer.stage.addChild(this.tmpShape);
                 this.tmpShape.scaleX = this.renderer.imageWidth;
                 this.tmpShape.scaleY = this.renderer.imageHeight;
