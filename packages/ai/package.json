@@ -3,29 +3,20 @@
   "version": "0.2.1",
   "description": "AI tools for annotations",
   "author": "Pixano Authors <pixano@cea.fr>",
-  "homepage": "",
   "license": "CECILL-C",
-  "main": "lib/ai.js",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
+  "main": "lib/index.js",
+  "devDependencies": {
+    "typescript": "^3.8.3"
   },
-  "files": [
-    "lib"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+  "dependencies": {
+    "@tensorflow-models/coco-ssd": "^2.0.1",
+    "@tensorflow/tfjs": "^1.7.1",
+    "@tensorflow/tfjs-converter": "^1.7.1",
+    "@tensorflow/tfjs-core": "^1.7.1"
   },
   "scripts": {
     "build": "tsc --build",
     "watch": "tsc --watch",
     "clean": "tsc --build --clean"
-  },
-  "devDependencies": {
-    "@tensorflow-models/coco-ssd": "^2.0.1",
-    "@tensorflow/tfjs": "^1.7.1",
-    "@tensorflow/tfjs-converter": "^1.7.1",
-    "@tensorflow/tfjs-core": "^1.7.1"
   }
 }
