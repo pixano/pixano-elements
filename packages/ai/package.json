@@ -14,10 +14,10 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@tensorflow-models/coco-ssd": "^2.0.1",
-    "@tensorflow/tfjs": "^1.7.1",
-    "@tensorflow/tfjs-converter": "^1.7.1",
-    "@tensorflow/tfjs-core": "^1.7.1"
+    "@tensorflow-models/coco-ssd": "^2.0.3",
+    "@tensorflow/tfjs": "^1.7.3",
+    "@tensorflow/tfjs-converter": "^1.7.3",
+    "@tensorflow/tfjs-core": "^1.7.3"
   },
   "scripts": {
     "build": "tsc --build",

@@ -13,10 +13,10 @@
   },
   "devDependencies": {
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.43.0",
     "source-map-loader": "^0.2.4",
     "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "@pixano/graphics-2d": "^0.2.3",

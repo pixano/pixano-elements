@@ -18,7 +18,7 @@
     "@pixano/ai": "^0.2.3",
     "@pixano/core": "^0.2.3",
     "lit-element": "^2.3.1",
-    "pixi.js": "^5.2.1"
+    "pixi.js": "^5.2.3"
   },
   "scripts": {
     "build": "tsc --build",

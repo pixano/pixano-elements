@@ -3,9 +3,9 @@
   "private": true,
   "version": "0.2.3",
   "devDependencies": {
-    "es-dev-server": "^1.45.2",
+    "es-dev-server": "^1.46.5",
     "lerna": "^3.20.2",
-    "typedoc": "^0.16.10",
+    "typedoc": "^0.17.4",
     "typedoc-plugin-lerna-packages": "^0.3.0"
   },
   "scripts": {
