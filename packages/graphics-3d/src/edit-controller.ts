@@ -44,6 +44,7 @@ export class EditModeController extends BasicEventTarget {
                 } else if (this.objControls.mode === 'rotate') {
                     annotation.heading = obj.rotation.z;
                 } else if (this.objControls.mode === 'scale') {
+                    annotation.position = obj.position.toArray();
                     annotation.size = obj.scale.toArray();
                 }
                 this.updatePending = false;
@@ -59,6 +60,7 @@ export class EditModeController extends BasicEventTarget {
             } else if (this.objControls.mode === 'rotate') {
                 annotation.heading = obj.rotation.z;
             } else if (this.objControls.mode === 'scale') {
+                annotation.position = obj.position.toArray();
                 annotation.size = obj.scale.toArray();
             }
 

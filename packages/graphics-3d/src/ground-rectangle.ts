@@ -58,6 +58,7 @@ export class GroundRectangle extends THREE.Mesh implements Destructible {
         this.rotateZ(heading);
         this._bottomLeft = bottomLeft;
         this._topRight = topRight;
+        this.updateAttitude();
     }
 
     destroy() {

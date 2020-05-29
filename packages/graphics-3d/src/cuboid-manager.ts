@@ -13,6 +13,7 @@ import { SceneView } from './scene-view';
 import { Cuboid } from './types';
 import { EditModeController } from './edit-controller';
 import { CreateModeController } from './create-controller';
+import { GroundSegmentation } from './ground-segmentation';
 
 // edit mode can either be active (target != null) or inactive (target == null)
 export type InteractiveMode = "edit" | "create" | "none";
@@ -24,6 +25,7 @@ export class ModeManager {
     private annotations: ObservableSet<Cuboid>;
     private annotationPlots: CuboidSetManager;
     private groundPlot: THREE.Object3D;
+    private groundSegmentation: GroundSegmentation;
 
     private observers = new Map<object, Observer>();  // to ensure proper disposal
 
@@ -38,7 +40,7 @@ export class ModeManager {
     private editing = false;  // mousedown
     private updatePending = false;  // mousedown+drag
     public editTarget: Cuboid | null = null;
-    private pclPlot: () => PointCloudPlot;
+    private pclPlot: PointCloudPlot;
 
     private createMode: CreateModeController | null = null;
 
@@ -47,13 +49,15 @@ export class ModeManager {
             annotations: ObservableSet<Cuboid>,
             annotationPlots: CuboidSetManager,
             groundPlot: THREE.Object3D,
-            pclPlot: () => PointCloudPlot) {
+            pclPlot: PointCloudPlot,
+            groundSegmentation: GroundSegmentation) {
         this.viewer = viewer;
         this.pclPlot = pclPlot;
         this.eventTarget = eventTarget;
         this.annotations = annotations;
         this.annotationPlots = annotationPlots;
         this.groundPlot = groundPlot;
+        this.groundSegmentation = groundSegmentation;
 
         this.orbitControls = new OrbitControls(viewer.camera, viewer.domElement);
         // this.orbitControls.minDistance = 5;
@@ -64,22 +68,6 @@ export class ModeManager {
         this.orbitControls.addEventListener("change", () => {
             this.navigating = true;
             this.viewer.render();
-        });
-
-        window.addEventListener('keydown', (evt: KeyboardEvent) => {
-            if (evt.key === '+') {
-                const pcl = this.pclPlot();
-                if (pcl) {
-                    pcl.plusSize();
-                    this.viewer.render();
-                }
-            } else if (evt.key === '-') {
-                const pcl = this.pclPlot();
-                if (pcl) {
-                    pcl.minusSize();
-                    this.viewer.render();
-                }
-            }
         });
 
         // mouse movement to have the mouse position ready when needed
@@ -231,7 +219,8 @@ export class ModeManager {
             this.orbitControls.enabled = false;
             this.createMode = new CreateModeController(
                 this.viewer, this.groundPlot, this.annotations,
-                this.lastMouseMouseEvt, this.pclPlot);
+                this.lastMouseMouseEvt, this.pclPlot,
+                this.groundSegmentation);
             this.createMode.addEventListener('create', (evt: CustomEvent) => {
                 this.editTarget = evt.detail;
                 this.mode = 'edit';
