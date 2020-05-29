@@ -60,37 +60,30 @@ export class ShapesEditController extends Controller {
         return this._updated;
     }
 
+    /**
+     * Invoked on new selection
+     */
+    public onSelect() {
+        const multiSel = this.targetShapes.size > 1;
+        this.targetShapes.forEach((t) => {
+            const shape = this.getTargetGraphic(t)!;
+            this.decorateTo(shape, multiSel ? Decoration.Contour : Decoration.Box);
+            this.renderer.bringToFront(shape);
+        });
+    }
+
     constructor(renderer: Renderer, graphics: Set<Shape>, targetShapes: ObservableSet<ShapeData>) {
         super();
         this.renderer = renderer;
         this.graphics = graphics;
         this.targetShapes = targetShapes;
+        // handle change of shape selection
         observe(this.targetShapes, (prop: string, value?: any) => {
             switch(prop) {
                 case 'set':
                 case 'add': {
-                    // add new selection
-                    this.graphics.forEach((o) => {
-                        const decorator = !this.targetShapes.has(o.data) ? Decoration.None :
-                                            this.targetShapes.size > 2 ? Decoration.Contour : Decoration.Box;
-                        o.state = decorator;
-                        if (o.state === Decoration.Box) {
-                            o.controls.forEach((c, idx) => {
-                                c.removeAllListeners();
-                                c.on('pointerdown', (evt: any) => {
-                                    // stop bubbling
-                                    evt.stopPropagation();
-                                    evt.idx = idx;
-                                    this.onControlDown(evt);
-                                });
-                            });
-                        }
-                        o.draw();
-                    });
-                    const sel = this.getFirstGraphic();
-                    if (sel) {
-                        this.renderer.bringToFront(sel);
-                    }
+                    // new selection
+                    this.onSelect();
                     break;
                 }
                 case 'delete': {
@@ -110,10 +103,6 @@ export class ShapesEditController extends Controller {
                 }
             }
         });
-    }
-
-    public decorateTo(obj: Shape, state: Decoration) {
-        obj.state = state;
     }
 
     public activate() {
@@ -138,6 +127,10 @@ export class ShapesEditController extends Controller {
         this.renderer.stage.removeListener('pointerdown', this.pointerHandlers.POINTERDOWN);
     }
 
+    /**
+     * Handle click on canvas
+     * @param evt 
+     */
     protected onRootDown(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
             return;
@@ -147,6 +140,9 @@ export class ShapesEditController extends Controller {
         }
     }
 
+    /**
+     * Handle click on shape
+     */
     protected onObjectDown(evt: PIXI.interaction.InteractionEvent) {
         // default behaviour is
         // cancel action if pointer is right or middle
@@ -182,10 +178,15 @@ export class ShapesEditController extends Controller {
             }
         } else if (!this.targetShapes.has(shape)) {
             this.reclick = false;
-            this.targetShapes.set([shape]);
+            this.targetShapes.forEach((t) => this.targetShapes.delete(t));
+            this.targetShapes.add(shape);
         }
     }
 
+    /**
+     * Handle cursor move on object
+     * @param evt 
+     */
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
         const shape = (evt as any).shape;
         if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
@@ -221,10 +222,6 @@ export class ShapesEditController extends Controller {
         }
     }
 
-    protected toggle(obj: Shape) {
-        return obj;
-    }
-
     private onObjectUp() {
         this.isDragging = false;
         const obj = this.getFirstGraphic();
@@ -257,13 +254,11 @@ export class ShapesEditController extends Controller {
         const obj = this.getFirstGraphic();
         if (obj) {
             obj.controls[this.activeControlIdx].on('pointermove', (e: any) => {
-                // stop bubbling
                 e.stopPropagation();
                 e.idx = this.activeControlIdx;
                 this.onControlMove(e);
             });
             obj.controls[this.activeControlIdx].on('pointerupoutside', (e: any) => {
-                // stop bubbling
                 e.stopPropagation();
                 this.onControlUp();
             });
@@ -394,8 +389,31 @@ export class ShapesEditController extends Controller {
     protected getShape(id: string) {
         return [...this.targetShapes].find((s) => s.id === id);
     }
+
+    protected toggle(obj: Shape) {
+        return obj;
+    }
+
+    public decorateTo(obj: Shape, state: Decoration) {
+        obj.state = state;
+        if (obj.state === Decoration.Box) {
+            obj.controls.forEach((c, idx) => {
+                c.removeAllListeners();
+                c.on('pointerdown', (evt: any) => {
+                    evt.stopPropagation();
+                    evt.idx = idx;
+                    this.onControlDown(evt);
+                });
+            });
+        }
+        obj.draw();
+    }
 }
 
+/**
+ * Base class for shape creation:
+ * Displays a cross around cursor for better precision.
+ */
 export abstract class ShapeCreateController extends Controller {
 
     protected renderer: Renderer;
@@ -526,7 +544,9 @@ export class ShapesManager extends EventTarget {
                         obj.draw();
                     });
                     // reapply controller to new objects
-                    this.modes[this.mode].reset();
+                    if (this.modes[this.mode]) {
+                        this.modes[this.mode].reset();
+                    }
                     break;
                 }
                 case 'delete': {

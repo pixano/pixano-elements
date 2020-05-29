@@ -6,6 +6,7 @@
  */
 
 import { Renderer } from './renderer';
+import { Rectangle as PIXIRectangle } from 'pixi.js';
 
 export class ViewControls extends EventTarget {
 
@@ -93,7 +94,7 @@ export class ViewControls extends EventTarget {
             // center placeholder if zoom is minimal
             this.viewer.s = this.viewer.smin;
             this.viewer.computeDrawableArea(this.viewer.canvasWidth, this.viewer.canvasHeight,
-                this.viewer.imageWidth, this.viewer.imageHeight);
+                this.viewer.imageWidth, this.viewer.imageHeight, true);
             this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
             this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
         }
@@ -141,6 +142,7 @@ export class ViewControls extends EventTarget {
             this.isPanning = true;
             this.viewer.stage.on('pointermove', this.handlers.PANMOVE);
             this.viewer.stage.on('pointerupoutside', this.handlers.PANUP);
+            console.info('Start panning.');
         }
     }
 
@@ -170,6 +172,12 @@ export class ViewControls extends EventTarget {
         this.isPanning = false;
         this.viewer.stage.removeListener('pointermove', this.handlers.PANMOVE);
         this.viewer.stage.removeListener('pointerupoutside', this.handlers.PANUP);
+        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
+        this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
+                -this.viewer.stage.position.y / this.viewer.stage.scale.y,
+                this.viewer.canvasWidth / this.viewer.stage.scale.x,
+                this.viewer.canvasHeight / this.viewer.stage.scale.y);
+
     }
 
     public onEdgeMove(evt: PIXI.interaction.InteractionEvent) {
@@ -203,5 +211,9 @@ export class ViewControls extends EventTarget {
             return;
         }
         this.viewer.stage.position.set(stageX, stageY);
+        this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
+            -this.viewer.stage.position.y / this.viewer.stage.scale.y,
+            this.viewer.canvasWidth / this.viewer.stage.scale.x,
+            this.viewer.canvasHeight / this.viewer.stage.scale.y);
     }
 }
