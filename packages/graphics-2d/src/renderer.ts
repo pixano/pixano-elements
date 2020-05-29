@@ -205,6 +205,10 @@ export class Renderer extends PIXI.Application {
         return y * this.image.height;
     }
 
+    /**
+     * Get position from interaction event
+     * @param data 
+     */
     public getPosition(data: PIXI.interaction.InteractionData): {x: number, y: number} {
         const mouseData = data.getLocalPosition(this.stage);
         const pt = {x: Math.round(mouseData.x), y: Math.round(mouseData.y)};
@@ -221,7 +225,12 @@ export class Renderer extends PIXI.Application {
      * @param imageWidth width of background image
      * @param imageHeight height of background image
      */
-    public computeDrawableArea(canvasWidth: number, canvasHeight: number, imageWidth: number, imageHeight: number) {
+    public computeDrawableArea(canvasWidth: number, canvasHeight: number, imageWidth: number, imageHeight: number, forceReset: boolean = false) {
+        if (!forceReset && imageWidth === this.imageWidth && imageHeight === this.imageHeight) {
+            // if image dimension is the same as previously
+            // do not recompute canvas position
+            return;
+        }
         const imageAspectRatio = imageWidth / imageHeight;
         // canvas full dimensions
         const canvasAspectRatio = canvasWidth / canvasHeight;
@@ -247,13 +256,9 @@ export class Renderer extends PIXI.Application {
             this.rx = 0;
             this.ry = 0;
         }
-        // remember pan (?)
-        // if sx and sy are set to 0 (default)
-        // use existing value
-        if (this.sx === 0 && this.sy === 0) {
-            this.sx = 0.5 * (1 - this.s) * this.rw;
-            this.sy = 0.5 * (1 - this.s) * this.rh;
-        }
+        this.sx = 0.5 * (1 - this.s) * this.rw;
+        this.sy = 0.5 * (1 - this.s) * this.rh;
+
     }
 
     /**
