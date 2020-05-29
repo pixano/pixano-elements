@@ -29,3 +29,16 @@ export interface ShapeData {
   // category string
   category?: string;
 }
+
+export interface KeyShapeData extends ShapeData {
+  interpNext: boolean // Interpolation mode
+  tempProps: {[key: string]: any}; // Temporary track (specific to a frame) properties (eg posture)
+  timestamp: number;
+}
+
+export interface TrackData {
+  id: number;
+  keyShapes: {[key: number]: KeyShapeData};
+  category: string;
+  permProps: {[key: string]: any};
+}

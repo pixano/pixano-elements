@@ -12,7 +12,9 @@ import { GroundPlot, PointCloudPlot } from './plots';
 import { CuboidSetManager } from "./cuboid-set-manager";
 import { SceneView } from './scene-view';
 import { Cuboid } from "./types";
-import { normalizeAngle } from './utils';
+import { normalizeAngle, filterCentralArea, findLowestZ } from './utils';
+import { GroundSegmentation } from './ground-segmentation';
+import { InnerPointsPainter } from './pointcloud-painter';
 
 /** An interactive 3D editor window to manipulate cuboid objects. -
  *
@@ -34,7 +36,11 @@ export class CuboidEditor extends LitElement {
 
   private groundPlot: GroundPlot = new GroundPlot();
 
-  private pclPlot: PointCloudPlot = new PointCloudPlot(200000);
+  private pclPlot: PointCloudPlot = new PointCloudPlot();
+
+  private innerPointsPainter: InnerPointsPainter;
+
+  private groundSegmentation: GroundSegmentation;
 
   private modeManager: ModeManager;
 
@@ -48,18 +54,22 @@ export class CuboidEditor extends LitElement {
     this.viewer.scene.add(this.groundPlot);
 
     // decomment this if you want to paint inner points of cuboids
-    // this.innerPointsPainter = new InnerPointsPainter(this.pclPlot, this.editableCuboids);
+    this.innerPointsPainter = new InnerPointsPainter(this.pclPlot, this.editableCuboids);
+
+    // ground segmentation
+    this.groundSegmentation = new GroundSegmentation();
 
     this.modeManager = new ModeManager(
         this.viewer, this, this.editableCuboids,
-        this.cuboidPlots, this.groundPlot, this.getPcl.bind(this));
+        this.cuboidPlots, this.groundPlot, this.pclPlot,
+        this.groundSegmentation);
     this.mode = this.modeManager.mode;
     window.addEventListener("keydown", this.defaultOnKeyDown.bind(this));
   }
 
   destroy() {
     this.cuboidPlots.destroy();
-    // this.innerPointsPainter.destroy();
+    this.innerPointsPainter.destroy();
     this.groundPlot.destroy();
     this.pclPlot.destroy();
     this.modeManager.destroy();
@@ -125,8 +135,17 @@ export class CuboidEditor extends LitElement {
   get pcl() {
     return this.pclPlot.positionBuffer;
   }
+
   set pcl(value: Float32Array) {
+    const count = this.pclPlot.count;
     this.pclPlot.positionBuffer = value;
+    if (count === this.pclPlot.maxPts) {
+      // initialization of ground z
+      const {points, zmin, zmax} = filterCentralArea(this.pclPlot.positionBuffer);
+      const z = findLowestZ(points, zmin, zmax);
+      this.groundPlot.setZ(z);
+      this.groundSegmentation.groundZ = z;
+    }
     this.viewer.render();
   }
 
@@ -251,15 +270,13 @@ export class CuboidEditor extends LitElement {
       this.paste();
 
     } else if (e.key === '+') {
-      const pcl = this.getPcl();
-      if (pcl) {
-          pcl.plusSize();
+      if (this.pclPlot) {
+          this.pclPlot.plusSize();
           this.viewer.render();
       }
   } else if (e.key === '-') {
-      const pcl = this.getPcl();
-      if (pcl) {
-          pcl.minusSize();
+      if (this.pclPlot) {
+          this.pclPlot.minusSize();
           this.viewer.render();
       }
     }

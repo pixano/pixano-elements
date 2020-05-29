@@ -20,6 +20,7 @@ export class InnerPointsPainter implements Destructible {
         this.pclPlot = pclPlot;
 
         const observer = observe(cuboids, (op, value?) => {
+
             if (op === "add") {
                 this.innerPoints.set(value, new Uint32Array(0));
                 this.updateInnerPoints(value);
@@ -69,6 +70,10 @@ export class InnerPointsPainter implements Destructible {
         this.updateColorBuffer();
     }
 
+    updateAllInnerPoints(cuboids: Set<Cuboid>) {
+        cuboids.forEach(this.updateInnerPoints);
+    }
+
     updateColorBuffer() {
         // Only the inner points are updated!
         const colors = this.pclPlot.colors;
@@ -85,6 +90,19 @@ export class InnerPointsPainter implements Destructible {
         this.pclPlot.colors = colors;
     }
 
+
+    updateColorGround(groundPts: Uint32Array) {
+        // Only the inner points are updated!
+        const colors = this.pclPlot.colors;
+        const groundColor = 65280;
+        const color = new THREE.Color(groundColor);
+        for (const i of groundPts) {
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g
+            colors[i * 3 + 2] = color.b;
+        }
+        this.pclPlot.colors = colors;
+    }
     blankColorBuffer() {
         const colors = this.pclPlot.colors;
         colors.fill(1.);

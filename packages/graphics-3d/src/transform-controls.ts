@@ -24,7 +24,6 @@ import {
 	PlaneBufferGeometry,
 	Quaternion,
 	Raycaster,
-	SphereBufferGeometry,
 	TorusBufferGeometry,
 	Camera,
 	Vector3
@@ -117,12 +116,6 @@ export class TransformControls extends Object3D {
 	xDirection: boolean = true;
 	yDirection: boolean = true;
 	zDirection: boolean = true;
-
-	// mouseButtons: {
-	// 	LEFT: MOUSE;
-	// 	MIDDLE: MOUSE;
-	// 	RIGHT: MOUSE;
-	// };
 
 	constructor( object: Camera, domElement: HTMLElement ) {
 		super();
@@ -355,7 +348,7 @@ export class TransformControls extends Object3D {
 
 	pointerMove ( pointer ) {
 
-		const axis = this.axis;
+		let axis = this.axis;
 		const mode = this.mode;
 		const object = this.object;
 		let space = this.space;
@@ -431,68 +424,53 @@ export class TransformControls extends Object3D {
 				}
 			}
 		} else if ( mode === 'scale' ) {
-
+			// edit of original scaling behaviour
+			// asymetrical scaling instead of symetrical
+			// scaling factor is ratio between clicked point and moving point
+			// w.r.t initial center of the box
+			// both of opposite scaling gizmos are visible (except when overlapping)
+			// instead of only the closer
+			let factor = 0.5;
 			if ( axis.search( 'XYZ' ) !== - 1 ) {
-				const subaxis = axis.slice(3);
-				// grey scale box
-				// fix opposite box plane while rescaling
-				// scale factor is this.pointStart / this.pointEnd
-				this._tempVector.copy( this.pointStart );
-				this._tempVector2.copy( this.pointEnd );
-
-				this._tempVector.applyQuaternion( this.worldQuaternionInv );
-				this._tempVector2.applyQuaternion( this.worldQuaternionInv );
-
-				this._tempVector2.divide( this._tempVector );
-
-				// compute offset to cancel out scaling
-				this.offset.copy( this.scaleStart ).multiply( this._tempVector2 ).sub(this.scaleStart);
-				// this.offset.applyQuaternion( this.worldQuaternionInv );
-				if (!this.xDirection) {
-					this.offset.x *= -1;
-				}
-				if (!this.yDirection) {
-					this.offset.y *= -1;
-				}
-				if (!this.zDirection) {
-					this.offset.z *= -1;
-				}
-				if ( subaxis.search( 'X' ) === - 1 ) {
-					this._tempVector2.x = 1;
-					this.offset.x = 0;
-				}
-				if ( subaxis.search( 'Y' ) === - 1 ) {
-					this._tempVector2.y = 1;
-					this.offset.y = 0;
-				}
-				if ( subaxis.search( 'Z' ) === - 1 ) {
-					this._tempVector2.z = 1;
-					this.offset.z = 0;
-				}
-				this.offset.applyQuaternion( this.quaternionStart ).divide( this.parentScale );
-				object.position.copy( this.positionStart ).add(this.offset.multiplyScalar(0.5));
-
+				axis = axis.slice(3);
 			} else {
-				// colored scale box
-				// fix box center while rescaling
-				this._tempVector.copy( this.pointStart );
-				this._tempVector2.copy( this.pointEnd );
-
-				this._tempVector.applyQuaternion( this.worldQuaternionInv );
-				this._tempVector2.applyQuaternion( this.worldQuaternionInv );
-
-				this._tempVector2.divide( this._tempVector );
-
-				if ( axis.search( 'X' ) === - 1 ) {
-					this._tempVector2.x = 1;
-				}
-				if ( axis.search( 'Y' ) === - 1 ) {
-					this._tempVector2.y = 1;
-				}
-				if ( axis.search( 'Z' ) === - 1 ) {
-					this._tempVector2.z = 1;
-				}
+				factor *= -1;
 			}
+
+			this._tempVector.copy( this.pointStart);
+			this._tempVector2.copy( this.pointEnd);
+
+			this._tempVector.applyQuaternion( this.worldQuaternionInv );
+			this._tempVector2.applyQuaternion( this.worldQuaternionInv );
+
+			this._tempVector2.divide( this._tempVector );
+
+			// compute offset to cancel out scaling
+			this.offset.copy( this.scaleStart ).multiply( this._tempVector2 ).sub(this.scaleStart);
+
+			if (!this.xDirection) {
+				this.offset.x *= -1;
+			}
+			if (!this.yDirection) {
+				this.offset.y *= -1;
+			}
+			if (!this.zDirection) {
+				this.offset.z *= -1;
+			}
+			if ( axis !== 'X' ) {
+				this._tempVector2.x = 1;
+				this.offset.x = 0;
+			}
+			if ( axis !== 'Y' ) {
+				this._tempVector2.y = 1;
+				this.offset.y = 0;
+			}
+			if ( axis !== 'Z' ) {
+				this._tempVector2.z = 1;
+				this.offset.z = 0;
+			}
+			this.offset.applyQuaternion( this.quaternionStart ).divide( this.parentScale );
+			object.position.copy( this.positionStart ).add(this.offset.multiplyScalar(factor));
 
 			// Apply scale
 			object.scale.copy( this.scaleStart ).multiply( this._tempVector2 );
@@ -851,56 +829,49 @@ class TransformControlsGizmo extends Object3D {
 		};
 
 		const pickerRotate = {
-			X: [
-				[ new Mesh( new TorusBufferGeometry( 1, 0.1, 4, 24 ), matInvisible ), [ 0, 0, 0 ], [ 0, - Math.PI / 2, - Math.PI / 2 ]],
-			],
-			Y: [
-				[ new Mesh( new TorusBufferGeometry( 1, 0.1, 4, 24 ), matInvisible ), [ 0, 0, 0 ], [ Math.PI / 2, 0, 0 ]],
-			],
 			Z: [
-				[ new Mesh( new TorusBufferGeometry( 1, 0.1, 4, 24 ), matInvisible ), [ 0, 0, 0 ], [ 0, 0, - Math.PI / 2 ]],
-			],
-			E: [
-				[ new Mesh( new TorusBufferGeometry( 1.25, 0.1, 2, 24 ), matInvisible ) ]
-			],
-			XYZE: [
-				[ new Mesh( new SphereBufferGeometry( 0.7, 10, 8 ), matInvisible ) ]
+				[ new Mesh( new TorusBufferGeometry( 1, 0.2, 4, 24 ), matInvisible ), [ 0, 0, 0 ], [ 0, 0, - Math.PI / 2 ]],
 			]
 		};
 
 		const gizmoScale = {
 			X: [
-				[ new Mesh( scaleHandleGeometry, matRed ), [ 0.8, 0, 0 ], [ 0, 0, - Math.PI / 2 ]],
-				[ new Line( lineGeometry, matLineRed ), null, null, [ 0.8, 1, 1 ]]
+				[ new Mesh( scaleHandleGeometry, matRed ), [ -1.1, 0, 0 ], [ 0, 0, - Math.PI / 2 ]],
+				[ new Line( lineGeometry, matLineRed ), null, null, [ -1.1, 1, 1 ]]
 			],
 			Y: [
-				[ new Mesh( scaleHandleGeometry, matGreen ), [ 0, 0.8, 0 ]],
-				[ new Line( lineGeometry, matLineGreen ), null, [ 0, 0, Math.PI / 2 ], [ 0.8, 1, 1 ]]
+				[ new Mesh( scaleHandleGeometry, matGreen ), [ 0, -1.1, 0 ]],
+				[ new Line( lineGeometry, matLineGreen ), null, [ 0, 0, Math.PI / 2 ], [ -1.1, 1, 1 ]]
 			],
 			Z: [
-				[ new Mesh( scaleHandleGeometry, matBlue ), [ 0, 0, 0.8 ], [ Math.PI / 2, 0, 0 ]],
-				[ new Line( lineGeometry, matLineBlue ), null, [ 0, - Math.PI / 2, 0 ], [ 0.8, 1, 1 ]]
+				[ new Mesh( scaleHandleGeometry, matBlue ), [ 0, 0, -1.1 ], [ Math.PI / 2, 0, 0 ]],
+				[ new Line( lineGeometry, matLineBlue ), null, [ 0, - Math.PI / 2, 0 ], [ -1.1, 1, 1 ]]
 			],
 			XYZX: [
-				[ new Mesh( new BoxBufferGeometry( 0.125, 0.125, 0.125 ), matWhiteTransparent.clone() ), [ 1.1, 0, 0 ]],
+				[ new Mesh( scaleHandleGeometry, matRed.clone() ), [ 1.1, 0, 0 ], [ 0, 0, - Math.PI / 2 ]],
+				[ new Line( lineGeometry, matLineRed ), null, null, [ 1.1, 1, 1 ]]
 			],
 			XYZY: [
-				[ new Mesh( new BoxBufferGeometry( 0.125, 0.125, 0.125 ), matWhiteTransparent.clone() ), [ 0, 1.1, 0 ]],
+				[ new Mesh( scaleHandleGeometry, matGreen.clone() ), [ 0, 1.1, 0 ]],
+				[ new Line( lineGeometry, matLineGreen ), null, [ 0, 0, Math.PI / 2 ], [ 1.1, 1, 1 ]]
 			],
 			XYZZ: [
-				[ new Mesh( new BoxBufferGeometry( 0.125, 0.125, 0.125 ), matWhiteTransparent.clone() ), [ 0, 0, 1.1 ]],
+				[ new Mesh( scaleHandleGeometry, matBlue.clone() ), [ 0, 0, 1.1 ], [ Math.PI / 2, 0, 0 ]],
+				[ new Line( lineGeometry, matLineBlue ), null, [ 0, - Math.PI / 2, 0 ], [ 1.1, 1, 1 ]]
 			]
 		};
-
+		// hit area
+		// quick hack to use scaling on both sides of the cube
+		// replace xyz+axis for opposite axis
 		const pickerScale = {
 			X: [
-				[ new Mesh( new CylinderBufferGeometry( 0.2, 0, 0.8, 4, 1, false ), matInvisible ), [ 0.5, 0, 0 ], [ 0, 0, - Math.PI / 2 ]]
+				[ new Mesh( new BoxBufferGeometry( 0.2, 0.2, 0.2 ), matInvisible ), [ -1.1, 0, 0 ]]
 			],
 			Y: [
-				[ new Mesh( new CylinderBufferGeometry( 0.2, 0, 0.8, 4, 1, false ), matInvisible ), [ 0, 0.5, 0 ]]
+				[ new Mesh( new BoxBufferGeometry( 0.2, 0.2, 0.2 ), matInvisible ), [ 0, -1.1, 0 ]],
 			],
 			Z: [
-				[ new Mesh( new CylinderBufferGeometry( 0.2, 0, 0.8, 4, 1, false ), matInvisible ), [ 0, 0, 0.5 ], [ Math.PI / 2, 0, 0 ]]
+				[ new Mesh( new BoxBufferGeometry( 0.2, 0.2, 0.2 ), matInvisible ), [ 0, 0, -1.1 ]],
 			],
 			XYZX: [
 				[ new Mesh( new BoxBufferGeometry( 0.2, 0.2, 0.2 ), matInvisible ), [ 1.1, 0, 0 ]],
@@ -1030,6 +1001,7 @@ class TransformControlsGizmo extends Object3D {
 			handle.scale.set( 1, 1, 1 ).multiplyScalar( eyeDistance * this.size / 7 );
 
 			// TODO: simplify helpers and consider decoupling from gizmo
+			// Helper direction lines
 			if ( handle.tag === 'helper' ) {
 				handle.visible = false;
 				if ( handle.name === 'AXIS' ) {
@@ -1067,6 +1039,7 @@ class TransformControlsGizmo extends Object3D {
 					if ( this.axis === 'E' ) {
 						handle.visible = false;
 					}
+					handle.visible = this.axis?.search( handle.name ) !== - 1;
 				} else if ( handle.name === 'START' ) {
 					handle.position.copy( this.worldPositionStart );
 					handle.visible = this.dragging;
@@ -1088,7 +1061,9 @@ class TransformControlsGizmo extends Object3D {
 						handle.position.copy( this.worldPosition );
 					}
 					if ( this.axis ) {
-						handle.visible = this.axis.search( handle.name ) !== - 1;
+						// only show axis of interest for XYZx scale mode
+						const axis = this.mode === 'scale' ? this.axis?.replace('XYZ', '') : this.axis;
+						handle.visible = axis.search( handle.name ) !== - 1;
 					}
 				}
 				// If updating helper, skip rest of the loop
@@ -1097,7 +1072,6 @@ class TransformControlsGizmo extends Object3D {
 
 			// Align handles to current local or world rotation
 			handle.quaternion.copy( quaternion );
-
 			if ( this.mode === 'translate' || this.mode === 'scale' ) {
 				// Hide translate and scale axis facing the camera
 				const AXIS_HIDE_TRESHOLD = 0.99;
@@ -1120,6 +1094,16 @@ class TransformControlsGizmo extends Object3D {
 					if ( Math.abs( this.alignVector.copy( this.unitZ ).applyQuaternion( quaternion ).dot( this.eye ) ) > AXIS_HIDE_TRESHOLD ) {
 						handle.scale.set( 1e-10, 1e-10, 1e-10 );
 						handle.visible = false;
+					}
+					if (this.mode === 'scale') {
+						const el = Math.abs( this.alignVector.copy( this.unitZ ).applyQuaternion( quaternion ).dot( this.eye ) );
+						const lat = Math.abs( this.alignVector.copy( this.unitY ).applyQuaternion( quaternion ).dot( this.eye ) );
+						const lon = Math.abs( this.alignVector.copy( this.unitX ).applyQuaternion( quaternion ).dot( this.eye ) );
+						if (el > 0.72 && el < 0.82 && lat > 0.56 && lat < 0.70 ||
+							el > 0.72 && el < 0.82 && lon > 0.56 && lon < 0.70) {
+							handle.scale.set( 1e-10, 1e-10, 1e-10 );
+							handle.visible = false;
+						}
 					}
 				}
 				if ( handle.name === 'XY' ) {
@@ -1146,7 +1130,7 @@ class TransformControlsGizmo extends Object3D {
 					if ( this.alignVector.copy( this.unitX ).applyQuaternion( quaternion ).dot( this.eye ) < AXIS_FLIP_TRESHOLD ) {
 						if ( handle.tag === 'fwd' ) {
 							handle.visible = false;
-						} else {
+						} else if (this.mode === 'translate') {
 							handle.scale.x *= - 1;
 						}
 					} else if ( handle.tag === 'bwd' ) {
@@ -1157,7 +1141,7 @@ class TransformControlsGizmo extends Object3D {
 					if ( this.alignVector.copy( this.unitY ).applyQuaternion( quaternion ).dot( this.eye ) < AXIS_FLIP_TRESHOLD ) {
 						if ( handle.tag === 'fwd' ) {
 							handle.visible = false;
-						} else {
+						} else if (this.mode === 'translate') {
 							handle.scale.y *= - 1;
 						}
 					} else if ( handle.tag === 'bwd' ) {
@@ -1168,7 +1152,7 @@ class TransformControlsGizmo extends Object3D {
 					if ( this.alignVector.copy( this.unitZ ).applyQuaternion( quaternion ).dot( this.eye ) < AXIS_FLIP_TRESHOLD ) {
 						if ( handle.tag === 'fwd' ) {
 							handle.visible = false;
-						} else {
+						} else if (this.mode === 'translate') {
 							handle.scale.z *= - 1;
 						}
 					} else if ( handle.tag === 'bwd' ) {
@@ -1287,7 +1271,9 @@ class TransformControlsPlane extends Mesh {
 		switch (this.mode) {
 			case 'translate':
 			case 'scale':
-				switch (this.axis) {
+				// TODO remove
+				const axis = this.mode === 'scale' ? this.axis?.replace('XYZ', '') : this.axis;
+				switch (axis) {
 					case 'X':
 						this.alignVector.copy( this.eye ).cross( this.unitX );
 						this.dirVector.copy( this.unitX ).cross( this.alignVector );
