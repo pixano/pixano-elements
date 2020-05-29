@@ -17,5 +17,6 @@
     "serve": "serve",
     "start": "es-dev-server --preserve-symlinks --node-resolve --open ",
     "docs": "rm -rf docs && typedoc packages && grep -rl 'index.html' docs/* | xargs -i@ sed -i 's/index.html/docs.html/g' @ && rm docs/index.html && mv docs/globals.html docs/index.html"
-  }
+  },
+  "dependencies": {}
 }

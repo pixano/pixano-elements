@@ -19,6 +19,10 @@ export class GroundPlot extends THREE.Mesh implements Destructible {
         super(geometry, material);
     }
 
+    setZ(z: number) {
+        this.position.set(0, 0, z);
+    }
+
     destroy() {
         this.geometry.dispose();
         (this.material as THREE.MeshBasicMaterial).dispose();

@@ -8,8 +8,9 @@ import { observable, BasicEventTarget } from '@pixano/core';
 import { SceneView } from './scene-view';
 import { GroundRectangle, GroundDisc, PointCloudPlot } from './plots';
 import { Cuboid } from './types';
-// @ts-ignore
-import { filterPtsInBox, fitToPts, fitBoxWithAutoZ, transformCloud } from './utils';
+
+import { fitBoxWithAutoZ } from './utils';
+import { GroundSegmentation } from './ground-segmentation';
 
 /**
  * Manages plots and user interaction for object creation.
@@ -22,12 +23,11 @@ export class CreateModeController extends BasicEventTarget {
     private eventListeners: any[] = [];
     private viewer: SceneView;
     private groundPlot: THREE.Object3D;
-    // @ts-ignore
     private annotations: Set<Cuboid>;
     private groundCursor: GroundDisc | null;
     private groundRect: GroundRectangle | null = null;
-    private pclPlot: () => PointCloudPlot;
-
+    private pcl: PointCloudPlot;
+    private groundSegmentation: GroundSegmentation;
     private get state() {
         if (this.groundCursor) { return "pre"; }
         else if (this.groundRect) { return "selecting"; }
@@ -37,12 +37,20 @@ export class CreateModeController extends BasicEventTarget {
     constructor(
             viewer: SceneView, groundPlot: THREE.Object3D,
             annotations: Set<Cuboid>, mousePos: MouseEvent,
-            pclPlot: () => PointCloudPlot) {
+            pcl: PointCloudPlot,
+            groundSegmentation: GroundSegmentation) {
         super();
-        this.pclPlot = pclPlot;
+        this.pcl = pcl;
         this.viewer = viewer;
         this.groundPlot = groundPlot;
         this.annotations = annotations;
+        this.groundSegmentation = groundSegmentation;
+
+        // put ground plot z at estimated z ground plane at point (0,0) if available
+        const [success, z] = this.groundSegmentation.projectToGround([0,0,0]);
+        if (success) {
+            this.groundPlot.position.setZ(z);
+        }
 
         // Create ground cursor to provide visual feedback
         this.groundCursor = new GroundDisc(0.2, 0xff0000);
@@ -111,9 +119,10 @@ export class CreateModeController extends BasicEventTarget {
     onMouseDown() {
         if (this.state === "pre") {
             // Draw selection rectangle
+            const pos = this.groundCursor!.position;
             this.groundRect = new GroundRectangle(
-                this.groundCursor!.position, this.groundCursor!.position,
-                this.viewer.camera.rotation.z - Math.PI);
+                pos, pos,
+                this.viewer.camera.rotation.z - Math.PI, 0xff0000);
             this.viewer.scene.add(this.groundRect);
 
             // Erase ground cursor
@@ -135,12 +144,12 @@ export class CreateModeController extends BasicEventTarget {
             const l = Math.abs(this.groundRect!.scale.y);
             const w = Math.abs(this.groundRect!.scale.x);
             const heading = this.groundRect!.rotation.z - Math.PI / 2;
-            const box = fitBoxWithAutoZ(this.pclPlot().positionBuffer, [x, y, z], [l, w], heading);
+            const box = fitBoxWithAutoZ(this.pcl.positionBuffer, [x, y, z], [l, w], heading, this.groundSegmentation.groundZ);
 
             const cuboid = observable({
                 ...box,
                 id: Math.random().toString(36).substring(7)
-            } as Cuboid)
+            } as Cuboid);
 
             // Cleanup creation mode
             this.destroy();

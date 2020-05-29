@@ -9,7 +9,7 @@ import { Cuboid } from './types';
 /** True modulo function (not remainder, duh!). */
 export function mod(n: number, m: number) {
     return ((n % m) + m) % m;
-  }
+}
 
 /** Normalize angle between -pi and pi. */
 export function normalizeAngle(a: number) {
@@ -21,401 +21,185 @@ export const chunk = (arr: any, size: number) => arr.reduce((chunks: any, el: an
     : chunks.push([el])) && chunks, [])
 
 /**
- * Filter points in box
- * @param pointBuffer array of array of numbers
- * @param annotation filtering cube
+ * Compute encompassing axis-aligned box from oriented box
+ * centered around `pos`
+ * @param pos
+ * @param size
+ * @param heading
  */
-export function filterPtsInBox(pointBuffer: [number, number, number][] | Float32Array, annotation: Cuboid): [number, number, number][] {
-  if (pointBuffer instanceof Float32Array) {
-      pointBuffer = chunk(pointBuffer, 3) as [number, number, number][];
-  }
-  const rz = annotation.heading;
-  const size = annotation.size;
-  const pos = annotation.position;
-  const cond = (el: [number, number, number]) => {
-    return el[0] < 0.5 * size[0] && el[0] > - 0.5 * size[0]
-          && el[1] < 0.5 * size[1] && el[1] > - 0.5 * size[1]
-          && el[2] < 0.5 * size[2] && el[2] > - 0.5 * size[2];
-  }
-  const output = pointBuffer.filter((pt) => {
-    const x = Math.cos(rz) * (pt[0] - pos[0]) + Math.sin(rz) * (pt[1] - pos[1]);
-    const y = - Math.sin(rz) * (pt[0] - pos[0]) + Math.cos(rz) * (pt[1] - pos[1]);
-    const z = pt[2] - pos[2];
-    return cond([x, y, z]);
-  });
-  return output;
-}
-
-/**
- * List points in box
- * @param pointBuffer array of array of numbers
- * @param annotation filtering cube
- */
-export function listPtsInBox(pointBuffer: [number, number, number][] | Float32Array, annotation: Cuboid): boolean[] {
-  if (pointBuffer instanceof Float32Array) {
-      pointBuffer = chunk(pointBuffer, 3) as [number, number, number][];
-  }
-  const rz = annotation.heading;
-  const size = annotation.size;
-  const pos = annotation.position;
-  const cond = (el: [number, number]) => {
-    return el[0] < 0.5 * size[0] && el[0] > - 0.5 * size[0]
-          && el[1] < 0.5 * size[1] && el[1] > - 0.5 * size[1];
-  }
-  const output = pointBuffer.map((pt) => {
-    const x = Math.cos(rz) * (pt[0] - pos[0]) + Math.sin(rz) * (pt[1] - pos[1]);
-    const y = - Math.sin(rz) * (pt[0] - pos[0]) + Math.cos(rz) * (pt[1] - pos[1]);
-    return cond([x, y]);
-  });
-  return output;
+export function axisAlignedBox(pos: number[], size: number[], heading: number):
+                            { pos: number[], size: number[]; } {
+  const [l, w, h] = size;
+  const [x, y, z] = pos;
+  const cosRz = Math.cos(heading);
+  const sinRz = Math.sin(heading);
+  // find axis-aligned bounding box (aabb) of annotation
+  const vx: number[] = [(l/2)*cosRz + (w/2)*sinRz, (l/2)*cosRz - (w/2)*sinRz,
+                        (-l/2)*cosRz + (-w/2)*sinRz, (-l/2)*cosRz + (w/2)*sinRz];
+  const vy: number[] = [-(l/2)*sinRz + (w/2)*cosRz, -(l/2)*sinRz - (w/2)*cosRz,
+                        (l/2)*sinRz + (-w/2)*cosRz, (l/2)*sinRz + (w/2)*cosRz];
+  const xmin = Math.min(...vx) + x;
+  const xmax = Math.max(...vx) + x;
+  const ymin = Math.min(...vy) + y;
+  const ymax = Math.max(...vy) + y;
+  return { pos: [(xmin+xmax)/2, (ymin+ymax)/2, z], size: [(xmax-xmin), (ymax-ymin), h] };
 }
 
 /**
  * Find points in box
- * @param pointBuffer array of array of numbers
+ * @param pointBuffer array of point coordinates
  * @param annotation filtering cube
  * @returns list of included points indices
  */
-export function findPtsInBox(pointBuffer: [number, number, number][] | Float32Array, annotation: Cuboid): Uint32Array {
-  if (pointBuffer instanceof Float32Array) {
-      pointBuffer = chunk(pointBuffer, 3) as [number, number, number][];
-  }
-  const rz = annotation.heading;
+export function findPtsInBox(pointBuffer: Float32Array, annotation: Cuboid): Uint32Array {
   const [l, w, h] = annotation.size;
   const [x, y, z] = annotation.position;
-  const output = pointBuffer.map((pt, i) => {
-    const x2 = Math.cos(rz) * (pt[0] - x) + Math.sin(rz) * (pt[1] - y);
-    const y2 = - Math.sin(rz) * (pt[0] - x) + Math.cos(rz) * (pt[1] - y);
-    const z2 = pt[2] - z;
-    const cond = (
-      x2 < l / 2 && x2 >= - l / 2
-      && y2 < w / 2 && y2 > - w / 2
-      && z2 < h / 2 && z2 > - h / 2);
-    return cond ? i : -1;
-  });
-  return Uint32Array.from(output.filter(i => i >= 0));
+  const cosRz = Math.cos(annotation.heading);
+  const sinRz = Math.sin(annotation.heading);
+  const AABB = axisAlignedBox(annotation.position, annotation.size, annotation.heading);
+  // bounds of axis aligned box centered in [0,0,0]
+  const xmin = -AABB.size[0]/2;
+  const xmax = AABB.size[0]/2;
+  const ymin = -AABB.size[1]/2;
+  const ymax = AABB.size[1]/2;
+  const zmin = -h/2;
+  const zmax = h/2;
+
+  const output: number[] = [];
+  for(let i=0; i<pointBuffer.length / 3; i++) {
+    // coordinates of 3D point centered wrt to box
+    const xi = pointBuffer[3*i] - x;
+    const yi = pointBuffer[3*i+1] - y;
+    const zi = pointBuffer[3*i+2] - z;
+    // first-pass: filter with axis-oriented box
+    const cond1 = (
+      xi <= xmax && xi >= xmin
+      && yi <= ymax && yi >= ymin
+      && zi <= zmax && zi >= zmin);
+    if (cond1) {
+      // second-pass: filter with oriented box
+      const x2 = cosRz * xi + sinRz * yi;
+      const y2 = - sinRz * xi + cosRz * yi;
+      const z2 = zi;
+      const cond2 = (
+        x2 <= l / 2 && x2 >= - l / 2
+        && y2 <= w / 2 && y2 >= - w / 2
+        && z2 <= h / 2 && z2 >= - h / 2);
+      if (cond2) {
+        output.push(i);
+      }
+    }
+  }
+  return Uint32Array.from(output);
 }
 
 /**
  * Fit box w.r.t pointcloud.
  * Ignores low points (ground) for better box fitting.
  * @param pointBuffer point cloud
- * @param pos original center of the box
- * @param size original length/width of the box
+ * @param pos original center of the box (z not used)
+ * @param size original length/width of the box (height not used)
  * @param rz original heading of the box
  */
-export function fitBoxWithAutoZ(pointBuffer: [number, number, number][] | Float32Array,
+export function fitBoxWithAutoZ(pointBuffer: Float32Array,
                                 pos: [number, number, number],
-                                size: [number, number],
-                                rz: number):
+                                searchSize: [number, number],
+                                rz: number,
+                                gz?: number | null) :
                                 { position : [number, number, number];
                                   size : [number, number, number];
                                   heading : number; } {
-  if (pointBuffer instanceof Float32Array) {
-    pointBuffer = chunk(pointBuffer, 3) as [number, number, number][];
-  }
-  const delta = 0.2;
+
   const maxHeight = 3;
-  const cond = (el: [number, number]) => {
-    return el[0] < 0.5 * size[0] && el[0] > - 0.5 * size[0]
-    && el[1] < 0.5 * size[1] && el[1] > - 0.5 * size[1];
-  }
   let minZ = Infinity;
   let maxZ = -Infinity;
   // filter points inside box with minimal z
   // and transform point cloud at the same time
-  let output = pointBuffer.filter((pt) => {
-    const x = Math.cos(rz) * (pt[0] - pos[0]) + Math.sin(rz) * (pt[1] - pos[1]);
-    const y = - Math.sin(rz) * (pt[0] - pos[0]) + Math.cos(rz) * (pt[1] - pos[1]);
-    const isIn = cond([x, y]);
-    // if the point is inside the bounding box
-    // with minimal z threshold for outliers
-    if (isIn) {
-      pt[0] = x;
-      pt[1] = y;
-      if (pt[2] < minZ && pt[2] > - 2) {
-        minZ = pt[2];
-      } else if (pt[2] > maxZ) {
-        maxZ = pt[2];
+  const cosRz = Math.cos(rz);
+  const sinRz = Math.sin(rz);
+  const AABB = axisAlignedBox(pos, [searchSize[0], searchSize[1], 1], rz);
+  const xmin = -AABB.size[0]/2;
+  const xmax = AABB.size[0]/2;
+  const ymin = -AABB.size[1]/2;
+  const ymax = AABB.size[1]/2;
+
+  // pointcloud centered around clicked area
+  // and filtered by clicked area
+  let output: [number,number,number][] = [];
+  for (let i=0; i<pointBuffer.length / 3; i++) {
+    // coordinates of 3D point centered wrt to box
+    const xi = pointBuffer[3*i] - pos[0];
+    const yi = pointBuffer[3*i+1] - pos[1];
+    // first-pass: filter with axis-oriented box
+    const cond1 = (
+      xi <= xmax && xi >= xmin
+      && yi <= ymax && yi >= ymin);
+    if (cond1) {
+      // second-pass: filter with oriented box
+      const x2 = cosRz * xi + sinRz * yi;
+      const y2 = - sinRz * xi + cosRz * yi;
+      const cond2 = (
+        x2 <= searchSize[0] / 2 && x2 >= - searchSize[0] / 2
+        && y2 <= searchSize[1] / 2 && y2 >= - searchSize[1] / 2);
+      // if the point is inside the bounding box
+      // with minimal z threshold for outliers
+      if (cond2) {
+        const zi = pointBuffer[3*i+2];
+        if (zi < minZ) minZ = zi;
+        if (zi > maxZ) maxZ = zi;
+        output.push([pointBuffer[3*i], pointBuffer[3*i+1], zi]);
       }
     }
-    return isIn;
-  });
-  minZ = isFinite(minZ) ? minZ : -1;
-  maxZ = isFinite(maxZ) ? Math.min(maxZ, minZ + maxHeight) : 1;
-  output = output.filter((pt) => pt[2] > (minZ + delta) && pt[2] < (minZ + maxHeight));
+  }
+  const size: [number,number,number] = [0,0,maxZ - minZ];
+  const position: [number,number,number] = [0,0,0.5 * (minZ + maxZ)];
+
+  // if zmin is close to ground z
+  // remove low points
+  const maxDev = 0.5;
+  if (gz === null || (gz && minZ < (gz + maxDev))) {
+    // ground height to remove
+    const delta = 0.18;
+    // remove points below zmin + delta and
+    output = output.filter((pt) => pt[2] > (minZ + delta) && pt[2] < (minZ + maxHeight));
+  }
   if (output.length) {
     // fit box to point cloud
-    // ignoring height and z
-    // @ts-ignore
-    const [x, y, z, l, w, h, heading] = fitToPts(output);
-    pos[0] += Math.cos(-rz) * x + Math.sin(-rz) * y;
-    pos[1] += - Math.sin(-rz) * x + Math.cos(-rz) * y;
-    pos[2] = 0.5 * (maxZ + minZ);
-    rz += heading;
-    size[0] = l;
-    size[1] = w;
+    const {x, y, l, w, angle} = fitToPts(output);
+    position[0] = x;
+    position[1] = y;
+    size[0] = l === 0 ? 0.1 : l;
+    size[1] = w === 0 ? 0.1 : w;
+    rz = angle;
   }
-  return {
-    position: pos,
-    size: [size[0], size[1], maxZ - minZ],
-    heading: rz
-  };
+
+  return { position, size, heading: rz };
 }
 
 /**
- * Filter points in box ignoring lowest points
- * @param pointBuffer array of array of numbers
- * @param annotation filtering cube
- */
-export function filterPtsInBoxIgnoreLow(pointBuffer: [number, number, number][] | Float32Array,
-                                        annotation: Cuboid,
-                                        ignoreDelta: number = 0.2): [number, number, number][] {
-  if (pointBuffer instanceof Float32Array) {
-    pointBuffer = chunk(pointBuffer, 3) as [number, number, number][];
-  }
-  const rz = annotation.heading;
-  const size = annotation.size;
-  const pos = annotation.position;
-  const cond = (el: [number, number, number]) => {
-    return el[0] < 0.5 * size[0] && el[0] > - 0.5 * size[0]
-    && el[1] < 0.5 * size[1] && el[1] > - 0.5 * size[1]
-    && el[2] < 0.5 * size[2] && el[2] > (- 0.5 * size[2] + ignoreDelta);
-  }
-  const output = pointBuffer.filter((pt) => {
-    const x = Math.cos(rz) * (pt[0] - pos[0]) + Math.sin(rz) * (pt[1] - pos[1]);
-    const y = - Math.sin(rz) * (pt[0] - pos[0]) + Math.cos(rz) * (pt[1] - pos[1]);
-    const z = pt[2] - pos[2];
-    return cond([x, y, z]);
-  });
-  return output;
-}
-
-/**
- * Transform set of points:
- * First subtract center, then apply inverse rotation.
- * @param pointBuffer
- * @param center subtract value
- * @param rz trigonometric direction in rad.
- */
-export function transformCloud(pointBuffer: number[][], center: number[], rz: number) {
-  const tr = pointBuffer.map((pt) => {
-    const x = Math.cos(rz) * (pt[0] - center[0]) + Math.sin(rz) * (pt[1] - center[1]);
-    const y = - Math.sin(rz) * (pt[0] - center[0]) + Math.cos(rz) * (pt[1] - center[1]);
-    return pt.length === 2 ? [x, y] : [x, y, pt[2]];
-  });
-  return tr;
-}
-
-/**
- * L2 cost between two matrices of same size.
- * @param matGT heatmap matrice origin
- * @param matRes heatmap matric target
- */
-export const l2loss = (matGT: number[][], matRes: number[][]) => {
-  return matGT.reduce((total, vec, idx) => {
-    return vec.reduce((subtot, v, i) =>  subtot + Math.pow(v-matRes[idx][i], 2), total);
-  }, 0);
-}
-
-/**
- * Compute side density of bounding box
- * @param bin heatmap of bounding box
- */
-export const getDenserSize = (bin: number[][]) => {
-  const front = bin[0].reduce((a, b) => a + b, 0);
-  const rear = bin[bin.length - 1].reduce((a, b) => a + b, 0);
-  const left = bin.reduce((a, b) => a + b[0], 0);
-  const right = bin.reduce((a, b) => a + b[b.length - 1], 0);
-  const r1 = front/rear;
-  const r2 = left/right;
-  const isFront = rear && r1 > 4 ? true : r1 < 0.25 ? false : front > 20;
-  const isLeft = right && r2 > 4 ? true : r2 < 0.25 ? false : null;
-  return [isFront, isLeft];
-}
-
-/**
- * Fit histogram box into an area.
- * @param sbin box heatmap
- * @param bbin area
- */
-export const boxSearch = (boxOrig: Cuboid, pointcloudOrig: Float32Array | [number, number, number][],
-                          pointcloudTarget: Float32Array | [number, number, number][]) => {
-  const searchRatio = 5;
-  const boxNbBins = 6;
-  const groundHeight = 0.2;
-  const arange = Math.PI / 4;
-  const astep = Math.PI / 24;
-  let ptsOrig = filterPtsInBoxIgnoreLow(pointcloudOrig, boxOrig, groundHeight);
-  ptsOrig = transformCloud(ptsOrig, boxOrig.position, boxOrig.heading) as [number, number, number][];
-  const binOrig = createBins(ptsOrig, [boxOrig.size[0], boxOrig.size[1]], boxNbBins);
-  const [isFront, isLeft] = getDenserSize(binOrig);
-  const cubeArea = {
-    id: '',
-    position: JSON.parse(JSON.stringify(boxOrig.position)),
-    size: [boxOrig.size[0] * searchRatio, boxOrig.size[1] * searchRatio, boxOrig.size[2]],
-    heading: JSON.parse(JSON.stringify(boxOrig.heading))
-  };
-  const ptsArea = filterPtsInBoxIgnoreLow(pointcloudTarget, cubeArea, groundHeight);
-  let minloss = Infinity;
-  let dx = 0;
-  let dy = 0;
-  let dtmin = 0;
-  for (let dt = - arange / 2; dt <= arange / 2; dt += astep) {
-    const ptsOriented = transformCloud(ptsArea, cubeArea.position, cubeArea.heading + dt) as [number, number, number][];
-    const binArea = createBins(ptsOriented, [cubeArea.size[0], cubeArea.size[1]], boxNbBins * searchRatio);
-    for (let x=0; x < binArea.length - binOrig.length; x++) {
-      const bx = binArea.slice(x, x + binOrig.length);
-      if (isFront !== null) {
-        const s = bx[isFront ? 0 : bx.length - 1].reduce((tot, val) => tot + val, 0);
-        if (s <= 1) continue;
-      }
-      for (let y=0; y < binArea[0].length - binOrig[0].length; y++) {
-        const by = bx.map((b) => b.slice(y, y + binOrig[0].length));
-        if (isLeft !== null) {
-          const s = by.reduce((tot, val) => tot + val[isLeft ? 0 : by[0].length - 1], 0);
-          if (s <= 1) continue;
-        }
-        const loss = l2loss(binOrig, by);
-        if (loss < minloss) {
-          minloss = loss;
-          dtmin = dt;
-          dx = 0.5 * (binArea.length - binOrig.length) - x;
-          dy = 0.5 * (binArea[0].length - binOrig[0].length) - y;
-        }
-      }
-    }
-  }
-  const dxLoc = dx * boxOrig.size[0] / binOrig.length
-  const dyLoc = dy * boxOrig.size[1] / binOrig[0].length
-  const dxOrig = Math.cos(-boxOrig.heading-dtmin) * dxLoc + Math.sin(-boxOrig.heading-dtmin) * dyLoc;
-  const dyOrig = - Math.sin(-boxOrig.heading-dtmin) * dxLoc + Math.cos(-boxOrig.heading-dtmin) * dyLoc;
-  return [dxOrig, dyOrig, dtmin];
-}
-
-
-/**
- * Get density heatmap of a pointcloud
- * @param cloud point cloud
- * @param size [length, width]
- * @param nbBins number of bins for the smaller side
- */
-export const createBins = (cloud: number[][], [length, width]: [number, number], nbBins: number = 6): number[][] => {
-  const lwRatio = Math.floor(length/width);
-  const occGrid = Array.from(Array(nbBins * lwRatio), () => new Array(nbBins).fill(0));
-  cloud.forEach((c: number[]) => {
-    if (c[0] < 0.5 * length && c[1] < 0.5 * width
-        && c[0] > - 0.5 * length && c[1] > - 0.5 * width) {
-      // discretize into size / step bins
-      const x = Math.floor(c[0] * 0.5 * nbBins * lwRatio / (0.5 * length)) + 0.5 * nbBins * lwRatio;
-      const y = Math.floor(c[1] * 0.5 * nbBins / (0.5 * width)) +  0.5 * nbBins;
-      occGrid[x][y] += 1;
-    }
-  });
-  return occGrid;
-}
-
-// @ts-ignore
-export function fitToPtsMin(positions: number[][], [length, width, height]: [number, number, number], isLeft: boolean) {
-  const delta = 0.2;
-  if (isLeft === true) {
-    let top = -Infinity;
-    let topLeft = 0;
-    let bottom = Infinity;
-    let bottomLeft = 0;
-    positions.forEach((pos) => {
-      if (pos[1] < (-0.5 * width + delta)) {
-        if (pos[0] > top) {
-          top = pos[0];
-          topLeft = pos[1];
-        } else if (pos[0] < bottom) {
-          bottom = pos[0];
-          bottomLeft = pos[1];
-        }
-      }
-    });
-    // compute angle
-    const ptX = top - bottom;
-    const ptY = topLeft - bottomLeft
-    const angle = Math.atan2(ptX, ptY);
-    const meanPtX = 0.5 * (top + bottom);
-    const meanPtY = 0.5 * (topLeft + bottomLeft);
-    const x = Math.cos(angle) * meanPtX + Math.sin(angle) * meanPtY;
-    const y = -Math.sin(angle) * meanPtX + Math.cos(angle) * meanPtY;
-    const dY = 2 * y - width;
-    return [
-      x,
-      dY,
-      0.5,
-      length,
-      width,
-      height,
-      angle
-    ];
-  } else if (isLeft === false) {
-    let top = -Infinity;
-    let topRight = 0;
-    let bottom = Infinity;
-    let bottomRight = 0;
-    positions.forEach((pos) => {
-      if (pos[1] > (0.5 * width - delta)) {
-        if (pos[0] > top) {
-          top = pos[0];
-          topRight = pos[1];
-        } else if (pos[0] < bottom) {
-          bottom = pos[0];
-          bottomRight = pos[1];
-        }
-      };
-    });
-    // compute angle
-    const ptX = top - bottom;
-    const ptY = topRight - bottomRight;
-    const angle = Math.atan2(ptY, ptX);
-    const meanPtX = 0.5 * (top + bottom);
-    const meanPtY = 0.5 * (topRight + bottomRight);
-    const x = Math.cos(angle) * meanPtX + Math.sin(angle) * meanPtY;
-    const y = -Math.sin(angle) * meanPtX + Math.cos(angle) * meanPtY;
-    const dY = 2 * y - width;
-    return [
-      x,
-      dY,
-      0.5,
-      length,
-      width,
-      height,
-      angle
-    ];
-  }
-  return null;
-}
-
-/**
- * Fit box to point cloud
+ * Fit box to point cloud (2d)
  * @param positions point cloud
  */
 export function fitToPts(positions: number[][]) {
     // Parameters
     const rstep = 0.1; // translation step in meters
     const nangles = 90; // nb of angles
-    const amin = -Math.PI/4;
+    const amin = -Math.PI/4; // starting from amin
     const adelta = Math.PI / nangles;
 
-    const minPt = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
-    const maxPt = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
+    const minPt = [Number.MAX_VALUE, Number.MAX_VALUE];
+    const maxPt = [-Number.MAX_VALUE, -Number.MAX_VALUE];
     positions.forEach((pos) => {
       if (pos[0] < minPt[0]) minPt[0] = pos[0];
       if (pos[1] < minPt[1]) minPt[1] = pos[1];
-      if (pos[2] < minPt[2]) minPt[2] = pos[2];
       if (pos[0] > maxPt[0]) maxPt[0] = pos[0];
       if (pos[1] > maxPt[1]) maxPt[1] = pos[1];
-      if (pos[2] > maxPt[2]) maxPt[2] = pos[2];
     });
     const center = [
       0.5 * (minPt[0] + maxPt[0]),
-      0.5 * (minPt[1] + maxPt[1]),
-      0.5 * (minPt[2] + maxPt[2])
+      0.5 * (minPt[1] + maxPt[1])
     ];
+    // diagonal length of axis-aligned bounding box of points
     const diag = Math.sqrt((minPt[0] - maxPt[0]) * (minPt[0] - maxPt[0]) + (minPt[1] - maxPt[1]) * (minPt[1] - maxPt[1]));
     const invrstep = 1.0 / rstep;
     const rmin = -0.5 * diag;
@@ -423,6 +207,7 @@ export function fitToPts(positions: number[][]) {
     let nradius = Math.floor(diag / rstep);
     if (diag < rstep) nradius=1;
 
+    // pre-compute rot cosinus
     const sinbyrstep: number[] = [];
     const cosbyrstep: number[] = [];
     for(let a = 0; a < nangles; a++){
@@ -434,21 +219,25 @@ export function fitToPts(positions: number[][]) {
     const nhough = nangles * nradius;
     const hough = new Array(nhough).fill(0);
     for (const pos of positions) {
-      const x = pos[0] - center[0];
-      const y = pos[1] - center[1];
+      // translate to center of pointcloud and
+      // apply all possible rotations
+      // increase counter for given radius+angle
+      const xi = pos[0] - center[0];
+      const yi = pos[1] - center[1];
       let rstart = 0;
       for (let a = 0; a < nangles; a++, rstart += nradius) {
-        const r = Math.floor(cosbyrstep[a] * x + sinbyrstep[a] * y - rminbystep);
+        const r = Math.floor(cosbyrstep[a] * xi + sinbyrstep[a] * yi - rminbystep);
         if (r >= 0 && r < nradius) {
           hough[rstart + r]++;
         }
       }
     }
 
+    // find angle with denser top
     let maxHough = hough[0];
     let argMaxHough = 0;
     for (let h = 1; h < nhough; h++)
-      if (hough[h] > maxHough){
+      if (hough[h] > maxHough) {
         argMaxHough = h;
         maxHough = hough[h];
       }
@@ -460,30 +249,114 @@ export function fitToPts(positions: number[][]) {
     let xmax =-Number.MAX_VALUE;
     let ymin = Number.MAX_VALUE;
     let ymax =-Number.MAX_VALUE;
-    let zmin = Number.MAX_VALUE;
-    let zmax =-Number.MAX_VALUE;
+    const cosa = Math.cos(angle);
+    const sina = Math.sin(angle);
     for (const pos of positions) {
-      let x = pos[0];
-      let y = pos[1];
-      const z = pos[2];
-      x = Math.cos(angle) * x + Math.sin(angle) * y;
-      y = -Math.sin(angle) * x + Math.cos(angle) * y;
-      xmin = Math.min(xmin, x);
-      xmax = Math.max(xmax, x);
-      ymin = Math.min(ymin, y);
-      ymax = Math.max(ymax, y);
-      zmin = Math.min(zmin, z);
-      zmax = Math.max(zmax, z);
+      const x1 = pos[0] - center[0];
+      const y1 = pos[1] - center[1];
+      const x2 = cosa * x1 + sina * y1;
+      const y2 = -sina * x1 + cosa * y1;
+      xmin = Math.min(xmin, x2);
+      xmax = Math.max(xmax, x2);
+      ymin = Math.min(ymin, y2);
+      ymax = Math.max(ymax, y2);
     }
-    return [
-        0.5 * (xmin + xmax),
-        0.5 * (ymin + ymax),
-        0.5 * (zmin + zmax),
-        xmax - xmin,
-        ymax - ymin,
-        zmax - zmin,
+    const x = 0.5 * (xmin + xmax);
+    const y = 0.5 * (ymin + ymax);
+    const l = xmax - xmin + 0.000000000000001;
+    const w = ymax - ymin + 0.000000000000001;
+    return {
+        x: center[0] + (cosa * x - sina * y),
+        y: center[1] + (sina * x + cosa * y),
+        l,
+        w,
         angle
-    ];
+    };
+}
+
+/**
+ * Find points in central region of interest ( rmin < r < rmax && z < 0) and
+ * find minimal z (zmin) in that region and maximal distance (dmax) in the entire point cloud
+ * @param pointBuffer
+ * @param rmin minimal distance for pointcloud filtering
+ * @param rmax maximal distance for pointcloud filtering
+ * @returns filtered central points, zmin and rmax
+ */
+export function filterCentralArea(pointBuffer: Float32Array, rmin: number = 3, rmax: number = 6): {
+    points: [number,number,number][],
+    rmax: number, zmin: number, zmax: number
+  } {
+  const centralPts: [number,number,number][] = [];
+  let zmin = Infinity;
+  let zmax = -Infinity;
+  let dmax2 = 0;
+  for (let i=0; i< pointBuffer.length/3; i++) {
+    const xi = pointBuffer[3*i];
+    const yi = pointBuffer[3*i+1];
+    const zi = pointBuffer[3*i+2];
+    const r2 = xi*xi + yi*yi;
+    if (dmax2 < r2) {
+      dmax2 = r2;
+    }
+    if (r2 >= rmin*rmin && r2 < rmax*rmax && zi < 0) {
+      centralPts.push([xi,yi,zi]);
+      if (zmin > zi) zmin = zi;
+      if (zmax < zi) zmax = zi;
+    }
+  }
+  return {points: centralPts, rmax: Math.sqrt(dmax2), zmin, zmax}
+}
+
+/**
+ * Find sensor height by counting number of points in layers of height delta,
+ * and choosing layer with max nb of points.
+ * @param points input point cloud
+ * @param zmin search grid is [zmin, 0] (zmin negative)
+ * @param delta search grid step
+ * @returns zl : bottom z value of higher density layer
+ *          zh : top z value of higher density layer (zl + delta)
+ *          mean : mean inside layer of higher density
+ */
+export function findHighDensityZ(points: [number,number,number][], zmin: number, delta = 0.25): {
+    zl: number, zh: number, mean: number
+  } {
+
+  const layersLength = new Array(Math.ceil(- zmin / delta)).fill(0);
+  const layersSum = new Array(Math.ceil(- zmin / delta)).fill(0);
+  // iterate over layers in [zmin, 0] in z descending order
+  for (const pt of points) {
+    const layer = Math.floor(- pt[2] / delta);
+    layersSum[layer] += pt[2];
+    layersLength[layer] += 1;
+  }
+  const bestIndex = layersLength.reduce((iMax, x, i, arr) => x > arr[iMax] ? i : iMax, 0);
+  const mean = layersSum[bestIndex] / layersLength[bestIndex];
+  const zl = - delta * (bestIndex + 1);
+  const zh = - delta * bestIndex;
+  return {
+    zl, zh, mean
+  }
+}
+
+/**
+ * Simple search for ground z.
+ * @param points 
+ * @param zmin 
+ * @param zmax 
+ */
+export function findLowestZ(points: [number, number, number][], zmin: number, zmax: number) {
+  // handle case with no ground points
+  let delta = 0.1;
+  const groundPercentage = 0.05;
+  let i =  zmin;
+  let pts: [number, number, number][] = [];
+  for (; i < zmax; i+=delta) {
+    pts = points.filter((pt) => pt[2] >= i && pt[2] < (i+delta));
+    if (pts.length > groundPercentage * points.length) {
+      break;
+    }
+  }
+  return i;
 }
 
 export const cubeToCoordinates = (cube: Cuboid) => {

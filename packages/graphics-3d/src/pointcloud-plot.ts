@@ -7,12 +7,18 @@
 import * as THREE from 'three';
 import { Destructible } from '@pixano/core';
 
+const numMax = 300000;
+
 /** Simple Scatter plot. */
 export class PointCloudPlot extends THREE.Points implements Destructible {
+
+  maxPts: number;
+
     get positionBuffer(): Float32Array {
       const attr = (this.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
       return (attr.array as Float32Array).subarray(0, attr.count * 3);
     }
+
     set positionBuffer(value) {
       const attr = (this.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
       if (attr.array !== value) {
@@ -20,6 +26,11 @@ export class PointCloudPlot extends THREE.Points implements Destructible {
         attr.count = value.length / 3;
       }
       attr.needsUpdate = true;
+    }
+
+    get count() {
+      const attr = (this.geometry as THREE.BufferGeometry).getAttribute('position') as THREE.BufferAttribute;
+      return attr.count;
     }
 
     get colors(): Float32Array {
@@ -35,7 +46,7 @@ export class PointCloudPlot extends THREE.Points implements Destructible {
       attr.needsUpdate = true;
     }
 
-    constructor(maxPts=300000) {
+    constructor(maxPts: number = numMax) {
       const positionBuffer = new Float32Array(maxPts * 3)
       positionBuffer.fill(0);
       const colorBuffer = new Float32Array(maxPts * 3);
@@ -55,6 +66,7 @@ export class PointCloudPlot extends THREE.Points implements Destructible {
 
       super(geometry, material);
       this.frustumCulled = false;
+      this.maxPts = maxPts;
     }
 
     public plusSize() {

@@ -24,7 +24,7 @@ export class CuboidPlot extends THREE.Group implements Destructible {
         const [x, y, z] = cuboid.position;
         const [l, w, h] = cuboid.size;
         const color = 0xffffff;
-        const opacity = 0.5;
+        const opacity = 0.0;
         const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
         const boxMaterial = new THREE.MeshBasicMaterial(
             {transparent: true, opacity});

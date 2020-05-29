@@ -1,25 +1,29 @@
 {
-  "name": "demo-polygon-http",
-  "version": "0.2.3",
+  "name": "demo-tracking",
+  "version": "0.1.0",
   "private": true,
-  "description": "Demo for polygon",
+  "description": "Demo for tracking",
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
   "license": "CECILL-C",
-  "main": "my-demo.js",
+  "main": "demo-tracking.js",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+  },
   "scripts": {
     "build": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch"
   },
   "devDependencies": {
-    "cors": "^2.8.5",
+    "@babel/preset-env": "^7.7.6",
+    "babel-loader": "^8.0.6",
     "source-map-loader": "^0.2.4",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.2.3",
-    "common": "^0.2.3",
+    "@pixano/graphics-2d": "^0.1.0",
     "lit-element": "^2.3.1"
   }
 }
