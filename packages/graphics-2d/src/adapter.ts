@@ -6,7 +6,7 @@
  */
 
 import { ShapeData } from './types';
-import { Shape, RectangleShape, PolygonShape, MultiPolygonShape } from './shapes-2d';
+import { Shape, RectangleShape, PolygonShape, MultiPolygonShape, GraphShape } from './shapes-2d';
 
 export const rgbToHex = (r: number, g: number, b: number) => {
     return (r << 16) + (g << 8) + (b | 0);
@@ -18,6 +18,7 @@ export const dataToShape = (s: ShapeData): Shape => {
             case 'rectangle': return new RectangleShape(d);
             case 'polygon': return new PolygonShape(d);
             case 'multi_polygon': return new MultiPolygonShape(d);
+            case 'graph': return new GraphShape(d);
             default:
                 return new RectangleShape(s);
         }
