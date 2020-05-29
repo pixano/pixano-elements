@@ -117,6 +117,11 @@ export class PlaybackControl extends LitElement {
       this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
     }
 
+    onSliderChange() {
+      this.current = this.slider.value;
+      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+    }
+
     firstUpdated() {
       this.slider.addEventListener("keydown", (event: KeyboardEvent) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -139,7 +144,7 @@ export class PlaybackControl extends LitElement {
       this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
     }
 
-    set(value: number) {
+    public set(value: number) {
       this.slider.value = value;
       this.current = this.slider.value;
       this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
@@ -165,6 +170,7 @@ export class PlaybackControl extends LitElement {
           <p class="button" @click=${this.setNext}>&#10148;</p>
           <p class="frameidx">${this.current}/${this.max}</p>
           <mwc-slider @input=${this.onSliderInput}
+                      @change=${this.onSliderChange}
                       discrete
                       markers
                       max="${this.max}"
