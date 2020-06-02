@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@material/mwc-button": "^0.14.1",
-    "@pixano/graphics-2d": "^0.2.3",
+    "@pixano/graphics-2d": "^0.3.0",
     "lit-element": "^2.3.1"
   }
 }
