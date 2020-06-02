@@ -1,6 +1,6 @@
 {
   "name": "demo-segmentation",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "private": true,
   "description": "Demo for segmentation",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -17,8 +17,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.2.3",
-    "@pixano/core": "^0.2.3",
+    "@pixano/graphics-2d": "^0.3.0",
+    "@pixano/core": "^0.3.0",
     "lit-element": "^2.3.1"
   }
 }
