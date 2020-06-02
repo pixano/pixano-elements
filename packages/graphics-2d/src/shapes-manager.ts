@@ -90,6 +90,10 @@ export class ShapesEditController extends Controller {
                 }
             }
         });
+        this.bindings();
+    }
+
+    protected bindings() {
         // prebind methods
         this.onRootDown = this.onRootDown.bind(this);
         this.onObjectDown = this.onObjectDown.bind(this);
@@ -145,6 +149,10 @@ export class ShapesEditController extends Controller {
         this.renderer.stage.removeListener('pointerdown', this.onRootDown);
     }
 
+    /**
+     * Handle click on canvas
+     * @param evt 
+     */
     protected onRootDown(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
             return;
@@ -154,6 +162,9 @@ export class ShapesEditController extends Controller {
         }
     }
 
+    /**
+     * Handle click on shape
+     */
     onObjectDown(evt: PIXI.interaction.InteractionEvent) {
 
         // default behaviour is
@@ -195,6 +206,10 @@ export class ShapesEditController extends Controller {
                 [...this.targetShapes][0].id === [...this.targetShapes][0].id;
     }
 
+    /**
+     * Handle cursor move on object
+     * @param evt 
+     */
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
         const shape = (evt as any).shape;
         if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
@@ -233,7 +248,6 @@ export class ShapesEditController extends Controller {
         if (obj) {
             obj.removeAllListeners('pointermove');
             obj.removeAllListeners('pointerupoutside');
-            obj.removeAllListeners('pointerup');
             if (this.updated) {
                 this.emitUpdate();
             }
@@ -391,8 +405,27 @@ export class ShapesEditController extends Controller {
     protected getShape(id: string) {
         return [...this.targetShapes].find((s) => s.id === id);
     }
+
+    // public decorateTo(obj: Shape, state: Decoration) {
+    //     obj.state = state;
+    //     if (obj.state === Decoration.Box) {
+    //         obj.controls.forEach((c, idx) => {
+    //             c.removeAllListeners();
+    //             c.on('pointerdown', (evt: any) => {
+    //                 evt.stopPropagation();
+    //                 evt.idx = idx;
+    //                 this.onControlDown(evt);
+    //             });
+    //         });
+    //     }
+    //     obj.draw();
+    // }
 }
 
+/**
+ * Base class for shape creation:
+ * Displays a cross around cursor for better precision.
+ */
 export abstract class ShapeCreateController extends Controller {
 
     protected renderer: Renderer;

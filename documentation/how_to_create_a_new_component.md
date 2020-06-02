@@ -10,6 +10,8 @@ This tutorial walks you through the process of building a new web component, whe
 
 - We use the rendering library [ThreeJS](https://threejs.org/) to create 3d scenes. If you intend to edit the 3d scene, please follow their [tutorial](https://threejs.org/docs/#manual/en/introduction/Useful-links).
 
+- Article explaining the main Javascript concepts [here](https://medium.com/the-node-js-collection/modern-javascript-explained-for-dinosaurs-f695e9747b70).
+
 ## From scratch
 
 Let's create a simple component that displays an image. A minimal setup to do so is as follows:
