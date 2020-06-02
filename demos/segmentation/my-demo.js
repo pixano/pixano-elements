@@ -12,15 +12,9 @@ import { demoStyles,
   magic_select,
   subtract,
   union,
-  brush,
   lock,
-  rectify,
-  balloon,
-  balloon2,
-  filter,
   zoomIn,
-  zoomOut,
-  opacity } from 'common/shared-styles';
+  zoomOut } from '@pixano/core/lib/svg';
 
 class MyDemo extends LitElement {
   static get styles() {
@@ -118,7 +112,7 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation image="${this.image}" .mask="${this.mask}" disablefullscreen showroi>
+          <pxn-segmentation image="${this.image}" .mask="${this.mask}" disablefullscreen>
           </pxn-segmentation>
           ${this.rightPanel}
         </main>`;

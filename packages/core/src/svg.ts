@@ -1,4 +1,4 @@
-import { html } from 'lit-element';
+import { css, html } from 'lit-element';
 
 export const fullscreen = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.414 18.586l2.586-2.586v8h-8l2.586-2.586-5.172-5.172 2.828-2.828 5.172 5.172zm-13.656-8l2.828-2.828-5.172-5.172 2.586-2.586h-8v8l2.586-2.586 5.172 5.172zm10.828-8l-2.586-2.586h8v8l-2.586-2.586-5.172 5.172-2.828-2.828 5.172-5.172zm-8 13.656l-2.828-2.828-5.172 5.172-2.586-2.586v8h8l-2.586-2.586 5.172-5.172z"/></svg>`;
 export const create_pencil = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-3.994 12.964l3.106 3.105-4.112.931 1.006-4.036zm9.994-3.764l-5.84 5.921-3.202-3.202 5.841-5.919 3.201 3.2z"/></svg>`;
@@ -27,3 +27,67 @@ export const decrease = html`<svg enable-background="new 0 0 24 24" version="1.1
 export const switchTrack = html`<svg width="24pt" height="24pt" version="1.1" viewBox="0 0 24 24"><path d="m17.043 2.9453v1.1211l-0.83203 0.24609c-1.9492 0.58594-3.7656 2.3047-7.0312 6.6602-3.7773 5.0312-4.3828 5.5-7.0781 5.5h-1.8164v3.2656h1.9023c3.8672 0 5.1367-0.89062 9.5234-6.6719 2.4258-3.1953 3.4219-4.3359 4.4648-5.0898 0.84766-0.61328 0.86719-0.59766 0.86719 0.62891 0 0.80859 0.042969 1.0625 0.17578 1.0117 0.46484-0.18359 6.5625-3.7734 6.5938-3.8828 0.039062-0.12109-6.168-3.7734-6.5664-3.8633-0.16406-0.035156-0.20312 0.17578-0.20312 1.0742m-16.758 2.8047v1.6328h1.7812c2.3867 0 2.9375 0.30078 4.9102 2.6406 1.2148 1.4414 0.99219 1.4531 2.1445-0.10938l0.95312-1.293-0.45703-0.57812c-2.3672-3.0078-4.0938-3.9258-7.3711-3.9258h-1.9609v1.6328m11.719 8.1172c-1.1641 1.543-1.2031 1.3281 0.60156 3.1484 1.5938 1.6094 2.7266 2.3438 3.8945 2.5312l0.54297 0.085937v1.1992c0 0.96875 0.039062 1.1914 0.20312 1.1562 0.39844-0.09375 6.6055-3.7422 6.5664-3.8633-0.03125-0.11328-6.1289-3.6992-6.5938-3.8828-0.13281-0.054688-0.17578 0.20312-0.17578 1.0078 0 0.59375-0.054688 1.082-0.12109 1.082-0.38672 0-2.875-2.3594-3.5078-3.3281-0.34375-0.52344-0.38672-0.49609-1.4102 0.86328" fill-rule="evenodd"/></svg>`;
 export const cutTrack = html`<svg width="24pt" height="24pt" version="1.1" viewBox="0 0 24 24"><path d="m10.293 11.926v10.441h3.3164v-9.1562l2.707 0.011718 2.7109 0.015625 0.023437 1.7266 0.027344 1.7266 2.3828-2.418 2.3867-2.4219-2.3867-2.3867-2.3828-2.3906-0.015625 1.6367-0.011719 1.6328h-5.4414v-8.8594h-3.3164v10.441m-7.6211-2.4492-2.3984 2.3984 2.3984 2.4023 2.3984 2.3984 0.027344-1.7188 0.023438-1.7188 1.7695-0.015625 1.7695-0.011718v-2.8672h-3.5625l-0.011718-1.6328-0.015626-1.6367-2.3984 2.4023" fill-rule="evenodd"/></svg>`;
 export const mergeTracks = html `<svg width="24pt" height="24pt" version="1.1" viewBox="0 0 24 24"><path d="m0 12.074v10.441h3.3164v-8.957h3.5117v3.2891l2.4141-2.4102 2.4102-2.4141-2.3984-2.3984-2.3984-2.4023-0.027344 1.7227-0.023437 1.7188-1.7461 0.011719-1.7422 0.015625v-9.0586h-3.3164v10.441m20.684-6.0625v4.3789h-3.5117v-3.2891l-2.4141 2.4102-2.4102 2.4141 2.3984 2.3984 2.3984 2.4023 0.027344-1.7188 0.023437-1.7227 3.4883-0.023437v9.2539h3.3164v-20.883h-3.3164v4.3789" fill-rule="evenodd"/></svg>`;
+
+export const demoStyles = css`
+  main {
+    display: flex;
+    height: 100%;
+    width: 100%;
+  }
+  .right-panel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    display: flex;
+    margin: auto;
+    width: auto;
+  }
+
+  .icon {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      right: 0px;
+      margin-bottom: 10px;
+      margin-left: 10px;
+      margin-right: 10px;
+      display: flex;
+      margin-top: 10px;
+      height: 24px;
+      width: 24px;
+      z-index: 1;
+      color: black;
+      background: white;
+      fill: #79005D;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      -webkit-transition: all 0.5s ease;
+        -moz-transition: all 0.5s ease;
+          -o-transition: all 0.5s ease;
+          -ms-transition: all 0.5s ease;
+              transition: all 0.5s ease;
+  }
+  .icon:hover {
+    background: #79005D;
+    fill: white;
+  }
+  svg {
+    overflow: visible;
+    width: inherit;
+  }
+  .icons {
+    height: calc(100% - 44px);
+    padding-top: 60px;
+    flex-wrap: wrap;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }`;

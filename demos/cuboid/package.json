@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@pixano/graphics-3d": "^0.2.3",
-    "common": "^0.2.3",
+    "@pixano/core": "^0.2.3",
     "lit-element": "^2.3.1"
   }
 }

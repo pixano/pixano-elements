@@ -7,8 +7,6 @@ import {css, html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d/lib/pxn-tracking';
 import '@pixano/graphics-2d/lib/pxn-track-panel';
 import '@material/mwc-button';
-// import {Track} from '@pixano/graphics-2d/lib/pxn-tracking';
-
 
 class MyDemo extends LitElement {
   static get styles() {

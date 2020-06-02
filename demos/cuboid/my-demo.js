@@ -9,7 +9,7 @@ import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
   create_pencil,
-  swap } from 'common/shared-styles';
+  swap } from '@pixano/core/lib/svg';
 
 const colormap = [
   0xe6194b, 0x3cb44b, 0xffe119, 0x0082c8, 0xf58230, 0x911eb4, 0x46f0f0,
