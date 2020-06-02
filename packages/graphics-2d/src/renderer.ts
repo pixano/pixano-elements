@@ -209,6 +209,10 @@ export class Renderer extends PIXI.Application {
         return y * this.image.height;
     }
 
+    /**
+     * Get position from interaction event
+     * @param data 
+     */
     public getPosition(data: PIXI.interaction.InteractionData): {x: number, y: number} {
         const mouseData = data.getLocalPosition(this.stage);
         const pt = {x: Math.round(mouseData.x), y: Math.round(mouseData.y)};

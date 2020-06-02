@@ -9,6 +9,7 @@ import { Brush } from './brush';
 import { GMask } from './mask';
 import { PolygonShape, MultiPolygonShape } from './polygon-shape';
 import { RectangleShape } from './rectangle-shape';
+import { GraphShape } from './graph-shape';
 import { DrawingCross } from './drawing-cross';
 import { Shape, Decoration, CONTROL_POINTS } from './shape';
 
@@ -18,6 +19,7 @@ export {
   Decoration,
   DrawingCross,
   GMask,
+  GraphShape,
   PolygonShape,
   MultiPolygonShape,
   RectangleShape,

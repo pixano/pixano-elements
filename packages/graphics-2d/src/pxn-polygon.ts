@@ -12,9 +12,6 @@ import { PolygonShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
 import { observable } from '@pixano/core';
 import { insertMidNode } from './utils';
-import { Renderer } from './renderer';
-import { Shape } from './shapes-2d';
-import { ObservableSet } from '@pixano/core';
 
 /**
  * Inherit Canvas2d to handle polygons.
@@ -118,11 +115,8 @@ class PolygonsEditController extends ShapesEditController {
 
     protected reclick: boolean = false;
 
-    constructor(renderer: Renderer,
-        graphics: Set<Shape>,
-        targetShapes: ObservableSet<ShapeData>,
-        dispatchEvent?: (event: Event) => boolean) {
-        super(renderer, graphics, targetShapes, dispatchEvent);
+    bindings() {
+        super.bindings();
         this.onNodeDown = this.onNodeDown.bind(this);
         this.onNodeMove = this.onNodeMove.bind(this);
         this.onNodeUp = this.onNodeUp.bind(this);
