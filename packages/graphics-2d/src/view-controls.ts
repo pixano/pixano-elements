@@ -16,27 +16,20 @@ export class ViewControls extends EventTarget {
 
     protected viewer: Renderer;
 
-    private handlers: {
-        [key: string]: (evt: any) => void;
-    } = {};
-
     constructor(viewer?: Renderer) {
         super();
         this.viewer = viewer || new Renderer();
         // necessity to store listener as variable
         // to keep ability to removelistener
-        this.handlers = {
-            PANDOWN: this.onPanInit.bind(this),
-            PANMOVE: this.onPan.bind(this),
-            PANUP: this.onPanUp.bind(this),
-            EDGEMOVE: this.onEdgeMove.bind(this)
-
-        };
+        this.onPanInit = this.onPanInit.bind(this);
+        this.onPan = this.onPan.bind(this);
+        this.onPanUp = this.onPanUp.bind(this);
+        this.onEdgeMove = this.onEdgeMove.bind(this);
+        this.onWheel = this.onWheel.bind(this);
         if (viewer) {
-            this.viewer.view.addEventListener('wheel', this.onWheel.bind(this), {passive: false});
+            this.viewer.view.addEventListener('wheel', this.onWheel, {passive: false});
             this.viewer.stage.interactive = true;
-            this.viewer.stage.on('pointerdown', this.handlers.PANDOWN);
-            this.viewer.stage.on('pointermove', this.handlers.EDGEMOVE);
+            this.viewer.stage.on('pointerdown', this.onPanInit);
         }
     }
 
@@ -140,8 +133,8 @@ export class ViewControls extends EventTarget {
             this.init.x = x;
             this.init.y = y;
             this.isPanning = true;
-            this.viewer.stage.on('pointermove', this.handlers.PANMOVE);
-            this.viewer.stage.on('pointerupoutside', this.handlers.PANUP);
+            this.viewer.stage.on('pointermove', this.onPan);
+            this.viewer.stage.on('pointerupoutside', this.onPanUp);
             console.info('Start panning.');
         }
     }
@@ -153,9 +146,10 @@ export class ViewControls extends EventTarget {
      */
     public onPan(evt: PIXI.interaction.InteractionEvent) {
         if (this.isPanning) {
+            const imgX = (evt.data.global.x - this.viewer.rx * this.viewer.s - this.viewer.sx) / this.viewer.stage.width * this.viewer.imageWidth;
+            const imgY = (evt.data.global.y - this.viewer.ry * this.viewer.s - this.viewer.sy) / this.viewer.stage.height * this.viewer.imageHeight;
             evt.stopPropagation();
-            const mouseData = evt.data.getLocalPosition(this.viewer.stage);
-            const {x, y} = this.viewer.normalize(mouseData);
+            const {x, y} = this.viewer.normalize({x: imgX , y: imgY});
             const deltaX = 0.5 * (x - this.init.x) * this.viewer.rw;
             const deltaY = 0.5 * (y - this.init.y) * this.viewer.rh;
             this.viewer.rx += deltaX;
@@ -170,8 +164,8 @@ export class ViewControls extends EventTarget {
      */
     public onPanUp() {
         this.isPanning = false;
-        this.viewer.stage.removeListener('pointermove', this.handlers.PANMOVE);
-        this.viewer.stage.removeListener('pointerupoutside', this.handlers.PANUP);
+        this.viewer.stage.removeListener('pointermove', this.onPan);
+        this.viewer.stage.removeListener('pointerupoutside', this.onPanUp);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
                 -this.viewer.stage.position.y / this.viewer.stage.scale.y,
@@ -189,15 +183,24 @@ export class ViewControls extends EventTarget {
         let transY = 0;
         const threshX = 0.05 * this.viewer.canvasWidth;
         const threshY = 0.05 * this.viewer.canvasHeight;
-        const speed = 2;
+        const speed = 0.05;
         if (this.viewer.canvasWidth - x < threshX && x < this.viewer.canvasWidth) {
-            transX = -speed;
-        } else if (x < threshX && x > 0) {
+            // panning to the right
+            const paddRight = (this.viewer.rx * this.viewer.s + this.viewer.sx) + this.viewer.stage.width;
+            if (paddRight > this.viewer.canvasWidth) {
+                transX = -speed;
+            }
+        } else if (x < threshX && x > 0
+            && this.viewer.rx * this.viewer.s + this.viewer.sx < 0) {
             transX = speed;
         }
         if (this.viewer.canvasHeight - y < threshY && y < this.viewer.canvasHeight) {
-            transY = -speed;
-        } else if (y < threshY && y > 0) {
+            const paddTop = (this.viewer.ry * this.viewer.s + this.viewer.sy) + this.viewer.stage.height;
+            if (paddTop > this.viewer.canvasHeight) {
+                transY = -speed;
+            }
+        } else if (y < threshY && y > 0
+            && this.viewer.ry * this.viewer.s + this.viewer.sy < 0) {
             transY = speed;
         }
         this.viewer.rx += transX;
