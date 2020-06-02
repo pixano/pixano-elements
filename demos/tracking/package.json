@@ -6,13 +6,13 @@
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
   "license": "CECILL-C",
-  "main": "demo-tracking.js",
+  "main": "my-demo.js",
   "repository": {
     "type": "git",
     "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "rm -rf my-demo-bundle.js & webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch"
   },
   "devDependencies": {
@@ -23,7 +23,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.1.0",
+    "@material/mwc-button": "^0.14.1",
+    "@pixano/graphics-2d": "^0.2.3",
     "lit-element": "^2.3.1"
   }
 }

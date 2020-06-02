@@ -61,7 +61,9 @@ class MyDemo extends LitElement {
         <main>
           <pxn-rectangle  image="${this.image}"
                           disablefullscreen
-                          @create=${this.onCreate}>
+                          @create=${this.onCreate}
+                          @update=${this.onUpdate}
+                          @selection=${this.onSelection}>
           </pxn-rectangle>
           ${this.rightPanel}
         </main>`;
@@ -73,6 +75,13 @@ class MyDemo extends LitElement {
     this.element.mode = 'edit';
   }
 
+  onUpdate(evt) {
+    console.log('update ids', evt.detail);
+  }
+
+  onSelection(evt) {
+    console.log('selection ids', evt.detail);
+  }
 
   get element() {
     return this.shadowRoot.querySelector('pxn-rectangle');

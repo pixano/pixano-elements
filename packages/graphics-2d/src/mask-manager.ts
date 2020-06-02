@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+import bind from 'bind-decorator';
 import { Renderer } from './renderer';
 import { GMask, PolygonShape } from './shapes-2d';
 import { unfuseId, fuseId, getPolygonExtrema,
@@ -47,29 +48,22 @@ export class EditionController extends Controller {
         this.gmask = gmask;
         this.selectedId = selectedId;
         this.send = send;
-        this.pointerHandlers = {
-            CREATE_POLYGON: this.onPointerDownSelectionPolygon.bind(this),
-            TEMP_POLYGON: this.onPointerMoveTempPolygon.bind(this)
-        };
-        this.keyHandlers = {
-            KEY_POLYGON: this.onKeyDown.bind(this)
-        };
         this.contours = contours;
     }
 
     activate() {
-        this.renderer.stage.on('mousedown', this.pointerHandlers.CREATE_POLYGON);
-        this.renderer.stage.on('pointermove', this.pointerHandlers.TEMP_POLYGON);
+        this.renderer.stage.on('mousedown', this.onPointerDownSelectionPolygon);
+        this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
         this.contours.visible = true;
     }
 
     deactivate() {
-        this.renderer.stage.removeListener('mousedown', this.pointerHandlers.CREATE_POLYGON);
-        this.renderer.stage.removeListener('pointermove', this.pointerHandlers.TEMP_POLYGON);
+        this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectionPolygon);
+        this.renderer.stage.removeListener('pointermove', this.onPointerMoveTempPolygon);
         this.contours.visible = false;
     }
 
-    protected onKeyDown(evt: KeyboardEvent) {
+    @bind protected onKeyDown(evt: KeyboardEvent) {
         if (!this.selectedId.value) {
             // nothing to edit
             return;
@@ -108,7 +102,7 @@ export class EditionController extends Controller {
         }
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
+    @bind onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
         if (!this.selectedId.value) {
             // nothing to edit
             return;
@@ -122,8 +116,8 @@ export class EditionController extends Controller {
             this.tempPolygon.pushNode(x, y);
             this.tempPolygon.pushNode(x, y);
         } else {
-            window.removeEventListener('keydown', this.keyHandlers.KEY_POLYGON, false);
-            window.addEventListener('keydown', this.keyHandlers.KEY_POLYGON, false);
+            window.removeEventListener('keydown', this.onKeyDown, false);
+            window.addEventListener('keydown', this.onKeyDown, false);
             this.tempPolygon = new PolygonShape(observable({id: '', color: 'red', geometry: {type: 'polygon', vertices: []}}));
             this.tempPolygon.pushNode(x, y);
             this.tempPolygon.pushNode(x, y);
@@ -181,28 +175,22 @@ export class SelectController extends Controller {
         this.gmask = gmask;
         this.selectedId = selectedId;
         this.contours = contours;
-        this.pointerHandlers = {
-            SELECTION_PICKER: this.onPointerDownSelectInstance.bind(this)
-        };
-        this.keyHandlers = {
-            KEY_SELECTION: this.onKeySelectionDown.bind(this)
-        }
         this.send = send;
     }
 
     activate() {
-        this.renderer.stage.on('mousedown', this.pointerHandlers.SELECTION_PICKER);
-        window.addEventListener('keydown', this.keyHandlers.KEY_SELECTION, false);
+        this.renderer.stage.on('mousedown', this.onPointerDownSelectInstance);
+        window.addEventListener('keydown', this.onKeySelectionDown, false);
         this.contours.visible = true;
     }
 
     deactivate() {
-        window.removeEventListener('keydown', this.keyHandlers.KEY_SELECTION, false);
-        this.renderer.stage.removeListener('mousedown', this.pointerHandlers.SELECTION_PICKER);
+        window.removeEventListener('keydown', this.onKeySelectionDown, false);
+        this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectInstance);
         this.contours.visible = false;
     }
 
-    protected onPointerDownSelectInstance(evt: PIXI.interaction.InteractionEvent) {
+    @bind protected onPointerDownSelectInstance(evt: PIXI.interaction.InteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
@@ -252,7 +240,7 @@ export class SelectController extends Controller {
         }
     }
 
-    protected onKeySelectionDown(evt: KeyboardEvent) {
+    @bind protected onKeySelectionDown(evt: KeyboardEvent) {
         if (evt.key === 'Escape') {
             this.deselect();
         }
@@ -268,20 +256,17 @@ export class LockController extends Controller {
         super();
         this.renderer = renderer;
         this.gmask = gmask;
-        this.pointerHandlers = {
-            LOCK_DOWN: this.onPointerDownLock.bind(this)
-        };
     }
 
     activate() {
-        this.renderer.stage.on('mousedown', this.pointerHandlers.LOCK_DOWN);
+        this.renderer.stage.on('mousedown', this.onPointerDownLock);
     }
 
     deactivate() {
-        this.renderer.stage.removeListener('mousedown', this.pointerHandlers.LOCK_DOWN);
+        this.renderer.stage.removeListener('mousedown', this.onPointerDownLock);
     }
 
-    protected onPointerDownLock(evt: PIXI.interaction.InteractionEvent) {
+    @bind protected onPointerDownLock(evt: PIXI.interaction.InteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         const fId = fuseId(id);
@@ -324,24 +309,17 @@ export class CreateController extends Controller {
         this.targetClass = targetClass;
         this.send = send;
         this.renderer.stage.addChild(this.roi);
-        this.pointerHandlers = {
-            CREATE_POLYGON: this.onPointerDownSelectionPolygon.bind(this),
-            TEMP_POLYGON: this.onPointerMoveTempPolygon.bind(this)
-        };
-        this.keyHandlers = {
-            KEY_POLYGON: this.onKeyDown.bind(this)
-        };
     }
 
     activate() {
-        this.renderer.stage.on('mousedown', this.pointerHandlers.CREATE_POLYGON);
-        this.renderer.stage.on('pointermove', this.pointerHandlers.TEMP_POLYGON);
+        this.renderer.stage.on('mousedown', this.onPointerDownSelectionPolygon);
+        this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
         this.initRoi();
     }
 
     deactivate() {
-        this.renderer.stage.removeListener('mousedown', this.pointerHandlers.CREATE_POLYGON);
-        this.renderer.stage.removeListener('pointermove', this.pointerHandlers.TEMP_POLYGON);
+        this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectionPolygon);
+        this.renderer.stage.removeListener('pointermove', this.onPointerMoveTempPolygon);
         this.roi.clear();
     }
 
@@ -358,7 +336,8 @@ export class CreateController extends Controller {
         this.roi.visible = this.showRoi;
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
+    
+    @bind onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         const {x, y} = this.renderer.normalize(newPos);
         if (this.tempPolygon) {
@@ -366,8 +345,8 @@ export class CreateController extends Controller {
             this.tempPolygon.pushNode(x, y);
             this.tempPolygon.pushNode(x, y);
         } else {
-            window.removeEventListener('keydown', this.keyHandlers.KEY_POLYGON, false);
-            window.addEventListener('keydown', this.keyHandlers.KEY_POLYGON, false);
+            window.removeEventListener('keydown', this.onKeyDown, false);
+            window.addEventListener('keydown', this.onKeyDown, false);
             this.tempPolygon = new PolygonShape(observable({id: '', color: 'red', geometry: {type: 'polygon', vertices: []}}));
             this.tempPolygon.pushNode(x, y);
             this.tempPolygon.pushNode(x, y);
@@ -378,7 +357,8 @@ export class CreateController extends Controller {
         }
     }
 
-    onPointerMoveTempPolygon(evt: PIXI.interaction.InteractionEvent) {
+    
+    @bind onPointerMoveTempPolygon(evt: PIXI.interaction.InteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         if (this.tempPolygon) {
             const {x, y} = this.renderer.normalize(newPos);
@@ -390,7 +370,7 @@ export class CreateController extends Controller {
         }
     }
 
-    protected onKeyDown(evt: KeyboardEvent) {
+    @bind protected onKeyDown(evt: KeyboardEvent) {
         if (evt.key === 'Enter') {
             // End polygon creation
             if (this.tempPolygon) {

@@ -5,15 +5,12 @@
  * @license CECILL-C
 */
 
-import { LitElement, html, customElement, property} from 'lit-element';
-import './pxn-rectangle'
+import { customElement, property} from 'lit-element';
+import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
-
-// TODO should not been used directly
-import { observable } from '@pixano/core';
-import { generateKey, getShape, setKeyShape, deleteShape, isKeyShape} from './video-utils';
-
-const colors = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan']
+import { trackColors } from './video-utils';
+import { getShape, setKeyShape, isKeyShape} from './video-utils';
+import { ShapesEditController } from './shapes-manager';
 
 enum displayMode {
     SHOW_ALL = 'show_all',
@@ -21,32 +18,64 @@ enum displayMode {
 }
 
 export enum Mode {
-    //CREATE_TRACK = 'create_track',
-    ADD_REPLACE_BOX = 'add_replace_box',
-    //EDIT_BOX = 'edit_box'
+    ADD_REPLACE_BOX = 'add_replace_box'
 }
 
 @customElement('pxn-tracking' as any)
-export class Tracking extends LitElement{
-    @property({type: String})
-    public image: string | null = null;
+export class Tracking extends Rectangle {
 
     @property({type: Number})
     public imageIdx: number = 0;
 
-    @property({type: Number})
-    public selectedTrackId: number = -1;
-
     @property({type: Object})
-    public tracks: {[key: number]: TrackData} = {};
+    public tracks: {[key: string]: TrackData} = {};
 
-    @property({type: String})
-    public mode: Mode = Mode.ADD_REPLACE_BOX
+    displayMode: displayMode = displayMode.SHOW_ALL;
 
-    displayMode: displayMode = displayMode.SHOW_ALL
+    @property({ type: Object })
+    public selectedTracks: Set<TrackData> = new Set();
 
-    constructor(){
-        super();      
+    constructor() {
+        super();
+        this.addEventListener('selection', (evt: any) => {
+            if (!evt.detail.length) {
+                this.selectedTracks.clear();
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+            }
+        });
+        this.addEventListener('update', () => {
+            // when updating instance
+            // create keyshape
+            this.shManager.targetShapes.forEach((s) => {
+                const t = [...this.selectedTracks].find((tr) => tr.id === s.id);
+                if (t) {
+                    setKeyShape(t, this.imageIdx, {...getShape(t, this.imageIdx)!, ...s});
+                }
+            });
+        });
+        this.handleTrackSelection();
+    }
+
+    /**
+     * Extend shape controller onObjectDown to handle track selection
+     */
+    protected handleTrackSelection() {
+        const editController = (this.shManager.modes['edit'] as ShapesEditController);
+        editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
+            const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
+            const t = this.tracks[shape.id];
+            if (isShiftKey) {
+                if (!this.selectedTracks.has(t)) {
+                    this.selectedTracks.add(this.tracks[shape.id]);
+                    this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+                }
+            } else if (!this.selectedTracks.has(t)) {
+                this.selectedTracks.clear();
+                this.selectedTracks.add(this.tracks[shape.id]);
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+            }
+            return firstClick;
+        }
     }
 
     /**
@@ -54,178 +83,45 @@ export class Tracking extends LitElement{
      * @param changedProperty 
      */
     protected updated(changedProperties: any) {
-        if (changedProperties.has('mode') && this.mode) {
-            // console.log('Pxn-tracking new mode :', this.mode);
-            // this.setRectangleMode(this.mode);
-            this.rectangle.mode = 'create'
-        }
-        if (changedProperties.has('imageIdx') && this.imageIdx >= 0) {
-            // console.log('New image idx :', this.imageIdx, this.tracks);
-            // TODO setter does not work do it manually
-            // this.rectangle.shapes = this.getShapes(this.imageIdx);
-            this.rectangle.shapes.set(this.convertShapes(this.imageIdx).map(observable));
+        super.updated(changedProperties);
+        if (changedProperties.has('imageIdx') || changedProperties.has('image') && this.imageIdx >= 0) {
+            this.drawTracks();
         }
         if (changedProperties.has('tracks')) {
             // Called when we initialize the tracks for the first time
-            console.log("tracks modified, updating shapes", this.tracks)
-            this.rectangle.shapes.set(this.convertShapes(this.imageIdx).map(observable));
+            this.drawTracks();
         }
     }
 
-    /**
-     * Switch between displaying all tracks or only the selected one
-     */
-    public changeDisplayMode() {
-        if (this.displayMode === displayMode.SHOW_SELECTED) {
-            this.displayMode = displayMode.SHOW_ALL;
-        } 
-        else {
-            this.displayMode = displayMode.SHOW_SELECTED;
-        }
-        // TODO setter does not work do it manually
-        // this.rectangle.shapes = this.getShapes(this.imageIdx);
-        this.rectangle.shapes.set(this.convertShapes(this.imageIdx).map(observable));
-    }
-    
-    /**
-     * Delete a key frame (called from exterior)
-     */
-    public deleteBox(){
-        this._onDelete();
-        this.rectangle.shapes.set(this.convertShapes(this.imageIdx).map(observable));
+    public drawTracks() {
+        this.shapes = this.convertShapes(this.imageIdx) as any;
+        // update selection to be displayed
+        const selectedIds = [...this.selectedTracks].map((t) => t.id);
+        this.selectedShapeIds = selectedIds;
     }
 
     /**
      * Get rectangle shapes from specific frame
      * @param fIdx 
      */
-    public convertShapes(fIdx: number): ShapeData[]{
+    public convertShapes(fIdx: number): ShapeData[] {
         const shapes = new Array();
-        let tmap: {[key: number]: TrackData} = {};
-        const selectedTrack = this.tracks[this.selectedTrackId];
-        if (this.displayMode === displayMode.SHOW_ALL) {
-            tmap = this.tracks
-        } else if (this.displayMode === displayMode.SHOW_SELECTED && selectedTrack){
-            tmap[this.selectedTrackId] = selectedTrack;
-        }
-        Object.keys(tmap).forEach((tid: any) => {
-                const t = tmap[tid];
+        const tracks = this.displayMode === displayMode.SHOW_ALL ?
+                this.tracks : [...this.selectedTracks].reduce((map, obj) => ({...map, [obj.id]: obj}), {});
+        Object.keys(tracks).forEach((tid: string) => {
+                const t = tracks[tid];
                 const ks = getShape(t, fIdx);
-                if (ks && (isKeyShape(t,fIdx) || ks.interpNext)){
+                const isHidden = ks?.isNextHidden && !isKeyShape(t, this.imageIdx);
+                if (ks && !isHidden) {
+                    // hide box after last keyshape if not selected (?)
                     shapes.push({
                         id: tid.toString(), 
-                        geometry: {
-                            vertices: ks.geometry.vertices,
-                            type: 'rectangle'
-                        }, 
-                        color: colors[tid % colors.length]
-                    });                    
+                        geometry: ks.geometry, 
+                        color: trackColors[parseInt(tid) % trackColors.length]
+                    } as ShapeData);
                 } 
             }
         )
         return shapes;
-    }
-
-    set imageElement(htmlImageElement: HTMLImageElement) {
-        this.rectangle.imageElement = htmlImageElement;
-    }
-
-    get imageElement() {
-        return this.rectangle.imageElement;
-    }
-
-    get rectangle() {
-        return this.shadowRoot!.querySelector('pxn-rectangle')!;
-    }
-
-    _onSelection(evt: any) {
-        // console.log('_onSelection', evt);
-        const trackId = evt.detail;
-        if (trackId.length > 0) {
-            this.selectedTrackId = parseInt(trackId[0]);
-            this.dispatchEvent(new CustomEvent("selected-box-changed", {detail: this.selectedTrackId}))
-        }
-    }
-
-    /**
-     * Called when a box is updated
-     * @param evt 
-     */
-    _onUpdate(evt: any) {
-        const selectedTrack = this.tracks[this.selectedTrackId];
-        if (!selectedTrack) {
-            return;
-        }
-        console.log("update event detail", evt.detail);
-        const newVertices = [...this.rectangle.shapes].find((e) => e.id === this.selectedTrackId.toString())!.geometry.vertices;
-        // This is already a key frame for the selected track
-        const ks = getShape(selectedTrack, this.imageIdx);
-        if (ks) {
-            ks.geometry.vertices = newVertices;
-            setKeyShape(selectedTrack, this.imageIdx, ks);
-        }
-        this.dispatchEvent(new CustomEvent('update', {detail: this.tracks}));
-        console.log("Updated track", this.selectedTrackId)
-    }
-
-    /**
-     * Called after a box has been created
-     * @param evt 
-     */
-    _onCreate(evt: any) {
-        const selectedTrack = this.tracks[this.selectedTrackId];
-        if (!selectedTrack) {
-            console.log('You need to select or create tracks before adding boxes');
-            this.rectangle.shapes.set([]);
-            return;
-        } 
-
-        // console.log("create event detail", evt.detail);
-        const newVertices = evt.detail.geometry.vertices;
-        const ks = getShape(selectedTrack, this.imageIdx);
-        if (ks) {
-            ks.interpNext = true;
-            ks.geometry.vertices = newVertices;
-            setKeyShape(selectedTrack, this.imageIdx, ks);
-            this.dispatchEvent(new CustomEvent('update', {detail: this.tracks}));
-            console.log("Replace box for track ", this.selectedTrackId);
-        } else {
-            // No previous frames for this track                       
-            const newKS = {geometry: {vertices: newVertices, type: 'rectangle'}, interpNext: true, 
-                    tempProps: {}, timestamp: this.imageIdx, id: generateKey()};
-            setKeyShape(selectedTrack, this.imageIdx, newKS);
-            this.dispatchEvent(new CustomEvent("fill-temp-props", {detail: this.imageIdx}));
-            console.log("Created new box for track ", this.selectedTrackId);
-        } 
-        this.rectangle.shapes.set(this.convertShapes(this.imageIdx).map(observable));   // For refresh
-    }
-
-    _onDelete() {
-        const selectedTrack = this.tracks[this.selectedTrackId];
-        if (!selectedTrack) {
-            return;
-        }
-        const ret = deleteShape(selectedTrack, this.imageIdx);
-        if (ret) {
-            this.dispatchEvent(new CustomEvent('update', {detail: this.tracks}));
-            console.log("Deleted box of track", this.selectedTrackId);
-        }
-    }
-
-    render() {
-        return html`
-            <pxn-rectangle image="${this.image}"
-                @create=${this._onCreate}
-                @update=${this._onUpdate}
-                @delete=${this._onDelete}
-                @selection=${this._onSelection}>
-            </pxn-rectangle>
-        `;
-    }
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-      'pxn-tracking': Tracking;
     }
 }

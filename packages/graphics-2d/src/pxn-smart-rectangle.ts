@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+import bind from 'bind-decorator';
 import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, ObservableSet, utils } from '@pixano/core';
@@ -78,9 +79,6 @@ class SmartRectangleCreateController extends ShapeCreateController {
     super(renderer, shapes);
     this.boundingBoxCreator = new PixelToBoundingBox();
     this.renderer.stage.addChild(this.roi);
-    this.keyHandlers = {
-      SMART_KEYDOWN: this.onSmartKeydown.bind(this)
-    };
   }
 
   load() {
@@ -96,15 +94,12 @@ class SmartRectangleCreateController extends ShapeCreateController {
     this.cross.visible = false;
     this.roi.visible = true;
     this.updateRoi();
-    window.addEventListener("keydown", this.keyHandlers.SMART_KEYDOWN, false);
+    window.addEventListener("keydown", this.onSmartKeydown, false);
   }
 
   deactivate() {
     super.deactivate();
-    Object.keys(this.keyHandlers).forEach(key => {
-      const v = this.keyHandlers[key];
-      window.removeEventListener("keydown", v);
-    });
+    window.removeEventListener("keydown", this.onSmartKeydown);
     this.roi.visible = false;
   }
 
@@ -133,7 +128,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     );
   }
 
-  protected async onRootDown(evt: PIXI.interaction.InteractionEvent) {
+  @bind async onRootDown(evt: PIXI.interaction.InteractionEvent) {
     this.isCreating = true;
     const mouseData = this.renderer.getPosition(evt.data);
     const click: AIPoint = { x: mouseData.x, y: mouseData.y };
@@ -177,7 +172,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  protected onRootMove(evt: PIXI.interaction.InteractionEvent) {
+  @bind onRootMove(evt: PIXI.interaction.InteractionEvent) {
     super.onRootMove(evt);
     const roiSize =
       this.boundingBoxCreator.baseRoiSize *
@@ -195,7 +190,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  protected onSmartKeydown(evt: KeyboardEvent) {
+  @bind protected onSmartKeydown(evt: KeyboardEvent) {
     if (evt.key === "+") {
       this.roiUp();
     } else if (evt.key === "-") {

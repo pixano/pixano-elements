@@ -67,11 +67,12 @@ export class ObservableSet<T> extends Set<T> {
     }
 
     clear() {
-        const success = super.clear();
-        for (const cb of [...observers.get(this)!]) {
-            cb('clear');
+        if (this.size) {
+            super.clear();
+            for (const cb of [...observers.get(this)!]) {
+                cb('clear');
+            }
         }
-        return success;
     }
 
     /**

@@ -93,6 +93,8 @@ export class Renderer extends PIXI.Application {
             // reset pan offset if the image has new dimensions
             this.sx = 0.5 * (1 - this.s) * this.rw;
             this.sy = 0.5 * (1 - this.s) * this.rh;
+            this.htmlImageElement = img;
+            this.onImageSizeChange();
         }
         this.htmlImageElement = img;
         if (this.stage.children.length > 0) {
@@ -149,6 +151,8 @@ export class Renderer extends PIXI.Application {
         ];
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
+
+    public onImageSizeChange() {}
 
     public setContainer(container: HTMLDivElement = document.createElement('div')) {
         while (container.firstChild) {
@@ -221,7 +225,12 @@ export class Renderer extends PIXI.Application {
      * @param imageWidth width of background image
      * @param imageHeight height of background image
      */
-    public computeDrawableArea(canvasWidth: number, canvasHeight: number, imageWidth: number, imageHeight: number) {
+    public computeDrawableArea(canvasWidth: number, canvasHeight: number, imageWidth: number, imageHeight: number, forceCompute: boolean = false) {
+        if (imageWidth === this.imageWidth && imageHeight === this.imageHeight && !forceCompute) {
+            // if image dimension is the same as previously
+            // do not recompute canvas position
+            return;
+        }
         const imageAspectRatio = imageWidth / imageHeight;
         // canvas full dimensions
         const canvasAspectRatio = canvasWidth / canvasHeight;
@@ -247,13 +256,8 @@ export class Renderer extends PIXI.Application {
             this.rx = 0;
             this.ry = 0;
         }
-        // remember pan (?)
-        // if sx and sy are set to 0 (default)
-        // use existing value
-        if (this.sx === 0 && this.sy === 0) {
-            this.sx = 0.5 * (1 - this.s) * this.rw;
-            this.sy = 0.5 * (1 - this.s) * this.rh;
-        }
+        this.sx = 0.5 * (1 - this.s) * this.rw;
+        this.sy = 0.5 * (1 - this.s) * this.rh;
     }
 
     /**
@@ -287,7 +291,7 @@ export class Renderer extends PIXI.Application {
             this.sx = 0.5 * (1 - this.s) * this.rw;
             this.sy = 0.5 * (1 - this.s) * this.rh;
             this.computeDrawableArea(this.canvasWidth, this.canvasHeight,
-                                    this.htmlImageElement.width, this.htmlImageElement.height);
+                                    this.htmlImageElement.width, this.htmlImageElement.height, true);
             this.stage.scale.set(this.s * this.rw / this.image.width, this.s * this.rh / this.image.height);
             this.stage.position.set(this.rx * this.s + this.sx, this.ry * this.s + this.sy);
             this.stage.hitArea = new PIXI.Rectangle(-this.stage.position.x / this.stage.scale.x,

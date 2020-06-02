@@ -82,35 +82,32 @@ export function getClosestFrames(track: TrackData, fIdx: number): number[] {
  * @param track the track processed
  * @param fId the frame index where interpolation takes place
  */
-export function getShape(track: TrackData, fId: number) : KeyShapeData | undefined{
+export function getShape(track: TrackData, fId: number) : KeyShapeData | undefined {
     if (fId < 0)
         return undefined;
 
     // If requested shape is a key one return it
     const ks = getKeyShape(track, fId);
-    if (ks)
+    if (ks) {
         return ks;
+    }
     
     // Search for bounds
     const [id1, id2] = getClosestFrames(track, fId);
     const s1 = getKeyShape(track, id1);
 
     // No previous frame, asking for shape before previous track trame
-    if (!s1)
-    {
-        // console.log('@@ no shape')
+    if (!s1) {
         return undefined;
     } 
     
-    // Make a copy of previous shape      
-    const newKS = JSON.parse(JSON.stringify(s1));
-    newKS.id = generateKey();
+    // Make a deep copy of previous shape      
+    const newKS = JSON.parse(JSON.stringify(s1)) as KeyShapeData;
     newKS.timestamp = fId;
 
     // No next frame, asking for shape after last track frame return last one
     const s2 = getKeyShape(track, id2);
     if (!s2) {
-        // console.log('@@ prev frame', newKS)
         return newKS; 
     }
 
@@ -120,7 +117,6 @@ export function getShape(track: TrackData, fId: number) : KeyShapeData | undefin
         newKS.geometry.vertices[i] = (1 - w) * s1.geometry.vertices[i] + 
                                           w  * s2.geometry.vertices[i]
     }
-    // console.log('@@ interpolation between', id1, id2, newKS)
     return newKS;
 }  
 
@@ -132,19 +128,30 @@ export function getShape(track: TrackData, fId: number) : KeyShapeData | undefin
  */
 export function deleteShape(track: TrackData, fIdx: number) {
     const ks = getKeyShape(track, fIdx);
-    if (ks)
-    {
+    if (ks) {
         // If shape to remove is a key one, remove it
         delete track.keyShapes[fIdx];
         return true;
     } else {
-        // Otherwise get previous frame shape and set interpNext to false
+        // Otherwise get previous frame shape and set visibility to false
         const prevKS = getShape(track, fIdx-1);
         if (prevKS) {
-            prevKS.interpNext = false;
+            prevKS.isNextHidden = true;
             setKeyShape(track, fIdx-1, prevKS);
             return true;
         }
     }
     return false;
 }
+
+/**
+ * Sort dictionary key-value by key.
+ * Key is a string to cast in int.
+ * @param dict 
+ */
+export function sortDictByKey(dict: {[key: string]: any}): {[key: string]: any} {
+    const sortedArr: [string, any][] = [...Object.entries(dict)].sort(([a], [b]) => parseInt(a) - parseInt(b));
+    return sortedArr.reduce((o, val) => { o[val[0]] = val[1]; return o; }, {} as {[key: string]: any});
+}
+
+export const trackColors = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
