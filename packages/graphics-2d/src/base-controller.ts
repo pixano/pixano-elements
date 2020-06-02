@@ -6,10 +6,7 @@ export abstract class Controller extends EventTarget {
         this.deactivate();
         this.activate();
     }
-    protected pointerHandlers: {
-        [key: string]: (evt: any) => void;
-    } = {};
-    protected keyHandlers: {
-        [key: string]: (evt: any) => void;
-    } = {};
+    public emit(type: string, detail: any) {
+        this.dispatchEvent(new CustomEvent(type, { detail }));
+    }
 }

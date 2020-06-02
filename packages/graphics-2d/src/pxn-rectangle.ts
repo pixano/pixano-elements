@@ -55,7 +55,7 @@ export class RectangleCreateController extends ShapeCreateController {
         this.tmpShape.draw();
     }
 
-    protected onRootMove(evt: PIXI.interaction.InteractionEvent) {
+    onRootMove(evt: PIXI.interaction.InteractionEvent) {
         super.onRootMove(evt);
         const mouse = this.renderer.getPosition(evt.data);
         if (mouse.x === this.mouse.x && mouse.y === this.mouse.y) {

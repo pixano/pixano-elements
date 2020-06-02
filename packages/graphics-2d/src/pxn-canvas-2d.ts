@@ -69,14 +69,8 @@ export class Canvas2d extends Canvas {
   }
 
   set selectedShapeIds(ids: string[]) {
-    this.shManager.targetShapes.clear();
-    for (const v of ids) {
-      // retrieve shape corresponding to id
-      const shape = [...this.shapes].find((s) => s.id === v);
-      if (shape) {
-        this.shManager.targetShapes.add(shape);
-      }
-    }
+    const shapes = [...this.shapes].filter((s) => ids.includes(s.id));
+    this.shManager.targetShapes.set(shapes);
   }
 
   // observable set of selected shapes.
@@ -103,8 +97,6 @@ export class Canvas2d extends Canvas {
    * @param shapes Set of [ShapeData]
    */
   set shapes(value) {
-    // console.time('t1');
-    // encapsulate object in Proxy
     // to observe its property changes.
     this._shapes.set((value as any).map(observable));
   }
@@ -181,8 +173,10 @@ export class Canvas2d extends Canvas {
   protected initShapeSetObserver() {
     // Trigger notification on shape
     // selection(s) changed.
-    observe(this.shManager.targetShapes, () => {
-      this.notifySelection([...this.shManager.targetShapes].map((t) => t.id));
+    observe(this.shManager.targetShapes, (prop) => {
+      if (prop != 'set') {
+        this.notifySelection([...this.shManager.targetShapes].map((t) => t.id));
+      }
     });
     observe(this.shapes, (event: any, shape?: ShapeData) => {
       if (event === 'add' && shape) {

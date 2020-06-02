@@ -59,6 +59,15 @@ Each package can contain multiple web components which are regrouped by affinity
 | [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [link](http://pixano.cea.fr/smart-annotation/) |
 | [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [link](http://pixano.cea.fr/3d-bounding-box/) |
 
+## 📚 Documentation
+
+Check out the [TypeDoc](https://pixano.github.io/docs/docs) documentation. Each package's usage and API is also documented:
+- [graphics-2d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
+- [graphics-3d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
+
+
+You can also try the demos on our [website](http://pixano.cea.fr/bounding-box/).
+
 ## Contributing
 
 Clone and setup the repo:

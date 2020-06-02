@@ -12,6 +12,9 @@ import { PolygonShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
 import { observable } from '@pixano/core';
 import { insertMidNode } from './utils';
+import { Renderer } from './renderer';
+import { Shape } from './shapes-2d';
+import { ObservableSet } from '@pixano/core';
 
 /**
  * Inherit Canvas2d to handle polygons.
@@ -23,7 +26,7 @@ export class Polygon extends Canvas2d {
         super();
         this.shManager.setController('create', new PolygonCreateController(this.renderer, this.shapes));
         this.shManager.setController('edit', new PolygonsEditController(this.renderer,
-                                                    this.shManager.graphics, this.shManager.targetShapes));
+                                                    this.shManager.graphics, this.shManager.targetShapes, this.shManager.dispatchEvent.bind(this.shManager)));
     }
 
     protected initShapeManagerListeners() {
@@ -113,10 +116,19 @@ class PolygonsEditController extends ShapesEditController {
 
     private isMidNodeTranslating: boolean = false;
 
-    protected pointerHandlers: any = {
-        ...this.pointerHandlers,
-        ONMIDNODEMOVE: this.onMidNodeMove.bind(this),
-        ONMIDNODEUP: this.onMidNodeUp.bind(this)
+    protected reclick: boolean = false;
+
+    constructor(renderer: Renderer,
+        graphics: Set<Shape>,
+        targetShapes: ObservableSet<ShapeData>,
+        dispatchEvent?: (event: Event) => boolean) {
+        super(renderer, graphics, targetShapes, dispatchEvent);
+        this.onNodeDown = this.onNodeDown.bind(this);
+        this.onNodeMove = this.onNodeMove.bind(this);
+        this.onNodeUp = this.onNodeUp.bind(this);
+        this.onMidNodeDown = this.onMidNodeDown.bind(this);
+        this.onMidNodeMove = this.onMidNodeMove.bind(this);
+        this.onMidNodeUp = this.onMidNodeUp.bind(this);
     }
 
     protected toggle(obj: PolygonShape): PolygonShape {
@@ -130,6 +142,21 @@ class PolygonsEditController extends ShapesEditController {
         }
         obj.draw();
         return obj;
+    }
+
+    doObjectSelection(shape: ShapeData, isShiftKey: boolean) {
+        const firstClick = super.doObjectSelection(shape, isShiftKey);
+        this.reclick = !firstClick;
+        return firstClick;
+    }
+
+    onObjectUp() {
+        super.onObjectUp();
+        const obj = this.getFirstGraphic() as PolygonShape;
+        if (obj && this.reclick && !this.updated) {
+            this.reclick = false;
+            this.toggle(obj);
+        }
     }
 
     public decorateTo(obj: PolygonShape, state: Decoration) {
@@ -208,8 +235,8 @@ class PolygonsEditController extends ShapesEditController {
         if (evt.data.originalEvent.buttons !== 2) {
             this.activeNodeIdx = evt.nodeIdx;
             this.isMidNodeTranslating = true;
-            this.renderer.stage.on('pointermove', this.pointerHandlers.ONMIDNODEMOVE);
-            this.renderer.stage.on('pointerupoutside', this.pointerHandlers.ONMIDNODEUP);
+            this.renderer.stage.on('pointermove', this.onMidNodeMove);
+            this.renderer.stage.on('pointerupoutside', this.onMidNodeUp);
         }
     }
 
@@ -248,8 +275,8 @@ class PolygonsEditController extends ShapesEditController {
                 }
                 this.updated = false;
             }
-            this.renderer.stage.removeListener('pointermove', this.pointerHandlers.ONMIDNODEMOVE);
-            this.renderer.stage.removeListener('pointerupoutside', this.pointerHandlers.ONMIDNODEUP);
+            this.renderer.stage.removeListener('pointermove', this.onMidNodeMove);
+            this.renderer.stage.removeListener('pointerupoutside', this.onMidNodeUp);
         }
     }
 
@@ -337,7 +364,7 @@ class PolygonCreateController extends ShapeCreateController {
         }
     }
 
-    protected onRootMove(evt: PIXI.interaction.InteractionEvent) {
+    onRootMove(evt: PIXI.interaction.InteractionEvent) {
         super.onRootMove(evt);
         const m = this.renderer.getPosition(evt.data);
         if (m.x === this.mouse.x && m.y === this.mouse.y) {

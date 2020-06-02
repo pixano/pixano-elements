@@ -63,7 +63,9 @@ class MyDemo extends LitElement {
         <main>
           <pxn-polygon  image="${this.image}"
                         disablefullscreen
-                        @create=${this.onCreate}>
+                        @create=${this.onCreate}
+                        @update=${this.onUpdate}
+                        @selection=${this.onSelection}>
           </pxn-polygon>
           ${this.rightPanel}
         </main>`;
@@ -73,6 +75,14 @@ class MyDemo extends LitElement {
     const newObj = evt.detail;
     newObj.color = colors[Math.floor(Math.random() * colors.length)];
     this.element.mode = 'edit';
+  }
+
+  onUpdate(evt) {
+    console.log('update', evt.detail);
+  }
+
+  onSelection(evt) {
+    console.log('selection ids', evt.detail);
   }
 
   get element() {

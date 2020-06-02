@@ -2,8 +2,8 @@
   "packages": [
     "packages/core",
     "packages/ai",
-    "packages/graphics-3d",
     "packages/graphics-2d",
+    "packages/graphics-3d",
     "demos/*"
   ],
   "command": {

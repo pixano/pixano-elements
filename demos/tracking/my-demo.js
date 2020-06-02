@@ -6,38 +6,59 @@
 import {css, html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d/lib/pxn-tracking';
 import '@pixano/graphics-2d/lib/pxn-track-panel';
+import '@material/mwc-button';
+// import {Track} from '@pixano/graphics-2d/lib/pxn-tracking';
 
-//import {Track} from '@pixano/graphics-2d/lib/pxn-tracking';
 
-
-class DemoTracking extends LitElement {
+class MyDemo extends LitElement {
   static get styles() {
     return [css`
     main {
       display: flex;
       height: 100%;
-    }`];
+    }
+    p {
+      margin: 0;
+      text-align: center;
+    }
+    pxn-track-panel {
+      flex: 0 0 300px;
+    }
+    pxn-tracking {
+      height: calc(100% - 18px);
+    }
+    #editor {
+      width: 100%;
+      flex: 1;
+      min-width: 100px;
+    }
+    `];
   }
 
   static get properties() {
     return {
       imageIdx: {type: Number},
-      selectedTrackId: {type: Number},
-      //trackIds: {type: Array}
+      selectedTracks: {type: Object},
+      mode: {type: String},
+      tracks: {type: Object}
     };
   }
 
-  constructor(){
+  constructor() {
     super();
     this.imageIdx = 0;
+    this.mode = 'edit';
     this.imageList = new Array();
-    this.selectedTrackId = -1;
+    this.selectedTracks = new Set();
     this.tracks = {};
-
-
-    const basename = './sequence/'
+    // fetch("./20170320_144339_cam_0_tracks.json")
+    //   .then(response => response.json())
+    //   .then(json => {
+    //     console.log('set tracks');
+    //     this.tracks = json.annotations;
+    //   });
     for (let i = 1; i < 30; i++) [
-      this.imageList.push(basename + paddy(i, 6) + '.jpg')
+      this.imageList.push('sequence/' + paddy(i, 6) + '.jpg')
     ]
 
     window.addEventListener('keydown', (evt) => {
@@ -51,7 +72,10 @@ class DemoTracking extends LitElement {
         this.tracker.deleteBox();
       }
       if (evt.key == 'Control') {
-        this.tracker.rectangle.mode = 'update';
+        this.tracker.mode = 'update';
+      }
+      if (evt.key == 'm') {
+        this.selectedTracks = {};
       }
     });
 
@@ -86,31 +110,33 @@ class DemoTracking extends LitElement {
           
   return html`
     <main>
-      <pxn-tracking
+      <div id="editor">
+        <pxn-tracking
             image=${this.imageList[this.imageIdx]}
             imageIdx=${this.imageIdx}
-            selectedTrackId=${this.selectedTrackId}
+            mode=${this.mode}
             .tracks=${this.tracks}
-            @selected-box-changed=${() => this.selectedTrackId = this.tracker.selectedTrackId}
-            @fill-temp-props=${(e) => this.picker.fillTempProps(e.detail)}
-            @update=${(e) => this.onUpdate(e)}>
+            .selectedTracks=${this.selectedTracks}
+            @selection-track=${() => this.picker.requestUpdate()}
+            @create=${(e) => this.picker.newTrack(e)}
+            @update=${() => this.picker.requestUpdate()}>
         </pxn-tracking>
-
-        <pxn-track-panel
-          imageIdx=${this.imageIdx}
-          selectedTrackId=${this.selectedTrackId}
-          .tracks=${this.tracks}
-          @create=${() => this.selectedTrackId = this.picker.selectedTrackId}
-          @imageIdx-changed=${() => this.imageIdx = this.picker.imageIdx}
-          @selected-track-changed=${() => this.selectedTrackId = this.picker.selectedTrackId}
-          @change-display-mode=${() => this.tracker.changeDisplayMode()}
-          @update=${(e) => this.onUpdate(e)}>
-        </pxn-track-panel>
+        <p>${this.imageIdx}</p>
+      </div>
+      <pxn-track-panel
+        imageIdx=${this.imageIdx}
+        mode=${this.mode}
+        .selectedTracks=${this.selectedTracks}
+        .tracks=${this.tracks}
+        @mode=${(e) => this.mode = e.detail}
+        @update=${() => this.tracker.drawTracks()}
+        @imageIdx-changed=${() => this.imageIdx = this.picker.imageIdx}>
+      </pxn-track-panel>
     </main>`;
   } 
 }
 
-customElements.define('demo-tracking', DemoTracking);
+customElements.define('my-demo', MyDemo);
 
 function paddy(num, padlen, padchar) {
   var pad_char = typeof padchar !== 'undefined' ? padchar : '0';

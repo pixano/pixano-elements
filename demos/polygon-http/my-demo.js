@@ -71,7 +71,7 @@ class MyDemo extends LitElement {
 
   onCreate(evt) {
     const newObj = evt.detail;
-    fetch('http://localhost:4000/stuff', {
+    fetch('http://localhost:4000', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

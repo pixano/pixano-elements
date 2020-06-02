@@ -30,15 +30,30 @@ export interface ShapeData {
   category?: string;
 }
 
-export interface KeyShapeData extends ShapeData {
-  interpNext: boolean // Interpolation mode
-  tempProps: {[key: string]: any}; // Temporary track (specific to a frame) properties (eg posture)
+
+export interface KeyShapeData {
+  geometry: Geometry;
+  // Is next instances of track visible
+  // Undefined means not hidden
+  isNextHidden?: boolean;
+  // Temporary track (specific to a frame) properties (eg posture)
+  labels: {[key: string]: any};
+  // Image index
   timestamp: number;
 }
 
 export interface TrackData {
-  id: number;
+  id: string;
+  // Mapping between timestamps and their corresponding
+  // track instances.
+  // JavaScript will convert the integer timestamp to a string
+  // Values still accessible though an int key, but remember
+  // to cast to number if you want to get the keys timestamps.
+  // e.g: const a = {2300: "Some value"};
+  // > test[2300] === test["2300"] # true
+  // > Object.keys(test) # ["2300"]
   keyShapes: {[key: number]: KeyShapeData};
   category: string;
-  permProps: {[key: string]: any};
+  // permanent properties
+  labels: {[key: string]: any};
 }

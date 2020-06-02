@@ -4,7 +4,7 @@
  * @license CECILL-C
  */
 
-const colorNames: {[key: string]: string} = {
+export const colorNames: {[key: string]: string} = {
     aliceblue: "f0f8ff",
     antiquewhite: "faebd7",
     aqua: "0ff",
