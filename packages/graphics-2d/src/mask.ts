@@ -338,6 +338,30 @@ export class GMask extends PIXIContainer {
         }
     }
 
+    public replaceValue(prev: [number, number, number], curr: [number, number, number]) {
+        const [id1, id2, cls] = curr;
+        const ctx = this.canvas.getContext('2d')!;
+        const pixels = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        const color = this.pixelToColor(id1, id2, cls);
+        const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
+        for (let i = 0; i < this.canvas.width * this.canvas.height; i++) {
+            const pixId = this.pixelId(i);
+            if (pixId[0] === prev[0] && pixId[1] === prev[1] && pixId[2] === prev[2]) {
+                const idx = i * 4;
+                this.orig!.data[idx] = id1;
+                this.orig!.data[idx + 1] = id2;
+                this.orig!.data[idx + 2] = cls;
+                this.orig!.data[idx + 3] = 255;
+                pixels.data[idx] = color[0];
+                pixels.data[idx + 1] = color[1];
+                pixels.data[idx + 2] = color[2];
+                pixels.data[idx + 3] = alpha;
+            }
+        }
+        ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
+        this.colorMask.texture.update();
+    }
+
     public updateValue(maskArray: ImageData, id: [number, number, number], fillType='unite') {
         if (this.lockedInstances.has(fuseId(id))) {
             // do not update locked instances

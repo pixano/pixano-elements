@@ -8,8 +8,8 @@ import '@pixano/graphics-2d';
 import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
-  create_pencil,
-  magic_select,
+  createPencil,
+  magicSelect,
   subtract,
   union,
   lock,
@@ -97,8 +97,8 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
-          <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magic_select}</p>
+          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
           <p class="icon" title="Subtract" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
           <p class="icon" title="Union" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
           <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>

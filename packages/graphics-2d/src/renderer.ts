@@ -211,7 +211,7 @@ export class Renderer extends PIXI.Application {
 
     /**
      * Get position from interaction event
-     * @param data 
+     * @param data
      */
     public getPosition(data: PIXI.interaction.InteractionData): {x: number, y: number} {
         const mouseData = data.getLocalPosition(this.stage);

@@ -8,7 +8,7 @@ import '@pixano/graphics-3d';
 import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
-  create_pencil,
+  createPencil,
   swap } from '@pixano/core/lib/svg';
 
 const colormap = [
@@ -69,7 +69,7 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
+          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
           <p class="icon" title="Add instance" @click=${() => this.element.swap()}>${swap}</p>
         </div>       
       </div>

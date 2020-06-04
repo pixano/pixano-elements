@@ -5,7 +5,6 @@
  * @license CECILL-C
  */
 
-import bind from 'bind-decorator';
 import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, ObservableSet, utils } from '@pixano/core';
@@ -79,6 +78,9 @@ class SmartRectangleCreateController extends ShapeCreateController {
     super(renderer, shapes);
     this.boundingBoxCreator = new PixelToBoundingBox();
     this.renderer.stage.addChild(this.roi);
+    this.onRootDown = this.onRootDown.bind(this);
+    this.onRootMove = this.onRootMove.bind(this);
+    this.onSmartKeydown = this.onSmartKeydown.bind(this);
   }
 
   load() {
@@ -128,7 +130,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     );
   }
 
-  @bind async onRootDown(evt: PIXI.interaction.InteractionEvent) {
+  async onRootDown(evt: PIXI.interaction.InteractionEvent) {
     this.isCreating = true;
     const mouseData = this.renderer.getPosition(evt.data);
     const click: AIPoint = { x: mouseData.x, y: mouseData.y };
@@ -172,7 +174,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  @bind onRootMove(evt: PIXI.interaction.InteractionEvent) {
+  onRootMove(evt: PIXI.interaction.InteractionEvent) {
     super.onRootMove(evt);
     const roiSize =
       this.boundingBoxCreator.baseRoiSize *
@@ -190,7 +192,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  @bind protected onSmartKeydown(evt: KeyboardEvent) {
+  protected onSmartKeydown(evt: KeyboardEvent) {
     if (evt.key === "+") {
       this.roiUp();
     } else if (evt.key === "-") {

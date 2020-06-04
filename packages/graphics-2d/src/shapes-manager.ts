@@ -151,7 +151,7 @@ export class ShapesEditController extends Controller {
 
     /**
      * Handle click on canvas
-     * @param evt 
+     * @param evt
      */
     protected onRootDown(evt: any) {
         if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
@@ -208,7 +208,7 @@ export class ShapesEditController extends Controller {
 
     /**
      * Handle cursor move on object
-     * @param evt 
+     * @param evt
      */
     public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
         const shape = (evt as any).shape;
@@ -558,7 +558,9 @@ export class ShapesManager extends EventTarget {
                         obj.draw();
                     });
                     // reapply controller to new objects
-                    this.modes[this.mode].reset();
+                    if (this.modes[this.mode]) {
+                        this.modes[this.mode].reset();
+                    }
                     break;
                 }
                 case 'delete': {

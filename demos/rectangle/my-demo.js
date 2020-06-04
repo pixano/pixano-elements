@@ -8,7 +8,7 @@ import { html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d';
 import { demoStyles,
   fullscreen,
-  create_pencil,
+  createPencil,
   zoomIn,
   zoomOut } from '@pixano/core/lib/svg';
 
@@ -42,7 +42,7 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${create_pencil}</p>
+          <p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
           <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
           <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
         </div>

@@ -3,10 +3,9 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2020)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { LitElement, css, html, customElement, property} from 'lit-element';
-
 import { TrackData, KeyShapeData, ShapeData } from './types'
 import { setKeyShape, isKeyShape, getClosestFrames, getShape, deleteShape, trackColors, sortDictByKey } from './video-utils';
 import { mergeTracks, cutTrack } from '@pixano/core/lib/svg';
@@ -20,7 +19,7 @@ import '@material/mwc-list/mwc-list-item';
 interface Property {
     name: string // Property name
     type: string // Property type (checkbox, dropdown, ...)
-    enum: Array<any> // If property type is dropdown, all possible values
+    enum: any[] // If property type is dropdown, all possible values
     persistent: boolean // Whether the property is permanent or temporary (ie specific to a frame)
     default: any // Default value
 }
@@ -31,21 +30,21 @@ interface Property {
 interface Category {
     name: string // Category name
     color: string // Category color
-    properties: Array<Property> // Category properties (permanent or temporary)
+    properties: Property[] // Category properties (permanent or temporary)
 
 }
 
 interface Schema {
-    category: Array<Category>
+    category: Category[]
     default: string // Default category name
 }
 
-const defaultSchema =  
+const defaultSchema =
     {
         category: [
             {name: 'car', color: "green", properties: []},
             {name: 'person', color: "#eca0a0", properties: [
-                {name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'], 
+                {name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],
                 persistent: false, default: 'standing'}
             ]},
         ],
@@ -79,6 +78,13 @@ export class TrackPanel extends LitElement {
 
     static get styles() {
         return css`
+            :host {
+                height: 100%;
+                display: flex;
+            }
+            main {
+                width: 100%;
+            }
             .track-id {
                 width: 22px;
                 height: 22px;
@@ -115,20 +121,21 @@ export class TrackPanel extends LitElement {
         return category ? category.color || 'rgb(0,0,0)' : 'rgb(0,0,0)';
     }
 
-  
     public reloadSchema(schema: Schema) {
         this.schema = schema;
     }
 
     getDefaultPermProps(categoryName: string) {
         const category = this.schema.category.find((c) => c.name === categoryName);
-
-        const permProps: {[key: string]: any} = {};
-        category!.properties.forEach((p) => {
-            if (p.persistent)
-                permProps[p.name] = p.default
-        })
-        return permProps;
+        if (category) {
+            const permProps: {[key: string]: any} = {};
+            category!.properties.forEach((p) => {
+                if (p.persistent)
+                    permProps[p.name] = p.default
+            })
+            return permProps;
+        }
+        return {};
     }
 
     getDefaultTempProps(categoryName: string) {
@@ -149,7 +156,7 @@ export class TrackPanel extends LitElement {
     }
 
     newTrack(e: any) {
-        const newTrackId = Object.keys(this.tracks).length != 0 ? 
+        const newTrackId = Object.keys(this.tracks).length !== 0 ?
             (Math.max(...Object.keys(this.tracks).map(Number)) + 1).toString() : '0';
         const newShape = e.detail as ShapeData;
         newShape.id = newTrackId;
@@ -163,7 +170,7 @@ export class TrackPanel extends LitElement {
         const newTrack = {
             id: newTrackId,
             keyShapes: {[this.imageIdx] : keyShape},
-            category: cls, 
+            category: cls,
             labels: this.getDefaultPermProps(cls)
         };
         this.tracks[newTrackId] = newTrack;
@@ -183,7 +190,7 @@ export class TrackPanel extends LitElement {
         this.dispatchEvent(new Event("change-display-mode"));
     }
 
-        /**
+    /**
      * Set class (category) of the selected track
      * @param cls new class
      */
@@ -206,14 +213,14 @@ export class TrackPanel extends LitElement {
      * @param value the new property value
      */
     updateTrackProp(t: TrackData, ks: KeyShapeData, prop: Property,  newValue: any) {
-        if (newValue == "undefined") {
+        if (newValue === "undefined") {
             return;
         }
         if ((prop.persistent && t.labels[prop.name] === newValue) ||
-            (!prop.persistent && ks.labels[prop.name] == newValue)) {
+            (!prop.persistent && ks.labels[prop.name] === newValue)) {
             return;
         }
-        
+
         if (prop.persistent){
             t.labels[prop.name] = newValue;
         } else {
@@ -235,7 +242,7 @@ export class TrackPanel extends LitElement {
 
     /**
      * Remove keyshape from track
-     * @param t 
+     * @param t
      */
     removeOrAddKeyShape(t: TrackData) {
         if (isKeyShape(t, this.imageIdx)) {
@@ -251,30 +258,30 @@ export class TrackPanel extends LitElement {
 
     /**
      * Go to previous keyframe for a given track
-     * @param t 
+     * @param t
      */
     goToPreviousKeyFrame(t: TrackData) {
         const [prev,] = getClosestFrames(t, this.imageIdx);
         if (prev >= 0) {
             this.imageIdx = prev;
             this.dispatchEvent(new CustomEvent("imageIdx-changed", {detail: this.imageIdx}));
-        }          
+        }
     }
 
     /**
      * Go to next keyframe for a given track
-     * @param t 
+     * @param t
      */
     goToNextKeyFrame(t: TrackData) {
         const [,next] = getClosestFrames(t, this.imageIdx);
         if (isFinite(next)) {
             this.imageIdx = next;
             this.dispatchEvent(new CustomEvent("imageIdx-changed", {detail: this.imageIdx}));
-        }      
+        }
     }
 
     /**
-     * Enable or disable interpolation for the current frame  
+     * Enable or disable interpolation for the current frame
      */
     switchVisibility(t: TrackData, tIdx: number) {
         const prevShape = getShape(t, tIdx - 1);
@@ -306,10 +313,10 @@ export class TrackPanel extends LitElement {
 
     /**
      * Split track into two tracks
-     * @param t 
+     * @param t
      */
     splitTrack(t: TrackData) {
-        const newTrackId = Object.keys(this.tracks).length != 0 ? 
+        const newTrackId = Object.keys(this.tracks).length !== 0 ?
             (Math.max(...Object.keys(this.tracks).map(Number)) + 1).toString() : '';
 
         // create keyshape for current frame and previous frame
@@ -329,7 +336,7 @@ export class TrackPanel extends LitElement {
             keyShapes: ks.filter((k) => k.timestamp >= this.imageIdx)
                          .map((k) => ({...k, id: newTrackId}))
                          .reduce((map, obj) => ({...map, [obj.timestamp]: obj}), {}),
-            category: t.category, 
+            category: t.category,
             labels: t.labels
         };
         this.tracks[newTrackId] = newTrack;
@@ -347,7 +354,7 @@ export class TrackPanel extends LitElement {
      * @param tracks tracks to be switched
      */
     switchTrack(tracks: Set<TrackData>) {
-        if (tracks.size == 2) {
+        if (tracks.size === 2) {
             const [t1, t2] = [...tracks];
             const ks1 = [...Object.values(t1.keyShapes)];
             const ks2 = [...Object.values(t2.keyShapes)];
@@ -391,14 +398,14 @@ export class TrackPanel extends LitElement {
             const s1 = getShape(t1, this.imageIdx);
             const s2 = getShape(t2, this.imageIdx);
             // overlap timestamp
-            const tps = s1?.isNextHidden && !isKeyShape(t1, this.imageIdx) || 
+            const tps = s1?.isNextHidden && !isKeyShape(t1, this.imageIdx) ||
                       s2?.isNextHidden && !isKeyShape(t2, this.imageIdx) ?
                       parseInt(keys[1 - olderTrackIdx][0]) : this.imageIdx;
             const [ks1l,] = [...Object.values(t1.keyShapes)]
                     .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
             const [, ks2r] = [...Object.values(t2.keyShapes)]
                     .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
-            
+
             t1.keyShapes = [...ks1l, ... ks2r]
                             .reduce((map, obj) => ({...map, [obj.timestamp]: obj}), {});
             delete this.tracks[t2.id];
@@ -408,7 +415,7 @@ export class TrackPanel extends LitElement {
 
     /**
      * Delete track and its instances
-     * @param tId 
+     * @param tId
      */
     deleteTrack(tId: string) {
         this.selectedTracks.clear();
@@ -461,8 +468,11 @@ export class TrackPanel extends LitElement {
                                 ?disabled=${!currentShape}
                                 outlined
                                 style="--mdc-select-outlined-idle-border-color: ${color}; --mdc-theme-primary: ${color};"
-                                @action=${(evt: any) => {this.setClass(t, evt.path[0].value);}}>
-                        ${this.schema.category.map((c) => {  
+                                @action=${(evt: any) => {
+                                    const idx = evt.detail.index;
+                                    this.setClass(t, this.schema.category[idx].name);
+                                    }}>
+                        ${this.schema.category.map((c) => {
                             return html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`;
                         })}
                     </mwc-select>
@@ -487,14 +497,14 @@ export class TrackPanel extends LitElement {
                 <mwc-select disabled
                             outlined
                             style="--mdc-select-outlined-idle-border-color: ${color}; --mdc-theme-primary: ${color};">
-                    ${this.schema.category.map((c) => {  
+                    ${this.schema.category.map((c) => {
                         return html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`;
                     })}
                 </mwc-select>
                 <mwc-icon-button icon="delete_forever" disabled></mwc-icon-button>
             </div>
         `
-        } 
+        }
 
         return trackStatus;
     }
@@ -505,21 +515,21 @@ export class TrackPanel extends LitElement {
             currentValue = t.labels[prop.name];
         }
         else {
-            currentValue = (ks && ks.labels) ? ks.labels[prop.name] : this.getDefaultPropValue(t.category, prop.name); 
+            currentValue = (ks && ks.labels) ? ks.labels[prop.name] : this.getDefaultPropValue(t.category, prop.name);
         }
 
         if (prop.type === 'dropdown') {
             return html`
                 debug: ${currentValue}
-                <select id="${prop.name}" ?disabled=${!ks} 
+                <select id="${prop.name}" ?disabled=${!ks}
                         @change=${(evt: any) => this.updateTrackProp(t, ks!, prop, evt.path[0].value)}>
-                    ${prop.enum.map((v) => {return html`<option value="${v}" ?selected="${v === currentValue}">${v}</option>`})}                
+                    ${prop.enum.map((v) => {return html`<option value="${v}" ?selected="${v === currentValue}">${v}</option>`})}
                 </select>
                 `
 
         } else if (prop.type === 'checkbox') {
             return html`
-                <input id=${prop.name} type=checkbox ?checked=${currentValue} ?disabled=${!ks} 
+                <input id=${prop.name} type=checkbox ?checked=${currentValue} ?disabled=${!ks}
                         @click=${(evt: any) => this.updateTrackProp(t, ks!, prop, evt.path[0].checked)}>
                 <label> ${prop.name}</label>
                 `
@@ -543,7 +553,7 @@ export class TrackPanel extends LitElement {
                             style="width: 100%; flex-direction: column;">New</mwc-button>
                 ${[...this.selectedTracks].map(this.renderTrackTile.bind(this))}
                 ${
-                    this.selectedTracks.size == 2 ? html`
+                    this.selectedTracks.size === 2 ? html`
                     <mwc-icon-button @click=${() => this.switchTrack(this.selectedTracks)}
                                      icon="shuffle"
                                      title="Switch track"></mwc-icon-button>
@@ -567,6 +577,6 @@ export class TrackPanel extends LitElement {
                     Cancel
                 </mwc-button>
             </mwc-dialog>
-        ` 
+        `
     }
 }
