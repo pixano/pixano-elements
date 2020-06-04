@@ -24,9 +24,7 @@
     "@pixano/core": "^0.3.1",
     "lit-element": "^2.3.1",
     "on-change": "^2.0.1",
-    "pixi.js": "^5.2.3",
-    "bind-decorator": "^1.0.11",
-    "auto-bind-inheritance": "1.0.6"
+    "pixi.js": "^5.2.3"
   },
   "scripts": {
     "build": "tsc --build",

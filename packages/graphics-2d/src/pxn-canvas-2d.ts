@@ -16,11 +16,7 @@ import { Canvas } from './pxn-canvas';
 /**
  * Possible modes to be used in this class.
  */
-export enum Mode {
-  Create = 'create',
-  Update = 'update',
-  None = 'none'
-}
+export type InteractiveMode = "edit" | "create" | "none";
 
 /**
  * Parent class that displays image with
@@ -36,7 +32,7 @@ export class Canvas2d extends Canvas {
 
   // input mode type
   @property({type: String, reflect: true})
-  public mode: string = Mode.Update;
+  public mode: InteractiveMode = "edit";
 
   // set of 2d shapes to be drawn by the element
   private _shapes: ObservableSet<ShapeData>;
@@ -156,7 +152,7 @@ export class Canvas2d extends Canvas {
    * @param event [keyBoardEvent]
    */
   protected onTabulation(event: KeyboardEvent) {
-    if (this.mode === Mode.Create) {
+    if (this.mode === "create") {
       return;
     }
     event.preventDefault();
@@ -174,7 +170,7 @@ export class Canvas2d extends Canvas {
     // Trigger notification on shape
     // selection(s) changed.
     observe(this.shManager.targetShapes, (prop) => {
-      if (prop != 'set') {
+      if (prop !== 'set') {
         this.notifySelection([...this.shManager.targetShapes].map((t) => t.id));
       }
     });
@@ -230,7 +226,7 @@ export class Canvas2d extends Canvas {
     this.dispatchEvent(new CustomEvent('update', { detail: ids }));
   }
 
-  protected notifyMode(mode: Mode) {
+  protected notifyMode(mode: InteractiveMode) {
     /**
      * Fired when `pxn-canvas-2d` changes mode.
      *

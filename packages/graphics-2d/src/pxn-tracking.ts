@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2020)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { customElement, property} from 'lit-element';
 import { Rectangle } from './pxn-rectangle'
@@ -60,7 +60,7 @@ export class Tracking extends Rectangle {
      * Extend shape controller onObjectDown to handle track selection
      */
     protected handleTrackSelection() {
-        const editController = (this.shManager.modes['edit'] as ShapesEditController);
+        const editController = (this.shManager.modes.edit as ShapesEditController);
         editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
             const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
             const t = this.tracks[shape.id];
@@ -80,7 +80,7 @@ export class Tracking extends Rectangle {
 
     /**
      * Called on every property change
-     * @param changedProperty 
+     * @param changedProperty
      */
     protected updated(changedProperties: any) {
         super.updated(changedProperties);
@@ -102,7 +102,7 @@ export class Tracking extends Rectangle {
 
     /**
      * Get rectangle shapes from specific frame
-     * @param fIdx 
+     * @param fIdx
      */
     public convertShapes(fIdx: number): ShapeData[] {
         const shapes = new Array();
@@ -115,11 +115,11 @@ export class Tracking extends Rectangle {
                 if (ks && !isHidden) {
                     // hide box after last keyshape if not selected (?)
                     shapes.push({
-                        id: tid.toString(), 
-                        geometry: ks.geometry, 
+                        id: tid.toString(),
+                        geometry: ks.geometry,
                         color: trackColors[parseInt(tid) % trackColors.length]
                     } as ShapeData);
-                } 
+                }
             }
         )
         return shapes;

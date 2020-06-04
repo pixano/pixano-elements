@@ -33,11 +33,11 @@ export class Graph extends Canvas2d {
      * }
      */
     set graphType(t: GraphSettings) {
-        (this.shManager.modes['create'] as GraphCreateController).graphType = t;
+        (this.shManager.modes.create as GraphCreateController).graphType = t;
     }
 
     get graphType() {
-        return (this.shManager.modes['create'] as GraphCreateController).graphType;
+        return (this.shManager.modes.create as GraphCreateController).graphType;
     }
 
     constructor() {
@@ -156,7 +156,7 @@ class GraphsUpdateController extends ShapesEditController {
             const obj = this.targetShapes.values().next().value;
             obj.geometry.visibles![nodeIdx] = !obj.geometry.visibles![nodeIdx];
             this.emitUpdate();
-        } else {   
+        } else {
             this.activeNodeIdx = nodeIdx;
             this.isNodeTranslating = true;
             const obj = this.getFirstGraphic() as GraphShape;
@@ -166,7 +166,7 @@ class GraphsUpdateController extends ShapesEditController {
             node.removeAllListeners('pointerupoutside');
             node.on('pointermove', this.onNodeMove.bind(this));
             node.on('pointerupoutside', this.onNodeUp.bind(this));
-        } 
+        }
     }
 
     public onNodeMove(evt: PIXI.interaction.InteractionEvent) {

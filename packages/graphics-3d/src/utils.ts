@@ -340,13 +340,13 @@ export function findHighDensityZ(points: [number,number,number][], zmin: number,
 
 /**
  * Simple search for ground z.
- * @param points 
- * @param zmin 
- * @param zmax 
+ * @param points pointcloud
+ * @param zmin min z for search
+ * @param zmax max z for search
  */
 export function findLowestZ(points: [number, number, number][], zmin: number, zmax: number) {
   // handle case with no ground points
-  let delta = 0.1;
+  const delta = 0.1;
   const groundPercentage = 0.05;
   let i =  zmin;
   let pts: [number, number, number][] = [];

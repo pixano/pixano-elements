@@ -18,7 +18,7 @@ export function generateKey() {
 
 /**
  * Get key shape at a given frame index
- * @param track the track 
+ * @param track the track
  * @param fIdx the frame index
  * @return the key shape if exist, undefined otherwise
  */
@@ -28,7 +28,7 @@ export function getKeyShape(track: TrackData, fIdx: number): KeyShapeData | unde
 
 /**
  * Get key shape at a given frame index
- * @param track the track 
+ * @param track the track
  * @param fIdx the frame index
  * @param shape the shape  to add
  */
@@ -38,7 +38,7 @@ export function setKeyShape(track: TrackData, fIdx: number, shape: KeyShapeData)
 
 /**
  * Get length of a track
- * @param track the track 
+ * @param track the track
  * @return the number of key shapes for this track
  */
 export function getNumKeyShapes(track: TrackData): number {
@@ -47,7 +47,7 @@ export function getNumKeyShapes(track: TrackData): number {
 
 /**
  * Check if track has a key shape at given frame index
- * @param track the track 
+ * @param track the track
  * @param fIdx the frame index
  * @return True if the track ahs a key shpe at this frame
  */
@@ -64,7 +64,7 @@ export function isKeyShape(track: TrackData, fIdx: number): boolean {
 export function getClosestFrames(track: TrackData, fIdx: number): number[] {
     let less = -1;
     let greater = Infinity;
-  
+
     for (const k of Object.keys(track.keyShapes)) {
         const f = parseInt(k);
         if (f < fIdx && f > less){
@@ -72,7 +72,7 @@ export function getClosestFrames(track: TrackData, fIdx: number): number[] {
         }
         else if (f > fIdx && f < greater){
             greater = f;
-        }     
+        }
     }
     return [less, greater]
 }
@@ -91,7 +91,7 @@ export function getShape(track: TrackData, fId: number) : KeyShapeData | undefin
     if (ks) {
         return ks;
     }
-    
+
     // Search for bounds
     const [id1, id2] = getClosestFrames(track, fId);
     const s1 = getKeyShape(track, id1);
@@ -99,30 +99,30 @@ export function getShape(track: TrackData, fId: number) : KeyShapeData | undefin
     // No previous frame, asking for shape before previous track trame
     if (!s1) {
         return undefined;
-    } 
-    
-    // Make a deep copy of previous shape      
+    }
+
+    // Make a deep copy of previous shape
     const newKS = JSON.parse(JSON.stringify(s1)) as KeyShapeData;
     newKS.timestamp = fId;
 
     // No next frame, asking for shape after last track frame return last one
     const s2 = getKeyShape(track, id2);
     if (!s2) {
-        return newKS; 
+        return newKS;
     }
 
     // Interpolation case
     const w = (fId - id1) / (id2 - id1)
     for(let i = 0; i < 4; i++){
-        newKS.geometry.vertices[i] = (1 - w) * s1.geometry.vertices[i] + 
+        newKS.geometry.vertices[i] = (1 - w) * s1.geometry.vertices[i] +
                                           w  * s2.geometry.vertices[i]
     }
     return newKS;
-}  
+}
 
 /**
  * Get shape at a given frame index
- * @param track the track 
+ * @param track the track
  * @param fIdx the frame index
  * @return true if delete is successfull
  */
@@ -147,7 +147,7 @@ export function deleteShape(track: TrackData, fIdx: number) {
 /**
  * Sort dictionary key-value by key.
  * Key is a string to cast in int.
- * @param dict 
+ * @param dict object
  */
 export function sortDictByKey(dict: {[key: string]: any}): {[key: string]: any} {
     const sortedArr: [string, any][] = [...Object.entries(dict)].sort(([a], [b]) => parseInt(a) - parseInt(b));
