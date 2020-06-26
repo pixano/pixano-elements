@@ -24,7 +24,7 @@
     "@pixano/core": "^0.3.2",
     "lit-element": "^2.3.1",
     "on-change": "^2.0.1",
-    "pixi.js": "^5.2.3"
+    "pixi.js": "^5.3.0"
   },
   "scripts": {
     "build": "tsc --build",

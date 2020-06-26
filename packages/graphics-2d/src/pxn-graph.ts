@@ -144,7 +144,7 @@ class GraphsUpdateController extends ShapesEditController {
         obj.draw();
     }
 
-    onNodeDown(evt: PIXI.interaction.InteractionEvent) {
+    onNodeDown(evt: PIXI.InteractionEvent) {
         const origEvt = evt.data.originalEvent as PointerEvent;
         const nodeIdx = (evt as any).nodeIdx;
         const shape = (evt as any).shape as ShapeData;
@@ -169,7 +169,7 @@ class GraphsUpdateController extends ShapesEditController {
         }
     }
 
-    public onNodeMove(evt: PIXI.interaction.InteractionEvent) {
+    public onNodeMove(evt: PIXI.InteractionEvent) {
         if (this.isNodeTranslating) {
             const newPos = this.renderer.getPosition(evt.data);
             const {x, y} = this.renderer.normalize(newPos);
@@ -207,7 +207,7 @@ class GraphCreateController extends ShapeCreateController {
         names: ['header', 'RFoot', 'LFoot']
     }
 
-    protected onRootDown(evt: PIXI.interaction.InteractionEvent) {
+    protected onRootDown(evt: PIXI.InteractionEvent) {
         this.isCreating = true;
         const mouse = this.renderer.getPosition(evt.data);
         const pos = this.renderer.normalize(mouse);

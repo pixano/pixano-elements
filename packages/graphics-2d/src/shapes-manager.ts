@@ -165,7 +165,7 @@ export class ShapesEditController extends Controller {
     /**
      * Handle click on shape
      */
-    onObjectDown(evt: PIXI.interaction.InteractionEvent) {
+    onObjectDown(evt: PIXI.InteractionEvent) {
 
         // default behaviour is
         // cancel action if pointer is right or middle
@@ -210,7 +210,7 @@ export class ShapesEditController extends Controller {
      * Handle cursor move on object
      * @param evt
      */
-    public onObjectMove(evt: PIXI.interaction.InteractionEvent) {
+    public onObjectMove(evt: PIXI.InteractionEvent) {
         const shape = (evt as any).shape;
         if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
             const mouse = this.renderer.getPosition(evt.data);
@@ -258,7 +258,7 @@ export class ShapesEditController extends Controller {
         this.emit('update', [...this.targetShapes].map((data) => data.id));
     }
 
-    protected onControlDown(evt: PIXI.interaction.InteractionEvent) {
+    protected onControlDown(evt: PIXI.InteractionEvent) {
         this.isScaling = true;
         // @ts-ignore
         const idx = evt.idx;
@@ -281,7 +281,7 @@ export class ShapesEditController extends Controller {
         }
     }
 
-    public onControlMove(evt: PIXI.interaction.InteractionEvent) {
+    public onControlMove(evt: PIXI.InteractionEvent) {
         if (this.isScaling && (evt as any).idx === this.activeControlIdx) {
             if (!this.updated) {
                 // this.emit('start-update', this.selectToJson());
@@ -476,9 +476,9 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.removeListener('pointerupoutside', this.onRootUp);
     }
 
-    protected abstract onRootDown(evt: PIXI.interaction.InteractionEvent): void;
+    protected abstract onRootDown(evt: PIXI.InteractionEvent): void;
 
-    onRootMove(evt: PIXI.interaction.InteractionEvent) {
+    onRootMove(evt: PIXI.InteractionEvent) {
         const pointer = (evt.data.originalEvent as PointerEvent);
         if (pointer.buttons === 2 || pointer.buttons === 4) {
             return;

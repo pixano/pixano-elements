@@ -321,7 +321,7 @@ class PolygonCreateController extends ShapeCreateController {
         CREATEDOWN: this.onKeyDownCreate.bind(this)
     }
 
-    protected onRootDown(evt: PIXI.interaction.InteractionEvent) {
+    protected onRootDown(evt: PIXI.InteractionEvent) {
         if ((evt.data.originalEvent as PointerEvent).buttons !== 2) {
             this.isCreating = true;
             const m = this.renderer.getPosition(evt.data);
@@ -358,7 +358,7 @@ class PolygonCreateController extends ShapeCreateController {
         }
     }
 
-    onRootMove(evt: PIXI.interaction.InteractionEvent) {
+    onRootMove(evt: PIXI.InteractionEvent) {
         super.onRootMove(evt);
         const m = this.renderer.getPosition(evt.data);
         if (m.x === this.mouse.x && m.y === this.mouse.y) {

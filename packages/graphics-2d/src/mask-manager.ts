@@ -104,7 +104,7 @@ export class EditionController extends Controller {
         }
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
+    onPointerDownSelectionPolygon(evt: PIXI.InteractionEvent) {
         if (!this.selectedId.value) {
             // nothing to edit
             return;
@@ -129,7 +129,7 @@ export class EditionController extends Controller {
         }
     }
 
-    onPointerMoveTempPolygon(evt: PIXI.interaction.InteractionEvent) {
+    onPointerMoveTempPolygon(evt: PIXI.InteractionEvent) {
         if (this.tempPolygon) {
             const newPos = this.renderer.getPosition(evt.data);
             const {x, y} = this.renderer.normalize(newPos);
@@ -194,7 +194,7 @@ export class SelectController extends Controller {
         this.contours.visible = false;
     }
 
-    protected onPointerDownSelectInstance(evt: PIXI.interaction.InteractionEvent) {
+    protected onPointerDownSelectInstance(evt: PIXI.InteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
@@ -271,7 +271,7 @@ export class LockController extends Controller {
         this.renderer.stage.removeListener('mousedown', this.onPointerDownLock);
     }
 
-    protected onPointerDownLock(evt: PIXI.interaction.InteractionEvent) {
+    protected onPointerDownLock(evt: PIXI.InteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         const fId = fuseId(id);
@@ -344,7 +344,7 @@ export class CreateController extends Controller {
         this.roi.visible = this.showRoi;
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.interaction.InteractionEvent) {
+    onPointerDownSelectionPolygon(evt: PIXI.InteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         const {x, y} = this.renderer.normalize(newPos);
         if (this.tempPolygon) {
@@ -364,7 +364,7 @@ export class CreateController extends Controller {
         }
     }
 
-    onPointerMoveTempPolygon(evt: PIXI.interaction.InteractionEvent) {
+    onPointerMoveTempPolygon(evt: PIXI.InteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         if (this.tempPolygon) {
             const {x, y} = this.renderer.normalize(newPos);

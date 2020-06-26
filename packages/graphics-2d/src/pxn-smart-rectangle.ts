@@ -130,7 +130,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     );
   }
 
-  async onRootDown(evt: PIXI.interaction.InteractionEvent) {
+  async onRootDown(evt: PIXI.InteractionEvent) {
     this.isCreating = true;
     const mouseData = this.renderer.getPosition(evt.data);
     const click: AIPoint = { x: mouseData.x, y: mouseData.y };
@@ -174,7 +174,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  onRootMove(evt: PIXI.interaction.InteractionEvent) {
+  onRootMove(evt: PIXI.InteractionEvent) {
     super.onRootMove(evt);
     const roiSize =
       this.boundingBoxCreator.baseRoiSize *
