@@ -144,7 +144,7 @@ export class ViewControls extends EventTarget {
      * @param x normalized x
      * @param y normalized y
      */
-    public onPan(evt: PIXI.interaction.InteractionEvent) {
+    public onPan(evt: PIXI.InteractionEvent) {
         if (this.isPanning) {
             const imgX = (evt.data.global.x - this.viewer.rx * this.viewer.s - this.viewer.sx) / this.viewer.stage.width * this.viewer.imageWidth;
             const imgY = (evt.data.global.y - this.viewer.ry * this.viewer.s - this.viewer.sy) / this.viewer.stage.height * this.viewer.imageHeight;
@@ -174,7 +174,7 @@ export class ViewControls extends EventTarget {
 
     }
 
-    public onEdgeMove(evt: PIXI.interaction.InteractionEvent) {
+    public onEdgeMove(evt: PIXI.InteractionEvent) {
         if (this.viewer.s <= 1) {
             return;
         }

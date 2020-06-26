@@ -162,7 +162,7 @@ export abstract class Shape extends PIXIContainer {
       return this as any;
     }
 
-    public removeAllListeners<T extends Shape>(event: PIXI.interaction.InteractionEventTypes): T {
+    public removeAllListeners<T extends Shape>(event: PIXI.InteractionEventTypes): T {
       this.area.removeAllListeners(event);
       return this as any;
     }
