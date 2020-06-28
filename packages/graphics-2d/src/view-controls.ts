@@ -33,6 +33,13 @@ export class ViewControls extends EventTarget {
         }
     }
 
+    public computeHitArea() {
+        this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
+            -this.viewer.stage.position.y / this.viewer.stage.scale.y,
+            this.viewer.canvasWidth / this.viewer.stage.scale.x,
+            this.viewer.canvasHeight / this.viewer.stage.scale.y);
+    }
+
     public triggerOnZoom() {
         this.dispatchEvent(new CustomEvent('zoom', { detail: this.viewer.s }))
     }
@@ -97,6 +104,7 @@ export class ViewControls extends EventTarget {
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
+        this.computeHitArea();
     }
 
     public zoomIn() {
@@ -105,6 +113,7 @@ export class ViewControls extends EventTarget {
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
+        this.computeHitArea();
     }
 
     public zoomOut() {
@@ -119,6 +128,7 @@ export class ViewControls extends EventTarget {
             this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
+        this.computeHitArea();
     }
 
     /**
@@ -135,7 +145,6 @@ export class ViewControls extends EventTarget {
             this.isPanning = true;
             this.viewer.stage.on('pointermove', this.onPan);
             this.viewer.stage.on('pointerupoutside', this.onPanUp);
-            console.info('Start panning.');
         }
     }
 
@@ -167,10 +176,7 @@ export class ViewControls extends EventTarget {
         this.viewer.stage.removeListener('pointermove', this.onPan);
         this.viewer.stage.removeListener('pointerupoutside', this.onPanUp);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
-        this.viewer.stage.hitArea = new PIXIRectangle(-this.viewer.stage.position.x / this.viewer.stage.scale.x,
-                -this.viewer.stage.position.y / this.viewer.stage.scale.y,
-                this.viewer.canvasWidth / this.viewer.stage.scale.x,
-                this.viewer.canvasHeight / this.viewer.stage.scale.y);
+        this.computeHitArea();
 
     }
 
