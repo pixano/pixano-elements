@@ -37,6 +37,11 @@ export class RectangleCreateController extends ShapeCreateController {
     protected updated: boolean = false;
 
     protected onRootDown(evt: PIXI.InteractionEvent) {
+        // prevent shape creating when using middle or right mouse click
+        const pointer = (evt.data.originalEvent as PointerEvent);
+        if (pointer.buttons === 2 || pointer.buttons === 4) {
+            return;
+        }
         this.isCreating = true;
         this.mouse = this.renderer.getPosition(evt.data);
         const pt = this.renderer.normalize(this.mouse);
