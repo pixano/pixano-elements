@@ -517,6 +517,9 @@ export class ShapesManager extends EventTarget {
         [key: string]: Controller;
     };
 
+    // can be replaced by a custom dataToShape function
+    public dataToShape: ((s: ShapeData) => Shape) = dataToShape;
+
     constructor(renderer: Renderer = new Renderer(),
                 shapes: ObservableSet<ShapeData> = new ObservableSet()) {
         super();
@@ -527,7 +530,7 @@ export class ShapesManager extends EventTarget {
         }
         this.renderer.onImageSizeChange = () => {
             shapes.forEach((s: ShapeData) => {
-                const obj = dataToShape(s);
+                const obj = this.dataToShape(s);
                 this.graphics.add(obj);
                 obj.scaleX = this.renderer.imageWidth || 100;
                 obj.scaleY = this.renderer.imageHeight || 100;
@@ -550,7 +553,7 @@ export class ShapesManager extends EventTarget {
                         value = shapes;
                     }
                     value.forEach((s: ShapeData) => {
-                        const obj = dataToShape(s);
+                        const obj = this.dataToShape(s);
                         this.graphics.add(obj);
                         obj.scaleX = this.renderer.imageWidth || 100;
                         obj.scaleY = this.renderer.imageHeight || 100;
