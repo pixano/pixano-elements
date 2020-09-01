@@ -49,13 +49,7 @@ class MyDemo extends LitElement {
       console.log("select", e.detail);
       this.target = e.detail;
     });
-    fetch(this.pcl).then((response) => {
-      return response.ok ? response.arrayBuffer() : Promise.reject(response.status);
-    }).then((points) => {
-      this.element.pcl = new Float32Array(points);
-      this.pcl = this.element.pcl;
-    });
-    
+    this.element.input = this.pcl;
   }
 
   fullScreen() {

@@ -185,14 +185,6 @@ export class Canvas2d extends Canvas {
   }
 
   /**
-   * Called after the element’s DOM has been updated the first time
-   * @param changedProperty
-   */
-  protected firstUpdated() {
-    this.renderer.setContainer(this.canvasElement);
-  }
-
-  /**
    * Snackbar temporary appearance
    * To display mode instructions.
    * @param text

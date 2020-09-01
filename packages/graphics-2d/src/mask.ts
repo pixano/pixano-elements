@@ -245,22 +245,26 @@ export class GMask extends PIXIContainer {
       this.colorMask.texture.update();
     }
 
-    public updateByMask(mask: Float32Array, pos: {x: number, y: number}) {
+    public updateByMask(mask: Float32Array, pos: {x: number, y: number}, newVal: [number, number, number]) {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
-        const size = Math.sqrt(mask.length);
-        const treshold = 0.35;
-        for (let x = 0; x <= size; x++) {
-            for (let y = 0; y <= size; y++) {
-                const idx = (x + pos.x - 0.5 * size + (y + pos.y - 0.5 * size) * this.canvas.width) * 4;
-                if (mask[y * size + x] > treshold) {
-                    this.orig!.data[idx] = 1;
-                    this.orig!.data[idx + 1] = 0;
-                    this.orig!.data[idx + 2] = 2;
-                    this.orig!.data[idx + 3] = 255;
-                    pixels.data[idx] = 255;
-                    pixels.data[idx + 1] = 255;
-                    pixels.data[idx + 2] = 0;
-                    pixels.data[idx + 3] = 255;
+        let size = Math.sqrt(mask.length);
+        const color = this.pixelToColor(...newVal);
+        const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
+        pos.x -= 0.5 * size;
+        pos.y -= 0.5 * size;
+        const [id1, id2, cls] = newVal;
+        for (let x = 0; x < size; x++) {
+            for (let y = 0; y < size; y++) {
+                const idx = (x + pos.x + (y + pos.y) * this.canvas.width);
+                if (mask[y * size + x] == 1) {
+                    this.orig!.data[4 * idx] = id1;
+                    this.orig!.data[4 * idx + 1] = id2;
+                    this.orig!.data[4 * idx + 2] = cls;
+                    this.orig!.data[4 * idx + 3] = 255;
+                    pixels.data[4 * idx] = color[0];
+                    pixels.data[4 * idx + 1] = color[1];
+                    pixels.data[4 * idx + 2] = color[2];
+                    pixels.data[4 * idx + 3] = alpha;
                 }
             }
         }

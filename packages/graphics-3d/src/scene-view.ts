@@ -27,10 +27,10 @@ export class SceneView {
     return this._camera;
   }
 
-  get cameraMode() {
+  get cameraMode(): "perspective" | "orthographic" {
     return this.camera instanceof THREE.PerspectiveCamera ? "perspective" : "orthographic";
   }
-  set cameraMode(mode: string) {
+  set cameraMode(mode: "perspective" | "orthographic") {
     if (mode === "perspective") {
       if (this.camera instanceof THREE.PerspectiveCamera) { return; }
 
@@ -103,8 +103,13 @@ export class SceneView {
     const parent = this.domElement.parentElement;
     if (parent) {
       this.renderer.setSize(parent.clientWidth, parent.clientHeight);
-      if (this.camera instanceof THREE.PerspectiveCamera) {
-        this.camera.aspect = parent.clientWidth / parent.clientHeight;
+      const aspect = parent.clientWidth / parent.clientHeight;
+      if (this.camera.type === "PerspectiveCamera") {
+        this.camera.aspect = aspect;
+      } else {
+        const frustumSize = 20;
+        this.camera.left = frustumSize * aspect / -2;
+        this.camera.right = frustumSize * aspect / 2;
       }
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(parent.clientWidth, parent.clientHeight);
