@@ -26,7 +26,9 @@ import {
 	Raycaster,
 	TorusBufferGeometry,
 	Camera,
-	Vector3
+	Vector3,
+	PerspectiveCamera,
+	OrthographicCamera
 } from "three";
 
 export class TransformControls extends Object3D {
@@ -40,7 +42,7 @@ export class TransformControls extends Object3D {
 	enabled: boolean = true;
 	// The current transformation axis.
 	axis: string | null = null;
-	mode: string = "translate";
+	mode: string = "scale";
 	translationSnap: number | null = null;
 	rotationSnap: number | null = null;
 	space: string = "local";
@@ -107,11 +109,6 @@ export class TransformControls extends Object3D {
 
 	scaleSnap: number | null = null;
 
-	onPointerDownBind = this.onPointerDown.bind(this);
-	onPointerHoverBind = this.onPointerHover.bind(this);
-	onPointerMoveBind = this.onPointerMove.bind(this);
-	onPointerUpBind = this.onPointerUp.bind(this);
-
 	// Gizmo direction is same as axis
 	xDirection: boolean = true;
 	yDirection: boolean = true;
@@ -151,15 +148,20 @@ export class TransformControls extends Object3D {
 		this.defineProperty( "rotationAngle", this.rotationAngle );
 		this.defineProperty( "eye", this.eye );
 
-		domElement.addEventListener( "mousedown", this.onPointerDownBind, false );
-		domElement.addEventListener( "touchstart", this.onPointerDownBind, false );
-		domElement.addEventListener( "mousemove", this.onPointerHoverBind, false );
-		domElement.addEventListener( "touchmove", this.onPointerHoverBind, false );
-		domElement.addEventListener( "touchmove", this.onPointerMoveBind, false );
-		document.addEventListener( "mouseup", this.onPointerUpBind, false );
-		domElement.addEventListener( "touchend", this.onPointerUpBind, false );
-		domElement.addEventListener( "touchcancel", this.onPointerUpBind, false );
-		domElement.addEventListener( "touchleave", this.onPointerUpBind, false );
+		this.onPointerDown = this.onPointerDown.bind(this);
+		this.onPointerHover = this.onPointerHover.bind(this);
+		this.onPointerMove = this.onPointerMove.bind(this);
+		this.onPointerUp = this.onPointerUp.bind(this);
+
+		domElement.addEventListener( "mousedown", this.onPointerDown, false );
+		domElement.addEventListener( "touchstart", this.onPointerDown, false );
+		document.addEventListener( "mousemove", this.onPointerHover, false );
+		domElement.addEventListener( "touchmove", this.onPointerHover, false );
+		domElement.addEventListener( "touchmove", this.onPointerMove, false );
+		document.addEventListener( "mouseup", this.onPointerUp, false );
+		domElement.addEventListener( "touchend", this.onPointerUp, false );
+		domElement.addEventListener( "touchcancel", this.onPointerUp, false );
+		domElement.addEventListener( "touchleave", this.onPointerUp, false );
 
 		// show configured axis for default mode
 		this.setMode(this.mode);
@@ -218,16 +220,16 @@ export class TransformControls extends Object3D {
 	}
 
 	dispose(): void {
-		this.domElement.removeEventListener( "mousedown", this.onPointerDownBind );
-		this.domElement.removeEventListener( "touchstart", this.onPointerDownBind );
-		this.domElement.removeEventListener( "mousemove", this.onPointerHoverBind );
-		document.removeEventListener( "mousemove", this.onPointerMoveBind );
-		this.domElement.removeEventListener( "touchmove", this.onPointerHoverBind );
-		this.domElement.removeEventListener( "touchmove", this.onPointerMoveBind );
-		document.removeEventListener( "mouseup", this.onPointerUpBind );
-		this.domElement.removeEventListener( "touchend", this.onPointerUpBind );
-		this.domElement.removeEventListener( "touchcancel", this.onPointerUpBind );
-		this.domElement.removeEventListener( "touchleave", this.onPointerUpBind );
+		this.domElement.removeEventListener( "mousedown", this.onPointerDown );
+		this.domElement.removeEventListener( "touchstart", this.onPointerDown );
+		document.removeEventListener( "mousemove", this.onPointerHover );
+		document.removeEventListener( "mousemove", this.onPointerMove );
+		this.domElement.removeEventListener( "touchmove", this.onPointerHover );
+		this.domElement.removeEventListener( "touchmove", this.onPointerMove );
+		document.removeEventListener( "mouseup", this.onPointerUp );
+		this.domElement.removeEventListener( "touchend", this.onPointerUp );
+		this.domElement.removeEventListener( "touchcancel", this.onPointerUp );
+		this.domElement.removeEventListener( "touchleave", this.onPointerUp );
 
 		this.traverse( ( child ) => {
 			if ( child instanceof Mesh || child instanceof Line) {
@@ -284,7 +286,11 @@ export class TransformControls extends Object3D {
 		}
 		this.camera.updateMatrixWorld();
 		this.camera.matrixWorld.decompose( this.cameraPosition, this.cameraQuaternion, this.cameraScale );
-		this.eye.copy( this.cameraPosition ).sub( this.worldPosition ).normalize();
+		if ( this.camera instanceof PerspectiveCamera ) {
+			this.eye.copy( this.cameraPosition ).sub( this.worldPosition ).normalize();
+		} else if ( this.camera instanceof OrthographicCamera ) {
+			this.eye.copy( this.cameraPosition ).normalize();
+		}
 		super.updateMatrixWorld();
 	}
 
@@ -570,7 +576,7 @@ export class TransformControls extends Object3D {
 	onPointerDown( event ) {
 		if ( ! this.enabled ) return;
 
-		document.addEventListener( "mousemove", this.onPointerMoveBind, false );
+		document.addEventListener( "mousemove", this.onPointerMove, false );
 		this.pointerHover( this.getPointer( event ) );
 		this.pointerDown( this.getPointer( event ) );
 	}
@@ -593,6 +599,7 @@ class TransformControlsGizmo extends Object3D {
 	type: string = 'TransformControlsGizmo';
 
 	public isTransformControlsGizmo = true;
+	object: Object3D | undefined;
 
 	// Gizmo creation
 	gizmo: {[key: string]: Object3D} = {};
@@ -614,10 +621,11 @@ class TransformControlsGizmo extends Object3D {
 	unitZ = new Vector3( 0, 0, 1 );
 
 	space: string = "world";
-	mode: string = "translate";
+	mode: string = "scale";
 	worldQuaternion = new Quaternion();
 	worldPosition = new Vector3();
 	cameraPosition = new Vector3();
+	camera: Camera | null = null;
 	size: number = 1;
 	worldPositionStart = new Vector3();
 	axis: string | null = null;
@@ -971,6 +979,10 @@ class TransformControlsGizmo extends Object3D {
 
 	updateMatrixWorld () {
 
+		if (!this.object) {
+			return;
+		}
+
 		let space = this.space;
 
 		if ( this.mode === 'scale' ) space = 'local'; // scale always oriented to local rotation
@@ -987,17 +999,20 @@ class TransformControlsGizmo extends Object3D {
 
 
 		let handles: Gizmo[] = [];
-		handles = handles.concat( this.picker[ this.mode ].children as Gizmo[] );
-		handles = handles.concat( this.gizmo[ this.mode ].children as Gizmo[] );
+		handles = handles.concat( this.picker[ this.mode ].children as Gizmo[] ); // interactive area
+		handles = handles.concat( this.gizmo[ this.mode ].children as Gizmo[] ); // lines and meshes
 		handles = handles.concat( this.helper[ this.mode ].children as Gizmo[] );
+
+		// eyeDistance increases with unzoom
+		const eyeDistance = (this.camera instanceof OrthographicCamera) ? 
+					60 / (this.size * this.camera.zoom) : 
+					this.worldPosition.distanceTo( this.cameraPosition );
 
 		for ( const handle of handles ) {
 			// hide aligned to camera
 			handle.visible = true;
 			handle.rotation.set( 0, 0, 0 );
 			handle.position.copy( this.worldPosition );
-
-			const eyeDistance = this.worldPosition.distanceTo( this.cameraPosition );
 			handle.scale.set( 1, 1, 1 ).multiplyScalar( eyeDistance * this.size / 7 );
 
 			// TODO: simplify helpers and consider decoupling from gizmo
@@ -1243,7 +1258,7 @@ class TransformControlsPlane extends Mesh {
 	worldQuaternion = new Quaternion();
 	worldPosition = new Vector3();
 	space: string = "local";
-	mode: string = "translate";
+	mode: string = "scale";
 	axis: string | null = null;
 	eye = new Vector3();
 	cameraQuaternion = new Quaternion();

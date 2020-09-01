@@ -40,12 +40,12 @@ export class EditModeController extends BasicEventTarget {
             if (this.updatePending) {
                 const obj = this.objControls.object!;
                 if (this.objControls.mode === 'translate') {
-                    annotation.position = obj.position.toArray();
+                    annotation.position = obj.position.toArray() as [number, number, number];
                 } else if (this.objControls.mode === 'rotate') {
                     annotation.heading = obj.rotation.z;
                 } else if (this.objControls.mode === 'scale') {
-                    annotation.position = obj.position.toArray();
-                    annotation.size = obj.scale.toArray();
+                    annotation.position = obj.position.toArray() as [number, number, number];
+                    annotation.size = obj.scale.toArray() as [number, number, number];
                 }
                 this.updatePending = false;
             }
@@ -53,33 +53,38 @@ export class EditModeController extends BasicEventTarget {
             this.dispatchEvent(new Event("stop"));
         });
 
+        this.objControls.addEventListener('mouseDown', () => {
+            this.dispatchEvent(new Event('start'));
+        })
+
         this.objControls.addEventListener('objectChange', () => {
             const obj = this.objControls.object!;
             if (this.objControls.mode === 'translate') {
-                annotation.position = obj.position.toArray();
+                annotation.position = obj.position.toArray() as [number, number, number];
             } else if (this.objControls.mode === 'rotate') {
                 annotation.heading = obj.rotation.z;
             } else if (this.objControls.mode === 'scale') {
-                annotation.position = obj.position.toArray();
-                annotation.size = obj.scale.toArray();
+                annotation.position = obj.position.toArray() as [number, number, number];
+                annotation.size = obj.scale.toArray() as [number, number, number];
             }
 
-            if (!this.updatePending) {
-                this.dispatchEvent(new Event('start'));
-            }
             this.updatePending = true;
             this.viewer.render();
             this.dispatchEvent(new Event('change'));
         });
     }
 
+    /**
+     * Toggle edition mode in the following order:
+     * scale > rotate > translate
+     */
     toggleMode() {
         if ( this.objControls.mode === "translate" ) {
-            this.objControls.setMode('rotate');
-        } else if ( this.objControls.mode === "rotate" ) {
             this.objControls.setMode('scale');
-        } else if ( this.objControls.mode === "scale" ) {
+        } else if ( this.objControls.mode === "rotate" ) {
             this.objControls.setMode('translate');
+        } else if ( this.objControls.mode === "scale" ) {
+            this.objControls.setMode('rotate');
         }
     }
 

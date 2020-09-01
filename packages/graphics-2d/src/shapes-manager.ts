@@ -390,8 +390,17 @@ export class ShapesEditController extends Controller {
         return [xMin, yMin, xMax, yMax];
     }
 
+    /**
+     * Get graphical instance of data object
+     * @param s 
+     */
     protected getTargetGraphic(s: ShapeData) {
-        return [...this.graphics].find((o) => o.data === s);
+        let g = [...this.graphics].find((o) => o.data === s);
+        if (!g) {
+            // use standard id property to check for equality
+            g = [...this.graphics].find((o) => o.data.id === s.id);
+        }
+        return g;
     }
 
     protected getFirstGraphic() {
