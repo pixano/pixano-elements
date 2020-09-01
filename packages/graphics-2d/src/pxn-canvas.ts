@@ -6,8 +6,9 @@
  * @license CECILL-C
  */
 
-import { LitElement, html, css, customElement, property } from 'lit-element';
+import { html, css, customElement, property } from 'lit-element';
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
+import { GenericDisplay } from '@pixano/core/lib/generic-display';
 import { Renderer } from './renderer';
 import { ViewControls } from './view-controls';
 
@@ -17,7 +18,7 @@ const fullscreen = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d=
  * Parent class that displays image
  */
 @customElement('pxn-canvas' as any)
-export class Canvas extends LitElement {
+export class Canvas extends GenericDisplay {
 
   // input image path
   @property({type: String})
@@ -49,7 +50,7 @@ export class Canvas extends LitElement {
   protected keyHandlerBind: (evt: any) => void = this.keyBinding.bind(this);
 
   static get styles() {
-    return [
+    return super.styles.concat([
       css`
       :host {
         width: 100%;
@@ -163,12 +164,15 @@ export class Canvas extends LitElement {
       .hidden {
         opacity: 0;
       }`
-    ];
+    ]);
   }
 
   constructor() {
     super();
     this.viewControls.addEventListener("zoom", (evt:any) => {this.zoom = evt.detail});
+    this.addEventListener('load', (evt: any) => {
+      this.data = evt.detail;
+    });
   }
 
   connectedCallback() {
@@ -195,15 +199,14 @@ export class Canvas extends LitElement {
   /**
    * Set the image to display, from a Image Element
    */
-  set imageElement(img: HTMLImageElement) {
-    if (img !== this.imageElement) {
+  set data(img: HTMLImageElement) {
+    if (img !== this.renderer.image) {
       this.renderer.image = img;
-      this.onImageChanged();
     }
   }
 
-  get imageElement() {
-    return this.renderer.htmlImageElement;
+  get data() {
+    return this.renderer.image;
   }
 
   public zoomIn() {
@@ -278,6 +281,7 @@ export class Canvas extends LitElement {
    * @param changedProperty
    */
   protected firstUpdated() {
+    super.firstUpdated();
     this.renderer.setContainer(this.canvasElement);
   }
 
@@ -317,7 +321,7 @@ export class Canvas extends LitElement {
   protected updated(changedProperties: any) {
     if (changedProperties.has('image') && this.image != null) {
       this.loadImageFromSrc(this.image).then((img) => {
-        this.imageElement = img;
+        this.data = img;
       });
     }
     if (changedProperties.has('hideLabels') && this.hideLabels !== undefined) {
@@ -347,7 +351,7 @@ export class Canvas extends LitElement {
   /**
    * Render the element template.
    */
-  render() {
+  display() {
     /**
      * `render` must return a lit-html `TemplateResult`.
      *

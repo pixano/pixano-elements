@@ -27,10 +27,18 @@ export class ViewControls extends EventTarget {
         this.onEdgeMove = this.onEdgeMove.bind(this);
         this.onWheel = this.onWheel.bind(this);
         if (viewer) {
-            this.viewer.view.addEventListener('wheel', this.onWheel, {passive: false});
+            this.enableZoom();
             this.viewer.stage.interactive = true;
             this.viewer.stage.on('pointerdown', this.onPanInit);
         }
+    }
+
+    public disableZoom() {
+        this.viewer.view.removeEventListener('wheel', this.onWheel);
+    }
+
+    public enableZoom() {
+        this.viewer.view.addEventListener('wheel', this.onWheel, {passive: false});
     }
 
     public computeHitArea() {

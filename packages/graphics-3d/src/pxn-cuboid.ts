@@ -4,9 +4,10 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, LitElement, property } from 'lit-element';
+import { css, customElement, html, property } from 'lit-element';
 import { ObservableSet, observable } from "@pixano/core";
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
+import { GenericDisplay } from '@pixano/core/lib/generic-display';
 import { InteractiveMode, ModeManager } from "./cuboid-manager";
 import { GroundPlot, PointCloudPlot } from './plots';
 import { CuboidSetManager } from "./cuboid-set-manager";
@@ -24,7 +25,7 @@ import { InnerPointsPainter } from './pointcloud-painter';
  * @fires CustomEvent#selection upon deletion of a cuboid { detail: Cuboid[] }
  */
 @customElement('pxn-cuboid-editor' as any)
-export class CuboidEditor extends LitElement {
+export class CuboidEditor extends GenericDisplay {
 
   // viewer of scene
   private viewer: SceneView = new SceneView();
@@ -65,6 +66,9 @@ export class CuboidEditor extends LitElement {
         this.groundSegmentation);
     this.mode = this.modeManager.mode;
     window.addEventListener("keydown", this.defaultOnKeyDown.bind(this));
+    this.addEventListener('load', (evt: any) => {
+      this.data = evt.detail;
+    });
   }
 
   destroy() {
@@ -77,12 +81,12 @@ export class CuboidEditor extends LitElement {
 
   // LitElement implementation
   static get styles() {
-    return [
+    return super.styles.concat([
       css`
       :host {
         width: 100%;
         height: 100%;
-        min-height: 300px;
+        min-height: 200px;
         min-width: 100px;
         position: relative;
         display: block;
@@ -96,18 +100,12 @@ export class CuboidEditor extends LitElement {
         margin: 0px;
         overflow: hidden;
       }
-      /* Medium Devices, Desktops */
-      @media only screen and (min-width : 992px) {
-        #root {
-          min-height: 600px;
-          max-height: 100vh;
-        }
-      }
       `
-    ];
+    ]);
   }
 
   firstUpdated() {
+    super.firstUpdated();
     const container = this.shadowRoot!.getElementById("root") as HTMLElement;
     container.appendChild(this.viewer.domElement);
     this.viewer.onResize();
@@ -116,7 +114,7 @@ export class CuboidEditor extends LitElement {
     this.addEventListener('mode', () => this.mode = this.modeManager.mode);
   }
 
-  render() {
+  display() {
     return html`<div id="root"></div>`;
   }
 
@@ -126,17 +124,17 @@ export class CuboidEditor extends LitElement {
     return this.viewer.cameraMode;
   }
   set cameraMode(value) {
-    this.mode = 'edit';
     this.viewer.cameraMode = value;
     this.viewer.render();
+    this.modeManager.mode = 'edit';
   }
 
   /** Point cloud as flattened array of [x, y, z] point coordinates. */
-  get pcl() {
+  get data() {
     return this.pclPlot.positionBuffer;
   }
 
-  set pcl(value: Float32Array) {
+  set data(value: Float32Array) {
     const count = this.pclPlot.count;
     this.pclPlot.positionBuffer = value;
     if (count === this.pclPlot.maxPts) {
@@ -181,6 +179,7 @@ export class CuboidEditor extends LitElement {
     return this._editableCuboids;
   }
   set editableCuboids(value) {
+    this.modeManager.editTarget = null;
     this._editableCuboids.clear();
     value = value || [];
     for (const v of value) {
