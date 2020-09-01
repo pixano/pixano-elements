@@ -17,11 +17,12 @@ export class PlaybackControl extends LitElement {
     @property({type: String})
     private current: number = 0;
 
-    private onNavigationKeyBind: (evt: KeyboardEvent) => void;
-
     // utils boolean to force maximal slider fps
-    // using keydown of: 10fps
+    // using keydown of: keySpeed fps
     private enableNavigation: boolean = true;
+
+    // slider time limit using keydown (ms), i.e fps: 1000/keyTime
+    private keyTime = 50;
 
     static get styles() {
       return [
@@ -73,7 +74,7 @@ export class PlaybackControl extends LitElement {
 
     constructor() {
       super();
-      this.onNavigationKeyBind = this.onNavigationKey.bind(this);
+      this.onNavigationKey = this.onNavigationKey.bind(this);
     }
 
     onNavigationKey(evt: KeyboardEvent) {
@@ -89,7 +90,7 @@ export class PlaybackControl extends LitElement {
       // force navigation speed through arrow keys to under 10fps.
       setTimeout(() => {
         this.enableNavigation = true;
-      }, 100);
+      }, this.keyTime);
       if (evt.key === 'ArrowRight') {
         this.setNext();
       }
@@ -102,14 +103,14 @@ export class PlaybackControl extends LitElement {
       super.connectedCallback();
       // set global window event listeners on connection
       // using useCapture so as to it is triggered first
-      window.addEventListener('keydown', this.onNavigationKeyBind, true);
+      window.addEventListener('keydown', this.onNavigationKey);
     }
 
     disconnectedCallback() {
       super.disconnectedCallback();
       // A classic global event listener is not be automatically destroyed by lit-element,
       // Removing it to prevent memory leaks and weird bugs.
-      window.removeEventListener('keydown', this.onNavigationKeyBind);
+      window.removeEventListener('keydown', this.onNavigationKey);
     }
 
     onSliderInput() {

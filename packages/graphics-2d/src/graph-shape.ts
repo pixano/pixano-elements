@@ -9,6 +9,28 @@ import { Graphics as PIXIGraphics, Rectangle as PIXIRectangle } from 'pixi.js';
 import { Decoration, Shape } from './shape';
 import { ShapeData } from './types';
 
+interface IGraphSettings {
+  radius: number;
+  colorFillType: "unique" | "order";
+  orderedColors: number[];
+  // Set skeleton #keypoints with their names
+  vertexNames: string[];
+  // Set skeleton links between its vertices
+  edges: [number, number][];
+}
+
+// common style shared by all skeletons
+export const settings: IGraphSettings = {
+  radius: 4,
+  colorFillType: "unique",
+  orderedColors: [
+    0xF44336, 0xffff00, 0xFFFFFF,
+    0X426eff, 0xFFFFFF, 0xFFFFFF
+  ],
+  edges: [[0,1], [0,2]],
+  vertexNames: ['header', 'RFoot', 'LFoot']
+}
+
 export class GraphShape extends Shape {
 
     public nodes: PIXIGraphics[] = [];
@@ -64,8 +86,10 @@ export class GraphShape extends Shape {
 
     draw() {
         this.area.clear();
-        this.data.geometry.edges!.forEach((edge, idx) => {
-            this.area.lineStyle(3, this.colors[idx] || 0xFFFFFF, 1, 0.5, true);
+        this.data.geometry.edges!.forEach((edge) => {
+            let color = this.hex;
+            color = this.state === Decoration.Nodes ? 0X426eff : color;
+            this.area.lineStyle(3, color || 0xFFFFFF, 1, 0.5, true);
             const sX = Math.round(this.data.geometry.vertices[edge[0] * 2] * this.scaleX);
             const sY = Math.round(this.data.geometry.vertices[edge[0] * 2 + 1] * this.scaleY);
             const tX = Math.round(this.data.geometry.vertices[edge[1] * 2] * this.scaleX);
@@ -91,12 +115,13 @@ export class GraphShape extends Shape {
         for (let i = 0; i < 0.5 * this.data.geometry.vertices.length; i++) {
             const x = this.data.geometry.vertices[i * 2];
             const y = this.data.geometry.vertices[i * 2 + 1];
-            const color = this.data.geometry.visibles![i] ? 0x00ff00 : 0xff0000;
-            const lineColor = this.state === Decoration.Nodes ? 0X426eff : color;
+            const opacity = this.data.geometry.visibles![i] ? 1 : 0.3;
+            const fillColor = settings.colorFillType === "order" ? settings.orderedColors[i] : this.hex;
+            const borderColor = this.state === Decoration.Nodes ? 0X426eff : this.hex;
             this.nodes[i].clear();
-            this.nodes[i].beginFill(color, 0.5);
-            this.nodes[i].lineStyle(1, lineColor, 1, 0.5, true);
-            this.nodes[i].drawCircle(0, 0, 4);
+            this.nodes[i].beginFill(fillColor, opacity);
+            this.nodes[i].lineStyle(1, borderColor, 1, 0.5, true);
+            this.nodes[i].drawCircle(0, 0, settings.radius);
             const parent = this.getHigherParent();
             if (parent) {
                 this.nodes[i].scale.x = 1.5 / parent.scale.x;

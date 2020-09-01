@@ -29,10 +29,9 @@ export class ModeManager {
 
     private observers = new Map<object, Observer>();  // to ensure proper disposal
 
-    private mouseUpListener: any;
-    private mouseMoveListener: any;
     private lastMouseMouseEvt = new MouseEvent("mousemove");
-    private orbitControls: OrbitControls;
+    public orbitControls: OrbitControls;
+    // TODO: remove (?)
     private navigating = false;
 
     private _mode: InteractiveMode = "edit";
@@ -66,41 +65,20 @@ export class ModeManager {
 
         // Event
         this.orbitControls.addEventListener("change", () => {
-            this.navigating = true;
+            if (!this.navigating) {
+                this.navigating = true;
+            }
             this.viewer.render();
         });
+        this.orbitControls.addEventListener("end", () => {
+            this.navigating = false;
+        });
 
-        // mouse movement to have the mouse position ready when needed
-        this.mouseMoveListener = (evt: MouseEvent) => { this.lastMouseMouseEvt = evt; };
+        // Mouse handling
+        this.mouseMoveListener = this.mouseMoveListener.bind(this);
+        this.mouseUpListener = this.mouseUpListener.bind(this);
+        this.viewer.domElement.addEventListener('click', this.mouseUpListener);
         this.viewer.domElement.addEventListener("mousemove", this.mouseMoveListener);
-
-        // clicks
-        this.mouseUpListener = (evt: MouseEvent) => {
-            if (this.navigating || this.editing) {
-                this.navigating = false;
-                this.editing = false;
-                return;
-            }
-
-            const plot = this.viewer.raycast(
-                evt.clientX, evt.clientY, ...this.annotationPlots.plotsMap.values())[0] as CuboidPlot;
-            const target = plot ? this.annotationPlots.annotationsMap.get(plot)! : null;
-            if (this.editMode && !target) {
-                this.editTarget = null;
-                this.mode = "edit";
-            } else if (this.editMode && target && target !== this.editTarget) {
-                this.editTarget = target;
-                this.mode = 'edit'
-            } else if (this.editMode && target && target === this.editTarget) {
-                this.editMode.toggleMode();
-                this.viewer.render();
-            } else if (this.mode === 'edit' && !this.editMode && target) {
-                this.editTarget = target;
-                this.mode = 'edit';
-            }
-        };
-
-        this.viewer.domElement.addEventListener('mouseup', this.mouseUpListener);
 
         // Track external events on annotations
         const observer1 = observe(annotations, (op, value?) => {
@@ -135,6 +113,43 @@ export class ModeManager {
             }
         }, Infinity);
         this.observers.set(annotations, observer2);
+    }
+
+    /**
+     * Mouse movement to have the mouse position ready when needed
+     * @param evt MouseEvent
+     */
+    mouseMoveListener(evt: MouseEvent) {
+        this.lastMouseMouseEvt = evt;
+    }
+
+    /**
+     * Handle clicks
+     * @param evt MouseEvent
+     */
+    mouseUpListener(evt: MouseEvent) {
+        if (this.editing) {
+            this.editing = false;
+            return;
+        }
+
+        const plot = this.viewer.raycast(
+            evt.clientX, evt.clientY, ...this.annotationPlots.plotsMap.values())[0] as CuboidPlot;
+        const target = plot ? this.annotationPlots.annotationsMap.get(plot)! : null;
+        if (this.editMode && !target) {
+            // unselect target
+            this.editTarget = null;
+            this.mode = "edit";
+        } else if (this.editMode && target && target !== this.editTarget) {
+            this.editTarget = target;
+            this.mode = 'edit'
+        } else if (this.editMode && target && target === this.editTarget) {
+            this.editMode.toggleMode();
+            this.viewer.render();
+        } else if (this.mode === 'edit' && !this.editMode && target) {
+            this.editTarget = target;
+            this.mode = 'edit';
+        }
     }
 
     destroy() {
@@ -184,7 +199,8 @@ export class ModeManager {
         }
 
         if (this.orbitControls.object !== this.viewer.camera) {
-            this.orbitControls = new OrbitControls(this.viewer.camera, this.viewer.domElement);
+            this.orbitControls.object = this.viewer.camera;
+            // this.orbitControls = new OrbitControls(this.viewer.camera, this.viewer.domElement);
         }
         this.orbitControls.enabled = true;
         this.navigating = false;

@@ -6,16 +6,14 @@
  */
 
 import { customElement } from 'lit-element';
+import { observable } from '@pixano/core';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapeCreateController, ShapesEditController } from './shapes-manager';
 import { GraphShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
-import { observable } from '@pixano/core';
+import { settings } from './graph-shape';
 
-interface GraphSettings {
-    edges: [number, number][];
-    names: string[];
-}
+export { settings };
 
 /**
  * Inherit Canvas2d to handle graph shapes (keypoints).
@@ -24,21 +22,6 @@ interface GraphSettings {
 export class Graph extends Canvas2d {
 
     private selectedNodeIdx: number = -1;
-
-    /**
-     * Set skeleton type (#keypoints, ).
-     * Default value is: {
-     *  edges: [[0,1], [0,2]],
-     *  names: ['header', 'RFoot', 'LFoot']
-     * }
-     */
-    set graphType(t: GraphSettings) {
-        (this.shManager.modes.create as GraphCreateController).graphType = t;
-    }
-
-    get graphType() {
-        return (this.shManager.modes.create as GraphCreateController).graphType;
-    }
 
     constructor() {
         super();
@@ -111,10 +94,12 @@ class GraphsUpdateController extends ShapesEditController {
     public activate() {
         // handle update mode for each shape
         this.graphics.forEach((s) => {
-            s.interactive = true;
-            s.buttonMode = true;
-            s.on('pointerdown', this.onObjectDown.bind(this));
-            this.decorateTo(s as GraphShape, Decoration.None);
+            if (s instanceof GraphShape) {
+                s.interactive = true;
+                s.buttonMode = true;
+                s.on('pointerdown', this.onObjectDown.bind(this));
+                this.decorateTo(s as GraphShape, Decoration.None);
+            }
         });
         this.renderer.stage.interactive = true;
         this.renderer.stage.on('pointerdown', this.onRootDown);
@@ -139,9 +124,11 @@ class GraphsUpdateController extends ShapesEditController {
     }
 
     public decorateTo(obj: GraphShape, state: Decoration) {
-        obj.state = state;
-        obj.onNode('pointerdown', this.onNodeDown);
-        obj.draw();
+        if (obj instanceof GraphShape) {
+            obj.state = state;
+            obj.onNode('pointerdown', this.onNodeDown);
+            obj.draw();
+        }
     }
 
     onNodeDown(evt: PIXI.InteractionEvent) {
@@ -202,12 +189,12 @@ class GraphsUpdateController extends ShapesEditController {
  */
 class GraphCreateController extends ShapeCreateController {
 
-    public graphType: GraphSettings = {
-        edges: [[0,1], [0,2]],
-        names: ['header', 'RFoot', 'LFoot']
-    }
-
     protected onRootDown(evt: PIXI.InteractionEvent) {
+        // prevent shape creating when using right mouse click
+        const pointer = (evt.data.originalEvent as PointerEvent);
+        if (pointer.buttons === 2) {
+            return;
+        }
         this.isCreating = true;
         const mouse = this.renderer.getPosition(evt.data);
         const pos = this.renderer.normalize(mouse);
@@ -215,14 +202,15 @@ class GraphCreateController extends ShapeCreateController {
         if (shape) {
             shape.pushNode(pos.x, pos.y);
             const l = shape.data.geometry.vertices.length * 0.5;
-            shape.data.geometry.edges = [...this.graphType.edges.filter(([e1, e2]) => e1 < l && e2 < l)];
+            shape.data.geometry.visibles![shape.data.geometry.visibles!.length-1] = pointer.buttons !== 4;
+            shape.data.geometry.edges = [...settings.edges.filter(([e1, e2]) => e1 < l && e2 < l)];    
         } else {
             const data = observable({
                 id: 'tmp',
                 geometry: {
                     vertices: [pos.x, pos.y],
                     edges: [],
-                    visibles: [],
+                    visibles: [pointer.buttons !== 4],
                     type: 'graph'
                 }
             } as ShapeData);
@@ -233,7 +221,7 @@ class GraphCreateController extends ShapeCreateController {
             this.tmpShape.draw();
         }
         // check length
-        if (this.tmpShape && this.tmpShape!.data.geometry.vertices.length === this.graphType.names.length * 2) {
+        if (this.tmpShape && this.tmpShape!.data.geometry.vertices.length === settings.vertexNames.length * 2) {
             this.createGraph();
         }
     }

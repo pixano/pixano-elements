@@ -89,8 +89,12 @@ export abstract class Shape extends PIXIContainer {
     }
 
     updateColorHex() {
-      const color = colorToHex(this.data.color!);
-      this.hex = parseInt(color.replace(/^#/, ''), 16);
+      if (typeof this.data.color == 'string') {
+        const color = colorToHex(this.data.color!);
+        this.hex = parseInt(color.replace(/^#/, ''), 16);
+      } else {
+        this.hex = (this.data.color as any) as number;
+      }
     }
 
     /**

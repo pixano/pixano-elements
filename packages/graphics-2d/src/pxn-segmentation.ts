@@ -58,6 +58,7 @@ export class Segmentation extends Canvas {
     this.maskManager.addEventListener('selection', (evt: any) => {
       this.dispatchEvent(new CustomEvent('selection', { detail: evt.detail }));
     });
+    this.addEventListener('load', this.onImageChanged.bind(this));
   }
 
   get targetClass() {

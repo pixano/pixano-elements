@@ -166,7 +166,9 @@ class PolygonsEditController extends ShapesEditController {
                 evt.stopPropagation();
                 this.onMidNodeDown(evt);
             });
-        } else {
+        } else if (obj instanceof PolygonShape) {
+            // only polygonshape has interactive nodes
+            // => multipolygons do not
             obj.removeNodeListeners();
         }
     }
