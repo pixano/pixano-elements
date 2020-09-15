@@ -1,6 +1,6 @@
 {
   "name": "demo-rectangle",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "private": true,
   "description": "Demo for rectangle",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -17,8 +17,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.3.4",
-    "@pixano/core": "^0.3.4",
+    "@pixano/graphics-2d": "^0.4.0",
+    "@pixano/core": "^0.4.0",
     "lit-element": "^2.3.1"
   }
 }
