@@ -32,7 +32,7 @@ When the code is ready for code review, please request a merge in github with co
 Please follow [tslint](https://palantir.github.io/tslint/) for your contributions:
 
 ```bash
-tslint -c tslint.json packages/**/src/*.ts
+npm run tslint
 ```
 
 #### Comments

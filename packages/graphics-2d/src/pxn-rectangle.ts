@@ -7,7 +7,7 @@
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
-import { ShapeCreateController } from './shapes-manager';
+import { ShapeCreateController } from './shapes-controllers';
 import { RectangleShape } from './shapes-2d';
 import { observable } from '@pixano/core';
 
@@ -18,12 +18,8 @@ import { observable } from '@pixano/core';
 export class Rectangle extends Canvas2d {
     constructor() {
         super();
-        this.shManager.setController('create', new RectangleCreateController(this.renderer, this.shapes));
-    }
-
-    protected initShapeManagerListeners() {
-        super.initShapeManagerListeners();
-        this.shManager.addEventListener('creating-rectangle', () => {
+        this.setController('create', new RectangleCreateController(this.renderer, this.shapes));
+        this.addEventListener('creating-rectangle', () => {
             this.showTooltip('Drag and release to end rectangle.')
         });
     }

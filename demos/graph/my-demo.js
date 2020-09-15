@@ -6,6 +6,7 @@
 
 import {css, html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d';
+import { settings } from '@pixano/graphics-2d/lib/pxn-graph';
 
 class MyDemo extends LitElement {
   static get styles() {
@@ -31,16 +32,13 @@ class MyDemo extends LitElement {
   }
   constructor() {
     super();
-    this.mode = 'update';  // overwrite default mode param of element
+    this.mode = 'edit';  // overwrite default mode param of element
     this.events = [];
     this.maxEventSize = 5;
     this.selectedShapeIds = [];
     this.disableMultiSelection = false;
     this.disableTabulation = false;
     this.hideLabels = false;
-    this.imageList = ['image.jpg'];
-    this.imageIdx = 0;
-    this.shapes = [];
     window.addEventListener('keydown', (evt) => {
       if (evt.key == 'Alt') {
         this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
@@ -64,8 +62,8 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-graph  image="${this.imageList[this.imageIdx]}"
-                      @create=${this.onCreate}
+          <pxn-graph @create=${this.onCreate}
+                      enableOutsideDrawing
                       @update=${this.onUpdate}
                       @selection=${this.onSelection}
                       mode=${this.mode}>
@@ -75,7 +73,10 @@ class MyDemo extends LitElement {
   }
 
   firstUpdated() {
-    // this.element.graphType = {names: ['center']};
+    this.element.input = "image.jpg";
+    settings.radius = 3;
+    settings.edges = [[0,1],[1,2]];
+    settings.vertexNames = ["t1","t2","t3"]
   }
 
   onCreate() {
@@ -91,14 +92,6 @@ class MyDemo extends LitElement {
   }
 
   updated(changedProperties) {
-    if (changedProperties.has('imageIdx') && this.imageIdx >= 0) {
-      console.log('changed image');
-      if (this.imageIdx === 0) {
-        this.shapes = [
-          { id:'random-id-4', vertices: [0,0, 0.5, 0.5, 0.2, 0.7], edges: [[0,1],[0,2]], color: 0x0F0, type: 'graph' }
-        ];
-      }
-    }
   }
 
   get element() {

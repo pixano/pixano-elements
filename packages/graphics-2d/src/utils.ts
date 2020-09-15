@@ -92,3 +92,20 @@ export function insertMidNode(vertices: number[], idx: number): number[] {
         ...vertices.slice(midIdx * 2)
     ];
 }
+
+// Check if the boundingbox g is included in s
+export function isIncludedRect(g: number[], s: number[]){
+    const xminG = g[0];
+    const yminG = g[1];
+    const xmaxG = g[2];
+    const ymaxG = g[3];
+    const xminS = s[0];
+    const yminS = s[1];
+    const xmaxS = s[2];
+    const ymaxS = s[3];
+    if (xminG > xminS && xmaxG < xmaxS && yminG > yminS && ymaxG < ymaxS){
+        return true;
+    } else {
+        return false;
+    }
+}
