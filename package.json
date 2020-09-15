@@ -6,16 +6,20 @@
     "es-dev-server": "^1.46.5",
     "lerna": "^3.20.2",
     "typedoc": "^0.17.4",
+    "rimraf": "^2.6.2",
+    "tslint": "6.1.3",
     "typedoc-plugin-lerna-packages": "^0.3.0"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap --hoist --strict --force-local",
+    "bootstrap": "npm i && lerna bootstrap --hoist --strict --force-local",
+    "clearall": "npm run clean && rimraf -rf node_modules",
     "build": "lerna run build",
     "watch": "lerna run watch --parallel",
     "clean": "lerna run clean",
     "test": "lerna run test",
     "serve": "serve",
     "start": "es-dev-server --preserve-symlinks --node-resolve --open ",
+    "tslint": "tslint -c tslint.json packages/**/src/*.ts",
     "docs": "rm -rf docs && typedoc packages && grep -rl 'index.html' docs/* | xargs -i@ sed -i 's/index.html/docs.html/g' @ && rm docs/index.html && mv docs/globals.html docs/index.html"
   },
   "dependencies": {}

@@ -7,7 +7,7 @@
 
 import { customElement } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
-import { ShapesEditController, ShapeCreateController } from './shapes-manager';
+import { ShapesEditController, ShapeCreateController } from './shapes-controllers';
 import { PolygonShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
 import { observable } from '@pixano/core';
@@ -21,14 +21,10 @@ export class Polygon extends Canvas2d {
 
     constructor() {
         super();
-        this.shManager.setController('create', new PolygonCreateController(this.renderer, this.shapes));
-        this.shManager.setController('edit', new PolygonsEditController(this.renderer,
-                                                    this.shManager.graphics, this.shManager.targetShapes, this.shManager.dispatchEvent.bind(this.shManager)));
-    }
-
-    protected initShapeManagerListeners() {
-        super.initShapeManagerListeners();
-        this.shManager.addEventListener('creating-polygon', () => {
+        this.setController('create', new PolygonCreateController(this.renderer, this.shapes));
+        this.setController('edit', new PolygonsEditController(this.renderer,
+                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this)));
+        this.addEventListener('creating-polygon', () => {
             this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
         });
     }
@@ -48,8 +44,8 @@ export class Polygon extends Canvas2d {
             }
         }
 
-        if (this.shManager.targetShapes.size > 1) {
-            const shapes = [...this.shManager.targetShapes];
+        if (this.targetShapes.size > 1) {
+            const shapes = [...this.targetShapes];
             // split all selected groups
             const newAnn: ShapeData = shapes.reduce((prev, curr) => {
                 // update geometry
@@ -82,8 +78,8 @@ export class Polygon extends Canvas2d {
      * into multiple polygons.
      */
     split() {
-        if (this.shManager.targetShapes.size === 1) {
-            const shape = this.shManager.targetShapes.values().next().value;
+        if (this.targetShapes.size === 1) {
+            const shape = this.targetShapes.values().next().value;
             if (shape.geometry.type === 'multi_polygon') {
                 shape.geometry.mvertices.forEach((v: number[], idx: number) => {
                     this.shapes.add(observable({

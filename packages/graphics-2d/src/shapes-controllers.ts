@@ -9,7 +9,6 @@ import { Renderer } from './renderer';
 import { Shape, DrawingCross } from './shapes-2d';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
-import { dataToShape } from './adapter';
 import { Decoration, CONTROL_POINTS } from './shapes-2d';
 import { bounds } from './utils';
 import { Controller } from './base-controller';
@@ -37,6 +36,8 @@ export class ShapesEditController extends Controller {
     protected renderer: Renderer;
 
     protected previousPos: {x: number, y: number} = {x: 0, y: 0};
+
+    public enableOutsideDrawing: boolean = false;
 
     set updated(updated: boolean) {
         this._updated = updated;
@@ -224,10 +225,12 @@ export class ShapesEditController extends Controller {
             const dtop = bb[1];
             const dright = 1 - bb[2];
             const dleft = bb[0];
-            dy = Math.min(dbottom, dy);
-            dy = Math.max(-dtop, dy);
-            dx = Math.min(dright, dx);
-            dx = Math.max(-dleft, dx);
+            if (!this.enableOutsideDrawing) {
+                dy = Math.min(dbottom, dy);
+                dy = Math.max(-dtop, dy);
+                dx = Math.min(dright, dx);
+                dx = Math.max(-dleft, dx);
+            }
             if (dx === 0 && dy === 0) {
                 return;
             }
@@ -391,16 +394,16 @@ export class ShapesEditController extends Controller {
     }
 
     /**
-     * Get graphical instance of data object
+     * Retrieve graphical shape for a given shape data
      * @param s 
      */
     protected getTargetGraphic(s: ShapeData) {
-        let g = [...this.graphics].find((o) => o.data === s);
-        if (!g) {
-            // use standard id property to check for equality
-            g = [...this.graphics].find((o) => o.data.id === s.id);
+        let graphic = [...this.graphics].find((o) => o.data === s);
+        if (!graphic) {
+            // find graphic with required id
+            graphic = [...this.graphics].find((o) => o.data.id === s.id);
         }
-        return g;
+        return graphic;
     }
 
     protected getFirstGraphic() {
@@ -506,125 +509,4 @@ export abstract class ShapeCreateController extends Controller {
     protected onRootUp() {
         // Implement your own onRootUp method when inheriting.
     };
-}
-
-/**
- * Manage set of interactive shapes
- */
-export class ShapesManager extends EventTarget {
-    protected renderer: Renderer;
-
-    protected shapes: ObservableSet<ShapeData>;
-
-    public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
-
-    public graphics: Set<Shape> = new Set();
-
-    public mode: string = 'edit';
-
-    public modes: {
-        [key: string]: Controller;
-    };
-
-    // can be replaced by a custom dataToShape function
-    public dataToShape: ((s: ShapeData) => Shape) = dataToShape;
-
-    constructor(renderer: Renderer = new Renderer(),
-                shapes: ObservableSet<ShapeData> = new ObservableSet()) {
-        super();
-        this.renderer = renderer;
-        this.shapes = shapes;
-        this.modes = {
-            edit: new ShapesEditController(this.renderer, this.graphics, this.targetShapes, this.dispatchEvent.bind(this))
-        }
-        this.renderer.onImageSizeChange = () => {
-            shapes.forEach((s: ShapeData) => {
-                const obj = this.dataToShape(s);
-                this.graphics.add(obj);
-                obj.scaleX = this.renderer.imageWidth || 100;
-                obj.scaleY = this.renderer.imageHeight || 100;
-                this.renderer.labelLayer.addChild(obj);
-                obj.draw();
-            });
-        }
-        // new ShapeCreateController(this.renderer)
-        // listen global changes on the set of shapes:
-        // add a new shape, delete a shape, initialize set.
-        observe(shapes, (prop: string, value?: any) => {
-            switch(prop) {
-                case 'set':
-                case 'add': {
-                    value = [value];
-                    if (prop === 'set') {
-                        // reset all objects at once
-                        this.renderer.clearLabels();
-                        this.graphics.clear();
-                        value = shapes;
-                    }
-                    value.forEach((s: ShapeData) => {
-                        const obj = this.dataToShape(s);
-                        this.graphics.add(obj);
-                        obj.scaleX = this.renderer.imageWidth || 100;
-                        obj.scaleY = this.renderer.imageHeight || 100;
-                        this.renderer.labelLayer.addChild(obj);
-                        obj.draw();
-                    });
-                    // reapply controller to new objects
-                    if (this.modes[this.mode]) {
-                        this.modes[this.mode].reset();
-                    }
-                    break;
-                }
-                case 'delete': {
-                    const obj = [...this.graphics].find(({data}) => data === value);
-                    if (obj) {
-                        this.graphics.delete(obj);
-                        this.renderer.labelLayer.removeChild(obj);
-                        this.targetShapes.clear();
-                    }
-                    break;
-                }
-                case 'clear': {
-                    this.renderer.clearLabels();
-                    if (this.targetShapes.size) {
-                        this.targetShapes.clear();
-                    }
-                    break;
-                }
-            }
-        });
-        this.modes[this.mode].activate();
-    }
-
-    public setController(mode: string, controller: Controller) {
-        if (mode === this.mode && this.modes[mode]) {
-            // remove active base controller
-            this.modes[mode].deactivate();
-            this.modes[mode] = controller;
-            this.modes[mode].activate();
-        } else {
-            this.modes[mode] = controller;
-        }
-        return this;
-    }
-
-    /**
-     * Handle new mode set:
-     * 1. Reset canvas to default "mode-free" (no interaction)
-     * 2. Apply interactions of new mode
-     * @param mode string
-     */
-    public setMode(mode: string) {
-        if (mode !== this.mode) {
-            if (this.modes[this.mode]) {
-                // Restore default state
-                this.modes[this.mode].deactivate();
-            }
-            if (this.modes[mode]) {
-                // Set up new mode state
-                this.modes[mode].activate();
-            }
-            this.mode = mode;
-        }
-    }
 }
