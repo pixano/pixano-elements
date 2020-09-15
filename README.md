@@ -85,6 +85,7 @@ Clone and setup the repo:
 ```bash
 git clone https://github.com/pixano/pixano-elements.git
 cd pixano-elements
+npm i
 npm run bootstrap
 npm run build
 ```
