@@ -9,14 +9,13 @@
 import { customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
-import { ShapesManager } from './shapes-manager';
+import { ShapesEditController } from './shapes-controllers';
 import { observable } from '@pixano/core';
 import { Canvas } from './pxn-canvas';
+import { Shape } from './shapes-2d';
+import { Controller } from './base-controller';
+import { dataToShape } from './adapter';
 
-/**
- * Possible modes to be used in this class.
- */
-export type InteractiveMode = "edit" | "create" | "none";
 
 /**
  * Parent class that displays image with
@@ -32,22 +31,29 @@ export class Canvas2d extends Canvas {
 
   // input mode type
   @property({type: String, reflect: true})
-  public mode: InteractiveMode = "edit";
+  public mode: string = "edit";
+
+  // Enable user to draw outside of the image
+  @property({type: Boolean})
+  public enableOutsideDrawing: boolean = false;
 
   // set of 2d shapes to be drawn by the element
   private _shapes: ObservableSet<ShapeData>;
 
-  // manager that handles interaction with the
-  // stage and the shapes.
-  protected shManager: ShapesManager;
+  public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
+
+  public graphics: Set<Shape> = new Set();
+
+  public modes: {
+    [key: string]: Controller;
+  };
+
+  // can be replaced by a custom dataToShape function
+  public dataToShape: ((s: ShapeData) => Shape) = dataToShape;
 
   constructor() {
     super();
     this._shapes = new ObservableSet<ShapeData>();
-    // Create a manager of the shapes
-    this.shManager = new ShapesManager(this.renderer, this._shapes);
-    this.initShapeManagerListeners();
-    this.initShapeSetObserver();
     this.viewControls.addEventListener('zoom', () => {
       this.renderer.labelLayer.children.forEach((obj: any) => {
         obj.nodeContainer.children.forEach((o: any) => {
@@ -56,29 +62,39 @@ export class Canvas2d extends Canvas {
         });
       });
     });
+    this.modes = {
+      edit: new ShapesEditController(this.renderer, this.graphics, this.targetShapes, this.dispatchEvent.bind(this))
+    }
+    this.renderer.onImageSizeChange = () => {
+      // this.renderer.clearLabels();
+      // this.graphics.clear();
+      this.graphics.forEach((s: Shape) => {
+          s.scaleX = this.renderer.imageWidth || 100;
+          s.scaleY = this.renderer.imageHeight || 100;
+          s.draw();
+      });
+    }
+    // Order important
+    // Other solution: call shapes.clear() on shapes change
+    this.observeShapeForDisplay();
+    this.observeShapeForNotification();
+    this.modes[this.mode].activate();
   }
 
   // observable set of selected shape ids.
   get selectedShapeIds() {
-    const lis = [...this.shManager.targetShapes.values()];
+    const lis = [...this.targetShapes.values()];
     return lis.map((s) => s.id);
   }
 
   set selectedShapeIds(ids: string[]) {
     const shapes = [...this.shapes].filter((s) => ids.includes(s.id));
-    this.shManager.targetShapes.set(shapes);
+    this.targetShapes.set(shapes);
   }
 
   // observable set of selected shapes.
   get selectedShapes() {
-    return [...this.shManager.targetShapes];
-  }
-
-  protected initShapeManagerListeners() {
-    this.shManager.addEventListener('update', (evt: any) => {
-      const ids = evt.detail;
-      this.notifyUpdate(ids);
-    });
+    return [...this.targetShapes];
   }
 
   // Get set of 2d shapes with their unique id.
@@ -101,8 +117,8 @@ export class Canvas2d extends Canvas {
    * Copy selected shapes in clipboard
    */
   onCopy(): string | void {
-    if (this.shManager.targetShapes.size) {
-      return JSON.stringify([...this.shManager.targetShapes]);
+    if (this.targetShapes.size) {
+      return JSON.stringify([...this.targetShapes]);
     }
   }
 
@@ -123,6 +139,55 @@ export class Canvas2d extends Canvas {
     }
   }
 
+  observeShapeForDisplay(){
+    // new ShapeCreateController(this.renderer)
+    // listen global changes on the set of shapes:
+    // add a new shape, delete a shape, initialize set.
+    observe(this._shapes, (prop: string, value?: any) => {
+      switch(prop) {
+          case 'set':
+          case 'add': {
+              value = [value];
+              if (prop === 'set') {
+                  // reset all objects at once
+                  this.renderer.clearLabels();
+                  this.graphics.clear();
+                  value = this._shapes;
+              }
+              value.forEach((s: ShapeData) => {
+                  const obj = this.dataToShape(s);
+                  this.graphics.add(obj);
+                  obj.scaleX = this.renderer.imageWidth || 100;
+                  obj.scaleY = this.renderer.imageHeight || 100;
+                  this.renderer.labelLayer.addChild(obj);
+                  obj.draw();
+              });
+              // reapply interaction controller to new objects
+              if (this.modes[this.mode]) {
+                  this.modes[this.mode].reset();
+              }
+              break;
+          }
+          case 'delete': {
+              const obj = [...this.graphics].find(({data}) => data === value);
+              if (obj) {
+                  this.graphics.delete(obj);
+                  this.renderer.labelLayer.removeChild(obj);
+                  this.targetShapes.clear();
+              }
+              break;
+          }
+          case 'clear': {
+              this.renderer.clearLabels();
+              if (this.targetShapes.size) {
+                  this.targetShapes.clear();
+              }
+              break;
+          }
+      }
+    });
+  }
+
   /**
    * General keyboard event handling
    * @param event [keyBoardEvent]
@@ -136,16 +201,49 @@ export class Canvas2d extends Canvas {
         break;
       }
       case 'Delete': {
-        this.shManager.targetShapes.forEach((s) => this.shapes.delete(s));
-        this.shManager.targetShapes.clear();
+        this.targetShapes.forEach((s) => this.shapes.delete(s));
+        this.targetShapes.clear();
         break;
       }
       case 'Escape': {
-        this.shManager.targetShapes.clear();
+        this.targetShapes.clear();
         break;
       }
     }
   }
+
+  public setController(mode: string, controller: Controller) {
+    if (mode === this.mode && this.modes[mode]) {
+        // remove active base controller
+        this.modes[mode].deactivate();
+        this.modes[mode] = controller;
+        this.modes[mode].activate();
+    } else {
+        this.modes[mode] = controller;
+    }
+    return this;
+  }
+
+  /**
+   * Handle new mode set:
+   * 1. Reset canvas to default "mode-free" (no interaction)
+   * 2. Apply interactions of new mode
+   * @param mode string
+   */
+  public setMode(mode: string) {
+    if (mode !== this.mode) {
+        if (this.modes[this.mode]) {
+            // Restore default state
+            this.modes[this.mode].deactivate();
+        }
+        if (this.modes[mode]) {
+            // Set up new mode state
+            this.modes[mode].activate();
+        }
+        this.mode = mode;
+    }
+}
+
 
   /**
    * Handle tabulation event
@@ -157,21 +255,21 @@ export class Canvas2d extends Canvas {
     }
     event.preventDefault();
     const shapes = [...this.shapes.values()];
-    const currIdx = shapes.findIndex((s) => this.shManager.targetShapes.has(s)) || 0;
+    const currIdx = shapes.findIndex((s) => this.targetShapes.has(s)) || 0;
     const nextIdx = event.shiftKey ?  (currIdx + 1 + shapes.length) % shapes.length
                                     : (currIdx - 1 + shapes.length) % shapes.length;
     const nextShape = shapes[nextIdx];
     if (nextShape) {
-      this.shManager.targetShapes.set([nextShape])
+      this.targetShapes.set([nextShape])
     }
   }
 
-  protected initShapeSetObserver() {
+  protected observeShapeForNotification() {
     // Trigger notification on shape
     // selection(s) changed.
-    observe(this.shManager.targetShapes, (prop) => {
+    observe(this.targetShapes, (prop) => {
       if (prop !== 'set') {
-        this.notifySelection([...this.shManager.targetShapes].map((t) => t.id));
+        this.notifySelection([...this.targetShapes].map((t) => t.id));
       }
     });
     observe(this.shapes, (event: any, shape?: ShapeData) => {
@@ -203,8 +301,22 @@ export class Canvas2d extends Canvas {
   protected updated(changedProperties: any) {
     super.updated(changedProperties);
     if (changedProperties.has('mode') && this.mode) {
-      this.shManager.setMode(this.mode);
-      this.dispatchEvent(new Event('mode'));
+      const prevMode = changedProperties.get('mode');
+      if (this.modes[prevMode]) {
+        // Restore default state of previous mode
+        this.modes[prevMode].deactivate();
+      }
+      if (this.modes[this.mode]) {
+          // Set up new mode state
+          // Use reset instead of activate
+          // to avoid another activate conflict
+          this.modes[this.mode].reset();
+          this.dispatchEvent(new Event('mode'));
+      }
+    }
+    if (changedProperties.has('enableOutsideDrawing')) {
+      this.renderer.enableOutsideDrawing = this.enableOutsideDrawing;
+      (this.modes.edit as ShapesEditController).enableOutsideDrawing = this.enableOutsideDrawing;
     }
   }
 
@@ -218,7 +330,7 @@ export class Canvas2d extends Canvas {
     this.dispatchEvent(new CustomEvent('update', { detail: ids }));
   }
 
-  protected notifyMode(mode: InteractiveMode) {
+  protected notifyMode(mode: string) {
     /**
      * Fired when `pxn-canvas-2d` changes mode.
      *

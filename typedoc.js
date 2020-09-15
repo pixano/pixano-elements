@@ -12,7 +12,8 @@ module.exports = {
         'demo-polygon',
         'demo-segmentation',
         'demo-smart-rectangle',
-        'demo-graph'
+        'demo-graph',
+        'demo-graph-rect'
     ],
     name: '@pixano',
     excludePrivate: true,

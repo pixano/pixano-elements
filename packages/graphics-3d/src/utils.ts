@@ -361,7 +361,7 @@ export function findLowestZ(points: [number, number, number][], zmin: number, zm
 
 /**
  * Convert 3d box to 3d vertex coordinates
- * @param cube 
+ * @param cube
  */
 export const cubeToCoordinates = (cube: Cuboid) => {
   const x = cube.position[0];
