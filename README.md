@@ -39,7 +39,17 @@ npm --version
 # 6.1.0
 ```
 
-## Usage
+## Run demo
+
+```
+git clone https://github.com/pixano/pixano-elements.git
+cd pixano-elements/demos/rectangle
+npm i
+npx serve
+```
+
+
+### Components overview
 
 The Pixano Elements are divided into `packages`. Each package can be installed independantly from [NPM](https://www.npmjs.com/) using the following command:
 
@@ -49,7 +59,6 @@ npm install @pixano/graphics-2d
 
 Each package can contain multiple web components which are regrouped by affinity.
 
-### Components overview
 
 | Component | Status | Demo |
 | ----------| -------| -----|
@@ -76,7 +85,6 @@ Clone and setup the repo:
 ```bash
 git clone https://github.com/pixano/pixano-elements.git
 cd pixano-elements
-npm i
 npm run bootstrap
 npm run build
 ```

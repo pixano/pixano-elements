@@ -2,6 +2,7 @@
 export abstract class Controller extends EventTarget {
     abstract activate(): void;
     abstract deactivate(): void;
+    // Reset interaction mode
     public reset() {
         this.deactivate();
         this.activate();

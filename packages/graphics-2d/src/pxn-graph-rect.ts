@@ -9,7 +9,7 @@ import { customElement } from 'lit-element';
 import { observable } from '@pixano/core';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapeCreateController, ShapesEditController } from './shapes-controllers';
-import { GraphShape, Decoration } from './shapes-2d';
+import { GraphShape, Decoration, RectangleShape } from './shapes-2d';
 import { ShapeData } from './types';
 import { settings } from './graph-shape';
 
@@ -18,8 +18,8 @@ export { settings };
 /**
  * Inherit Canvas2d to handle graph shapes (keypoints).
  */
-@customElement('pxn-graph' as any)
-export class Graph extends Canvas2d {
+@customElement('pxn-graph-rect' as any)
+export class GraphRect extends Canvas2d {
 
     private selectedNodeIdx: number = -1;
 
@@ -28,6 +28,10 @@ export class Graph extends Canvas2d {
         this.setController('create', new GraphCreateController(this.renderer, this.shapes))
             .setController('edit', new GraphsUpdateController(this.renderer, this.graphics,
                                                                           this.targetShapes, this.dispatchEvent.bind(this)));
+        this.addEventListener('rectangle-selected', (evt: any) => {
+            (this.modes.create as GraphCreateController).creationId = evt.detail;
+        })
+
     }
 
     protected firstUpdated() {
@@ -91,20 +95,61 @@ class GraphsUpdateController extends ShapesEditController {
         this.onNodeDown = this.onNodeDown.bind(this);
     }
 
-    public activate() {
+   onRectangleDown(evt: PIXI.InteractionEvent) {
+        const shape = (evt as any).shape as ShapeData;
+        const id = shape.id;
+        this.dispatchEvent(new CustomEvent('rectangle-selected', {detail: id}))
+   }
+
+   onRootDown() {
+       this.graphics.forEach((g) => {
+           g.visible = true;
+       })
+   }
+
+   public activate() {
         // handle update mode for each shape
         this.graphics.forEach((s) => {
-            if (s instanceof GraphShape) {
+            if (s instanceof GraphShape || s instanceof RectangleShape) {
                 s.interactive = true;
                 s.buttonMode = true;
-                s.on('pointerdown', this.onObjectDown.bind(this));
+                // Exclude Rectangle so we cannot move the bounding boxes
+                if (!(s instanceof RectangleShape)) {
+                    s.on('pointerdown', this.onObjectDown.bind(this));
+                } else {
+                    s.on('pointerdown', this.onRectangleDown.bind(this));
+                }
                 this.decorateTo(s as GraphShape, Decoration.None);
+
+                // Display only selected rectangle and potential associated keypoints
+                s.on('pointerdown', () => {
+                    this.graphics.forEach((g) => {
+                        if (g !== s && g.data.id !== s.data.id) {
+                            g.visible = false;
+                        }
+                    })
+                })
             }
         });
         this.renderer.stage.interactive = true;
         this.renderer.stage.on('pointerdown', this.onRootDown);
         this.drawSelection();
     }
+    /* // Automated id association between bounding boxes and keypoints : TO DO
+    updateIDs() {
+        // associate the same id between a bounding box and the included graph
+        this.graphics.forEach((bb) => {
+            if (bb instanceof RectangleShape){
+                let bb_id = bb.data.id;
+                this.graphics.forEach((kpt) => {
+                    if (kpt instanceof GraphShape)
+
+                });
+            }
+
+        });
+    }
+    */
 
     drawSelection() {
         this.targetShapes.forEach((t) => {
@@ -189,10 +234,12 @@ class GraphsUpdateController extends ShapesEditController {
  */
 class GraphCreateController extends ShapeCreateController {
 
+    public creationId: string | null = null;
+
     protected onRootDown(evt: PIXI.InteractionEvent) {
         // prevent shape creating when using right mouse click
         const pointer = (evt.data.originalEvent as PointerEvent);
-        if (pointer.buttons === 2) {
+        if (pointer.buttons === 2 || !this.creationId) {
             return;
         }
         this.isCreating = true;
@@ -228,10 +275,16 @@ class GraphCreateController extends ShapeCreateController {
 
     public createGraph() {
         const shape = this.tmpShape as GraphShape;
-        shape.data.id = Math.random().toString(36).substring(7);
+        // Passing down associated rectangle id
+        if (this.creationId) {
+            shape.data.id = this.creationId;
+        } else {
+            shape.data.id = Math.random().toString(36).substring(7);
+        }
         this.shapes.add(shape.data);
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;
+        this.creationId = null;
     }
 }

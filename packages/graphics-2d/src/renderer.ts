@@ -53,6 +53,8 @@ export class Renderer extends PIXI.Application {
 
     public labelLayer = new PIXI.Container();
 
+    public enableOutsideDrawing: boolean = false;
+
     private _brightness: number = 1;
 
     private filter: PIXI.filters.ColorMatrixFilter = new PIXI.filters.ColorMatrixFilter();
@@ -216,8 +218,10 @@ export class Renderer extends PIXI.Application {
     public getPosition(data: PIXI.InteractionData): {x: number, y: number} {
         const mouseData = data.getLocalPosition(this.stage);
         const pt = {x: Math.round(mouseData.x), y: Math.round(mouseData.y)};
-        pt.x = Math.min(Math.max(0, pt.x), this.imageWidth);
-        pt.y = Math.min(Math.max(0, pt.y), this.imageHeight);
+        if (!this.enableOutsideDrawing) {
+            pt.x = Math.min(Math.max(0, pt.x), this.imageWidth);
+            pt.y = Math.min(Math.max(0, pt.y), this.imageHeight);
+        }
         return pt;
     }
 

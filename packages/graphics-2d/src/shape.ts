@@ -55,9 +55,8 @@ export abstract class Shape extends PIXIContainer {
 
     public data: ShapeData;
 
-    public hex: number = 0X000000;
-
-    public onChangeBind: (prop: string) => void;
+    // red color by default
+    public hex: number = 0XFF0000;
 
     constructor(data: ShapeData) {
         super();
@@ -65,8 +64,8 @@ export abstract class Shape extends PIXIContainer {
         this.addChild(this.box);
         this.addChild(this.nodeContainer);
         this.data = data;
-        this.onChangeBind = this.onChange.bind(this);
-        observe(data, this.onChangeBind);
+        this.onChange = this.onChange.bind(this);
+        observe(data, this.onChange);
         this.updateColorHex();
         this.controls = new Array(8).fill(null).map(() => new PIXIGraphics());
         this.controls.forEach((n) => this.nodeContainer.addChild(n));
@@ -89,10 +88,10 @@ export abstract class Shape extends PIXIContainer {
     }
 
     updateColorHex() {
-      if (typeof this.data.color == 'string') {
+      if (typeof this.data.color === 'string') {
         const color = colorToHex(this.data.color!);
         this.hex = parseInt(color.replace(/^#/, ''), 16);
-      } else {
+      } else if (this.data.color) {
         this.hex = (this.data.color as any) as number;
       }
     }
@@ -206,6 +205,6 @@ export abstract class Shape extends PIXIContainer {
 
     destroy() {
       super.destroy();
-      unobserve(this.data, this.onChangeBind);
+      unobserve(this.data, this.onChange);
     }
 }

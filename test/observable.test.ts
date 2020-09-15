@@ -5,7 +5,7 @@
 */
 
 import 'jest';
-import { observable, observable, ObservableSet, observe, unobserve } from '@pixano/core';
+import { observable, ObservableSet, observe, unobserve } from '@pixano/core';
 
 
 @observable

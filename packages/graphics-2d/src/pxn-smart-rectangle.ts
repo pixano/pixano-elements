@@ -9,7 +9,7 @@ import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, ObservableSet, utils } from '@pixano/core';
 import { customElement, property } from "lit-element";
-import { ShapeCreateController } from "./shapes-manager";
+import { ShapeCreateController } from "./shapes-controllers";
 import { Rectangle } from "./pxn-rectangle";
 import { Graphics as PIXIGraphics } from "pixi.js";
 
@@ -18,29 +18,32 @@ import { ShapeData } from "./types";
 
 const IOU_THRESHOLD = 0.5;
 
+
 @customElement("pxn-smart-rectangle" as any)
 export class SmartRectangle extends Rectangle {
+
+  mode: string = "edit";
 
   @property({ type: Number }) scale = 1;
 
   constructor() {
     super();
-    this.shManager.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
+    this.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
   }
 
   get smartController() {
-    return (this.shManager.modes['smart-create'] as SmartRectangleCreateController);
+    return (this.modes['smart-create'] as SmartRectangleCreateController);
   }
 
   public roiUp() {
-    const mode = this.shManager.mode;
+    const mode = this.mode;
     if (mode === 'smart-create') {
       this.smartController.roiUp();
     }
   }
 
   public roiDown() {
-    const mode = this.shManager.mode;
+    const mode = this.mode;
     if (mode === 'smart-create') {
       this.smartController.roiDown();
     }
@@ -54,7 +57,7 @@ export class SmartRectangle extends Rectangle {
   }
 
   attributeChangedCallback(name: string, oldValue: any, newValue: any) {
-    const mode = this.shManager.mode;
+    const mode = this.mode;
     if (mode === 'smart-create' && name === "scale") {
       this.smartController.setScale(newValue);
     }
