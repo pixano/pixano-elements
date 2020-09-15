@@ -11,7 +11,7 @@
     "typedoc-plugin-lerna-packages": "^0.3.0"
   },
   "scripts": {
-    "bootstrap": "npm i && lerna bootstrap --hoist --strict --force-local",
+    "bootstrap": "lerna bootstrap --hoist --strict --force-local",
     "clearall": "npm run clean && rimraf -rf node_modules",
     "build": "lerna run build",
     "watch": "lerna run watch --parallel",
