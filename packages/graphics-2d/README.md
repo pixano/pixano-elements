@@ -64,6 +64,7 @@ customElements.define('my-demo-rectangle', MyDemoRectangle);
 | Name             | Type           | Default  | Description
 | ---------------- | -------------- | -------- |------------
 | `image`          | `string|null` | `null `  | Sets the image url to be rendered on canvas.
+| `input`          | `string|string[]` | `null `  | Sets the image url(s) to be rendered on canvas.
 | `hideLabels`     | `boolean`      | `false`  | When `true`, hides the label layer.
 | `color`          | `string `      | `#f3f3f5`| Background color
 | `zoom`           | `number`       | `0.95`(readonly) | Zoom value
