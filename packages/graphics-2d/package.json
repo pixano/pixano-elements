@@ -15,11 +15,11 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@material/mwc-button": "^0.14.1",
-    "@material/mwc-dialog": "^0.14.1",
-    "@material/mwc-icon-button-toggle": "^0.14.1",
-    "@material/mwc-list": "^0.14.1",
-    "@material/mwc-select": "^0.14.1",
+    "@material/mwc-button": "0.18.0",
+    "@material/mwc-dialog": "0.18.0",
+    "@material/mwc-icon-button-toggle": "0.18.0",
+    "@material/mwc-list": "0.18.0",
+    "@material/mwc-select": "0.18.0",
     "@pixano/ai": "^0.4.0",
     "@pixano/core": "^0.4.0",
     "lit-element": "^2.3.1",

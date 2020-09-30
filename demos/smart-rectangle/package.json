@@ -21,10 +21,10 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@material/mwc-button": "^0.14.1",
-    "@material/mwc-dialog": "^0.14.1",
-    "@material/mwc-linear-progress": "^0.14.1",
-    "@material/mwc-textfield": "^0.14.1",
+    "@material/mwc-button": "0.18.0",
+    "@material/mwc-dialog": "0.18.0",
+    "@material/mwc-linear-progress": "0.18.0",
+    "@material/mwc-textfield": "0.18.0",
     "@pixano/graphics-2d": "^0.4.0",
     "@pixano/core": "^0.4.0",
     "lit-element": "^2.3.1"
