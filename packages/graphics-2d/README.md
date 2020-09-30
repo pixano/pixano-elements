@@ -78,6 +78,7 @@ Note: `pxn-canvas-2d` inherits from `pxn-canvas`.
 | `mode`      | `InteractionMode*`  | `edit `  | Sets the canvas interaction mode. Use `none` for no interactions at all.
 | `shapes`    | `ShapeData**[]` | `[] `  | Sets the canvas shapes to be displayed.
 | `selectedShapeIds` | `string[]`   | `[]` | List of selected shape ids
+| `enableOutsideDrawing` | `boolean` | `false` | Enable 2d shape drawing outside of image bounds
 
 *InteractionMode depends on the element:
 ```ts
