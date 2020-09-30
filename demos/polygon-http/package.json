@@ -19,8 +19,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "^0.4.0",
-    "@pixano/core": "^0.4.0",
-    "lit-element": "^2.3.1"
+    "@pixano/graphics-2d": "0.4.0",
+    "@pixano/core": "0.4.0",
+    "lit-element": "2.4.0"
   }
 }
