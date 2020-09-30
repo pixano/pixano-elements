@@ -14,7 +14,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@material/mwc-slider": "^0.14.1",
+    "@material/mwc-slider": "0.18.0",
     "lit-element": "^2.3.1",
     "on-change": "^2.0.1"
   },
