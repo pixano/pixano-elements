@@ -182,13 +182,27 @@ export class VideoCache {
       }); 
     });
   }
+
+  function readBase64Array(path: string): Promise<Float32Array> {
+    const blob = atob( path );
+    const aryBuf = new ArrayBuffer( blob.length );
+    let dv = new DataView( aryBuf );
+    for ( let i=0; i < blob.length; i++ ) dv.setUint8( i, blob.charCodeAt(i) );
+
+    return Promise.resolve(new Float32Array(aryBuf));
+  }
   
   function read(path: string | string[]): Promise<any> {
+    const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
     if (typeof path === 'string') {
       if (path.endsWith('bin')) {
         return readPcl(path);
-      } else if (path.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+      } else if (path.match(/\.(jpeg|jpg|gif|png)$|data:image/) != null) {
+        // source ends with .[jpeg,jpg,gif,png] or is base64
         return readImage(path);
+      } else if (base64regex.test(path)) {
+        // source path is base64 encoded of float32 array
+        return readBase64Array(path);
       }
     } else if (Array.isArray(path)) {
       return Promise.all(path.map(read));

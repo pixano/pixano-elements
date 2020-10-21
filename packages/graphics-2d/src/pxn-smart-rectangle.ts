@@ -18,53 +18,6 @@ import { ShapeData } from "./types";
 
 const IOU_THRESHOLD = 0.5;
 
-
-@customElement("pxn-smart-rectangle" as any)
-export class SmartRectangle extends Rectangle {
-
-  mode: string = "edit";
-
-  @property({ type: Number }) scale = 1;
-
-  constructor() {
-    super();
-    this.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
-  }
-
-  get smartController() {
-    return (this.modes['smart-create'] as SmartRectangleCreateController);
-  }
-
-  public roiUp() {
-    const mode = this.mode;
-    if (mode === 'smart-create') {
-      this.smartController.roiUp();
-    }
-  }
-
-  public roiDown() {
-    const mode = this.mode;
-    if (mode === 'smart-create') {
-      this.smartController.roiDown();
-    }
-  }
-
-  async firstUpdated() {
-    super.firstUpdated();
-    await this.smartController.load();
-    console.info("Model loaded.");
-    this.dispatchEvent(new Event("ready"));
-  }
-
-  attributeChangedCallback(name: string, oldValue: any, newValue: any) {
-    const mode = this.mode;
-    if (mode === 'smart-create' && name === "scale") {
-      this.smartController.setScale(newValue);
-    }
-    super.attributeChangedCallback(name, oldValue, newValue);
-  }
-}
-
 /**
  * Inherit RectanglesManager to handle smart rectangle creation.
  */
@@ -202,5 +155,53 @@ class SmartRectangleCreateController extends ShapeCreateController {
       this.boundingBoxCreator.scaleRoiUp();
       this.roiDown();
     }
+  }
+}
+
+
+
+@customElement("pxn-smart-rectangle" as any)
+export class SmartRectangle extends Rectangle {
+
+  mode: string = "edit";
+
+  @property({ type: Number }) scale = 1;
+
+  constructor() {
+    super();
+    this.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
+  }
+
+  get smartController() {
+    return (this.modes['smart-create'] as SmartRectangleCreateController);
+  }
+
+  public roiUp() {
+    const mode = this.mode;
+    if (mode === 'smart-create') {
+      this.smartController.roiUp();
+    }
+  }
+
+  public roiDown() {
+    const mode = this.mode;
+    if (mode === 'smart-create') {
+      this.smartController.roiDown();
+    }
+  }
+
+  async firstUpdated() {
+    super.firstUpdated();
+    await this.smartController.load();
+    console.info("Model loaded.");
+    this.dispatchEvent(new Event("ready"));
+  }
+
+  attributeChangedCallback(name: string, oldValue: any, newValue: any) {
+    const mode = this.mode;
+    if (mode === 'smart-create' && name === "scale") {
+      this.smartController.setScale(newValue);
+    }
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 }
