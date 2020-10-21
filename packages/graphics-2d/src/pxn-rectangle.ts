@@ -12,20 +12,6 @@ import { RectangleShape } from './shapes-2d';
 import { observable } from '@pixano/core';
 
 /**
- * Inherit Canvas2d to handle rectangles.
- */
-@customElement('pxn-rectangle' as any)
-export class Rectangle extends Canvas2d {
-    constructor() {
-        super();
-        this.setController('create', new RectangleCreateController(this.renderer, this.shapes));
-        this.addEventListener('creating-rectangle', () => {
-            this.showTooltip('Drag and release to end rectangle.')
-        });
-    }
-}
-
-/**
  * Inherit ShapeCreateController to handle creation of rectangle shapes.
  */
 export class RectangleCreateController extends ShapeCreateController {
@@ -99,5 +85,19 @@ export class RectangleCreateController extends ShapeCreateController {
         shape.destroy();
         this.tmpShape = null;
         this.shapes.add(shape.data);
+    }
+}
+
+/**
+ * Inherit Canvas2d to handle rectangles.
+ */
+@customElement('pxn-rectangle' as any)
+export class Rectangle extends Canvas2d {
+    constructor() {
+        super();
+        this.setController('create', new RectangleCreateController(this.renderer, this.shapes));
+        this.addEventListener('creating-rectangle', () => {
+            this.showTooltip('Drag and release to end rectangle.')
+        });
     }
 }

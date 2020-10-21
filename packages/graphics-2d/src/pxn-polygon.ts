@@ -13,90 +13,6 @@ import { ShapeData } from './types';
 import { observable } from '@pixano/core';
 import { insertMidNode } from './utils';
 
-/**
- * Inherit Canvas2d to handle polygons.
- */
-@customElement('pxn-polygon' as any)
-export class Polygon extends Canvas2d {
-
-    constructor() {
-        super();
-        this.setController('create', new PolygonCreateController(this.renderer, this.shapes));
-        this.setController('edit', new PolygonsEditController(this.renderer,
-                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this)));
-        this.addEventListener('creating-polygon', () => {
-            this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
-        });
-    }
-
-    /**
-     * Group selected shapes into a single
-     * multi polygon.
-     */
-    merge() {
-        function getFlattenVertices(s: ShapeData["geometry"]): number[][] {
-            if (s.type === 'multi_polygon') {
-                return s.mvertices!.map((v) => {
-                    return v;
-                }) as number[][];
-            } else {
-                return [s.vertices];
-            }
-        }
-
-        if (this.targetShapes.size > 1) {
-            const shapes = [...this.targetShapes];
-            // split all selected groups
-            const newAnn: ShapeData = shapes.reduce((prev, curr) => {
-                // update geometry
-                const currVertices = getFlattenVertices(curr.geometry);
-                return {
-                    ...prev,
-                    id: prev.id + curr.id,
-                    geometry: {
-                        ...prev.geometry,
-                        mvertices: [...prev.geometry.mvertices!, ...currVertices]
-                    }
-                };
-            }, {
-                ...shapes[0],
-                geometry: {
-                    mvertices: [],
-                    vertices: [],
-                    type: 'multi_polygon'
-                }
-            });
-            this.shapes.add(observable(newAnn));
-            shapes.forEach((s) => {
-                this.shapes.delete(s);
-            });
-        }
-    }
-
-    /**
-     * Split multi polygon
-     * into multiple polygons.
-     */
-    split() {
-        if (this.targetShapes.size === 1) {
-            const shape = this.targetShapes.values().next().value;
-            if (shape.geometry.type === 'multi_polygon') {
-                shape.geometry.mvertices.forEach((v: number[], idx: number) => {
-                    this.shapes.add(observable({
-                        ...shape,
-                        id: shape.id + String(idx),
-                        geometry: {
-                            mvertices: [],
-                            vertices: v,
-                            type: 'polygon'
-                        }
-                    }));
-                });
-                this.shapes.delete(shape);
-            }
-        }
-    }
-}
 
 /**
  * Polygon interaction controls for polygon edition
@@ -388,5 +304,91 @@ class PolygonCreateController extends ShapeCreateController {
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;
+    }
+}
+
+
+/**
+ * Inherit Canvas2d to handle polygons.
+ */
+@customElement('pxn-polygon' as any)
+export class Polygon extends Canvas2d {
+
+    constructor() {
+        super();
+        this.setController('create', new PolygonCreateController(this.renderer, this.shapes));
+        this.setController('edit', new PolygonsEditController(this.renderer,
+                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this)));
+        this.addEventListener('creating-polygon', () => {
+            this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
+        });
+    }
+
+    /**
+     * Group selected shapes into a single
+     * multi polygon.
+     */
+    merge() {
+        function getFlattenVertices(s: ShapeData["geometry"]): number[][] {
+            if (s.type === 'multi_polygon') {
+                return s.mvertices!.map((v) => {
+                    return v;
+                }) as number[][];
+            } else {
+                return [s.vertices];
+            }
+        }
+
+        if (this.targetShapes.size > 1) {
+            const shapes = [...this.targetShapes];
+            // split all selected groups
+            const newAnn: ShapeData = shapes.reduce((prev, curr) => {
+                // update geometry
+                const currVertices = getFlattenVertices(curr.geometry);
+                return {
+                    ...prev,
+                    id: prev.id + curr.id,
+                    geometry: {
+                        ...prev.geometry,
+                        mvertices: [...prev.geometry.mvertices!, ...currVertices]
+                    }
+                };
+            }, {
+                ...shapes[0],
+                geometry: {
+                    mvertices: [],
+                    vertices: [],
+                    type: 'multi_polygon'
+                }
+            });
+            this.shapes.add(observable(newAnn));
+            shapes.forEach((s) => {
+                this.shapes.delete(s);
+            });
+        }
+    }
+
+    /**
+     * Split multi polygon
+     * into multiple polygons.
+     */
+    split() {
+        if (this.targetShapes.size === 1) {
+            const shape = this.targetShapes.values().next().value;
+            if (shape.geometry.type === 'multi_polygon') {
+                shape.geometry.mvertices.forEach((v: number[], idx: number) => {
+                    this.shapes.add(observable({
+                        ...shape,
+                        id: shape.id + String(idx),
+                        geometry: {
+                            mvertices: [],
+                            vertices: v,
+                            type: 'polygon'
+                        }
+                    }));
+                });
+                this.shapes.delete(shape);
+            }
+        }
     }
 }

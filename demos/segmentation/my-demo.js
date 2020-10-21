@@ -112,7 +112,7 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation image="${this.image}" .mask="${this.mask}" disablefullscreen>
+          <pxn-segmentation image="${this.image}" disablefullscreen>
           </pxn-segmentation>
           ${this.rightPanel}
         </main>`;
