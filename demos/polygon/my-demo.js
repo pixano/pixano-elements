@@ -24,6 +24,7 @@ class MyDemo extends LitElement {
 
   static get properties() {
     return {
+      isOpenedPolygon: { type: Boolean },
       mode: { type: String},
       image: { type: String }
     };
@@ -32,6 +33,7 @@ class MyDemo extends LitElement {
     super();
     this.mode = 'edit'; // overwrite default mode param of element
     this.image = "image.jpg";
+    this.isOpenedPolygon = true;
     window.addEventListener('keydown', (evt) => {
       if (evt.key == 'Alt') {
         this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
@@ -50,7 +52,8 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add polygon" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Add polygon" @click=${() => {this.element.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
+          <p class="icon" title="Add line" @click=${() => {this.element.isOpenedPolygon=true; this.element.mode = 'create'}}>${createPencil}</p>
           <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
           <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
         </div>
@@ -62,6 +65,7 @@ class MyDemo extends LitElement {
     return html`
         <main>
           <pxn-polygon  image="${this.image}"
+                        isOpenedPolygon="${this.isOpenedPolygon}"
                         disablefullscreen
                         @create=${this.onCreate}
                         @update=${this.onUpdate}

@@ -5,12 +5,13 @@
  * @license CECILL-C
  */
 
-import { customElement } from 'lit-element';
+ import { customElement, property } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapesEditController, ShapeCreateController } from './shapes-controllers';
-import { PolygonShape, Decoration } from './shapes-2d';
+import { PolygonShape, Decoration, Shape } from './shapes-2d';
+import { Renderer } from './renderer';
+import { ObservableSet, observable } from '@pixano/core';
 import { ShapeData } from './types';
-import { observable } from '@pixano/core';
 import { insertMidNode } from './utils';
 
 
@@ -26,6 +27,17 @@ class PolygonsEditController extends ShapesEditController {
     private isMidNodeTranslating: boolean = false;
 
     protected reclick: boolean = false;
+
+    public isOpenedPolygon: boolean = false;
+
+    constructor(renderer: Renderer,
+                graphics: Set<Shape>,
+                targetShapes: ObservableSet<ShapeData>,
+                dispatchEvent?: (event: Event) => boolean,
+                isOpenedPolygon: boolean = false) {
+        super(renderer, graphics, targetShapes, dispatchEvent);
+        this.isOpenedPolygon = isOpenedPolygon;
+    }
 
     bindings() {
         super.bindings();
@@ -197,6 +209,13 @@ class PolygonCreateController extends ShapeCreateController {
 
     private isDbClick: number = -1;
 
+    public isOpenedPolygon: boolean = false;
+
+    constructor(renderer: Renderer, shapes: ObservableSet<ShapeData>, isOpenedPolygon: boolean){
+        super(renderer, shapes);
+        this.isOpenedPolygon = isOpenedPolygon
+    }
+
     /**
      * Handle keyboard events
      */
@@ -260,7 +279,8 @@ class PolygonCreateController extends ShapeCreateController {
                         vertices: [pt.x, pt.y, pt.x, pt.y],
                         type: 'polygon'
                     },
-                    color: 'red'
+                    color: 'red',
+                    category: this.isOpenedPolygon ? 'opened' : 'closed'
                 } as ShapeData);
                 this.tmpShape = new PolygonShape(data) as PolygonShape;
                 window.addEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
@@ -314,14 +334,29 @@ class PolygonCreateController extends ShapeCreateController {
 @customElement('pxn-polygon' as any)
 export class Polygon extends Canvas2d {
 
+    @property({type: Boolean})
+    public isOpenedPolygon: boolean = false;
+
     constructor() {
         super();
-        this.setController('create', new PolygonCreateController(this.renderer, this.shapes));
+        this.setController('create', new PolygonCreateController(this.renderer, this.shapes, this.isOpenedPolygon));
         this.setController('edit', new PolygonsEditController(this.renderer,
-                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this)));
+                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this), this.isOpenedPolygon));
         this.addEventListener('creating-polygon', () => {
             this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
         });
+    }
+
+    /**
+     * Called on every property change
+     * @param changedProperty
+     */
+    protected updated(changedProperties: any) {
+      super.updated(changedProperties);
+      if (changedProperties.has('isOpenedPolygon')) {
+        (this.modes.create as PolygonCreateController).isOpenedPolygon = this.isOpenedPolygon;
+        (this.modes.edit as PolygonsEditController).isOpenedPolygon = this.isOpenedPolygon;
+      }
     }
 
     /**
