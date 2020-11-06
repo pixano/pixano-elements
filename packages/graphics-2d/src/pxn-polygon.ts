@@ -8,7 +8,7 @@
  import { customElement, property } from 'lit-element';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapesEditController, ShapeCreateController } from './shapes-controllers';
-import { PolygonShape, Decoration, Shape } from './shapes-2d';
+import { PolygonShape, Decoration } from './shapes-2d';
 import { Renderer } from './renderer';
 import { ObservableSet, observable } from '@pixano/core';
 import { ShapeData } from './types';
