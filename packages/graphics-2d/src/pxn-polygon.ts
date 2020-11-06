@@ -28,17 +28,6 @@ class PolygonsEditController extends ShapesEditController {
 
     protected reclick: boolean = false;
 
-    public isOpenedPolygon: boolean = false;
-
-    constructor(renderer: Renderer,
-                graphics: Set<Shape>,
-                targetShapes: ObservableSet<ShapeData>,
-                dispatchEvent?: (event: Event) => boolean,
-                isOpenedPolygon: boolean = false) {
-        super(renderer, graphics, targetShapes, dispatchEvent);
-        this.isOpenedPolygon = isOpenedPolygon;
-    }
-
     bindings() {
         super.bindings();
         this.onNodeDown = this.onNodeDown.bind(this);
@@ -341,7 +330,7 @@ export class Polygon extends Canvas2d {
         super();
         this.setController('create', new PolygonCreateController(this.renderer, this.shapes, this.isOpenedPolygon));
         this.setController('edit', new PolygonsEditController(this.renderer,
-                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this), this.isOpenedPolygon));
+                                                    this.graphics, this.targetShapes, this.dispatchEvent.bind(this)));
         this.addEventListener('creating-polygon', () => {
             this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
         });
@@ -355,7 +344,6 @@ export class Polygon extends Canvas2d {
       super.updated(changedProperties);
       if (changedProperties.has('isOpenedPolygon')) {
         (this.modes.create as PolygonCreateController).isOpenedPolygon = this.isOpenedPolygon;
-        (this.modes.edit as PolygonsEditController).isOpenedPolygon = this.isOpenedPolygon;
       }
     }
 
