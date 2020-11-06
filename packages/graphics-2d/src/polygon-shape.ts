@@ -134,7 +134,7 @@ export class PolygonShape extends Shape {
     }
 
     checkOpenedPolygon() {
-      return this.data.category === 'opened';
+      return this.data.geometry.isOpened;
     }
 
     draw() {

@@ -17,6 +17,8 @@ export interface Geometry {
   dim?: number;
   // in case of multi polygon
   mvertices?: number[][];
+  // in case of polygon
+  isOpened?: boolean;
 }
 
 export interface ShapeData {
