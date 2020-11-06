@@ -277,10 +277,10 @@ class PolygonCreateController extends ShapeCreateController {
                     id: 'tmp',
                     geometry: {
                         vertices: [pt.x, pt.y, pt.x, pt.y],
-                        type: 'polygon'
+                        type: 'polygon',
+                        isOpened: this.isOpenedPolygon
                     },
                     color: 'red',
-                    category: this.isOpenedPolygon ? 'opened' : 'closed'
                 } as ShapeData);
                 this.tmpShape = new PolygonShape(data) as PolygonShape;
                 window.addEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
