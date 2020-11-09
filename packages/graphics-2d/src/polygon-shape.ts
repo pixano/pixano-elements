@@ -6,7 +6,7 @@
  */
 
 import { Graphics as PIXIGraphics,
-    Circle as PIXICircle } from 'pixi.js';
+    Circle as PIXICircle, Polygon as PIXIPolygon } from 'pixi.js';
 import { Decoration, Shape } from './shape';
 import { observable } from '@pixano/core';
 import { isValid } from './misc';
@@ -41,6 +41,13 @@ export class PolygonShape extends Shape {
 
     get lastY() {
         return this.data.geometry.vertices[this.data.geometry.vertices.length - 1] * this.scaleY;
+    }
+
+    /**
+     * Is polygon actually a polyline
+     */
+    get isOpen() {
+        return this.data.geometry.isOpened;
     }
 
     addNodeListener(type: string, fn: (arg: any) => void) {
@@ -119,6 +126,25 @@ export class PolygonShape extends Shape {
         this.midnodes.forEach((n) => { n.destroy(); this.nodeContainer.removeChild(n)});
     }
 
+    /**
+     * Draw hit polygon: for each poly point create point (+10px,+10px),
+     * then points (-10px,-10px).
+     * @param points polyline points
+     */
+    getHitAreaForOpenPolygon(points: any[]) {
+      const th = 10;
+      return new PIXIPolygon(
+        points.reduce((result, value, index) => {
+          result.splice(index, 0, value - th)
+          if (index % 2 === 0)
+            result.splice(index + 1, 0, value + th);
+          else
+            result.splice(index + 2, 0, value + th);
+          return result;
+          }, [])
+      );
+    }
+
     draw() {
         let points = this.data.geometry.vertices.map((c, idx) => {
             if (idx % 2 === 0)
@@ -126,16 +152,28 @@ export class PolygonShape extends Shape {
             else
             return Math.round(c * this.scaleY);
         });
-        points = points.concat([points[0], points[1]]);
+        if(!this.isOpen){
+          // closes the polygon by adding a last point equal to the first point
+          points = points.concat([points[0], points[1]]);
+        }
         this.area.clear();
         this.area.lineStyle(1, this.hex, 1, 0.5, true);
-        if (this.data.geometry.vertices.length > 4) {
-            this.area.beginFill(this.hex, 0.15);
-            this.area.drawPolygon(points);
-            this.area.endFill();
-        } else if (this.data.geometry.vertices.length === 4) {
+        if (this.data.geometry.vertices.length === 4) {
             this.area.moveTo(points[0], points[1]);
             this.area.lineTo(points[2], points[3]);
+            if(this.isOpen){
+              this.area.hitArea = this.getHitAreaForOpenPolygon(points);
+            }
+        } else if (this.data.geometry.vertices.length > 4 && this.isOpen) {
+            for (let i = 0; i <= this.data.geometry.vertices.length - 4; i = i + 2) {
+              this.area.moveTo(points[i], points[i + 1]);
+              this.area.lineTo(points[i + 2], points[i + 3]);
+            }
+            this.area.hitArea = this.getHitAreaForOpenPolygon(points);
+        } else if (this.data.geometry.vertices.length > 4) {
+          this.area.beginFill(this.hex, 0.15);
+          this.area.drawPolygon(points);
+          this.area.endFill();
         }
         this.box.clear();
         this.controls.forEach((n) => n.clear());
@@ -151,11 +189,16 @@ export class PolygonShape extends Shape {
             this.drawBox();
         } else if (this.state === Decoration.Contour || this.state === Decoration.Nodes) {
             this.box.lineStyle(1, 0XFFFFFF, 1, 0.5, true);
-            if (this.data.geometry.vertices.length > 4) {
-                this.box.drawPolygon(points);
-            } else if (this.data.geometry.vertices.length === 4) {
-                this.box.moveTo(points[0], points[1]);
-                this.box.lineTo(points[2], points[3]);
+            if (this.data.geometry.vertices.length === 4) {
+                this.area.moveTo(points[0], points[1]);
+                this.area.lineTo(points[2], points[3]);
+            } else if (this.data.geometry.vertices.length > 4 && this.isOpen) {
+                for (let i = 0; i <= this.data.geometry.vertices.length - 4; i = i + 2) {
+                  this.area.moveTo(points[i], points[i + 1]);
+                  this.area.lineTo(points[i + 2], points[i + 3]);
+                }
+            } else if (this.data.geometry.vertices.length > 4) {
+              this.area.drawPolygon(points);
             }
             if (this.state === Decoration.Nodes) {
                 // NB: setting/unsetting interactive does not
@@ -196,6 +239,7 @@ export class PolygonShape extends Shape {
     }
 
     public isValid(): boolean {
+        if (this.isOpen && this.data.geometry.vertices.length > 3) return true;
         if (this.data.geometry.vertices.length < 6)  return false;
         if (!isValid(this.data.geometry.vertices)) {
             return false;
