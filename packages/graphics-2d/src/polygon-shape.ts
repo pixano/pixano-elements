@@ -43,6 +43,13 @@ export class PolygonShape extends Shape {
         return this.data.geometry.vertices[this.data.geometry.vertices.length - 1] * this.scaleY;
     }
 
+    /**
+     * Is polygon actually a polyline
+     */
+    get isOpen() {
+        return this.data.geometry.isOpened;
+    }
+
     addNodeListener(type: string, fn: (arg: any) => void) {
         this.nodeListeners.set(type, fn);
         this.applyNodeListeners();
@@ -119,6 +126,11 @@ export class PolygonShape extends Shape {
         this.midnodes.forEach((n) => { n.destroy(); this.nodeContainer.removeChild(n)});
     }
 
+    /**
+     * Draw hit polygon: for each poly point create point (+10px,+10px),
+     * then points (-10px,-10px).
+     * @param points polyline points
+     */
     getHitAreaForOpenPolygon(points: any[]) {
       const th = 10;
       return new PIXIPolygon(
@@ -133,10 +145,6 @@ export class PolygonShape extends Shape {
       );
     }
 
-    checkOpenedPolygon() {
-      return this.data.geometry.isOpened;
-    }
-
     draw() {
         let points = this.data.geometry.vertices.map((c, idx) => {
             if (idx % 2 === 0)
@@ -144,7 +152,7 @@ export class PolygonShape extends Shape {
             else
             return Math.round(c * this.scaleY);
         });
-        if(!this.checkOpenedPolygon()){
+        if(!this.isOpen){
           // closes the polygon by adding a last point equal to the first point
           points = points.concat([points[0], points[1]]);
         }
@@ -153,10 +161,10 @@ export class PolygonShape extends Shape {
         if (this.data.geometry.vertices.length === 4) {
             this.area.moveTo(points[0], points[1]);
             this.area.lineTo(points[2], points[3]);
-            if(this.checkOpenedPolygon()){
+            if(this.isOpen){
               this.area.hitArea = this.getHitAreaForOpenPolygon(points);
             }
-        } else if (this.data.geometry.vertices.length > 4 && this.checkOpenedPolygon()) {
+        } else if (this.data.geometry.vertices.length > 4 && this.isOpen) {
             for (let i = 0; i <= this.data.geometry.vertices.length - 4; i = i + 2) {
               this.area.moveTo(points[i], points[i + 1]);
               this.area.lineTo(points[i + 2], points[i + 3]);
@@ -184,7 +192,7 @@ export class PolygonShape extends Shape {
             if (this.data.geometry.vertices.length === 4) {
                 this.area.moveTo(points[0], points[1]);
                 this.area.lineTo(points[2], points[3]);
-            } else if (this.data.geometry.vertices.length > 4 && this.checkOpenedPolygon()) {
+            } else if (this.data.geometry.vertices.length > 4 && this.isOpen) {
                 for (let i = 0; i <= this.data.geometry.vertices.length - 4; i = i + 2) {
                   this.area.moveTo(points[i], points[i + 1]);
                   this.area.lineTo(points[i + 2], points[i + 3]);
@@ -231,7 +239,7 @@ export class PolygonShape extends Shape {
     }
 
     public isValid(): boolean {
-        if (this.checkOpenedPolygon() && this.data.geometry.vertices.length > 3) return true;
+        if (this.isOpen && this.data.geometry.vertices.length > 3) return true;
         if (this.data.geometry.vertices.length < 6)  return false;
         if (!isValid(this.data.geometry.vertices)) {
             return false;
