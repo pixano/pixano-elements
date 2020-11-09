@@ -1,6 +1,6 @@
 {
   "name": "demo-graph",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "Demo for graph",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -21,7 +21,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "0.4.2",
+    "@pixano/graphics-2d": "0.4.3",
     "lit-element": "2.4.0"
   }
 }
