@@ -140,6 +140,10 @@ Note: `pxn-rectangle` inherits from `pxn-canvas-2d` so all properties in `pxn-ca
 
 Note: `pxn-polygon` inherits from `pxn-canvas-2d` so all properties in `pxn-canvas-2d` will be available on `pxn-polygon`.
 
+| Name             | Type      | Default  | Description
+| ---------------- | --------- | -------- |------------
+| `isOpenedPolygon`| `Boolean` | `false ` | Whether to open polygon into polylines
+
 #### pxn-segmentation
 
 Note: `pxn-segmentation` inherits from `pxn-canvas` so all properties in `pxn-canvas` will be available on `pxn-segmentation`.
