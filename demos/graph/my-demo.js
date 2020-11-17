@@ -6,15 +6,16 @@
 
 import {css, html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d';
-import { settings } from '@pixano/graphics-2d/lib/pxn-graph';
+import { demoStyles,
+  fullscreen,
+  createPencil,
+  pointer,
+  zoomIn,
+  zoomOut } from '@pixano/core/lib/svg';
 
 class MyDemo extends LitElement {
   static get styles() {
-    return [css`
-    main {
-      display: flex;
-      height: 100%;
-    }`];
+    return demoStyles;
   }
 
   static get properties() {
@@ -48,9 +49,14 @@ class MyDemo extends LitElement {
 
   get rightPanel() {
     return html`
-      <div class="right-panel">
-        <button @click=${() => this.element.mode = 'create'}>Create</button>
-        <button @click=${() => this.element.mode = 'edit'}>Edit</button>
+    <div class="right-panel">
+        <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
+        <div class="icons">
+          <p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
+          <p class="icon" title="Add graph" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+          <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+        </div>
       </div>
     `;
   }
@@ -74,9 +80,9 @@ class MyDemo extends LitElement {
 
   firstUpdated() {
     this.element.input = "image.jpg";
-    settings.radius = 3;
-    settings.edges = [[0,1],[1,2]];
-    settings.vertexNames = ["t1","t2","t3"]
+    this.element.settings.radius = 3;
+    this.element.settings.edges = [[0,1],[1,2]];
+    this.element.settings.vertexNames = ["t1","t2","t3"];
   }
 
   onCreate() {

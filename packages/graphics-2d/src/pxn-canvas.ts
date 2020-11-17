@@ -200,7 +200,7 @@ export class Canvas extends GenericDisplay {
    * Set the image to display, from a Image Element
    */
   set data(img: HTMLImageElement) {
-    if (img !== this.renderer.image) {
+    if (img && img !== this.renderer.image) {
       this.renderer.image = img;
     }
   }
@@ -234,13 +234,6 @@ export class Canvas extends GenericDisplay {
    */
   protected onPaste(text: string): string | void {
     return text;
-  }
-
-  /**
-   * Invoked on image change.
-   */
-  protected onImageChanged() {
-    // Implement your own onImageChanged method.
   }
 
   /**
@@ -320,9 +313,8 @@ export class Canvas extends GenericDisplay {
    */
   protected updated(changedProperties: any) {
     if (changedProperties.has('image') && this.image != null) {
-      this.loadImageFromSrc(this.image).then((img) => {
-        this.data = img;
-      });
+      console.warn("WARNING! Obsolete property. Property 'image' has been deprecated, please use the new 'input' instead!");
+      this.input = this.image;
     }
     if (changedProperties.has('hideLabels') && this.hideLabels !== undefined) {
       this.renderer.showLabels = !this.hideLabels;

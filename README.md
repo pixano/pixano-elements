@@ -25,6 +25,7 @@ Also, be sure to have `git` available in your PATH, `npm` might need it (You can
     sudo apt install nodejs
     sudo apt install npm
     ```
+  Or install it with snap: `sudo snap install node`
 
 - #### Other Operating Systems
   You can find more information about the installation on the [official Node.js website](https://nodejs.org/) and the [official NPM website](https://npmjs.org/).
