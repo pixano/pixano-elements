@@ -2,7 +2,7 @@
 
 Pixano Elements
 ===============
-[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/) [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) ![Node.js CI](https://github.com/pixano/pixano-elements/workflows/Node.js%20CI/badge.svg)
+[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/) [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) [![Node.js CI](https://github.com/pixano/pixano-elements/workflows/Node.js%20CI/badge.svg)](https://github.com/pixano/pixano-elements/workflows/Node.js%20CI/badge.svg)
 
 
 Pixano Elements - Library of web components dedicated to data annotation tasks. A complete and ready-to-use annotation application is available at `https://github.com/pixano/pixano-app`.
