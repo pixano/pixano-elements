@@ -9,7 +9,7 @@ import { Graphics as PIXIGraphics, Rectangle as PIXIRectangle } from 'pixi.js';
 import { Decoration, Shape } from './shape';
 import { ShapeData } from './types';
 
-interface IGraphSettings {
+export interface IGraphSettings {
   radius: number;
   colorFillType: "unique" | "order";
   orderedColors: number[];
