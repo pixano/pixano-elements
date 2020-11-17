@@ -11,7 +11,7 @@ import { Canvas2d } from './pxn-canvas-2d';
 import { ShapeCreateController, ShapesEditController } from './shapes-controllers';
 import { GraphShape, Decoration } from './shapes-2d';
 import { ShapeData } from './types';
-import { settings } from './graph-shape';
+import { settings, IGraphSettings } from './graph-shape';
 
 export { settings };
 
@@ -20,6 +20,8 @@ export { settings };
  */
 @customElement('pxn-graph' as any)
 export class Graph extends Canvas2d {
+
+    public settings: IGraphSettings = settings;
 
     private selectedNodeIdx: number = -1;
 

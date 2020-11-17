@@ -17,6 +17,7 @@ export class RectangleShape extends Shape {
       const width = this.scaleX;
       const height = this.scaleY;
       this.area.clear();
+      this.area.removeChildren();
       this.area.beginFill(this.hex, 0.15);
       this.area.lineStyle(1, this.hex, 1, 0.5, true);
       const left = Math.round(this.data.geometry.vertices[0] * width);
