@@ -81,7 +81,7 @@ export class Renderer extends PIXI.Application {
      * to fit renderer HTML view.
      */
     set image(img: HTMLImageElement) {
-        if (img === this.htmlImageElement) {
+        if (img === this.htmlImageElement || img === null) {
             return;
         }
         const base = new PIXI.BaseTexture(img);
