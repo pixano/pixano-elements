@@ -6,23 +6,19 @@
  */
 
 import { ShapeData } from './types';
-import { Shape, RectangleShape, PolygonShape, MultiPolygonShape, GraphShape } from './shapes-2d';
+import { Graphic, GraphicRectangle, GraphicPolygon, GraphicMultiPolygon, GraphicGraph } from './graphics';
 
 export const rgbToHex = (r: number, g: number, b: number) => {
     return (r << 16) + (g << 8) + (b | 0);
 }
 
-export const dataToShape = (s: ShapeData): Shape => {
-    function switchGraphic(d: ShapeData) {
-        switch(s.geometry.type) {
-            case 'rectangle': return new RectangleShape(d);
-            case 'polygon': return new PolygonShape(d);
-            case 'multi_polygon': return new MultiPolygonShape(d);
-            case 'graph': return new GraphShape(d);
-            default:
-                return new RectangleShape(s);
-        }
+export const dataToShape = (s: ShapeData): Graphic => {
+    switch(s.geometry.type) {
+        case 'rectangle': return new GraphicRectangle(s);
+        case 'polygon': return new GraphicPolygon(s);
+        case 'multi_polygon': return new GraphicMultiPolygon(s);
+        case 'graph': return new GraphicGraph(s);
+        default:
+            return new GraphicRectangle(s);
     }
-    const obj: Shape = switchGraphic(s);
-    return obj;
 }

@@ -10,7 +10,7 @@ import { demoStyles,
   fullscreen,
   createPencil,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 const colors = [
   'blue', 'green', 'purple',
@@ -27,14 +27,10 @@ class MyDemo extends LitElement {
       image: {type: String}
     };
   }
+
   constructor() {
     super();
     this.image = 'image.jpg';
-    window.addEventListener('keydown', (evt) => {
-      if (evt.key == 'Alt') {
-        this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
-      }
-    });
   }
 
   get rightPanel() {
@@ -62,8 +58,9 @@ class MyDemo extends LitElement {
           <pxn-rectangle  image="${this.image}"
                           disablefullscreen
                           @create=${this.onCreate}
-                          @update=${this.onUpdate}
-                          @selection=${this.onSelection}>
+                          @update=${(e) => console.log('update ids', e.detail)}
+                          @delete=${(e) => console.log('delete', e.detail)}
+                          @selection=${(e) => console.log('selection', e.detail)}>
           </pxn-rectangle>
           ${this.rightPanel}
         </main>`;
@@ -73,14 +70,7 @@ class MyDemo extends LitElement {
     const newObj = evt.detail;
     newObj.color = colors[Math.floor(Math.random() * colors.length)];
     this.element.mode = 'edit';
-  }
-
-  onUpdate(evt) {
-    console.log('update ids', evt.detail);
-  }
-
-  onSelection(evt) {
-    console.log('selection ids', evt.detail);
+    console.log("create", evt.detail.id)
   }
 
   get element() {

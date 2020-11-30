@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "source-map-loader": "^0.2.4",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11"
+    "webpack": "4.44.2",
+    "webpack-cli": "3.3.12"
   },
   "dependencies": {
     "@pixano/core": "0.4.3",
