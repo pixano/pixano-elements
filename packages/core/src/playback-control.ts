@@ -155,6 +155,14 @@ export class PlaybackControl extends LitElement {
       return this.shadowRoot!.querySelector('mwc-slider')!;
     }
 
+    updated(changedProps: any) {
+      if (changedProps.has('current')) {
+        try {
+          this.slider?.layout();
+        } catch {}
+      }
+    }
+
 
     /**
      * Render the element template.
