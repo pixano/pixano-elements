@@ -379,7 +379,7 @@ export class Tracking extends Rectangle {
     get selectionSection() {
         return html`
         <div class="card">
-            <p style="display: inline-flex; width: 100%; height: 20px;">
+            <p style="display: inline-flex; width: -webkit-fill-available; height: 20px;">
                 <span>Tracks</span>
                 <span style="display: inline-flex; align-items: center;">${this.selectedTracks.size === 2 ? html`
                     <mwc-icon-button title="Switch track" @click=${() => this.switchTrack(this.selectedTracks)} icon="shuffle"></mwc-icon-button>
