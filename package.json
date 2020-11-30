@@ -1,9 +1,10 @@
 {
   "name": "pixano-elements",
   "private": true,
-  "version": "0.4.3",
+  "version": "0.5.1",
   "devDependencies": {
     "es-dev-server": "^1.46.5",
+    "glob": "7.1.6",
     "lerna": "^3.20.2",
     "typedoc": "^0.17.4",
     "rimraf": "^2.6.2",
