@@ -2,7 +2,7 @@ const glob = require( 'glob' );
 const fs = require('fs');
 
 // new version number
-const VERSION = "0.5.1";
+const VERSION = "0.5.2";
 
 // util function to update version in given package.json
 function updatePackage(filename) {

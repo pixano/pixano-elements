@@ -1,6 +1,6 @@
 {
   "name": "demo-polygon",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "description": "Demo for polygon",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -17,8 +17,8 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "0.5.1",
-    "@pixano/core": "0.5.1",
+    "@pixano/graphics-2d": "0.5.2",
+    "@pixano/core": "0.5.2",
     "lit-element": "2.4.0"
   }
 }
