@@ -81,7 +81,7 @@ export abstract class GenericDisplay extends LitElement {
           this.loader = new Loader();
           this.loader.load(source).then ((data) => {
             this.notifyInputLoaded(data);
-          })
+          });
         } else {
           // list of strings
           const loader = new SequenceLoader();
@@ -92,7 +92,7 @@ export abstract class GenericDisplay extends LitElement {
                   const match = path.match(regex);
                   const timestamp = match && match.length ? parseInt(match.pop()!) : 0;
                   return {path, timestamp}
-                } ) ;
+                });
           loader.init(frames)
                 .then((length) => {
                   this.maxFrameIdx = Math.max(length - 1, 0);
@@ -103,6 +103,7 @@ export abstract class GenericDisplay extends LitElement {
                   }
                 });
         }
+        this.requestUpdate();
       }
 
       get timestamp(): number {

@@ -3,6 +3,8 @@
 <head>
   <!-- <script type="module" src="dist/graphics-2d.min.js"></script> -->
   <script type="module" src="../packages/graphics-2d/dist/graphics-2d.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
+  <script src="https://unpkg.com/file-saver@2.0.2/dist/FileSaver.min.js"></script>
 </head>
 <style>
     body {
@@ -12,6 +14,26 @@
     }
 </style>
 <body>
-    <pxn-rectangle image="https://i.imgur.com/BHsjThB.jpg"></pxn-rectangle>
+    <button onclick="s()">Save</button>
+    <input onchange="l(event)" type="file" accept="image/*" multiple/>
+    <pxn-rectangle main image="https://i.imgur.com/BHsjThB.jpg"></pxn-rectangle>
 </body>
+<script>
+    // listen to element events
+    const el = document.querySelector('[main]');
+    el.addEventListener('create', (e) => console.log(e.detail));
+
+    // load image
+    function l({target}) {
+        const srcs = Object.entries(target.files).map(([, f], idx) => URL.createObjectURL(f))
+        el.input = srcs.length > 1 ? srcs : srcs[0];
+    }
+
+    // save labels
+    function s() {
+        const j = JSON.stringify([...el.shapes], null, 1);
+        const b = new Blob([j],{type: "text/plain;charset=utf-8"})
+        saveAs(b, "out.json")
+    }
+</script>
 </html>

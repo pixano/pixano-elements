@@ -198,7 +198,7 @@ export class VideoCache {
     if (typeof path === 'string') {
       if (path.endsWith('bin')) {
         return readPcl(path);
-      } else if (path.match(/\.(jpeg|jpg|gif|png)$|data:image/) != null) {
+      } else if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) != null) {
         // source ends with .[jpeg,jpg,gif,png] or is base64
         return readImage(path);
       } else if (base64regex.test(path)) {
