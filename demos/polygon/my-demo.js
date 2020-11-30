@@ -11,7 +11,7 @@ import { demoStyles,
   createPencil,
   polyline,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 const colors = [
   'red', 'blue', 'green', 'purple',
@@ -35,11 +35,6 @@ class MyDemo extends LitElement {
     this.mode = 'edit'; // overwrite default mode param of element
     this.image = "image.jpg";
     this.isOpenedPolygon = true;
-    window.addEventListener('keydown', (evt) => {
-      if (evt.key == 'Alt') {
-        this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
-      }
-    });
   }
 
   fullScreen() {
@@ -53,8 +48,8 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add polygon" @click=${() => {this.element.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
-          <p class="icon" title="Add line" @click=${() => {this.element.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
+          <p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
+          <p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
           <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
           <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
         </div>
@@ -66,11 +61,12 @@ class MyDemo extends LitElement {
     return html`
         <main>
           <pxn-polygon  image="${this.image}"
-                        isOpenedPolygon="${this.isOpenedPolygon}"
+                        ?isOpenedPolygon="${this.isOpenedPolygon}"
                         disablefullscreen
                         @create=${this.onCreate}
-                        @update=${this.onUpdate}
-                        @selection=${this.onSelection}>
+                        @update=${(e) => console.log('update ids', e.detail)}
+                        @delete=${(e) => console.log('delete', e.detail)}
+                        @selection=${(e) => console.log('selection', e.detail)}>
           </pxn-polygon>
           ${this.rightPanel}
         </main>`;
@@ -80,14 +76,7 @@ class MyDemo extends LitElement {
     const newObj = evt.detail;
     newObj.color = colors[Math.floor(Math.random() * colors.length)];
     this.element.mode = 'edit';
-  }
-
-  onUpdate(evt) {
-    console.log('update', evt.detail);
-  }
-
-  onSelection(evt) {
-    console.log('selection ids', evt.detail);
+    console.log('create', newObj.id);
   }
 
   get element() {

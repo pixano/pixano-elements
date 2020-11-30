@@ -7,14 +7,15 @@
 
 import { LitElement, html, css, customElement, property} from 'lit-element';
 import "@material/mwc-slider/mwc-slider";
+import { triLeft, triRight } from './style';
 
 @customElement('playback-control' as any)
 export class PlaybackControl extends LitElement {
 
-    @property({type: String})
+    @property({type: Number})
     public max: number = 0;
 
-    @property({type: String})
+    @property({type: Number})
     private current: number = 0;
 
     // utils boolean to force maximal slider fps
@@ -33,6 +34,8 @@ export class PlaybackControl extends LitElement {
             width: 100%;
             height: 50px;
             z-index: 1;
+            background: #f9f9f9;
+            --mdc-theme-secondary: #9C27B0;
             -webkit-touch-callout: none; /* iOS Safari */
             -webkit-user-select: none; /* Safari */
              -khtml-user-select: none; /* Konqueror HTML */
@@ -56,17 +59,17 @@ export class PlaybackControl extends LitElement {
             align-items: center;
             display: flex;
           }
-          .flip {
-            -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
+          .button > svg {
+            height: 18px;
           }
           .frameidx {
+            color: #777777;
+            font-size: 14px;
+            -webkit-transform: scale(1.1, 1);
             width: 55px;
             align-items: center;
             display: flex;
             margin: auto;
-            padding: 0;
-            padding-right: 15px;
           }
         `
       ];
@@ -120,7 +123,7 @@ export class PlaybackControl extends LitElement {
 
     onSliderChange() {
       this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value, bubbles: false}));
     }
 
     firstUpdated() {
@@ -134,21 +137,18 @@ export class PlaybackControl extends LitElement {
     }
 
     setNext() {
-      this.slider.value = Math.min(this.slider.value + 1, this.max);
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+      this.current = Math.min(this.slider.value + 1, this.max);
+      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
     }
 
     setBefore() {
-      this.slider.value = Math.max(this.slider.value - 1, 0);
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+      this.current = Math.max(this.slider.value - 1, 0);
+      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
     }
 
     public set(value: number) {
-      this.slider.value = value;
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+      this.current = value;
+      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
     }
 
     get slider() {
@@ -167,13 +167,13 @@ export class PlaybackControl extends LitElement {
          * with the `html` helper function:
          */
         return html`
-          <p class="button flip" @click=${this.setBefore}>&#10148;</p>
-          <p class="button" @click=${this.setNext}>&#10148;</p>
+          <p class="button" style="fill: ${this.current > 0 ? "black": "#d0d0d0"}" @click=${this.setBefore}>${triLeft}</p>
+          <p class="button" style="fill: ${this.current < this.max ? "black": "#d0d0d0"}" @click=${this.setNext}>${triRight}</p>
           <p class="frameidx">${this.current}/${this.max}</p>
           <mwc-slider @input=${this.onSliderInput}
                       @change=${this.onSliderChange}
                       discrete
-                      markers
+                      value=${this.current}
                       max="${this.max}"
                       step="1"></mwc-slider>
         `;

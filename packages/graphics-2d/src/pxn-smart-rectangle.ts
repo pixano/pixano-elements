@@ -7,14 +7,11 @@
 
 import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
-import { observable, ObservableSet, utils } from '@pixano/core';
+import { observable, utils } from '@pixano/core';
 import { customElement, property } from "lit-element";
-import { ShapeCreateController } from "./shapes-controllers";
+import { ShapeCreateController } from "./controller";
 import { Rectangle } from "./pxn-rectangle";
 import { Graphics as PIXIGraphics } from "pixi.js";
-
-import { Renderer } from "./renderer";
-import { ShapeData } from "./types";
 
 const IOU_THRESHOLD = 0.5;
 
@@ -27,11 +24,8 @@ class SmartRectangleCreateController extends ShapeCreateController {
 
   private roi: PIXIGraphics = new PIXIGraphics();
 
-  constructor(
-    renderer: Renderer = new Renderer(),
-    shapes: ObservableSet<ShapeData> = new ObservableSet()
-  ) {
-    super(renderer, shapes);
+  constructor(props?: Partial<ShapeCreateController>) {
+    super(props);
     this.boundingBoxCreator = new PixelToBoundingBox();
     this.renderer.stage.addChild(this.roi);
     this.onRootDown = this.onRootDown.bind(this);
@@ -169,7 +163,7 @@ export class SmartRectangle extends Rectangle {
 
   constructor() {
     super();
-    this.setController('smart-create', new SmartRectangleCreateController(this.renderer, this.shapes));
+    this.setController('smart-create', new SmartRectangleCreateController({ renderer: this.renderer, shapes: this.shapes }));
   }
 
   get smartController() {

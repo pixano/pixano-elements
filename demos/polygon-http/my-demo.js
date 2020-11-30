@@ -10,7 +10,7 @@ import { demoStyles,
   fullscreen,
   createPencil,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 const colors = [
   'red', 'blue', 'green', 'purple',

@@ -19,5 +19,7 @@ module.exports = {
         enforce: "pre"
       }
     ]
-  }
+  },
+  stats: { warnings:false },
+  performance: { hints: false },
 };
