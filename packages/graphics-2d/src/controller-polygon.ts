@@ -196,16 +196,21 @@ export class PolygonCreateController extends ShapeCreateController {
         this.isOpenedPolygon = props.isOpenedPolygon || false;
     }
 
+    bindings() {
+        super.bindings();
+        this.onKeyDownCreate = this.onKeyDownCreate.bind(this);
+    }
+
     /**
      * Handle keyboard events
      */
-    protected onKeyDownCreate = (event: KeyboardEvent) => {
+    protected onKeyDownCreate (event: KeyboardEvent) {
         switch (event.key) {
             case 'Enter': {
                 // close path and create object
                 this.isCreating = false;
                 this.createPolygon();
-                window.removeEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
+                window.removeEventListener('keydown', this.onKeyDownCreate, false);
                 break;
             }
             case 'Escape': {
@@ -217,7 +222,7 @@ export class PolygonCreateController extends ShapeCreateController {
                     this.tmpShape = null;
                     break;
                 }
-                window.removeEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
+                window.removeEventListener('keydown', this.onKeyDownCreate, false);
                 break;
             }
             case 'Backspace': {
@@ -228,10 +233,6 @@ export class PolygonCreateController extends ShapeCreateController {
                 }
             }
         }
-    }
-
-    protected keyHandlers = {
-        CREATEDOWN: this.onKeyDownCreate.bind(this)
     }
 
     protected onRootDown(evt: PIXI.InteractionEvent) {
@@ -263,7 +264,7 @@ export class PolygonCreateController extends ShapeCreateController {
                     color: 'red',
                 } as ShapeData);
                 this.tmpShape = new GraphicPolygon(data) as GraphicPolygon;
-                window.addEventListener('keydown', this.keyHandlers.CREATEDOWN, false);
+                window.addEventListener('keydown', this.onKeyDownCreate, false);
                 this.renderer.stage.addChild(this.tmpShape);
                 this.tmpShape.scaleX = this.renderer.imageWidth;
                 this.tmpShape.scaleY = this.renderer.imageHeight;
@@ -304,5 +305,6 @@ export class PolygonCreateController extends ShapeCreateController {
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;
+        this.emitCreate();
     }
 }

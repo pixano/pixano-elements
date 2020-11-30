@@ -23,7 +23,7 @@ export class Polygon extends Canvas2d {
     constructor() {
         super();
         // interactions with polygons (creation, edition)
-        this.setController('create', new PolygonCreateController({ renderer: this.renderer, shapes: this.shapes, isOpenedPolygon: this.isOpenedPolygon }));
+        this.setController('create', new PolygonCreateController({ renderer: this.renderer, shapes: this.shapes, isOpenedPolygon: this.isOpenedPolygon, dispatchEvent: this.dispatchEvent }));
         this.setController('edit', new PolygonsEditController( { renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent }));
         this.addEventListener('creating-polygon', () => {
             this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
