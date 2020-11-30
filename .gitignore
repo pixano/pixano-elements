@@ -7,7 +7,9 @@ node_modules
 /lerna-debug.log
 /gh-pages
 packages/*/lib
+packages/*/dist
 /packages/*/*.js
+!/packages/*/webpack.config.js
 /packages/*/*.js.map
 /packages/*/*.d.ts
 /packages/*/src/*-css.ts

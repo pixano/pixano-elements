@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "build:umd": "webpack --config webpack.config.js",
     "watch": "tsc --watch",
     "clean": "tsc --build --clean"
   }
