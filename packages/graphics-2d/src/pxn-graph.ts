@@ -23,7 +23,7 @@ export class Graph extends Canvas2d {
 
     constructor() {
         super();
-        this.setController('create', new GraphCreateController({ renderer: this.renderer, shapes: this.shapes }))
+        this.setController('create', new GraphCreateController({ renderer: this.renderer, shapes: this.shapes, dispatchEvent: this.dispatchEvent }))
             .setController('edit', new GraphsUpdateController({ renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent }));
     }
 

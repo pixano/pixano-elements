@@ -157,5 +157,6 @@ export class GraphCreateController extends ShapeCreateController {
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;
+        this.emitCreate();
     }
 }

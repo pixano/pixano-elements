@@ -63,8 +63,8 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-graph @create=${this.onCreate}
-                      enableOutsideDrawing
+          <pxn-graph  enableOutsideDrawing
+                      @create=${this.onCreate}
                       @update=${this.onUpdate}
                       @selection=${this.onSelection}
                       mode=${this.mode}>
@@ -82,6 +82,7 @@ class MyDemo extends LitElement {
 
   onCreate() {
     this.element.mode = 'edit';
+    console.log('create');
   }
 
   onUpdate() {
