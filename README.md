@@ -10,6 +10,12 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 > IMPORTANT: The Pixano Web Components are a work in progress and subject to major changes until 1.0 release.
 
+[Playcode demo](https://playcode.io/709884/)
+
+[Website demos](https://pixano.cea.fr/3d-bounding-box/)
+
+[Features video](https://www.youtube.com/watch?v=z5T2HhnugJo)
+
 ## Requirements
 
 For development, you will only need Node.js installed in your environement.
