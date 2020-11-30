@@ -10,7 +10,17 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 > IMPORTANT: The Pixano Web Components are a work in progress and subject to major changes until 1.0 release.
 
+[Playcode demo](https://playcode.io/709884/)
+
+[Website demos](https://pixano.cea.fr/3d-bounding-box/)
+
+[Features video](https://www.youtube.com/watch?v=z5T2HhnugJo)
+
+Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.
+
 ## Requirements
+
+Pixano requires WebGL to be activated in your browser. If you see the following error in you console `WebGL unsupported in this browser`, please [activate](https://superuser.com/questions/836832/how-can-i-enable-webgl-in-my-browser) it.
 
 For development, you will only need Node.js installed in your environement.
 
