@@ -1,6 +1,6 @@
 {
   "name": "@pixano/graphics-2d",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Pixano graphics 2d module",
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
@@ -25,8 +25,8 @@
     "@material/mwc-icon-button-toggle": "0.19.1",
     "@material/mwc-list": "0.19.1",
     "@material/mwc-select": "0.19.1",
-    "@pixano/ai": "0.5.0",
-    "@pixano/core": "0.5.0",
+    "@pixano/ai": "0.5.1",
+    "@pixano/core": "0.5.1",
     "lit-element": "2.4.0",
     "on-change": "^2.0.1",
     "pixi.js": "5.3.3"
