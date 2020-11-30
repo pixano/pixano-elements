@@ -16,7 +16,11 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 [Features video](https://www.youtube.com/watch?v=z5T2HhnugJo)
 
+Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.
+
 ## Requirements
+
+Pixano requires WebGL to be activated in your browser. If you see the following error in you console `WebGL unsupported in this browser`, please [activate](https://superuser.com/questions/836832/how-can-i-enable-webgl-in-my-browser) it.
 
 For development, you will only need Node.js installed in your environement.
 
