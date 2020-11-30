@@ -32,6 +32,8 @@ export abstract class GenericDisplay extends LitElement {
       @property({type: String})
       public timestampRule: 'index' | 'filename' = 'index';
 
+      protected authorizedType: 'image' | 'pcl' | 'all' = 'all';
+
       private _source: string | string[] = '';
 
       static get properties() {
@@ -78,13 +80,13 @@ export abstract class GenericDisplay extends LitElement {
         
         // case of unique data file
         if (typeof source === 'string') {
-          this.loader = new Loader();
+          this.loader = new Loader(this.authorizedType);
           this.loader.load(source).then ((data) => {
             this.notifyInputLoaded(data);
           });
         } else {
           // list of strings
-          const loader = new SequenceLoader();
+          const loader = new SequenceLoader(this.authorizedType);
           const regex = /(?<=_)(\d+?)(?=\.)/g;
           this.loader = loader;
           const frames = this.timestampRule == 'index' ? source.map( (path, timestamp) => ({timestamp, path})) || []:

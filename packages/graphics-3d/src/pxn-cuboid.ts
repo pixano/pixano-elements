@@ -51,6 +51,7 @@ export class CuboidEditor extends GenericDisplay {
 
   constructor() {
     super();
+    this.authorizedType = 'pcl';
     this.viewer.scene.add(this.pclPlot);
     this.viewer.scene.add(this.groundPlot);
 

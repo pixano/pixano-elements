@@ -184,6 +184,10 @@ export class VideoCache {
     });
   }
 
+  /**
+   * Read base64 string into float32 array
+   * @param path base64 encoded of float32 array
+   */
   function readBase64Array(path: string): Promise<Float32Array> {
     const blob = atob( path );
     const aryBuf = new ArrayBuffer( blob.length );
@@ -193,20 +197,29 @@ export class VideoCache {
     return Promise.resolve(new Float32Array(aryBuf));
   }
   
-  function read(path: string | string[]): Promise<any> {
-    const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+  /**
+   * Load media string based on authorized types
+   * @param path media string
+   * @param type authorized media type
+   */
+  function read(path: string | string[], type: 'image' | 'pcl' | 'all' = 'all'): Promise<any> {
     if (typeof path === 'string') {
-      if (path.endsWith('bin')) {
-        return readPcl(path);
-      } else if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) != null) {
-        // source ends with .[jpeg,jpg,gif,png] or is base64
-        return readImage(path);
-      } else if (base64regex.test(path)) {
-        // source path is base64 encoded of float32 array
-        return readBase64Array(path);
+      if ((type == 'image' || type == 'all')) {
+        // we must only accept images
+        if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) != null) {
+          return readImage(path);
+        }
+      } else if ((type == 'pcl' || type == 'all')) {
+        // we must only accept point clouds
+        const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+          if (path.match(/\.(bin)$|blob:/) != null) {
+            return readPcl(path);
+          } else if (base64regex.test(path)) {
+            return readBase64Array(path);
+          }
       }
     } else if (Array.isArray(path)) {
-      return Promise.all(path.map(read));
+      return Promise.all(path.map((p) => read(p, type)));
     }
     return Promise.resolve();
   }
@@ -215,9 +228,16 @@ export class VideoCache {
   * Handle loading of view(s)
   */
   export class Loader extends EventTarget {
+
+    private authorizedType: 'image' | 'pcl' | 'all' = 'all';
+
+    constructor(type: 'image' | 'pcl' | 'all' = 'all') {
+      super();
+      this.authorizedType = type;
+    }
   
     load(path: string): Promise<any> {
-      return read(path);
+      return read(path, this.authorizedType);
     }
   }
   
@@ -234,9 +254,11 @@ export class VideoCache {
     private cache: any;
     public frames: {timestamp: number, path: string}[];
     private _eventAbortCompleted: Event;
+    private authorizedType: 'image' | 'pcl' | 'all' = 'all';
   
-    constructor() {
+    constructor(type: 'image' | 'pcl' | 'all' = 'all') {
       super();
+      this.authorizedType = type;
       this.bufferSize = 2500; // number of frames max
       // this.loadedFrameNumber = 0;
       this.isLoading = false;
@@ -324,7 +346,7 @@ export class VideoCache {
         this.isLoading = false;
       } else {
           return new Promise((resolve) => {
-            return read(path).then((data: any) => {
+            return read(path, this.authorizedType).then((data: any) => {
               self.cache.setCacheByTimestamp({ timestamp, data });
               this.dispatchEvent(new CustomEvent('loaded_frame_index', {detail: idx}));
               if (idx === startBufferIdx) {
