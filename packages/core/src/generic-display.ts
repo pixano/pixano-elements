@@ -4,10 +4,10 @@
  * @license CECILL-C
 */
 
-import { html, css, LitElement, property } from 'lit-element';
+import { html, LitElement, property } from 'lit-element';
 import './playback-control';
 import { SequenceLoader, Loader } from './data-loader';
-
+import { genericStyles } from './style';
 
 /**
  * Utility class to load images of sequences of images given
@@ -23,35 +23,32 @@ export abstract class GenericDisplay extends LitElement {
       // additionnal properties for sequence loader
       public maxFrameIdx: number | null = null;
       public pendingLoad: boolean | null = null;
+
+      @property({type: Number})
       public targetFrameIdx: number | null = null;
+
+      // either use list item index as timestamp
+      // or look for timestamp value in filename
+      @property({type: String})
+      public timestampRule: 'index' | 'filename' = 'index';
 
       private _source: string | string[] = '';
 
       static get properties() {
         return {
-          maxFrameIdx: { type: Number },
-          targetFrameIdx: { type: Number }
+          maxFrameIdx: { type: Number }
         };
       }
 
-      static get styles() {
-        return [css`
-          #container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-          }
-          [name="slider"] {
-            height: 50px;
-            flex: 0 0 50px;
-            display: flex;
-          }
-          playback-control {
-            background: var(--theme-color);
-            color: var(--font-color);
-          }
-        `];
+      /**
+       * Returns video playback slider element.
+       */
+      get playback() {
+        return this.shadowRoot?.querySelector('playback-control');
+      }
+
+      public static get styles() {
+        return [genericStyles];
       }
 
       constructor() {
@@ -88,8 +85,14 @@ export abstract class GenericDisplay extends LitElement {
         } else {
           // list of strings
           const loader = new SequenceLoader();
+          const regex = /(?<=_)(\d+?)(?=\.)/g;
           this.loader = loader;
-          const frames = source.map( (path, timestamp) => ({timestamp, path})) || [];
+          const frames = this.timestampRule == 'index' ? source.map( (path, timestamp) => ({timestamp, path})) || []:
+                source.map( (path) => {
+                  const match = path.match(regex);
+                  const timestamp = match && match.length ? parseInt(match.pop()!) : 0;
+                  return {path, timestamp}
+                } ) ;
           loader.init(frames)
                 .then((length) => {
                   this.maxFrameIdx = Math.max(length - 1, 0);
@@ -99,6 +102,19 @@ export abstract class GenericDisplay extends LitElement {
                     this.frame = 0;
                   }
                 });
+        }
+      }
+
+      get timestamp(): number {
+        return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frame].timestamp : 0;
+      }
+
+      set timestamp(timestamp: number){
+        if (this.loader instanceof SequenceLoader) {
+          const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
+          if (frameIdx != -1) {
+            this.frame = frameIdx;
+          }
         }
       }
 
@@ -134,7 +150,15 @@ export abstract class GenericDisplay extends LitElement {
       }
 
       public nextFrame() {
-        if (this.isSequence) {
+        return new Promise((resolve) => {
+          if (!this.isSequence) {
+            resolve();
+          }
+          const obs = () => {
+            this.removeEventListener('load', obs);
+            resolve();
+          }
+          this.addEventListener('load', obs);
           if (this.playback) {
             this.playback.setNext();
           } else {
@@ -144,7 +168,8 @@ export abstract class GenericDisplay extends LitElement {
               this.frame = currIdx + 1;
             }
           }
-        }
+        })
+        
       }
 
       /**
@@ -167,13 +192,6 @@ export abstract class GenericDisplay extends LitElement {
         this.dispatchEvent(new CustomEvent('timestamp', { detail: this.targetFrameIdx }));
       }
 
-      /**
-       * Returns video playback slider element.
-       */
-      get playback() {
-        return this.shadowRoot!.querySelector('playback-control');
-      }
-
       display() {
         return html``;
       }
@@ -194,6 +212,7 @@ export abstract class GenericDisplay extends LitElement {
           ${this.display()}
           <slot name="slider" id="slot" style="display: ${this.isSequence ? 'block': 'none'};">
                 <playback-control @update=${this.onSliderChange}
+                                  current=${this.targetFrameIdx}
                                   style="display: ${this.isSequence ? 'flex': 'none'};"
                                   max=${this.maxFrameIdx}></playback-control>
           </slot>

@@ -6,13 +6,13 @@
  * @license CECILL-C
  */
 
-import { html, css, customElement, property } from 'lit-element';
+import { html, customElement, property } from 'lit-element';
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { GenericDisplay } from '@pixano/core/lib/generic-display';
 import { Renderer } from './renderer';
 import { ViewControls } from './view-controls';
-
-const fullscreen = html`<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.414 18.586l2.586-2.586v8h-8l2.586-2.586-5.172-5.172 2.828-2.828 5.172 5.172zm-13.656-8l2.828-2.828-5.172-5.172 2.586-2.586h-8v8l2.586-2.586 5.172 5.172zm10.828-8l-2.586-2.586h8v8l-2.586-2.586-5.172 5.172-2.828-2.828 5.172-5.172zm-8 13.656l-2.828-2.828-5.172 5.172-2.586-2.586v8h8l-2.586-2.586 5.172-5.172z"/></svg>`;
+import { style2d } from './style';
+import { fullscreen } from '@pixano/core/lib/style';
 
 /**
  * Parent class that displays image
@@ -50,125 +50,12 @@ export class Canvas extends GenericDisplay {
   protected keyHandlerBind: (evt: any) => void = this.keyBinding.bind(this);
 
   static get styles() {
-    return super.styles.concat([
-      css`
-      :host {
-        width: 100%;
-        height: 100%;
-        min-width: 100px;
-        position: relative;
-        display: block;
-      }
-      .canvas-container {
-        height: 100%;
-        width: 100%;
-        position: relative;
-        background-repeat: no-repeat;
-        margin: 0px;
-        overflow: hidden;
-      }
-      .corner {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        right: 0px;
-        margin-bottom: 10px;
-        margin-left: 10px;
-        margin-right: 10px;
-        display: flex;
-        position: absolute;
-        margin-top: 10px;
-        height: 24px;
-        width: 24px;
-        z-index: 1;
-        color: black;
-        background: white;
-        fill: #79005D;
-        padding: 10px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 18px;
-        -webkit-transition: all 0.5s ease;
-          -moz-transition: all 0.5s ease;
-            -o-transition: all 0.5s ease;
-            -ms-transition: all 0.5s ease;
-                transition: all 0.5s ease;
-      }
-      .corner:hover {
-        background: #79005D;
-        fill: white;
-        color: white;
-      }
-      #snackbar {
-        visibility: hidden;
-        min-width: 250px;
-        margin-left: -125px;
-        background-color: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 2px;
-        padding: 16px;
-        position: fixed;
-        z-index: 1;
-        left: 50%;
-        bottom: 30px;
-        font-size: 17px;
-        -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none; /* Safari */
-             -khtml-user-select: none; /* Konqueror HTML */
-               -moz-user-select: none; /* Old versions of Firefox */
-                -ms-user-select: none; /* Internet Explorer/Edge */
-                    user-select: none; /* Non-prefixed version, currently
-                                          supported by Chrome, Opera and Firefox */
-      }
-
-      #snackbar.show {
-        visibility: visible;
-        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        animation: fadein 0.5s, fadeout 0.5s 2.5s;
-      }
-
-      @-webkit-keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
-      }
-
-      @keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
-      }
-
-      @-webkit-keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
-      }
-
-      @keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
-      }
-      #zoom {
-        right: 70px;
-        font-size: 15px;
-        font-weight: bold;
-        text-align: center;
-        background: #79005D;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .hidden {
-        opacity: 0;
-      }`
-    ]);
+    return style2d;
   }
 
   constructor() {
     super();
+    this.dispatchEvent = this.dispatchEvent.bind(this);
     this.viewControls.addEventListener("zoom", (evt:any) => {this.zoom = evt.detail});
     this.addEventListener('load', (evt: any) => {
       this.data = evt.detail;

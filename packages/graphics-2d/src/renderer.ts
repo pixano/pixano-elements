@@ -13,8 +13,6 @@ import { colorToHex, hexToRgb255 } from './utils';
 // 16 samplers are disallowed on Mesa drivers to avoid crashing.
 PIXI.settings.SPRITE_MAX_TEXTURES = Math.min(PIXI.settings.SPRITE_MAX_TEXTURES , 16);
 
-import { Shape } from './shapes-2d';
-
 interface RendererOptions {
     color?: string;
     container?: HTMLDivElement
@@ -328,7 +326,7 @@ export class Renderer extends PIXI.Application {
         arr.push(el);
     }
 
-    public delete(s: Shape) {
+    public delete(s: PIXI.Container) {
         s.destroy();
     }
 

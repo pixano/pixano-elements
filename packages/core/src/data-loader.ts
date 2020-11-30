@@ -169,6 +169,7 @@ export class VideoCache {
       image.onload = () => {
         resolve(image);
       };
+      image.crossOrigin = "anonymous";
       image.src = dataUrl;
     });
   }
@@ -231,7 +232,7 @@ export class VideoCache {
     private isLoading: boolean;
     private loadStop: boolean;
     private cache: any;
-    private frames: {timestamp: number, path: string}[];
+    public frames: {timestamp: number, path: string}[];
     private _eventAbortCompleted: Event;
   
     constructor() {

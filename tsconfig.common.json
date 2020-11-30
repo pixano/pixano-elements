@@ -12,11 +12,12 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     // Build options
-    "sourceMap": true,
-    "declaration": true,
+    "sourceMap": true, // source maps (useful for debugging the TS source code)
+    "declaration": true, // types declarations (idem)
     "skipLibCheck": true,  // don't report errors from dependencies
     "declarationMap": true,
     "allowSyntheticDefaultImports": true,
+    "removeComments": true,
     "moduleResolution": "node",
     "plugins": [
       {

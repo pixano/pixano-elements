@@ -10,8 +10,9 @@ import { Rectangle } from './pxn-rectangle';
 import { Segmentation } from './pxn-segmentation';
 import { Graph } from './pxn-graph';
 import { SmartRectangle } from './pxn-smart-rectangle';
+import { Tracking } from './pxn-tracking';
 
-export { Graph, Polygon, Rectangle, Segmentation, SmartRectangle };
+export { Graph, Polygon, Rectangle, Segmentation, SmartRectangle, Tracking };
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -20,5 +21,6 @@ declare global {
     'pxn-segmentation': Segmentation;
     'pxn-graph': Graph;
     'pxn-smart-rectangle': SmartRectangle;
+    'pxn-tracking': Tracking;
   }
 }

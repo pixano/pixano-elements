@@ -14,6 +14,7 @@
     "bootstrap": "lerna bootstrap --hoist --strict --force-local",
     "clearall": "npm run clean && rimraf -rf node_modules",
     "build": "lerna run build",
+    "build:umd": "lerna run build:umd",
     "watch": "lerna run watch --parallel",
     "clean": "lerna run clean",
     "test": "lerna run test",

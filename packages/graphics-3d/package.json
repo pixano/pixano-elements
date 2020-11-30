@@ -12,7 +12,7 @@
     "directory": "packages/graphics-3d"
   },
   "devDependencies": {
-    "typescript": "^3.8.3"
+    "typescript": "3.8.3"
   },
   "dependencies": {
     "@pixano/core": "0.4.3",

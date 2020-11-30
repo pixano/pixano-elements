@@ -9,11 +9,11 @@
 import { customElement, property } from 'lit-element';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
-import { ShapesEditController } from './shapes-controllers';
+import { ShapesEditController } from './controller';
 import { observable } from '@pixano/core';
 import { Canvas } from './pxn-canvas';
-import { Shape } from './shapes-2d';
-import { Controller } from './base-controller';
+import { Graphic } from './graphics';
+import { Controller } from './controller-base';
 import { dataToShape } from './adapter';
 
 
@@ -40,16 +40,18 @@ export class Canvas2d extends Canvas {
   // set of 2d shapes to be drawn by the element
   private _shapes: ObservableSet<ShapeData>;
 
+  // set of selected 2d shapes
   public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
 
-  public graphics: Set<Shape> = new Set();
+  // set of shapes drawn on the canvas
+  public graphics: Set<Graphic> = new Set();
 
   public modes: {
     [key: string]: Controller;
   };
 
   // can be replaced by a custom dataToShape function
-  public dataToShape: ((s: ShapeData) => Shape) = dataToShape;
+  public dataToShape: ((s: ShapeData) => Graphic) = dataToShape;
 
   constructor() {
     super();
@@ -63,22 +65,32 @@ export class Canvas2d extends Canvas {
       });
     });
     this.modes = {
-      edit: new ShapesEditController(this.renderer, this.graphics, this.targetShapes, this.dispatchEvent.bind(this))
+      edit: new ShapesEditController({ renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent })
     }
     this.renderer.onImageSizeChange = () => {
       // this.renderer.clearLabels();
       // this.graphics.clear();
-      this.graphics.forEach((s: Shape) => {
+      this.graphics.forEach((s: Graphic) => {
           s.scaleX = this.renderer.imageWidth || 100;
           s.scaleY = this.renderer.imageHeight || 100;
           s.draw();
       });
     }
-    // Order important
-    // Other solution: call shapes.clear() on shapes change
+
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key == "Alt") {
+        this.switchMode();
+      }
+    })
+
     this.observeShapeForDisplay();
-    this.observeShapeForNotification();
     this.modes[this.mode].activate();
+  }
+
+  switchMode() {
+    const modes = Object.keys(this.modes);
+    const currentIdx = modes.findIndex((m) => m === this.mode);
+    this.mode = modes[(currentIdx + 1) % modes.length];
   }
 
   // observable set of selected shape ids.
@@ -163,16 +175,17 @@ export class Canvas2d extends Canvas {
                   obj.draw();
               });
               // reapply interaction controller to new objects
-              if (this.modes[this.mode]) {
-                  this.modes[this.mode].reset();
-              }
+              this.modes[this.mode]?.reset();
               break;
           }
           case 'delete': {
               const obj = [...this.graphics].find(({data}) => data === value);
               if (obj) {
+                  // remove from list of graphics
                   this.graphics.delete(obj);
+                  // remove from renderer
                   this.renderer.labelLayer.removeChild(obj);
+                  // reset selected shape list
                   this.targetShapes.clear();
               }
               break;
@@ -201,8 +214,12 @@ export class Canvas2d extends Canvas {
         break;
       }
       case 'Delete': {
-        this.targetShapes.forEach((s) => this.shapes.delete(s));
-        this.targetShapes.clear();
+        // delete selected shapes and send notification
+        const deletedIds = this.selectedShapeIds;
+        [...this.targetShapes].forEach((s) => {
+          this.shapes.delete(s)
+        });
+        this.notifyDelete(deletedIds);
         break;
       }
       case 'Escape': {
@@ -213,13 +230,10 @@ export class Canvas2d extends Canvas {
   }
 
   public setController(mode: string, controller: Controller) {
-    if (mode === this.mode && this.modes[mode]) {
-        // remove active base controller
-        this.modes[mode].deactivate();
-        this.modes[mode] = controller;
-        this.modes[mode].activate();
-    } else {
-        this.modes[mode] = controller;
+    this.modes[mode]?.deactivate(); // deactive already existing mode in cas active
+    this.modes[mode] = controller;
+    if (mode == this.mode) {
+      this.modes[mode].activate();
     }
     return this;
   }
@@ -230,18 +244,17 @@ export class Canvas2d extends Canvas {
    * 2. Apply interactions of new mode
    * @param mode string
    */
-  public setMode(mode: string) {
-    if (mode !== this.mode) {
-        if (this.modes[this.mode]) {
-            // Restore default state
-            this.modes[this.mode].deactivate();
-        }
-        if (this.modes[mode]) {
-            // Set up new mode state
-            this.modes[mode].activate();
-        }
-        this.mode = mode;
+  public setMode(prevMode: string, newMode: string) {
+    if (prevMode === newMode) {
+      return;
     }
+    if (this.modes[prevMode]) {
+        // Restore default state
+        this.modes[prevMode].deactivate();
+    }
+    // Set up new mode state
+    this.modes[newMode]?.activate();
+    this.mode = newMode;
 }
 
 
@@ -260,26 +273,10 @@ export class Canvas2d extends Canvas {
                                     : (currIdx - 1 + shapes.length) % shapes.length;
     const nextShape = shapes[nextIdx];
     if (nextShape) {
-      this.targetShapes.set([nextShape])
+      this.targetShapes.set([nextShape]);
+      // send selection notification
+      this.notifySelection(this.selectedShapeIds)
     }
-  }
-
-  protected observeShapeForNotification() {
-    // Trigger notification on shape
-    // selection(s) changed.
-    observe(this.targetShapes, (prop) => {
-      if (prop !== 'set') {
-        this.notifySelection([...this.targetShapes].map((t) => t.id));
-      }
-    });
-    observe(this.shapes, (event: any, shape?: ShapeData) => {
-      if (event === 'add' && shape) {
-        this.notifyCreate(shape);
-      }
-      if (event === 'delete' && shape) {
-        this.notifyDelete([shape.id]);
-      }
-    });
   }
 
   /**
@@ -302,21 +299,10 @@ export class Canvas2d extends Canvas {
     super.updated(changedProperties);
     if (changedProperties.has('mode') && this.mode) {
       const prevMode = changedProperties.get('mode');
-      if (this.modes[prevMode]) {
-        // Restore default state of previous mode
-        this.modes[prevMode].deactivate();
-      }
-      if (this.modes[this.mode]) {
-          // Set up new mode state
-          // Use reset instead of activate
-          // to avoid another activate conflict
-          this.modes[this.mode].reset();
-          this.dispatchEvent(new Event('mode'));
-      }
+      this.setMode(prevMode, this.mode);
     }
     if (changedProperties.has('enableOutsideDrawing')) {
       this.renderer.enableOutsideDrawing = this.enableOutsideDrawing;
-      (this.modes.edit as ShapesEditController).enableOutsideDrawing = this.enableOutsideDrawing;
     }
   }
 
