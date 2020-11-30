@@ -12,14 +12,19 @@
     "directory": "packages/graphics-2d"
   },
   "devDependencies": {
-    "typescript": "^3.8.3"
+    "awesome-typescript-loader": "5.2.1",
+    "terser-webpack-plugin": "4.2.2",
+    "typescript": "3.8.3",
+    "webpack": "4.44.2",
+    "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@material/mwc-button": "0.18.0",
-    "@material/mwc-dialog": "0.18.0",
-    "@material/mwc-icon-button-toggle": "0.18.0",
-    "@material/mwc-list": "0.18.0",
-    "@material/mwc-select": "0.18.0",
+    "@material/mwc-button": "0.19.1",
+    "@material/mwc-dialog": "0.19.1",
+    "@material/mwc-icon-button": "0.19.1",
+    "@material/mwc-icon-button-toggle": "0.19.1",
+    "@material/mwc-list": "0.19.1",
+    "@material/mwc-select": "0.19.1",
     "@pixano/ai": "0.4.3",
     "@pixano/core": "0.4.3",
     "lit-element": "2.4.0",
@@ -29,6 +34,7 @@
   "scripts": {
     "build": "tsc --build",
     "watch": "tsc --watch",
-    "clean": "tsc --build --clean"
+    "clean": "tsc --build --clean",
+    "build:umd": "webpack --config webpack.config.js"
   }
 }

@@ -18,7 +18,7 @@ import { demoStyles,
   decrease,
   upload,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 const colorMap = {
   'person': 'blue',

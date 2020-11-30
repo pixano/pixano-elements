@@ -2,13 +2,22 @@
 
 Set of web components for image and video annotations.
 
-## Import 
+## Installation
+
+```bash
+npm install @pixano/graphics-2d
+```
+Include with a module bundler like [rollup](http://rollupjs.org/) or [webpack](https://webpack.github.io/) using ES6 modules:
 
 ```javascript
 // import all 2d elements
 import "@pixano/graphics-2d";
 // or a specific element
 import "@pixano/graphics-2d/lib/pxn-rectangle";
+```
+The [UMD](https://github.com/umdjs/umd) build is also available on [unpkg](http://unpkg.com/):
+```html
+<script src="https://unpkg.com/@pixano/graphics-2d/dist/graphics-2d.min.js"></script>
 ```
 
 ## Example: Rectangle annotation

@@ -14,7 +14,7 @@ import { demoStyles,
   union,
   lock,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 class MyDemo extends LitElement {
   static get styles() {

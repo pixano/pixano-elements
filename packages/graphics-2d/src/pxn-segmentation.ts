@@ -6,9 +6,9 @@
  */
 
 import { customElement, property} from 'lit-element';
-import { MaskManager, CreateController } from './mask-manager';
-import { GMask } from './shapes-2d';
-import { MaskVisuMode } from './mask';
+import { MaskManager, CreateController } from './controller-mask';
+import { GMask } from './graphics';
+import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
 
 /**

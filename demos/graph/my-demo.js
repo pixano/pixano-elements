@@ -11,7 +11,7 @@ import { demoStyles,
   createPencil,
   pointer,
   zoomIn,
-  zoomOut } from '@pixano/core/lib/svg';
+  zoomOut } from '@pixano/core/lib/style';
 
 class MyDemo extends LitElement {
   static get styles() {
@@ -40,11 +40,6 @@ class MyDemo extends LitElement {
     this.disableMultiSelection = false;
     this.disableTabulation = false;
     this.hideLabels = false;
-    window.addEventListener('keydown', (evt) => {
-      if (evt.key == 'Alt') {
-        this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
-      }
-    });
   }
 
   get rightPanel() {
