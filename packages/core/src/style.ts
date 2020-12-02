@@ -32,7 +32,7 @@ export const polyline = html`<svg xmlns="http://www.w3.org/2000/svg" version="1"
 export const pointer = html`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 30 37.5" xml:space="preserve"><g transform="translate(-30 -320)"><polygon xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" points="55.287,336.168 38,321 38,344 44.299,339.402 48.763,349.428 52.221,347.889 47.757,337.863  "/></g></svg>`;
 export const triRight = html`<svg width="24pt" height="24pt" viewBox="0 0 24 24"><polygon points="0 0, 24 12, 0 24"/></svg>`;
 export const triLeft = html`<svg width="24pt" height="24pt" viewBox="0 0 24 24"><polygon points="0 12, 24 0, 24 24"/></svg>`;
-
+export const borderOuter = html`<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path d="M13 7h-2v2h2V7zm0 4h-2v2h2v-2zm4 0h-2v2h2v-2zM3 3v18h18V3H3zm16 16H5V5h14v14zm-6-4h-2v2h2v-2zm-4-4H7v2h2v-2z"/></svg>`;
 
 export const demoStyles = css`
   main {

@@ -1,6 +1,6 @@
 {
   "name": "demo-tracking",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "private": true,
   "description": "Demo for tracking",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@material/mwc-button": "0.19.1",
-    "@pixano/core": "0.5.6",
-    "@pixano/graphics-2d": "0.5.6",
+    "@pixano/core": "0.5.7",
+    "@pixano/graphics-2d": "0.5.7",
     "lit-element": "2.4.0"
   }
 }
