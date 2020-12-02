@@ -53,8 +53,8 @@ export class GMask extends PIXIContainer {
     // [r, g, b, isInstance (instance = 1, semantic = 0)]
     public clsMap: Map<number, [number, number, number, number]> = new Map([
       [0, [0,0,0,0]],
-      [1, [255,0,0,0]],
-      [2, [0,255,0,1]]
+      [1, [255,0,0,1]],
+      [2, [0,255,0,0]]
     ]);
 
     constructor() {

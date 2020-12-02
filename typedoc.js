@@ -3,17 +3,20 @@ module.exports = {
     out: 'docs',
     exclude: [
         '**/node_modules/**',
+        '**/lib/**',
+        '**/dist/**',
         '**/tests/*.ts',
     ],
     lernaExclude: [
-        'common',
         'demo-cuboid',
         'demo-rectangle',
         'demo-polygon',
+        'demo-polygon-http',
         'demo-segmentation',
+        'demo-segmentation-interactive',
         'demo-smart-rectangle',
         'demo-graph',
-        'demo-graph-rect'
+        'demo-tracking'
     ],
     name: '@pixano',
     excludePrivate: true,

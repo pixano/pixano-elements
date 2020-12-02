@@ -83,8 +83,8 @@ class MyDemo extends LitElement {
       ctx.putImageData(pixels, 0, 0, 0, 0, width, height);
       this.mask = pixels;
     }
-    this.element.maskVisuMode = 'INSTANCE';
-    this.element.targetClass = 2;
+    // this.element.maskVisuMode = 'INSTANCE'; // 'SEMANTIC'
+    // this.element.targetClass = 2;
   }
 
   fullScreen() {
