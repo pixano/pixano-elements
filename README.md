@@ -10,7 +10,7 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 > IMPORTANT: The Pixano Web Components are a work in progress and subject to major changes until 1.0 release.
 
-[Playcode demo](https://playcode.io/709884/)
+[Playcode demo](https://playcode.io/709884/) ([interactive-segmentation](https://playcode.io/710654/), [cuboid](https://playcode.io/709984/), [rectangle](https://playcode.io/709884/))
 
 [Website demos](https://pixano.cea.fr/3d-bounding-box/)
 
