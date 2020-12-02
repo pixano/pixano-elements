@@ -249,6 +249,32 @@ export class GMask extends PIXIContainer {
       this.colorMask.texture.update();
     }
 
+    public updateByMaskInRoi(mask: Float32Array, box: [number, number, number, number], newVal: [number, number, number]) {
+        const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
+        const width = box[2]-box[0];
+        const height = box[3]-box[1];
+        const color = this.pixelToColor(...newVal);
+        const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
+        const [id1, id2, cls] = newVal;
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
+                if (mask[y * width + x] == 1) {
+                    this.orig!.data[4 * idx] = id1;
+                    this.orig!.data[4 * idx + 1] = id2;
+                    this.orig!.data[4 * idx + 2] = cls;
+                    this.orig!.data[4 * idx + 3] = 255;
+                    pixels.data[4 * idx] = color[0];
+                    pixels.data[4 * idx + 1] = color[1];
+                    pixels.data[4 * idx + 2] = color[2];
+                    pixels.data[4 * idx + 3] = alpha;
+                }
+            }
+        }
+        this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
+        this.colorMask.texture.update();
+    }
+
     public updateByMask(mask: Float32Array, pos: {x: number, y: number}, newVal: [number, number, number]) {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
         let size = Math.sqrt(mask.length);

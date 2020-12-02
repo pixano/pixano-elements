@@ -15,7 +15,6 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-dialog';
 import '@material/mwc-list/mwc-list-item';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
-import { Tracker } from '@pixano/ai/lib/tracker';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
 import { getShape,
@@ -46,9 +45,6 @@ export class Tracking extends Rectangle {
 
     @property({ type: Object })
     public selectedTracks: Set<TrackData> = new Set();
-
-    //@ts-ignore
-    private tracker = new Tracker();
     
     categories: any[] = [
         { name: 'car', color: "green", properties: [] },
