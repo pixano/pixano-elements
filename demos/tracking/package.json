@@ -23,7 +23,6 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@material/mwc-button": "0.19.1",
     "@pixano/core": "0.5.8",
     "@pixano/graphics-2d": "0.5.8",
     "lit-element": "2.4.0"

@@ -5,7 +5,6 @@
 */
 import {html, LitElement} from 'lit-element';
 import '@pixano/graphics-2d';
-import '@material/mwc-button';
 import { demoStyles } from '@pixano/core/lib/style';
 
 class MyDemo extends LitElement {
@@ -31,10 +30,10 @@ class MyDemo extends LitElement {
         this.element.mode = 'tracking';
       }
     });
-    this.element.categories = [
-      { name: 'car', color: "green", properties: [] },
-      { name: 'truck', color: "#eca0a0", properties: [{name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],persistent: false, default: 'standing'}]}
-    ];
+    // this.element.categories = [
+    //   { name: 'car', color: "green", properties: [] },
+    //   { name: 'truck', color: "#eca0a0", properties: [{name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],persistent: false, default: 'standing'}]}
+    // ];
   }
 
 

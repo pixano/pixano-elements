@@ -47,8 +47,11 @@ export class Tracking extends Rectangle {
     public selectedTracks: Set<TrackData> = new Set();
     
     categories: any[] = [
-        { name: 'car', color: "green", properties: [] },
-        { name: 'person', color: "#eca0a0", properties: [{name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],persistent: false, default: 'standing'}]}
+        { name: 'person', color: "#eca0a0", properties: [
+            {name: 'posture', type: 'dropdown', enum: ['straight', 'inclined', 'squat', 'sit'], persistent: false, default: 'straight'},
+            {name: 'occlusion', type: 'dropdown', enum: [0, 0.25, 0.50, 0.75], persistent: false, default: 0}
+        ]},
+        { name: 'car', color: "green", properties: [] }
     ];
 
     static get styles() {
@@ -69,7 +72,6 @@ export class Tracking extends Rectangle {
             .item {
                 display: flex;
                 margin-top: 10px;
-                height: 100px;
                 border-bottom: 1px solid #e2e2e2;
             }
             .item mwc-icon-button,mwc-icon-button-toggle {
@@ -208,17 +210,17 @@ export class Tracking extends Rectangle {
         const newShape = e.detail as ShapeData;
         newShape.id = newTrackId;
         newShape.color = trackColors[parseInt(newTrackId) % trackColors.length];
+        const cls = this.categories[0].name;
         const keyShape = {
             geometry: newShape.geometry,
             timestamp: this.timestamp,
-            labels: {}
+            labels: this.getDefaultProperties(cls)
         };
-        const cls = this.categories[0].name;
         const newTrack = {
             id: newTrackId,
             keyShapes: {[this.timestamp] : keyShape},
             category: cls,
-            labels: this.getDefaultPermProps(cls)
+            labels: {}
         };
         this.tracks[newTrackId] = newTrack;
         this.selectedTracks.clear();
@@ -298,13 +300,13 @@ export class Tracking extends Rectangle {
         return {};
     }
 
-    getDefaultTempProps(categoryName: string) {
+    getDefaultProperties(categoryName: string) {
         const category = this.categories.find((c) => c.name === categoryName);
 
         const permProps: {[key: string]: any} = {};
         category!.properties.forEach((p: any) => {
             if (!p.persistent)
-                permProps[p.name] = p.default
+                permProps[p.name] = p.default;
         })
         return permProps;
     }
@@ -315,13 +317,27 @@ export class Tracking extends Rectangle {
      */
     setClass(t: TrackData, cls: string) {
         t.category = cls;
-        t.labels = this.getDefaultPermProps(cls);
-        const defaultProp = this.getDefaultTempProps(t.category);
+        t.labels = this.getDefaultProperties(cls);
+        const defaultProp = this.getDefaultProperties(t.category);
         for (const [ , ks ] of Object.entries(t.keyShapes)) {
             ks.labels = {...defaultProp};
         }
         this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
         this.requestUpdate();
+    }
+
+    /**
+     * Set property of the selected track
+     * @param cls new class
+     */
+    setProperty(t: TrackData, propName: string, propValue: any) {
+        const shape = getShape(t, this.timestamp).keyshape;
+        if (shape && shape.labels[propName] !== propValue) {
+            shape.labels[propName] = propValue;
+            setKeyShape(this.tracks[t.id], this.timestamp, {...shape});
+            this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
+            this.requestUpdate();
+        }
     }
 
     deleteTrack(tId: string) {
@@ -368,6 +384,21 @@ export class Tracking extends Rectangle {
         return this.shadowRoot!.getElementById("dialog") as any;
     }
 
+    htmlProperty(prop: any, t: TrackData) {
+        const shape = getShape(t, this.timestamp).keyshape;
+        if (shape && prop.type === 'dropdown') {
+            const value = shape.labels[prop.name];
+            return html`
+            <mwc-select id="${t.id}-${prop.name}" label="${prop.name}" @action=${(evt: any) => this.setProperty(t, prop.name, prop.enum[evt.detail.index])}>
+            ${prop.enum.map((v: any) => {
+                return html`<mwc-list-item value="${v}" ?selected="${v === value}">${v}</mwc-list-item>`
+            })}
+            </mwc-select>
+            `
+        }
+        return html``;
+    }
+
     /**
      * Display information tile of selected tracks
      * @param t track item
@@ -391,15 +422,15 @@ export class Tracking extends Rectangle {
                     if (currentShape) {
                         isHidden = currentShape.isNextHidden == true && !isKeyShape(t, this.timestamp);
                     }
+                    const categoryProps = this.categories.find((c) => c.name == t.category).properties || [];
                     return html`
                     <div class="item">
                         <p style="flex-direction: column; color: gray;">T${t.id.toString()}<span class="dot" style="background: ${color}"></span></p>
                         <div style="display: flex; flex-direction: column; width: 100%; margin-right: 10px;">
                             <mwc-select id="labels" outlined @action=${(evt: any) => this.setClass(t, this.categories[evt.detail.index].name)}>
-                                ${this.categories.map((c) => {
-                                    return html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`;
-                                })}
+                                ${this.categories.map((c) => html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`)}
                             </mwc-select>
+                            ${currentShape ? categoryProps.map((prop: any) => this.htmlProperty(prop, t)) : html``}
                             <div style="margin-left: auto; display: flex; justify-content: space-between;">
                                 <mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
                                 <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
