@@ -20,6 +20,7 @@ class MyDemo extends LitElement {
 
   static get properties() {
     return {
+      image: { type: String },
       shapes: {type: Array},
       selectedShapeIds: {type: Array},
       events: {type: Array},
@@ -27,8 +28,7 @@ class MyDemo extends LitElement {
       events: {type: Array},
       disableMultiSelection: {type: Boolean},
       disableTabulation: {type: Boolean},
-      hideLabels: {type: Boolean},
-      imageIdx: {type: Number}
+      hideLabels: {type: Boolean}
     };
   }
   constructor() {
@@ -40,6 +40,7 @@ class MyDemo extends LitElement {
     this.disableMultiSelection = false;
     this.disableTabulation = false;
     this.hideLabels = false;
+    this.image = "";
   }
 
   get rightPanel() {
@@ -64,6 +65,7 @@ class MyDemo extends LitElement {
     return html`
         <main>
           <pxn-graph  enableOutsideDrawing
+                      image=${this.image}
                       @create=${this.onCreate}
                       @update=${this.onUpdate}
                       @selection=${this.onSelection}
@@ -74,7 +76,6 @@ class MyDemo extends LitElement {
   }
 
   firstUpdated() {
-    this.element.input = "image.jpg";
     this.element.settings.radius = 3;
     this.element.settings.edges = [[0,1],[1,2]];
     this.element.settings.vertexNames = ["t1","t2","t3"];
