@@ -30,7 +30,7 @@ import { getShape,
     getNewTrackId,
     mergeTracks,
     getClosestFrames } from './utils-video';
-import { ShapesEditController } from './controller';
+import { ShapesEditController, ShapeCreateController } from './controller';
 // import { TrackingSmartController } from './controller-tracking';
 import { style2d } from './style';
 
@@ -127,6 +127,7 @@ export class Tracking extends Rectangle {
                     setKeyShape(this.tracks[t.id], this.timestamp, {...getShape(t, this.timestamp).keyshape!, ...s});
                 }
             });
+            this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
             this.requestUpdate();
         });
         this.addEventListener('delete', (evt: any) => {
@@ -141,6 +142,7 @@ export class Tracking extends Rectangle {
             this.drawTracks();
         })
         this.handleTrackSelection();
+        this.setController('point', new ClickController({renderer: this.renderer}))
         // this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
     }
 
@@ -274,7 +276,7 @@ export class Tracking extends Rectangle {
      * Enable or disable interpolation for the current frame
      */
     switchVisibility(t: TrackData) {
-        switchVisibility(t, this.timestamp);
+        switchVisibility(this.tracks[t.id], this.timestamp);
         this.dispatchEvent(new Event('update-tracks'));
     }
 
@@ -283,7 +285,7 @@ export class Tracking extends Rectangle {
      * @param t
      */
     removeOrAddKeyShape(t: TrackData) {
-        removeOrAddKeyShape(t, this.timestamp);
+        removeOrAddKeyShape(this.tracks[t.id], this.timestamp);
         this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
     }
 
@@ -477,4 +479,16 @@ export class Tracking extends Rectangle {
         </mwc-dialog>
         `;
       }
+}
+
+export class ClickController extends ShapeCreateController {
+
+    protected onRootDown(evt: PIXI.InteractionEvent) {
+        const pointer = (evt.data.originalEvent as PointerEvent);
+        if (pointer.buttons === 2 || pointer.buttons === 4) {
+            return;
+        }
+        const mouse = this.renderer.getPosition(evt.data);
+        this.dispatchEvent(new CustomEvent('point', {detail: this.renderer.normalize(mouse)}));
+    }
 }
