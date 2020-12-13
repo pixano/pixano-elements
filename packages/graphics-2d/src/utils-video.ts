@@ -221,20 +221,22 @@ export function getNewTrackId(tracks: {[key: string]: TrackData}): string {
 
 export function convertShapes(tracks: {[key: string]: TrackData}, fIdx: number): ShapeData[] {
     const shapes: ShapeData[] = [];
-    Object.keys(tracks).forEach((tid: string) => {
-        const t = tracks[tid];
-        const res = getShape(t, fIdx);
-        const ks = res.keyshape;
-        const isHidden = ks?.isNextHidden && !isKeyShape(t, fIdx);
-        if (ks && !isHidden) {
-            // hide box after last keyshape if not selected (?)
-            shapes.push({
-                id: tid.toString(),
-                geometry: ks.geometry,
-                color: trackColors[parseInt(tid) % trackColors.length]
-            } as ShapeData);
-        }
-    });
+    if (tracks != undefined) {
+        Object.keys(tracks).forEach((tid: string) => {
+            const t = tracks[tid];
+            const res = getShape(t, fIdx);
+            const ks = res.keyshape;
+            const isHidden = ks?.isNextHidden && !isKeyShape(t, fIdx);
+            if (ks && !isHidden) {
+                // hide box after last keyshape if not selected (?)
+                shapes.push({
+                    id: tid.toString(),
+                    geometry: ks.geometry,
+                    color: trackColors[parseInt(tid) % trackColors.length]
+                } as ShapeData);
+            }
+        });
+    }
     return shapes;
 }
 
