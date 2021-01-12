@@ -142,7 +142,6 @@ export class Tracking extends Rectangle {
             this.drawTracks();
         })
         this.handleTrackSelection();
-        // this.setController('point', new ClickController({renderer: this.renderer, dispatchEvent: this.dispatchEvent}))
         // this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
     }
 
@@ -481,15 +480,3 @@ export class Tracking extends Rectangle {
         `;
       }
 }
-
-// export class ClickController extends ShapeCreateController {
-
-//     protected onRootDown(evt: PIXI.InteractionEvent) {
-//         const pointer = (evt.data.originalEvent as PointerEvent);
-//         if (pointer.buttons === 2 || pointer.buttons === 4) {
-//             return;
-//         }
-//         const mouse = this.renderer.getPosition(evt.data);
-//         this.dispatchEvent(new CustomEvent('point', {detail: this.renderer.normalize(mouse)}));
-//     }
-// }
