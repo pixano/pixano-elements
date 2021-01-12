@@ -30,7 +30,7 @@ import { getShape,
     getNewTrackId,
     mergeTracks,
     getClosestFrames } from './utils-video';
-import { ShapesEditController, ShapeCreateController } from './controller';
+import { ShapesEditController } from './controller';
 // import { TrackingSmartController } from './controller-tracking';
 import { style2d } from './style';
 
@@ -142,7 +142,7 @@ export class Tracking extends Rectangle {
             this.drawTracks();
         })
         this.handleTrackSelection();
-        this.setController('point', new ClickController({renderer: this.renderer}))
+        // this.setController('point', new ClickController({renderer: this.renderer, dispatchEvent: this.dispatchEvent}))
         // this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
     }
 
@@ -227,9 +227,10 @@ export class Tracking extends Rectangle {
         this.tracks[newTrackId] = newTrack;
         this.selectedTracks.clear();
         this.selectedTracks.add(newTrack);
-        this.mode = 'edit';
         this.selectedShapeIds = [newTrack.id];
+        this.drawTracks();
         this.dispatchEvent(new CustomEvent('create-track', { detail: newTrack }));
+        this.mode = 'edit';
     }
 
     /**
@@ -481,14 +482,14 @@ export class Tracking extends Rectangle {
       }
 }
 
-export class ClickController extends ShapeCreateController {
+// export class ClickController extends ShapeCreateController {
 
-    protected onRootDown(evt: PIXI.InteractionEvent) {
-        const pointer = (evt.data.originalEvent as PointerEvent);
-        if (pointer.buttons === 2 || pointer.buttons === 4) {
-            return;
-        }
-        const mouse = this.renderer.getPosition(evt.data);
-        this.dispatchEvent(new CustomEvent('point', {detail: this.renderer.normalize(mouse)}));
-    }
-}
+//     protected onRootDown(evt: PIXI.InteractionEvent) {
+//         const pointer = (evt.data.originalEvent as PointerEvent);
+//         if (pointer.buttons === 2 || pointer.buttons === 4) {
+//             return;
+//         }
+//         const mouse = this.renderer.getPosition(evt.data);
+//         this.dispatchEvent(new CustomEvent('point', {detail: this.renderer.normalize(mouse)}));
+//     }
+// }

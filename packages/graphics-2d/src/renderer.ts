@@ -82,6 +82,7 @@ export class Renderer extends PIXI.Application {
         if (img === this.htmlImageElement || img === null) {
             return;
         }
+        let notifyNewImageSize = false;
         const base = new PIXI.BaseTexture(img);
         const texture = new PIXI.Texture(base);
         // prevent memory leak
@@ -93,8 +94,7 @@ export class Renderer extends PIXI.Application {
             // reset pan offset if the image has new dimensions
             this.sx = 0.5 * (1 - this.s) * this.rw;
             this.sy = 0.5 * (1 - this.s) * this.rh;
-            this.htmlImageElement = img;
-            this.onImageSizeChange();
+            notifyNewImageSize = true;
         }
         this.htmlImageElement = img;
         if (this.stage.children.length > 0) {
@@ -109,6 +109,9 @@ export class Renderer extends PIXI.Application {
             this.canvasWidth / this.stage.scale.x,
             this.canvasHeight / this.stage.scale.y);
         this.backgroundSprite.filters = [this.filter];
+        if (notifyNewImageSize) {
+            this.onImageSizeChange();
+        }
     }
 
     get image() {
