@@ -46,7 +46,7 @@ class MyDemo extends LitElement {
   }
 
   firstUpdated() {
-    const readMaskFromFile = true;
+    const readMaskFromFile = false;
     if (readMaskFromFile){
       const inputMask = new Image();
       inputMask.onload = () => {

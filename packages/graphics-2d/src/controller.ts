@@ -491,6 +491,14 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.on('pointerdown', this.onRootDown);
         this.renderer.stage.on('pointermove', this.onRootMove);
         this.renderer.stage.on('pointerupoutside', this.onRootUp);
+        this.renderer.onImageSizeChange = () => {
+            const pos = this.renderer.mouse;
+            this.cross.cx = pos.x;
+            this.cross.cy = pos.y;
+            this.cross.scaleX = this.renderer.imageWidth;
+            this.cross.scaleY = this.renderer.imageHeight;
+            this.cross.draw();
+        }
     }
 
     public deactivate() {
@@ -504,6 +512,7 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.removeListener('pointerdown', this.onRootDown);
         this.renderer.stage.removeListener('pointermove', this.onRootMove);
         this.renderer.stage.removeListener('pointerupoutside', this.onRootUp);
+        this.renderer.onImageSizeChange = () => {};
     }
 
     protected emitCreate() {

@@ -26,9 +26,16 @@ export class SmartCreateController extends ShapeCreateController {
       this.segmentationCreator = new BoxSegmentation(this.model);
     }
   
-    load() {
+    load(modelPath?: string) {
+      this.model = modelPath || this.model;
       this.segmentationCreator.modelPath = this.model;
-      this.segmentationCreator.load();
+      this.cross.visible = false;
+      this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
+      this.segmentationCreator.load().then(() => {
+        this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
+        this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
+        this.cross.visible = true;
+      });
     }
 
   

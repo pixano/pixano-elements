@@ -38,8 +38,7 @@ export class SegmentationInteractive extends Segmentation {
   updated(changedProperties: any) {
     super.updated(changedProperties);
     if (changedProperties.has('model')) {
-      (this.maskManager.modes['smart-create'] as SmartCreateController).model = this.model;
-      (this.maskManager.modes['smart-create'] as SmartCreateController).load();
+      (this.maskManager.modes['smart-create'] as SmartCreateController).load(this.model);
     }
   }
 }
