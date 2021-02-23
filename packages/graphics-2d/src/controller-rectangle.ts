@@ -3,7 +3,7 @@ import { ShapeCreateController } from './controller';
 import { GraphicRectangle } from './graphics';
 
 
-/** 
+/**
  * Inherit ShapeCreateController to handle creation of rectangle shapes.
  */
 export class RectangleCreateController extends ShapeCreateController {

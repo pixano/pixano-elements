@@ -194,8 +194,8 @@ export class ShapesEditController extends Controller {
     /**
      * Change selection based on shift key and box selected.
      * Return if selection has changed
-     * @param shape 
-     * @param isShiftKey 
+     * @param shape
+     * @param isShiftKey
      */
     doObjectSelection(shape: ShapeData, isShiftKey: boolean = false): boolean {
         const beforeSelection = new Set(this.targetShapes);
@@ -404,7 +404,7 @@ export class ShapesEditController extends Controller {
 
     /**
      * Retrieve graphical shape for a given shape data
-     * @param s 
+     * @param s
      */
     protected getTargetGraphic(s: ShapeData) {
         let graphic = [...this.graphics].find((o) => o.data === s);
@@ -492,9 +492,9 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.on('pointermove', this.onRootMove);
         this.renderer.stage.on('pointerupoutside', this.onRootUp);
         this.renderer.onImageSizeChange = () => {
-            const pos = this.renderer.mouse;
-            this.cross.cx = pos.x;
-            this.cross.cy = pos.y;
+            const p = this.renderer.mouse;
+            this.cross.cx = p.x;
+            this.cross.cy = p.y;
             this.cross.scaleX = this.renderer.imageWidth;
             this.cross.scaleY = this.renderer.imageHeight;
             this.cross.draw();

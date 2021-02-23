@@ -45,7 +45,7 @@ export class Tracking extends Rectangle {
 
     @property({ type: Object })
     public selectedTracks: Set<TrackData> = new Set();
-    
+
     categories: any[] = [
         { name: 'person', color: "#eca0a0", properties: [
             {name: 'posture', type: 'dropdown', enum: ['straight', 'inclined', 'squat', 'sit'], persistent: false, default: 'straight'},
@@ -137,7 +137,7 @@ export class Tracking extends Rectangle {
                     deleteShape(this.tracks[id], this.timestamp);
                 }
             });
-            
+
             this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
             this.drawTracks();
         })
@@ -420,11 +420,11 @@ export class Tracking extends Rectangle {
                     const currentShape = getShape(t, this.timestamp).keyshape;
                     const color = trackColors[parseInt(t.id) % trackColors.length];
                     let isHidden = true;
-                    let disabled = currentShape == null;
+                    const disabled = currentShape == null;
                     if (currentShape) {
-                        isHidden = currentShape.isNextHidden == true && !isKeyShape(t, this.timestamp);
+                        isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
                     }
-                    const categoryProps = this.categories.find((c) => c.name == t.category).properties || [];
+                    const categoryProps = this.categories.find((c) => c.name === t.category).properties || [];
                     return html`
                     <div class="item">
                         <p style="flex-direction: column; color: gray;">T${t.id.toString()}<span class="dot" style="background: ${color}"></span></p>

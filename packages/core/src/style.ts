@@ -107,7 +107,7 @@ export const genericStyles = css`
     display: flex;
     flex-direction: column;
   }
-  [name="slider"] {
+  [name="slider"] > div {
     height: 50px;
     flex: 0 0 50px;
     display: flex;

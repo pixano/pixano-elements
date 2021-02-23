@@ -78,10 +78,10 @@ export class Canvas2d extends Canvas {
     }
 
     window.addEventListener('keydown', (evt) => {
-      if (evt.key == "Alt") {
+      if (evt.key === "Alt") {
         this.switchMode();
       }
-    })
+    });
 
     this.observeShapeForDisplay();
     this.modes[this.mode].activate();
@@ -232,7 +232,7 @@ export class Canvas2d extends Canvas {
   public setController(mode: string, controller: Controller) {
     this.modes[mode]?.deactivate(); // deactive already existing mode in cas active
     this.modes[mode] = controller;
-    if (mode == this.mode) {
+    if (mode === this.mode) {
       this.modes[mode].activate();
     }
     return this;
@@ -255,6 +255,7 @@ export class Canvas2d extends Canvas {
     // Set up new mode state
     this.modes[newMode]?.activate();
     this.mode = newMode;
+    this.notifyMode();
 }
 
 
@@ -316,14 +317,13 @@ export class Canvas2d extends Canvas {
     this.dispatchEvent(new CustomEvent('update', { detail: ids }));
   }
 
-  protected notifyMode(mode: string) {
+  protected notifyMode() {
     /**
      * Fired when `pxn-canvas-2d` changes mode.
      *
      * @event mode
      * @param {string} mode New mode.
      */
-    this.mode = mode;
     this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
   }
 

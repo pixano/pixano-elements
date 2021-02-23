@@ -1004,8 +1004,8 @@ class TransformControlsGizmo extends Object3D {
 		handles = handles.concat( this.helper[ this.mode ].children as Gizmo[] );
 
 		// eyeDistance increases with unzoom
-		const eyeDistance = (this.camera instanceof OrthographicCamera) ? 
-					60 / (this.size * this.camera.zoom) : 
+		const eyeDistance = (this.camera instanceof OrthographicCamera) ?
+					60 / (this.size * this.camera.zoom) :
 					this.worldPosition.distanceTo( this.cameraPosition );
 
 		for ( const handle of handles ) {
