@@ -259,7 +259,7 @@ export class GMask extends PIXIContainer {
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
-                if (mask[y * width + x] == 1) {
+                if (mask[y * width + x] === 1) {
                     this.orig!.data[4 * idx] = id1;
                     this.orig!.data[4 * idx + 1] = id2;
                     this.orig!.data[4 * idx + 2] = cls;
@@ -277,7 +277,7 @@ export class GMask extends PIXIContainer {
 
     public updateByMask(mask: Float32Array, pos: {x: number, y: number}, newVal: [number, number, number]) {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
-        let size = Math.sqrt(mask.length);
+        const size = Math.sqrt(mask.length);
         const color = this.pixelToColor(...newVal);
         const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
         pos.x -= 0.5 * size;
@@ -286,7 +286,7 @@ export class GMask extends PIXIContainer {
         for (let x = 0; x < size; x++) {
             for (let y = 0; y < size; y++) {
                 const idx = (x + pos.x + (y + pos.y) * this.canvas.width);
-                if (mask[y * size + x] == 1) {
+                if (mask[y * size + x] === 1) {
                     this.orig!.data[4 * idx] = id1;
                     this.orig!.data[4 * idx + 1] = id2;
                     this.orig!.data[4 * idx + 2] = cls;

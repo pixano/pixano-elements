@@ -59,6 +59,12 @@ export class Segmentation extends Canvas {
       this.dispatchEvent(new CustomEvent('selection', { detail: evt.detail }));
     });
     this.addEventListener('load', this.onImageChanged.bind(this));
+
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key === "Alt") {
+        this.switchMode();
+      }
+  });
   }
 
   get targetClass() {
@@ -184,5 +190,11 @@ export class Segmentation extends Canvas {
    */
   public filterLittle(numPixels: number = 10) {
     this.maskManager.filterAll(numPixels)
+  }
+
+  switchMode() {
+    const modes = Object.keys(this.maskManager.modes);
+    const currentIdx = modes.findIndex((m) => m === this.mode);
+    this.mode = modes[(currentIdx + 1) % modes.length] as any;
   }
 }

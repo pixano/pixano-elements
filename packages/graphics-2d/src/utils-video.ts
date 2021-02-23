@@ -183,7 +183,7 @@ export function switchTrack(t1: TrackData, t2: TrackData, fIdx: number) {
  * @param tracks tracks to be merged
  */
 export function mergeTracks(tracks: {[key: string]: TrackData}, t1: TrackData, t2: TrackData, fIx: number) {
-    
+
     // check overlapping
     const keys = [
         [...Object.keys(sortDictByKey(t1.keyShapes))],
@@ -221,7 +221,7 @@ export function getNewTrackId(tracks: {[key: string]: TrackData}): string {
 
 export function convertShapes(tracks: {[key: string]: TrackData}, fIdx: number): ShapeData[] {
     const shapes: ShapeData[] = [];
-    if (tracks != undefined) {
+    if (tracks !== undefined) {
         Object.keys(tracks).forEach((tid: string) => {
             const t = tracks[tid];
             const res = getShape(t, fIdx);
@@ -316,10 +316,9 @@ export function sortDictByKey(dict: {[key: string]: any}): {[key: string]: any} 
 }
 
 // export const trackColors = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
-export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c', '#ad0900', '#610500', '#59302e', '#61504f', 
+export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c', '#ad0900', '#610500', '#59302e', '#61504f',
                             '#ff9500', '#ffc778', '#ffe0ad', '#b36f00', '#b38d50', '#5e3e0b', '#fffb00', '#8f8d00', '#f2f188',
                             '#6fff00', '#ceffa8', '#3c8a00', '#173600', '#5f8544', '#00ffcc', '#00997a', '#004a3b', '#409483',
                             '#00b7ff', '#0077a6', '#004b69', '#96e1ff', '#3c7f99', '#002aff', '#001891', '#2a387d', '#7a91ff',
                             '#4400ff', '#230085', '#15014d', '#533b96', '#b296ff', '#895eff', '#ff00fb', '#850083', '#360035',
                             '#fc95fb', '#8f278e', '#a86da8', '#873587', '#ff0062', '#bf2e66', '#73002c'];
-

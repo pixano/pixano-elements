@@ -1,7 +1,7 @@
 import { ShapesEditController } from './controller';
 import { Tracker } from '@pixano/ai/lib/tracker';
 
-/** 
+/**
  * Inherit ShapeCreateController to handle creation of rectangle shapes.
  */
 export class TrackingSmartController extends ShapesEditController {
@@ -14,7 +14,7 @@ export class TrackingSmartController extends ShapesEditController {
         super(props);
         this.nextFrame = props.nextFrame || (() => {});
     }
-    
+
     bindings() {
         super.bindings();
         this.keyBindings = this.keyBindings.bind(this);

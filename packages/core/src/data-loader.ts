@@ -2,7 +2,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2020)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 
 /**
@@ -14,30 +14,30 @@ export class VideoCache {
     private _numFrames: number;
     private _sourceId: string;
     private _frameIndex: number;
-  
+
     constructor() {
       this.frames = [];
       this._numFrames = -1;
       this._sourceId = '';
       this._frameIndex = -1;
     }
-  
+
     get sourceId() {
       return this._sourceId;
     }
-  
+
     set sourceId(value) {
       this._sourceId = value;
     }
-  
+
     get frameIndex() {
       return this._frameIndex;
     }
-  
+
     set frameIndex(frameIndex) {
       this._frameIndex = frameIndex;
     }
-  
+
     getNextIdxToLoad(start: number) {
       const idx = this.frames.slice(start + 1).findIndex((f) => f.data == null);
       if (idx !== -1) {
@@ -46,7 +46,7 @@ export class VideoCache {
         return -1;
       }
     }
-  
+
     /**
      * Set the total number of frames.
      * @param value total number of frames
@@ -54,47 +54,47 @@ export class VideoCache {
     setNumFrames(value: number) {
       this._numFrames = value;
     }
-  
+
     /**
      * Get the total number of frames.
      */
     get numFrames() {
       return this._numFrames;
     }
-  
+
     /**
      * Get the number of currently loaded frames in the cache.
      */
     getNumLoadedFrames() {
       return this.frames.filter((f) => f.data != null).length;
     }
-  
+
     getLoadedBetween(a: number, b: number) {
       return this.frames.slice(a, b).filter((f) => f.data != null).length;
     }
-  
+
     getMaxLoaded() {
       const revArray = this.frames.slice().reverse();
       const lastIdx = revArray.findIndex((f) => f.data != null);
       return this.frames.length - lastIdx;
     }
-  
+
     /**
      * Chech if the frames are completly loaded in the cache.
      */
     isFullyLoaded() {
         return ((this.numFrames === this.frames.length) && this.frames.length > 0);
     }
-  
+
     isLoadedByTimestamp(timestamp: number) {
       const index = this.frames.findIndex((f) => f.timestamp === timestamp);
       return index !== -1 && this.frames[index].data != null;
     }
-  
+
     isLoadedByIndex(idx: number) {
       return this.frames[idx] && this.frames[idx].data != null;
     }
-  
+
     /**
      * Get image from the cache by id
      * @param id frame id in the cache
@@ -102,7 +102,7 @@ export class VideoCache {
     getFrameByIndex(idx: number) {
       return (this.frames[idx] && this.frames[idx].data != null) ? this.frames[idx].data : null;
     }
-  
+
     /**
      * Get image from the cache by timestamp
      * @param id frame id in the cache
@@ -114,7 +114,7 @@ export class VideoCache {
       }
       return new Image();
     }
-  
+
     /**
      * Set image from the cache by id
      * @param id frame id in the cache
@@ -123,7 +123,7 @@ export class VideoCache {
       const index = this.frames.findIndex((f) => f.timestamp === frame.timestamp);
       this.frames[index] = frame;
     }
-  
+
     /**
      * Get the timestamp for the frame at index.
      * @param id frame index
@@ -131,7 +131,7 @@ export class VideoCache {
     toTimestamp(id:number) {
       return this.frames[id] ? this.frames[id].timestamp : -1;
     }
-  
+
     /**
      * Get the timestamp for the frame at index.
      * @param id frame index
@@ -139,7 +139,7 @@ export class VideoCache {
     getFrameIndex(timestamp: number) {
       return this.frames.findIndex((f) => f.timestamp === timestamp);
     }
-  
+
     /**
      * Add new frame to the cache.
      * @param f frame to add
@@ -147,7 +147,7 @@ export class VideoCache {
     add(f: {timestamp: number, data: any}) {
       this.frames.push(f);
     }
-  
+
     /**
      * Clear cache.
      */
@@ -155,14 +155,14 @@ export class VideoCache {
       this.frames = [];
       this._numFrames = 0;
     }
-  
+
     clearData() {
       this.frames.forEach((f) => f.data = null);
     }
   }
-  
+
   ////// Data loaders
-  
+
   function readImage(dataUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve) => {
       const image = new Image();
@@ -173,14 +173,14 @@ export class VideoCache {
       image.src = dataUrl;
     });
   }
-  
+
   function readPcl(path: string): Promise<Float32Array> {
     return new Promise((resolve) => {
       fetch(path).then((response) => {
         return response.ok ? response.arrayBuffer() : Promise.reject(response.status);
       }).then((points) => {
         resolve(new Float32Array(points));
-      }); 
+      });
     });
   }
 
@@ -191,12 +191,12 @@ export class VideoCache {
   function readBase64Array(path: string): Promise<Float32Array> {
     const blob = atob( path );
     const aryBuf = new ArrayBuffer( blob.length );
-    let dv = new DataView( aryBuf );
+    const dv = new DataView( aryBuf );
     for ( let i=0; i < blob.length; i++ ) dv.setUint8( i, blob.charCodeAt(i) );
 
     return Promise.resolve(new Float32Array(aryBuf));
   }
-  
+
   /**
    * Load media string based on authorized types
    * @param path media string
@@ -204,12 +204,12 @@ export class VideoCache {
    */
   function read(path: string | string[], type: 'image' | 'pcl' | 'all' = 'all'): Promise<any> {
     if (typeof path === 'string') {
-      if ((type == 'image' || type == 'all')) {
+      if ((type === 'image' || type === 'all')) {
         // we must only accept images
         if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) != null) {
           return readImage(path);
         }
-      } else if ((type == 'pcl' || type == 'all')) {
+      } else if ((type === 'pcl' || type === 'all')) {
         // we must only accept point clouds
         const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
           if (path.match(/\.(bin)$|blob:/) != null) {
@@ -223,10 +223,10 @@ export class VideoCache {
     }
     return Promise.resolve();
   }
-  
+
   /**
-  * Handle loading of view(s)
-  */
+   * Handle loading of view(s)
+   */
   export class Loader extends EventTarget {
 
     private authorizedType: 'image' | 'pcl' | 'all' = 'all';
@@ -235,18 +235,18 @@ export class VideoCache {
       super();
       this.authorizedType = type;
     }
-  
+
     load(path: string): Promise<any> {
       return read(path, this.authorizedType);
     }
   }
-  
+
   /**
-  * Handle loading of a sequence
-  * of files.
-  */
+   * Handle loading of a sequence
+   * of files.
+   */
   export class SequenceLoader extends EventTarget {
-  
+
     private bufferSize: number;
     // private loadedFrameNumber: number;
     private isLoading: boolean;
@@ -255,7 +255,7 @@ export class VideoCache {
     public frames: {timestamp: number, path: string}[];
     private _eventAbortCompleted: Event;
     private authorizedType: 'image' | 'pcl' | 'all' = 'all';
-  
+
     constructor(type: 'image' | 'pcl' | 'all' = 'all') {
       super();
       this.authorizedType = type;
@@ -267,15 +267,15 @@ export class VideoCache {
       this.frames = [];
       this._eventAbortCompleted = new Event('cancel_completed');
     }
-  
+
     /**
      * Load metadata
-     * @param { <timestamp: number, path: [string]>[] } frames 
+     * @param { <timestamp: number, path: [string]>[] } frames
      */
     init(frames: {timestamp: number, path: string}[]): Promise<number> {
       // fill cache with empty timestamped images to make sure that
       // the timestamps are in order
-      this.cache = new VideoCache;
+      this.cache = new VideoCache();
       for (const source of frames) {
         this.cache.add({ timestamp: source.timestamp, data: null });
       }
@@ -288,17 +288,17 @@ export class VideoCache {
         return Promise.resolve(frames.length);
       })
     }
-  
+
     /**
      * Peek frame at index.
-     * @param {number} idx 
+     * @param {number} idx
      */
     peekFrame(idx: number) {
       const requestedFrame = this.cache.getFrameByIndex(idx);
       if (requestedFrame == null) {
         return this.abortLoading().then(() => {
           this.cache.clearData();
-          return this.load(idx); 
+          return this.load(idx);
         });
         // if frame not loaded, abort current load and start from there
         // this.videoLoader.setFrameIndex(frameIndex);
@@ -306,7 +306,7 @@ export class VideoCache {
         return Promise.resolve(requestedFrame);
       }
     }
-  
+
     /**
      * Cancel image requests by emptying their src
      */
@@ -320,10 +320,10 @@ export class VideoCache {
           self.addEventListener('cancel_completed', () => {
             resolve();
           })
-        }); 
+        });
       }
     }
-  
+
     /**
      * Launch load of images.
      * Resolve first frame as soon as loaded
@@ -357,7 +357,7 @@ export class VideoCache {
               } else {
                 console.info('Finished loading', path);
                 this.isLoading = false;
-              }                
+              }
             });
           });
       }

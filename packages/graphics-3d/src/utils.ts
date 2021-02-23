@@ -30,7 +30,7 @@ export const chunk = (arr: any, size: number) => arr.reduce((chunks: any, el: an
 export function axisAlignedBox(pos: number[], size: number[], heading: number):
                             { pos: number[], size: number[]; } {
   const [l, w, h] = size;
-  const [x, y, z] = pos;
+  const [x, y] = pos;
   const cosRz = Math.cos(heading);
   const sinRz = Math.sin(heading);
   // find axis-aligned bounding box (aabb) of annotation
@@ -42,7 +42,56 @@ export function axisAlignedBox(pos: number[], size: number[], heading: number):
   const xmax = Math.max(...vx) + x;
   const ymin = Math.min(...vy) + y;
   const ymax = Math.max(...vy) + y;
-  return { pos: [(xmin+xmax)/2, (ymin+ymax)/2, z], size: [(xmax-xmin), (ymax-ymin), h] };
+  return { pos: [(xmin+xmax)/2, (ymin+ymax)/2, pos[2] || 0], size: [(xmax-xmin), (ymax-ymin), h] };
+}
+
+/**
+ * Find max and min height of points included in a cuboid
+ * @param pointBuffer array of point coordinates
+ * @param annotation filtering cube
+ * @returns list of included points indices
+ */
+export function getHeightOfPts(pointBuffer: Float32Array, position: [number, number], size: [number, number], heading: number): [number, number] {
+  const [l, w] = size;
+  const [x, y] = position;
+  const cosRz = Math.cos(heading);
+  const sinRz = Math.sin(heading);
+  const AABB = axisAlignedBox(position, size, heading);
+  // bounds of axis aligned box centered in [0,0,0]
+  const xmin = -AABB.size[0]/2;
+  const xmax = AABB.size[0]/2;
+  const ymin = -AABB.size[1]/2;
+  const ymax = AABB.size[1]/2;
+  let zmin = 10000;
+  let zmax = -10000;
+
+  for(let i=0; i<pointBuffer.length / 3; i++) {
+    // coordinates of 3D point centered wrt to box
+    const xi = pointBuffer[3*i] - x;
+    const yi = pointBuffer[3*i+1] - y;
+    const zi = pointBuffer[3*i+2];
+    // first-pass: filter with axis-oriented box
+    const cond1 = (
+      xi <= xmax && xi >= xmin
+      && yi <= ymax && yi >= ymin);
+    if (cond1) {
+      // second-pass: filter with oriented box
+      const x2 = cosRz * xi + sinRz * yi;
+      const y2 = - sinRz * xi + cosRz * yi;
+      const cond2 = (
+        x2 <= l / 2 && x2 >= - l / 2
+        && y2 <= w / 2 && y2 >= - w / 2);
+      if (cond2) {
+        if (zi < zmin) {
+          zmin = zi;
+        }
+        if (zi > zmax) {
+          zmax = zi;
+        }
+      }
+    }
+  }
+  return [zmin, zmax];
 }
 
 /**
@@ -282,6 +331,29 @@ export function fitToPts(positions: number[][]) {
  * @param rmax maximal distance for pointcloud filtering
  * @returns filtered central points, zmin and rmax
  */
+export function removeCentralArea(pointBuffer: Float32Array, r: number = 2): number[] {
+  const centralPts: number[] = [];
+  const offset = [1, 0, 0];
+  const rsq = r*r;
+  for (let i=0; i< pointBuffer.length/3; i++) {
+    const xi = pointBuffer[3*i] - offset[0];
+    const yi = pointBuffer[3*i+1] - offset[1];
+    const r2 = xi*xi + yi*yi;
+    if (r2 >= rsq) {
+      centralPts.push(pointBuffer[3*i],pointBuffer[3*i+1],pointBuffer[3*i+2]);
+    }
+  }
+  return centralPts
+}
+
+/**
+ * Find points in central region of interest ( rmin < r < rmax && z < 0) and
+ * find minimal z (zmin) in that region and maximal distance (dmax) in the entire point cloud
+ * @param pointBuffer
+ * @param rmin minimal distance for pointcloud filtering
+ * @param rmax maximal distance for pointcloud filtering
+ * @returns filtered central points, zmin and rmax
+ */
 export function filterCentralArea(pointBuffer: Float32Array, rmin: number = 3, rmax: number = 6): {
     points: [number,number,number][],
     rmax: number, zmin: number, zmax: number
@@ -377,7 +449,7 @@ export const cubeToCoordinates = (cube: Cuboid) => {
   const ymax = + 0.5 * width;
   const zmin = - 0.5 * height;
   const zmax = + 0.5 * height;
-  const edges = [
+  let edges = [
     [0,1], [1,2], [2,3], [3,0], // 1rst face
     [4,5], [5,6], [6,7], [7,4], // 2nd face
     [0,4], [1,5], [2,6], [3,7] // length edges
@@ -400,12 +472,22 @@ export const cubeToCoordinates = (cube: Cuboid) => {
   });
 
   // add bottom cross
-  // edges.push([0, 2]);
-  // edges.push([1, 3]);
-
+  // edges = [...edges,
+  //   [0, 2], [1, 3]
+  // ]
   // add front cross
-  // edges.push([1, 6]);
-  // edges.push([2, 5]);
+  edges = [...edges,
+    [1, 6], [2, 5]
+  ]
 
+  // let vertices: number[][] = [];
+  // vertices.push([xmin, ymin, zmin]);
+  // vertices.push([xmax, ymin, zmin]);
+  // vertices.push([xmin, ymax, zmin]);
+  // vertices.push([xmax, ymax, zmin]);
+  // vertices.push([xmin, ymin, zmax]);
+  // vertices.push([xmax, ymin, zmax]);
+  // vertices.push([xmin, ymax, zmax]);
+  // vertices.push([xmax, ymax, zmax]);
   return {vertices, edges};
 }

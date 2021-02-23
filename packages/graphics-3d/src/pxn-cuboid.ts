@@ -4,7 +4,7 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, property } from 'lit-element';
+import { css, customElement, html, property, CSSResult, TemplateResult } from 'lit-element';
 import { ObservableSet, observable } from "@pixano/core";
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { GenericDisplay } from '@pixano/core/lib/generic-display';
@@ -81,7 +81,7 @@ export class CuboidEditor extends GenericDisplay {
   }
 
   // LitElement implementation
-  static get styles() {
+  static get styles(): CSSResult[] {
     return super.styles.concat([
       css`
       :host {
@@ -115,7 +115,7 @@ export class CuboidEditor extends GenericDisplay {
     this.addEventListener('mode', () => this.mode = this.modeManager.mode);
   }
 
-  display() {
+  display(): TemplateResult {
     return html`<div id="root"></div>`;
   }
 

@@ -26,7 +26,7 @@ export class BoxSegmentation {
       console.warn('Unknown path', this.modelPath);
       return;
     }
-    if (this.loadedModelPath == this.modelPath) {
+    if (this.loadedModelPath === this.modelPath) {
       console.info('Model already loaded');
       return;
     }
@@ -45,11 +45,11 @@ export class BoxSegmentation {
   }
 
   private checkPathExists(path: string) {
-    var xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.open('HEAD', path, false);
     xhr.send();
-     
-    if (xhr.status == 404) {
+
+    if (xhr.status === 404) {
         return false;
     } else {
         return true;
@@ -85,7 +85,7 @@ export class BoxSegmentation {
     prediction = tf.image.cropAndResize(prediction, [[0.5*padding, 0.5*padding, 1-0.5*padding, 1-0.5*padding]], [0], [box[3]-box[1], box[2]-box[0]])
     prediction = tf.squeeze(prediction);
     prediction = tf.cast(prediction.add(1 - threshold), 'int32') as tf.Tensor<tf.Rank.R4>;
-    
+
     const res = await prediction.data() as Float32Array;
     return res;
   }

@@ -2,9 +2,9 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
-import { html, LitElement, property } from 'lit-element';
+import { html, LitElement, property, TemplateResult } from 'lit-element';
 import './playback-control';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
@@ -12,7 +12,7 @@ import { genericStyles } from './style';
 /**
  * Utility class to load images of sequences of images given
  * their sources.
- * 
+ *
  * @fires CustomEvent#load upon loading input item { detail: input data }
  * @fires CustomEvent#timestamp upon changing current timestamp { detail: number }
  */
@@ -77,7 +77,7 @@ export abstract class GenericDisplay extends LitElement {
        */
       set input(source: string | string[]) {
         this._source = source;
-        
+
         // case of unique data file
         if (typeof source === 'string') {
           this.loader = new Loader(this.authorizedType);
@@ -89,7 +89,7 @@ export abstract class GenericDisplay extends LitElement {
           const loader = new SequenceLoader(this.authorizedType);
           const regex = /(?<=_)(\d+?)(?=\.)/g;
           this.loader = loader;
-          const frames = this.timestampRule == 'index' ? source.map( (path, timestamp) => ({timestamp, path})) || []:
+          const frames = this.timestampRule === 'index' ? source.map( (path, timestamp) => ({timestamp, path})) || []:
                 source.map( (path) => {
                   const match = path.match(regex);
                   const timestamp = match && match.length ? parseInt(match.pop()!) : 0;
@@ -115,7 +115,7 @@ export abstract class GenericDisplay extends LitElement {
       set timestamp(timestamp: number){
         if (this.loader instanceof SequenceLoader) {
           const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
-          if (frameIdx != -1) {
+          if (frameIdx !== -1) {
             this.frame = frameIdx;
           }
         }
@@ -171,13 +171,12 @@ export abstract class GenericDisplay extends LitElement {
               this.frame = currIdx + 1;
             }
           }
-        })
-        
+        });
       }
 
       /**
        * Fired on playback slider update.
-       * @param {CustomEvent} evt 
+       * @param {CustomEvent} evt
        */
       onSliderChange(evt: CustomEvent) {
         this.frame = evt.detail;
@@ -195,7 +194,7 @@ export abstract class GenericDisplay extends LitElement {
         this.dispatchEvent(new CustomEvent('timestamp', { detail: this.targetFrameIdx }));
       }
 
-      display() {
+      display(): TemplateResult {
         return html``;
       }
 
@@ -213,11 +212,13 @@ export abstract class GenericDisplay extends LitElement {
         return html`
         <div id="container">
           ${this.display()}
-          <slot name="slider" id="slot" style="display: ${this.isSequence ? 'block': 'none'};">
+          <slot name="slider" id="slot">
+            <div style="display: ${this.isSequence ? 'block': 'none'};">
                 <playback-control @update=${this.onSliderChange}
                                   current=${this.targetFrameIdx}
                                   style="display: ${this.isSequence ? 'flex': 'none'};"
                                   max=${this.maxFrameIdx}></playback-control>
+            </div>
           </slot>
         </div>
         `;

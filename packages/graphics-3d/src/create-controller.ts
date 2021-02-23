@@ -6,10 +6,9 @@
 
 import { observable, BasicEventTarget } from '@pixano/core';
 import { SceneView } from './scene-view';
-import { GroundRectangle, GroundDisc, PointCloudPlot } from './plots';
+import { GroundRectangle, GroundCross, PointCloudPlot } from './plots';
 import { Cuboid } from './types';
-
-import { fitBoxWithAutoZ } from './utils';
+import { fitBoxWithAutoZ, getHeightOfPts } from './utils';
 import { GroundSegmentation } from './ground-segmentation';
 
 /**
@@ -20,11 +19,12 @@ import { GroundSegmentation } from './ground-segmentation';
  * @fires CustomEvent#create after object creation
  */
 export class CreateModeController extends BasicEventTarget {
+    public creationMode: "autoFit" | "noFit" | "autoGround" = "autoFit";
     private eventListeners: any[] = [];
     private viewer: SceneView;
     private groundPlot: THREE.Object3D;
     private annotations: Set<Cuboid>;
-    private groundCursor: GroundDisc | null;
+    private groundCursor: GroundCross | null;
     private groundRect: GroundRectangle | null = null;
     private pcl: PointCloudPlot;
     private groundSegmentation: GroundSegmentation;
@@ -53,7 +53,10 @@ export class CreateModeController extends BasicEventTarget {
         }
 
         // Create ground cursor to provide visual feedback
-        this.groundCursor = new GroundDisc(0.2, 0xff0000);
+        // Uncomment next line if you want to display a disc insteaf of
+        // the vertical and horizontal lines
+        // this.groundCursor = new GroundDisc(0.2, 0xff0000);
+        this.groundCursor = new GroundCross(0xff0000, this.viewer.camera.rotation.z);
         this.viewer.scene.add(this.groundCursor);
         const cursorPos = viewer.raycast(mousePos.clientX, mousePos.clientY, groundPlot)[1];
         if (cursorPos) {
@@ -144,7 +147,32 @@ export class CreateModeController extends BasicEventTarget {
             const l = Math.abs(this.groundRect!.scale.y);
             const w = Math.abs(this.groundRect!.scale.x);
             const heading = this.groundRect!.rotation.z - Math.PI / 2;
-            const box = fitBoxWithAutoZ(this.pcl.positionBuffer, [x, y, z], [l, w], heading, this.groundSegmentation.groundZ);
+            let box = {};
+
+            switch(this.creationMode ) {
+                case "autoFit": {
+                    box = fitBoxWithAutoZ(this.pcl.positionBuffer, [x, y, z], [l, w], heading, this.groundSegmentation.groundZ);
+                    break;
+                }
+                case "noFit": {
+                    const [zMin, zMax] = getHeightOfPts(this.pcl.positionBuffer, [x, y], [l, w], heading);
+                    box = {
+                        position: [x, y, 0.5*(zMin + zMax)],
+                        size: [l, w, zMax - zMin],
+                        heading
+                    };
+                    break;
+                }
+                case "autoGround": {
+                    const defaultHeight = 2;
+                    const groundZ = this.groundSegmentation.groundZ == null ? 0 : this.groundSegmentation.groundZ;
+                    box = {
+                        position: [x, y, groundZ + 0.5*defaultHeight],
+                        size: [l, w, defaultHeight],
+                        heading
+                    };
+                }
+            }
 
             const cuboid = observable({
                 ...box,

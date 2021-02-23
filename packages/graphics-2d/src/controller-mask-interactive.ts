@@ -9,15 +9,15 @@ import { GraphicRectangle } from './graphics';
 export class SmartCreateController extends ShapeCreateController {
 
     public renderer: Renderer;
-  
+
     public targetClass: { value: number };
 
     public gmask: GMask;
-  
+
     private segmentationCreator: BoxSegmentation = new BoxSegmentation();
-  
+
     public model: string = 'box_model/model.json';
-  
+
     constructor(props: Partial<SmartCreateController> = {}) {
       super(props);
       this.renderer = props.renderer || new Renderer();
@@ -25,7 +25,7 @@ export class SmartCreateController extends ShapeCreateController {
       this.gmask = props.gmask || new GMask();
       this.segmentationCreator = new BoxSegmentation(this.model);
     }
-  
+
     load(modelPath?: string) {
       this.model = modelPath || this.model;
       this.segmentationCreator.modelPath = this.model;
@@ -38,7 +38,6 @@ export class SmartCreateController extends ShapeCreateController {
       });
     }
 
-  
     onRootDown(evt: PIXI.InteractionEvent) {
       // prevent shape creating when using middle or right mouse click
       const pointer = (evt.data.originalEvent as PointerEvent);
@@ -66,7 +65,7 @@ export class SmartCreateController extends ShapeCreateController {
     emitUpdate() {
       this.dispatchEvent(new Event('update'));
     }
-  
+
     onRootMove(evt: PIXI.InteractionEvent) {
       super.onRootMove(evt);
         const mouse = this.renderer.getPosition(evt.data);
@@ -108,4 +107,3 @@ export class SmartCreateController extends ShapeCreateController {
       }
     }
   }
-  
