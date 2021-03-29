@@ -11,24 +11,31 @@ import { ShapeData } from './types';
 
 export interface IGraphSettings {
   radius: number;
-  colorFillType: "unique" | "order";
-  orderedColors: number[];
+  // Set list of node colors or empty if all take the shape color
+  nodeColors: number[];
+  // Set one color for all edges or same as nodes
+  edgeColorType: "default" | "node";
   // Set skeleton #keypoints with their names
   vertexNames: string[];
   // Set skeleton links between its vertices
   edges: [number, number][];
+  // Display node names during creation and edition
+  showVertexName: boolean;
 }
 
 // common style shared by all skeletons
 export const settings: IGraphSettings = {
   radius: 4,
-  colorFillType: "unique",
-  orderedColors: [
-    0xF44336, 0xffff00, 0xFFFFFF,
-    0X426eff, 0xFFFFFF, 0xFFFFFF
+  nodeColors: [
+    0Xe6194b, 0X3cb44b, 0Xffe119, 0X4363d8, 0Xf58231, 0X911eb4,
+    0X46f0f0, 0Xf032e6, 0Xbcf60c, 0Xfabebe, 0X008080, 0Xe6beff,
+    0X9a6324, 0Xfffac8, 0X800000, 0Xaaffc3, 0X808000, 0Xffd8b1,
+    0X000075, 0X808080, 0Xffffff, 0X000000
   ],
+  edgeColorType: "node",
   edges: [[0,1], [0,2]],
-  vertexNames: ['header', 'RFoot', 'LFoot']
+  vertexNames: ['header', 'RFoot', 'LFoot'],
+  showVertexName: true
 }
 
 /**
@@ -62,7 +69,7 @@ export class GraphicGraph extends Graphic {
 
     onNode(event: string, fn: (evt: any) => void, context?: any) {
       this.nodes.forEach((n, idx) => {
-          n.removeAllListeners();
+          n.removeAllListeners(event);
           n.interactive = true;
           n.buttonMode = true;
           n.cursor = 'grab';
@@ -90,9 +97,9 @@ export class GraphicGraph extends Graphic {
     draw() {
         this.area.clear();
         this.data.geometry.edges!.forEach((edge) => {
-            let color = this.hex;
-            color = this.state === 'nodes' ? 0X426eff : color;
-            this.area.lineStyle(3, color || 0xFFFFFF, 1, 0.5, true);
+            let edgeColor = settings.edgeColorType == "default" ? this.hex : settings.nodeColors[edge[0]]
+            edgeColor = this.state === 'nodes' ? 0X426eff : edgeColor;
+            this.area.lineStyle(3, edgeColor || 0xFFFFFF, 1, 0.5, true);
             const sX = Math.round(this.data.geometry.vertices[edge[0] * 2] * this.scaleX);
             const sY = Math.round(this.data.geometry.vertices[edge[0] * 2 + 1] * this.scaleY);
             const tX = Math.round(this.data.geometry.vertices[edge[1] * 2] * this.scaleX);
@@ -119,7 +126,7 @@ export class GraphicGraph extends Graphic {
             const x = this.data.geometry.vertices[i * 2];
             const y = this.data.geometry.vertices[i * 2 + 1];
             const opacity = this.data.geometry.visibles![i] ? 1 : 0.3;
-            const fillColor = settings.colorFillType === "order" ? settings.orderedColors[i] : this.hex;
+            const fillColor = settings.nodeColors.length ? settings.nodeColors[i] : this.hex;
             const borderColor = this.state === 'nodes' ? 0X426eff : this.hex;
             this.nodes[i].clear();
             this.nodes[i].beginFill(fillColor, opacity);
@@ -162,5 +169,15 @@ export class GraphicGraph extends Graphic {
       }
       this.data.geometry.vertices = [...this.data.geometry.vertices, x, y];
       this.data.geometry.visibles = [...this.data.geometry.visibles!, true];
+    }
+
+    public removeAllListeners() {
+      super.removeAllListeners();
+      this.nodes.forEach((n) => {
+        n.interactive = false;
+        n.buttonMode = false;
+        n.removeAllListeners();
+      });
+      return this;
     }
 }

@@ -1,4 +1,5 @@
 import { observable } from '@pixano/core';
+import { Text as PIXIText, InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { ShapesEditController, ShapeCreateController } from './controller';
 import { GraphicGraph } from './graphics';
 import { ShapeData } from './types';
@@ -10,9 +11,18 @@ export class GraphsUpdateController extends ShapesEditController {
 
     protected isNodeTranslating: boolean = false;
 
+    protected nodeText: PIXIText = new PIXIText("", {
+        fontFamily: 'Arial',
+        fontSize: 36,
+        fill: '#ffffff',
+        strokeThickness: 5,
+    });
+
     bindings() {
         super.bindings();
         this.onNodeDown = this.onNodeDown.bind(this);
+        this.onNodeHover = this.onNodeHover.bind(this);
+        this.onNodeOut = this.onNodeOut.bind(this);
     }
 
     public activate() {
@@ -26,8 +36,14 @@ export class GraphsUpdateController extends ShapesEditController {
             }
         });
         this.renderer.stage.interactive = true;
+        this.renderer.stage.addChild(this.nodeText);
         this.renderer.stage.on('pointerdown', this.onRootDown);
         this.drawSelection();
+    }
+
+    public deactivate() {
+        super.deactivate();
+        this.renderer.stage.removeChild(this.nodeText);
     }
 
     drawSelection() {
@@ -51,19 +67,25 @@ export class GraphsUpdateController extends ShapesEditController {
         if (obj instanceof GraphicGraph) {
             obj.state = state;
             obj.onNode('pointerdown', this.onNodeDown);
+            if (settings.showVertexName) {
+                obj.onNode('pointerover', this.onNodeHover);
+                obj.onNode('pointerout', this.onNodeOut);
+            }
             obj.draw();
         }
     }
 
-    onNodeDown(evt: PIXI.InteractionEvent) {
+    onNodeDown(evt: PIXIInteractionEvent) {
         const origEvt = evt.data.originalEvent as PointerEvent;
         const nodeIdx = (evt as any).nodeIdx;
         const shape = (evt as any).shape as ShapeData;
         if (!this.targetShapes.has(shape)) {
+            // select the belonging skeleton
             this.targetShapes.clear();
             this.targetShapes.add(shape);
         }
         if (origEvt.buttons === 2) {
+            // set as non-visible
             const obj = this.targetShapes.values().next().value;
             obj.geometry.visibles![nodeIdx] = !obj.geometry.visibles![nodeIdx];
             this.emitUpdate();
@@ -80,7 +102,20 @@ export class GraphsUpdateController extends ShapesEditController {
         }
     }
 
-    public onNodeMove(evt: PIXI.InteractionEvent) {
+    public onNodeHover(evt: PIXIInteractionEvent) {
+        const nodeIdx = (evt as any).nodeIdx;
+        const x = (evt as any).shape.geometry.vertices[nodeIdx*2+0];
+        const y = (evt as any).shape.geometry.vertices[nodeIdx*2+1];
+        this.nodeText.text = settings.vertexNames[nodeIdx];
+        this.nodeText.position.x = this.renderer.denormalizeX(x);
+        this.nodeText.position.y = this.renderer.denormalizeY(y);
+    }
+
+    public onNodeOut() {
+        this.nodeText.text = "";
+    }
+
+    public onNodeMove(evt: PIXIInteractionEvent) {
         if (this.isNodeTranslating) {
             const newPos = this.renderer.getPosition(evt.data);
             const {x, y} = this.renderer.normalize(newPos);
@@ -113,7 +148,31 @@ export class GraphsUpdateController extends ShapesEditController {
  */
 export class GraphCreateController extends ShapeCreateController {
 
-    protected onRootDown(evt: PIXI.InteractionEvent) {
+    protected nodeText: PIXIText = new PIXIText("", {
+        fontFamily: 'Arial',
+        fontSize: 36,
+        fill: '#ffffff',
+        strokeThickness: 5,
+    });
+
+    public activate() {
+        super.activate();
+        if (settings.showVertexName) {
+            this.renderer.stage.addChild(this.nodeText);
+            this.nodeText.text = settings.vertexNames[0];
+            this.nodeText.position.x = this.renderer.mouse.x - this.nodeText.width - 10;
+            this.nodeText.position.y = this.renderer.mouse.y - this.nodeText.height - 10;
+        }
+    }
+
+    public deactivate() {
+        super.deactivate();
+        if (settings.showVertexName) {
+            this.renderer.stage.removeChild(this.nodeText);
+        }
+    }
+
+    protected onRootDown(evt: PIXIInteractionEvent) {
         // prevent shape creating when using right mouse click
         const pointer = (evt.data.originalEvent as PointerEvent);
         if (pointer.buttons === 2) {
@@ -128,6 +187,7 @@ export class GraphCreateController extends ShapeCreateController {
             const l = shape.data.geometry.vertices.length * 0.5;
             shape.data.geometry.visibles![shape.data.geometry.visibles!.length-1] = pointer.buttons !== 4;
             shape.data.geometry.edges = [...settings.edges.filter(([e1, e2]) => e1 < l && e2 < l)];
+            this.nodeText.text = settings.vertexNames[l];
         } else {
             const data = observable({
                 id: 'tmp',
@@ -143,11 +203,25 @@ export class GraphCreateController extends ShapeCreateController {
             this.tmpShape.scaleY = this.renderer.imageHeight;
             this.renderer.stage.addChild(this.tmpShape);
             this.tmpShape.draw();
+            this.nodeText.text = settings.vertexNames[1] || "";
+        }
+        // update node text position
+        if (settings.showVertexName) {
+            this.nodeText.position.x = this.renderer.mouse.x - this.nodeText.width - 10;
+            this.nodeText.position.y = this.renderer.mouse.y - this.nodeText.height - 10;
         }
         // check length
         if (this.tmpShape && this.tmpShape!.data.geometry.vertices.length === settings.vertexNames.length * 2) {
             this.createGraph();
         }
+    }
+
+    onRootMove(evt: PIXIInteractionEvent) {
+        super.onRootMove(evt);
+        const mouse = this.renderer.getPosition(evt.data);
+        // text position at top left + margin
+        this.nodeText.position.x = mouse.x - this.nodeText.width - 10;
+        this.nodeText.position.y = mouse.y - this.nodeText.height - 10;
     }
 
     public createGraph() {

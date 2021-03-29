@@ -60,7 +60,7 @@ export class ModeManager {
 
         this.orbitControls = new OrbitControls(viewer.camera, viewer.domElement);
         // this.orbitControls.minDistance = 5;
-        this.orbitControls.maxDistance = 150;
+        this.orbitControls.maxDistance = 200;
         this.orbitControls.enableKeys = false;
 
         // Event
