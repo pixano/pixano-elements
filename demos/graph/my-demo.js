@@ -78,7 +78,8 @@ class MyDemo extends LitElement {
   firstUpdated() {
     this.element.settings.radius = 3;
     this.element.settings.edges = [[0,1],[1,2]];
-    this.element.settings.vertexNames = ["t1","t2","t3"];
+    this.element.settings.vertexNames = ["Left eye","Nose","Right eye"];
+    // this.element.settings.showVertexName = false;
   }
 
   onCreate() {

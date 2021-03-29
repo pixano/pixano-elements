@@ -163,11 +163,6 @@ export abstract class Graphic extends PIXIContainer {
       return this as any;
     }
 
-    public removeAllListeners<T extends Graphic>(event: PIXI.InteractionEventTypes): T {
-      this.area.removeAllListeners(event);
-      return this as any;
-    }
-
     /**
      * Draw encompassing box around object
      */

@@ -182,6 +182,38 @@ interface ImageData {
 }
 ```
 
+It can be read using the following python script:
+```python
+import json
+import base64
+import cv2
+import numpy as np
+
+def readb64(uri):
+  encoded_data = uri.split(',')[1]
+  nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
+  img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+  return img
+
+def writeb64(img):
+    retval, buffer = cv2.imencode('.png', img)
+    pic_str = base64.b64encode(buffer)
+    pic_str = pic_str.decode()
+    return pic_str
+
+# assuming you stored the mask in a json file of the following structure
+# { annotations: [{mask: "data:image/png;base64,iVBORw0KGgoAA..."}]}
+with open(filename, 'r') as f:
+  annotations = json.load(f)["annotations"]
+for ann in annotations:
+  mask = readb64(ann["mask"])
+  print(mask.shape)
+  # should be (height,width,3)
+  # corresponding to [id1, id2, classIdx]
+  # id1 and id2 are zeros in case of semantic segmentation
+
+```
+
 #### pxn-smart-rectangle
 
 Note: `pxn-smart-rectangle` inherits from `pxn-rectangle` so all properties in `pxn-rectangle` will be available on `pxn-smart-rectangle`. Its additional interaction mode consists in clicking on a pixel in the image cropping its context of given size and automatically generate the best fitted box in the area. Detector used is SSD mobilenet trained on MsCOCO. Generated boxes are assigned MsCOCO's categories.
@@ -198,12 +230,33 @@ Note: `pxn-graph` inherits from `pxn-canvas-2d` so all properties in `pxn-canvas
 | `graphType`          | `GraphSettings`| `defaultSkeleton`      | Skeleton structure
 
 ```ts
-interface GraphSettings {
-    edges: [number, number][];
-    names: string[];
+export interface IGraphSettings {
+  radius: number;
+  // Set list of node colors or empty if all take the shape color
+  nodeColors: number[];
+  // Set one color for all edges or same as nodes
+  edgeColorType: "default" | "node";
+  // Set skeleton #keypoints with their names
+  vertexNames: string[];
+  // Set skeleton links between its vertices
+  edges: [number, number][];
+  // Display node names during creation and edition
+  showVertexName: boolean;
 }
 
-const defaultSkeleton = { edges: [[0,1], [0,2]], names: ['header', 'RFoot', 'LFoot']};
+const defaultSkeletonSettings = {
+  radius: 4,
+  nodeColors: [
+    0Xe6194b, 0X3cb44b, 0Xffe119, 0X4363d8, 0Xf58231, 0X911eb4,
+    0X46f0f0, 0Xf032e6, 0Xbcf60c, 0Xfabebe, 0X008080, 0Xe6beff,
+    0X9a6324, 0Xfffac8, 0X800000, 0Xaaffc3, 0X808000, 0Xffd8b1,
+    0X000075, 0X808080, 0Xffffff, 0X000000
+  ],
+  edgeColorType: "node",
+  edges: [[0,1], [0,2]],
+  vertexNames: ['header', 'RFoot', 'LFoot'],
+  showVertexName: true
+};
 ```
 
 ### Methods

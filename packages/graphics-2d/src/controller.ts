@@ -141,7 +141,7 @@ export class ShapesEditController extends Controller {
         this.graphics.forEach((s) => {
             s.interactive = false;
             s.buttonMode = false;
-            s.removeAllListeners('pointerdown');
+            s.removeAllListeners();
         });
         this.renderer.stage.removeListener('pointerdown', this.onRootDown);
     }
