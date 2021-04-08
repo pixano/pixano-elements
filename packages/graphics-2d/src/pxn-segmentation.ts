@@ -196,5 +196,6 @@ export class Segmentation extends Canvas {
     const modes = Object.keys(this.maskManager.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
     this.mode = modes[(currentIdx + 1) % modes.length] as any;
+    this.dispatchEvent(new Event("mode"));
   }
 }

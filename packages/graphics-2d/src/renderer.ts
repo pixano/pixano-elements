@@ -55,7 +55,7 @@ export class Renderer extends PIXI.Application {
 
     private _brightness: number = 1;
 
-    private filter: PIXI.filters.ColorMatrixFilter = new PIXI.filters.ColorMatrixFilter();
+    private filter: any = new PIXI.filters.ColorMatrixFilter();
 
     get imageWidth() {
         return Math.round(this.htmlImageElement.width);

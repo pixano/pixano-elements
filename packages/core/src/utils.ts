@@ -317,7 +317,8 @@ export const isEqual = (value: any, other: any) => {
 				if (item1 !== item2) return false;
 			}
         }
-        return false;
+        // TODO: understand why original value is false
+        return true;
 	};
 	// Compare properties
 	if (type === '[object Array]') {

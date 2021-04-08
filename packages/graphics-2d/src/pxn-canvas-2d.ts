@@ -30,7 +30,7 @@ import { dataToShape } from './adapter';
 export class Canvas2d extends Canvas {
 
   // input mode type
-  @property({type: String, reflect: true})
+  @property({type: String})
   public mode: string = "edit";
 
   // Enable user to draw outside of the image

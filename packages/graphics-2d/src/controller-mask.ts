@@ -5,11 +5,12 @@
  * @license CECILL-C
  */
 
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { Renderer } from './renderer';
 import { GMask, GraphicPolygon } from './graphics';
 import { unfuseId, fuseId, getPolygonExtrema,
-         extremaUnion, convertIndexToDict, DensePolygon,
-         getDensePolysExtrema } from './utils-mask';
+        extremaUnion, convertIndexToDict, DensePolygon,
+        getDensePolysExtrema } from './utils-mask';
 import { Graphics as PIXIGraphics, Point} from 'pixi.js'
 import { observable } from '@pixano/core';
 import { Controller } from './controller-base';
@@ -104,7 +105,7 @@ export class EditionController extends Controller {
         }
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.InteractionEvent) {
+    onPointerDownSelectionPolygon(evt: PIXIInteractionEvent) {
         if (!this.selectedId.value) {
             // nothing to edit
             return;
@@ -129,7 +130,7 @@ export class EditionController extends Controller {
         }
     }
 
-    onPointerMoveTempPolygon(evt: PIXI.InteractionEvent) {
+    onPointerMoveTempPolygon(evt: PIXIInteractionEvent) {
         if (this.tempPolygon) {
             const newPos = this.renderer.getPosition(evt.data);
             const {x, y} = this.renderer.normalize(newPos);
@@ -194,7 +195,7 @@ export class SelectController extends Controller {
         this.contours.visible = false;
     }
 
-    protected onPointerDownSelectInstance(evt: PIXI.InteractionEvent) {
+    protected onPointerDownSelectInstance(evt: PIXIInteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
@@ -271,7 +272,7 @@ export class LockController extends Controller {
         this.renderer.stage.removeListener('mousedown', this.onPointerDownLock);
     }
 
-    protected onPointerDownLock(evt: PIXI.InteractionEvent) {
+    protected onPointerDownLock(evt: PIXIInteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         const fId = fuseId(id);
@@ -344,7 +345,7 @@ export class CreateController extends Controller {
         this.roi.visible = this.showRoi;
     }
 
-    onPointerDownSelectionPolygon(evt: PIXI.InteractionEvent) {
+    onPointerDownSelectionPolygon(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         const {x, y} = this.renderer.normalize(newPos);
         if (this.tempPolygon) {
@@ -364,7 +365,7 @@ export class CreateController extends Controller {
         }
     }
 
-    onPointerMoveTempPolygon(evt: PIXI.InteractionEvent) {
+    onPointerMoveTempPolygon(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         if (this.tempPolygon) {
             const {x, y} = this.renderer.normalize(newPos);

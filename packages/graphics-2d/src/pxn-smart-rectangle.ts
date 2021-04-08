@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, utils } from '@pixano/core';
@@ -80,7 +81,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     );
   }
 
-  async onRootDown(evt: PIXI.InteractionEvent) {
+  async onRootDown(evt: PIXIInteractionEvent) {
     this.isCreating = true;
     const mouseData = this.renderer.getPosition(evt.data);
     const click: AIPoint = { x: mouseData.x, y: mouseData.y };
@@ -124,7 +125,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
     }
   }
 
-  onRootMove(evt: PIXI.InteractionEvent) {
+  onRootMove(evt: PIXIInteractionEvent) {
     super.onRootMove(evt);
     const roiSize =
       this.boundingBoxCreator.baseRoiSize *

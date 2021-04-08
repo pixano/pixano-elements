@@ -98,7 +98,7 @@ export class GraphicGraph extends Graphic {
         this.area.clear();
         this.data.geometry.edges!.forEach((edge) => {
             let edgeColor = settings.edgeColorType == "default" ? this.hex : settings.nodeColors[edge[0]]
-            edgeColor = this.state === 'nodes' ? 0X426eff : edgeColor;
+            edgeColor = this.state === 'nodes' || this.state === 'box' ? 0X426eff : edgeColor;
             this.area.lineStyle(3, edgeColor || 0xFFFFFF, 1, 0.5, true);
             const sX = Math.round(this.data.geometry.vertices[edge[0] * 2] * this.scaleX);
             const sY = Math.round(this.data.geometry.vertices[edge[0] * 2 + 1] * this.scaleY);
@@ -127,7 +127,7 @@ export class GraphicGraph extends Graphic {
             const y = this.data.geometry.vertices[i * 2 + 1];
             const opacity = this.data.geometry.visibles![i] ? 1 : 0.3;
             const fillColor = settings.nodeColors.length ? settings.nodeColors[i] : this.hex;
-            const borderColor = this.state === 'nodes' ? 0X426eff : this.hex;
+            const borderColor = this.state === 'nodes' || this.state === 'box' ? 0X426eff : this.hex;
             this.nodes[i].clear();
             this.nodes[i].beginFill(fillColor, opacity);
             this.nodes[i].lineStyle(1, borderColor, 1, 0.5, true);
@@ -142,10 +142,10 @@ export class GraphicGraph extends Graphic {
             this.nodes[i].endFill();
         }
         if (this.state !== 'contour' && this.state !== 'nodes') {
-                if (this.state === 'box') {
-                    this.nodes.forEach((c) => { c.interactive = false; });
-                    this.drawBox();
-                }
+                // if (this.state === 'box') {
+                //     this.nodes.forEach((c) => { c.interactive = false; });
+                //     this.drawBox();
+                // }
             } else if (this.state === 'contour' || this.state === 'nodes') {
             this.controls.forEach((c) => { c.interactive = false; });
         } else {
