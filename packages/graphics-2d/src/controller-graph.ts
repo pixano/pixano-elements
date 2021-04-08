@@ -32,27 +32,18 @@ export class GraphsUpdateController extends ShapesEditController {
                 s.interactive = true;
                 s.buttonMode = true;
                 s.on('pointerdown', this.onObjectDown.bind(this));
-                this.decorateTo(s as GraphicGraph, 'none');
+                s.state = 'none';
             }
         });
         this.renderer.stage.interactive = true;
         this.renderer.stage.addChild(this.nodeText);
         this.renderer.stage.on('pointerdown', this.onRootDown);
-        this.drawSelection();
+        this.drawDefaultShapesDecoration();
     }
 
     public deactivate() {
         super.deactivate();
         this.renderer.stage.removeChild(this.nodeText);
-    }
-
-    drawSelection() {
-        this.targetShapes.forEach((t) => {
-            const shape = this.getTargetGraphic(t) as GraphicGraph;
-            this.decorateTo(shape, 'nodes');
-            this.renderer.bringToFront(shape);
-            shape.draw();
-        });
     }
 
     protected toggle(obj: GraphicGraph): GraphicGraph {
@@ -63,9 +54,9 @@ export class GraphsUpdateController extends ShapesEditController {
         return obj;
     }
 
-    public decorateTo(obj: GraphicGraph, state: 'box' | 'contour' | 'nodes' | 'none') {
+    public setShapeInteraction(obj: GraphicGraph | null = null) {
+        super.setShapeInteraction(obj);
         if (obj instanceof GraphicGraph) {
-            obj.state = state;
             obj.onNode('pointerdown', this.onNodeDown);
             if (settings.showVertexName) {
                 obj.onNode('pointerover', this.onNodeHover);
@@ -92,7 +83,7 @@ export class GraphsUpdateController extends ShapesEditController {
         } else {
             this.activeNodeIdx = nodeIdx;
             this.isNodeTranslating = true;
-            const obj = this.getTargetGraphic((evt as any).shape) as GraphicGraph;
+            const obj = this.getGraphic((evt as any).shape) as GraphicGraph;
             const node = obj.nodes[this.activeNodeIdx];
             this.updated = false;
             node.removeAllListeners('pointermove');
@@ -131,7 +122,7 @@ export class GraphsUpdateController extends ShapesEditController {
     }
 
     public onNodeUp(evt: any) {
-        const obj = this.getTargetGraphic((evt as any).shape) as GraphicGraph;
+        const obj = this.getGraphic((evt as any).shape) as GraphicGraph;
         const node = obj.nodes[this.activeNodeIdx];
         node.removeAllListeners('pointermove');
         node.removeAllListeners('pointerupoutside');

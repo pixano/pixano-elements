@@ -52,7 +52,6 @@ export const demoStyles = css`
     margin: auto;
     width: auto;
   }
-
   .icon {
       -webkit-touch-callout: none;
       -webkit-user-select: none;

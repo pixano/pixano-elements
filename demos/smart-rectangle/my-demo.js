@@ -128,12 +128,6 @@ class MyDemo extends LitElement {
     this.image = 'image.jpg';
     this.scales = [0.25, 0.5, 1, 1.5, 2];
     this.currentScale = 1;
-    window.addEventListener("keydown", evt => {
-      if (evt.key == "Alt") {
-        this.element.mode =
-          this.element.mode === "edit" ? "create" : "edit";
-      }
-    });
   }
 
   onCreate(e) {

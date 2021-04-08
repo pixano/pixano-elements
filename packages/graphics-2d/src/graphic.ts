@@ -152,8 +152,9 @@ export abstract class Graphic extends PIXIContainer {
     }
 
     public on<T extends Graphic>(event: string, fn: (evt: any) => void, context?: any): T {
+      this.area.removeListener(event);
       this.area.on(event, (evt: any) => {
-        if (event === 'pointerdown' || event === 'pointermove') {
+        if (event === 'pointerdown') {
           // stop bubbling
           evt.stopPropagation();
         }

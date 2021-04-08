@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { Renderer } from './renderer';
 import { Rectangle as PIXIRectangle } from 'pixi.js';
 
@@ -49,7 +50,8 @@ export class ViewControls extends EventTarget {
     }
 
     public triggerOnZoom() {
-        this.dispatchEvent(new CustomEvent('zoom', { detail: this.viewer.s }))
+        this.dispatchEvent(new CustomEvent('zoom', { detail: this.viewer.s }));
+        this.notifyUpdate();
     }
 
     /**
@@ -161,7 +163,7 @@ export class ViewControls extends EventTarget {
      * @param x normalized x
      * @param y normalized y
      */
-    public onPan(evt: PIXI.InteractionEvent) {
+    public onPan(evt: PIXIInteractionEvent) {
         if (this.isPanning) {
             const imgX = (evt.data.global.x - this.viewer.rx * this.viewer.s - this.viewer.sx) / this.viewer.stage.width * this.viewer.imageWidth;
             const imgY = (evt.data.global.y - this.viewer.ry * this.viewer.s - this.viewer.sy) / this.viewer.stage.height * this.viewer.imageHeight;
@@ -185,10 +187,20 @@ export class ViewControls extends EventTarget {
         this.viewer.stage.removeListener('pointerupoutside', this.onPanUp);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.computeHitArea();
-
+        this.notifyUpdate();
     }
 
-    public onEdgeMove(evt: PIXI.InteractionEvent) {
+    public notifyUpdate() {
+        this.dispatchEvent(new CustomEvent('update-display', { detail: {
+            s: this.viewer.s, // zoom
+            rx: this.viewer.rx, // pan offset
+            ry: this.viewer.ry, // pan offset
+            sx: this.viewer.sx, // zoom offset
+            sy: this.viewer.sy, // zoom offset
+        }}))
+    }
+
+    public onEdgeMove(evt: PIXIInteractionEvent) {
         if (this.viewer.s <= 1) {
             return;
         }

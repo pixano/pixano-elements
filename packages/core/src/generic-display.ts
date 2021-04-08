@@ -214,10 +214,9 @@ export abstract class GenericDisplay extends LitElement {
           ${this.display()}
           <slot name="slider" id="slot">
             <div style="display: ${this.isSequence ? 'block': 'none'};">
-                <playback-control @update=${this.onSliderChange}
-                                  current=${this.targetFrameIdx}
-                                  style="display: ${this.isSequence ? 'flex': 'none'};"
-                                  max=${this.maxFrameIdx}></playback-control>
+              <playback-control @update=${this.onSliderChange}
+                                    style="display: ${this.isSequence ? 'flex': 'none'};"
+                                    max=${this.maxFrameIdx}></playback-control>
             </div>
           </slot>
         </div>

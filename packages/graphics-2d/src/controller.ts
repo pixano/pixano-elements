@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { Renderer } from './renderer';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
@@ -67,20 +68,28 @@ export class ShapesEditController extends Controller {
                 case 'set':
                 case 'add': {
                     // add new selection
-                    this.drawSelection();
+                    value = Array.isArray(value) ? value: [value];
+                    value.forEach((v: ShapeData) => {
+                        const o = this.getGraphic(v)!;
+                        o.state = 'box';
+                        this.setShapeInteraction(o);
+                        o.draw();
+                    });
                     break;
                 }
                 case 'delete': {
                     // remove selection
-                    const o = this.getTargetGraphic(value as ShapeData)!;
-                    this.decorateTo(o, 'none');
+                    const o = this.getGraphic(value as ShapeData)!;
+                    o.state = 'none';
+                    this.setShapeInteraction(o);
                     o.draw();
                     break;
                 }
                 case 'clear': {
                     // remove all selection
                     this.graphics.forEach((o) => {
-                        this.decorateTo(o, 'none');
+                        o.state = 'none';
+                        this.setShapeInteraction(o);
                         o.draw();
                     });
                     break;
@@ -98,32 +107,45 @@ export class ShapesEditController extends Controller {
         this.onObjectUp = this.onObjectUp.bind(this);
     }
 
-    public drawSelection() {
-        this.graphics.forEach((o) => {
+    public setShapeInteraction(graphic: Graphic | null = null) {
+        if (!graphic) {
+            return;
+        }
+
+        if (graphic.state === 'box') {
+            graphic.controls.forEach((c, idx) => {
+                c.removeAllListeners();
+                c.on('pointerdown', (evt: any) => {
+                    // stop bubbling
+                    evt.stopPropagation();
+                    evt.idx = idx;
+                    this.onControlDown(evt, graphic);
+                });
+            });
+        } else if (graphic.state === 'none') {
+            graphic.controls.forEach((c) => {
+                c.removeAllListeners('pointerdown');
+                c.interactive = false;
+                c.buttonMode = false;
+            });
+            graphic.draw();
+        }
+    }
+
+    public drawDefaultShapesDecoration(graphic: Graphic | null = null) {
+
+        const graphics = graphic ? new Set([graphic]) : this.graphics;
+        graphics.forEach((o) => {
             const decorator = !this.targetShapes.has(o.data) ? 'none' :
                                 this.targetShapes.size > 2 ? 'contour' : 'box';
             o.state = decorator;
-            if (o.state === 'box') {
-                o.controls.forEach((c, idx) => {
-                    c.removeAllListeners();
-                    c.on('pointerdown', (evt: any) => {
-                        // stop bubbling
-                        evt.stopPropagation();
-                        evt.idx = idx;
-                        this.onControlDown(evt, o);
-                    });
-                });
-            }
+            this.setShapeInteraction(o);
             o.draw();
         });
         const sel = this.getFirstGraphic();
         if (sel) {
             this.renderer.bringToFront(sel);
         }
-    }
-
-    public decorateTo(obj: Graphic, state: 'box' | 'none' | 'contour' | 'nodes') {
-        obj.state = state;
     }
 
     public activate() {
@@ -133,7 +155,8 @@ export class ShapesEditController extends Controller {
             s.buttonMode = true;
             s.on('pointerdown', this.onObjectDown);
         });
-        this.drawSelection();
+        this.drawDefaultShapesDecoration();
+        this.renderer.stage.interactive = true;
         this.renderer.stage.on('pointerdown', this.onRootDown);
     }
 
@@ -163,7 +186,7 @@ export class ShapesEditController extends Controller {
     /**
      * Handle click on shape
      */
-    onObjectDown(evt: PIXI.InteractionEvent) {
+    onObjectDown(evt: PIXIInteractionEvent) {
 
         // default behaviour is
         // cancel action if pointer is right or middle
@@ -183,8 +206,8 @@ export class ShapesEditController extends Controller {
         if (!obj) {
             return;
         }
-        obj.on('pointermove', this.onObjectMove);
-        obj.on('pointerupoutside', this.onObjectUp);
+        this.renderer.stage.on('pointermove', this.onObjectMove);
+        this.renderer.stage.on('pointerupoutside', this.onObjectUp);
         const changed = this.doObjectSelection(shape, evt.data.originalEvent.shiftKey);
         if (changed) {
             this.emitSelection();
@@ -218,7 +241,7 @@ export class ShapesEditController extends Controller {
      * Handle cursor move on object
      * @param evt
      */
-    public onObjectMove(evt: PIXI.InteractionEvent) {
+    public onObjectMove(evt: PIXIInteractionEvent) {
         const shape = (evt as any).shape;
         if ((evt.data.originalEvent as PointerEvent).pressure && this.isDragging && this.targetShapes.has(shape)) {
             const mouse = this.renderer.getPosition(evt.data);
@@ -252,12 +275,13 @@ export class ShapesEditController extends Controller {
         }
     }
 
-    onObjectUp(e: PIXI.InteractionEvent) {
+    onObjectUp(e: PIXIInteractionEvent) {
+        
         this.isDragging = false;
-        const obj = this.getTargetGraphic((e as any).shape);
+        const obj = this.getGraphic((e as any).shape);
         if (obj) {
-            obj.removeAllListeners('pointermove');
-            obj.removeAllListeners('pointerupoutside');
+            this.renderer.stage.removeListener('pointermove', this.onObjectMove);
+            this.renderer.stage.removeListener('pointerupoutside', this.onObjectUp);
             if (this.updated) {
                 this.emitUpdate();
             }
@@ -272,7 +296,7 @@ export class ShapesEditController extends Controller {
         this.emit('selection', [...this.targetShapes].map((data) => data.id));
     }
 
-    protected onControlDown(evt: PIXI.InteractionEvent, graphic: Graphic) {
+    protected onControlDown(evt: PIXIInteractionEvent, graphic: Graphic) {
         this.isScaling = true;
         // @ts-ignore
         const idx = evt.idx;
@@ -294,7 +318,7 @@ export class ShapesEditController extends Controller {
         }
     }
 
-    public onControlMove(evt: PIXI.InteractionEvent) {
+    public onControlMove(evt: PIXIInteractionEvent) {
         if (this.isScaling && (evt as any).idx === this.activeControlIdx) {
             if (!this.updated) {
                 // this.emit('start-update', this.selectToJson());
@@ -406,7 +430,7 @@ export class ShapesEditController extends Controller {
      * Retrieve graphical shape for a given shape data
      * @param s
      */
-    protected getTargetGraphic(s: ShapeData) {
+    protected getGraphic(s: ShapeData) {
         let graphic = [...this.graphics].find((o) => o.data === s);
         if (!graphic) {
             // find graphic with required id
@@ -426,21 +450,6 @@ export class ShapesEditController extends Controller {
     protected getShape(id: string) {
         return [...this.targetShapes].find((s) => s.id === id);
     }
-
-    // public decorateTo(obj: Shape, state: Decoration) {
-    //     obj.state = state;
-    //     if (obj.state === Decoration.Box) {
-    //         obj.controls.forEach((c, idx) => {
-    //             c.removeAllListeners();
-    //             c.on('pointerdown', (evt: any) => {
-    //                 evt.stopPropagation();
-    //                 evt.idx = idx;
-    //                 this.onControlDown(evt);
-    //             });
-    //         });
-    //     }
-    //     obj.draw();
-    // }
 }
 
 /**
@@ -519,9 +528,9 @@ export abstract class ShapeCreateController extends Controller {
         this.emit('create', [...this.shapes].pop());
     }
 
-    protected abstract onRootDown(evt: PIXI.InteractionEvent): void;
+    protected abstract onRootDown(evt: PIXIInteractionEvent): void;
 
-    onRootMove(evt: PIXI.InteractionEvent) {
+    onRootMove(evt: PIXIInteractionEvent) {
         const pointer = (evt.data.originalEvent as PointerEvent);
         if (pointer.buttons === 2 || pointer.buttons === 4) {
             return;

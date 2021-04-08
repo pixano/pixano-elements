@@ -1,3 +1,4 @@
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { observable } from '@pixano/core';
 import { ShapesEditController, ShapeCreateController } from './controller';
 import { GraphicPolygon } from './graphics';
@@ -32,11 +33,13 @@ export class PolygonsEditController extends ShapesEditController {
             return obj;
         }
         if (obj.state === 'box') {
-            this.decorateTo(obj, 'nodes');
+            obj.state = 'nodes';
         } else if (obj.state === 'nodes') {
-            this.decorateTo(obj, 'nodes');
+            obj.state = 'nodes';
         }
+        this.setShapeInteraction(obj);
         obj.draw();
+        
         return obj;
     }
 
@@ -46,46 +49,45 @@ export class PolygonsEditController extends ShapesEditController {
         return changed;
     }
 
-    onObjectUp(e: PIXI.InteractionEvent) {
+    onObjectUp(e: PIXIInteractionEvent) {
         super.onObjectUp(e);
-        const obj = this.getTargetGraphic((e as any).shape) as GraphicPolygon;
+        const obj = this.getGraphic((e as any).shape) as GraphicPolygon;
         if (obj && this.reclick && !this.updated) {
             this.reclick = false;
             this.toggle(obj);
         }
     }
 
-    public decorateTo(obj: GraphicPolygon, state: 'box' | 'nodes' | 'none' | 'contour') {
-        super.decorateTo(obj, state);
-        if (state === 'nodes') {
-            obj.addNodeListener('pointerdown', (evt: any) => {
-                // stop bubbling
-                evt.stopPropagation();
-                this.onNodeDown(evt);
-            });
-            obj.addMidnodeListener('pointerdown', (evt: any) => {
-                // stop bubbling
-                evt.stopPropagation();
-                this.onMidNodeDown(evt);
-            });
-        } else if (obj instanceof GraphicPolygon) {
-            // only polygonshape has interactive nodes
-            // => multipolygons do not
-            obj.removeNodeListeners();
+    public setShapeInteraction(obj: GraphicPolygon | null = null) {
+        super.setShapeInteraction(obj);
+        if (obj) {
+            if (obj.state === 'nodes') {
+                obj.addNodeListener('pointerdown', (evt: any) => {
+                    // stop bubbling
+                    evt.stopPropagation();
+                    this.onNodeDown(evt);
+                });
+                obj.addMidnodeListener('pointerdown', (evt: any) => {
+                    // stop bubbling
+                    evt.stopPropagation();
+                    this.onMidNodeDown(evt);
+                });
+            } else if (obj instanceof GraphicPolygon) {
+                // only polygonshape has interactive nodes
+                // => multipolygons do not
+                obj.removeNodeListeners();
+            }
         }
     }
 
     public onNodeDown(evt: any) {
-        const obj = this.getTargetGraphic((evt as any).shape) as GraphicPolygon;
+        const obj = this.getGraphic((evt as any).shape) as GraphicPolygon;
         if (evt.data.originalEvent.buttons !== 2) {
             this.activeNodeIdx = evt.nodeIdx;
             this.isNodeTranslating = true;
-            const node = obj.nodes[this.activeNodeIdx];
             this.updated = false;
-            node.removeAllListeners('pointermove');
-            node.removeAllListeners('pointerupoutside');
-            node.on('pointermove', this.onNodeMove.bind(this));
-            node.on('pointerupoutside', this.onNodeUp.bind(this));
+            this.renderer.stage.on('pointermove', this.onNodeMove);
+            this.renderer.stage.on('pointerupoutside', this.onNodeUp);
         } else {
             // remove node
             if (obj.data.geometry.vertices.length > 6) {
@@ -114,10 +116,9 @@ export class PolygonsEditController extends ShapesEditController {
     }
 
     public onNodeUp(evt: any) {
-        const obj = this.getTargetGraphic((evt as any).shape) as GraphicPolygon;
-        const node = obj.nodes[this.activeNodeIdx];
-        node.removeAllListeners('pointermove');
-        node.removeAllListeners('pointerupoutside');
+        const obj = this.getGraphic((evt as any).shape) as GraphicPolygon;
+        this.renderer.stage.removeListener('pointermove', this.onNodeMove);
+        this.renderer.stage.removeListener('pointerupoutside', this.onNodeUp);
         this.isNodeTranslating = false;
         if (this.updated) {
             if (obj && !obj.isValid()) {
@@ -163,7 +164,7 @@ export class PolygonsEditController extends ShapesEditController {
         if (this.isMidNodeTranslating) {
             this.isMidNodeTranslating = false;
             if (this.updated) {
-                const obj = this.getTargetGraphic((evt as any).shape) as GraphicPolygon;
+                const obj = this.getGraphic((evt as any).shape) as GraphicPolygon;
                 if (obj && !obj.isValid()) {
                     // cancel update;
                     console.warn('Invalid polygon. Node creation cancelled.');
@@ -235,7 +236,7 @@ export class PolygonCreateController extends ShapeCreateController {
         }
     }
 
-    protected onRootDown(evt: PIXI.InteractionEvent) {
+    protected onRootDown(evt: PIXIInteractionEvent) {
         if ((evt.data.originalEvent as PointerEvent).buttons !== 2) {
             this.isCreating = true;
             const m = this.renderer.getPosition(evt.data);
@@ -273,7 +274,7 @@ export class PolygonCreateController extends ShapeCreateController {
         }
     }
 
-    onRootMove(evt: PIXI.InteractionEvent) {
+    onRootMove(evt: PIXIInteractionEvent) {
         super.onRootMove(evt);
         const m = this.renderer.getPosition(evt.data);
         if (m.x === this.mouse.x && m.y === this.mouse.y) {

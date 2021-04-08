@@ -77,15 +77,13 @@ export class GraphicPolygon extends Graphic {
             n.interactive = false;
             n.buttonMode = false;
             this.midnodeListeners.forEach((v, type) => {
-            n.interactive = true;
-            n.buttonMode = true;
-            n.on(type, (evt: any) => {
-                evt.nodeIdx = idx;
                 n.interactive = true;
                 n.buttonMode = true;
                 n.cursor = 'cell';
-                v(evt);
-            });
+                n.on(type, (evt: any) => {
+                    evt.nodeIdx = idx;
+                    v(evt);
+                });
             })
         });
     }
@@ -98,11 +96,9 @@ export class GraphicPolygon extends Graphic {
             this.nodeListeners.forEach((v, type) => {
                 n.interactive = true;
                 n.buttonMode = true;
+                n.cursor = 'grab';
                 n.on(type, (evt: any) => {
                     evt.nodeIdx = idx;
-                    n.interactive = true;
-                    n.buttonMode = true;
-                    n.cursor = 'grab';
                     v(evt);
                 });
             })
@@ -189,6 +185,10 @@ export class GraphicPolygon extends Graphic {
             this.midnodes.forEach((n) => n.clear());
         }
 
+        this.controls.forEach((c) => {
+            c.interactive = false;
+            c.buttonMode = false;
+        });
         if (this.state === 'box') {
             this.drawBox();
         } else if (this.state === 'contour' || this.state === 'nodes') {
@@ -237,8 +237,9 @@ export class GraphicPolygon extends Graphic {
                 }
             }
         } else {
-            this.nodes.forEach((c) => { c.interactive = false; });
-            this.controls.forEach((c) => { c.interactive = false; });
+            this.nodeContainer.interactive = false;
+            this.nodes.forEach((c) => c.interactive = false );
+            this.controls.forEach((c) => c.interactive = false );
         }
     }
 

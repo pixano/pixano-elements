@@ -86,7 +86,7 @@ export class ObservableSet<T> extends Set<T> {
             super.add(v);
         });
         for (const cb of [...observers.get(this)!]) {
-            cb('set');
+            cb('set', values);
         }
     }
 }

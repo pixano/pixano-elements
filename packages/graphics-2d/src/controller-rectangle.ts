@@ -1,3 +1,4 @@
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { observable } from '@pixano/core';
 import { ShapeCreateController } from './controller';
 import { GraphicRectangle } from './graphics';
@@ -10,7 +11,7 @@ export class RectangleCreateController extends ShapeCreateController {
 
     protected updated: boolean = false;
 
-    protected onRootDown(evt: PIXI.InteractionEvent) {
+    protected onRootDown(evt: PIXIInteractionEvent) {
         // prevent shape creating when using middle or right mouse click
         const pointer = (evt.data.originalEvent as PointerEvent);
         if (pointer.buttons === 2 || pointer.buttons === 4) {
@@ -34,7 +35,7 @@ export class RectangleCreateController extends ShapeCreateController {
         this.tmpShape.draw();
     }
 
-    onRootMove(evt: PIXI.InteractionEvent) {
+    onRootMove(evt: PIXIInteractionEvent) {
         super.onRootMove(evt);
         const mouse = this.renderer.getPosition(evt.data);
         if (mouse.x === this.mouse.x && mouse.y === this.mouse.y) {

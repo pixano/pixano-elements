@@ -1,3 +1,4 @@
+import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { BoxSegmentation } from '@pixano/ai/lib/box-segmentation';
 import { observable } from '@pixano/core';
 import { ShapeCreateController } from './controller';
@@ -38,7 +39,7 @@ export class SmartCreateController extends ShapeCreateController {
       });
     }
 
-    onRootDown(evt: PIXI.InteractionEvent) {
+    onRootDown(evt: PIXIInteractionEvent) {
       // prevent shape creating when using middle or right mouse click
       const pointer = (evt.data.originalEvent as PointerEvent);
       if (pointer.buttons === 2 || pointer.buttons === 4) {
@@ -66,7 +67,7 @@ export class SmartCreateController extends ShapeCreateController {
       this.dispatchEvent(new Event('update'));
     }
 
-    onRootMove(evt: PIXI.InteractionEvent) {
+    onRootMove(evt: PIXIInteractionEvent) {
       super.onRootMove(evt);
         const mouse = this.renderer.getPosition(evt.data);
         if (mouse.x === this.mouse.x && mouse.y === this.mouse.y) {
