@@ -259,7 +259,8 @@ export class GMask extends PIXIContainer {
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
-                if (mask[y * width + x] === 1) {
+                const pixId = this.pixelId(idx);
+                if (mask[y * width + x] === 1 && !this.lockedInstances.has(fuseId(pixId))) {
                     this.orig!.data[4 * idx] = id1;
                     this.orig!.data[4 * idx + 1] = id2;
                     this.orig!.data[4 * idx + 2] = cls;
