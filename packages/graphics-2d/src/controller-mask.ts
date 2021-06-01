@@ -86,15 +86,18 @@ export class EditionController extends Controller {
                 this.tempPolygon = null;
                 if (vertices.length > 2) {
                     const fillType = (this.mode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
-                    let extrema = getPolygonExtrema(vertices);
-                    extrema = extremaUnion(extrema, getDensePolysExtrema(this.densePolygons));
+                    let extrema = undefined;
+                    if (fillType != 'remove') {
+                        extrema = getPolygonExtrema(vertices);
+                        extrema = extremaUnion(extrema, getDensePolysExtrema(this.densePolygons));
+                    }
                     this.gmask.updateByPolygon(vertices, this.selectedId.value, fillType);
                     this.densePolygons = getPolygons(this.gmask, this.selectedId.value, extrema);
                     updateDisplayedSelection(this.contours, this.densePolygons);
                     this.send(new Event('update'));
                 }
             }
-        } else if (evt.key === 'Escape'){
+        } else if (evt.key === 'Escape') {
             this.densePolygons = [];
             if (this.tempPolygon) {
                 this.tempPolygon.destroy();
@@ -163,7 +166,7 @@ export class SelectController extends Controller {
 
     public contours = new PIXIGraphics();
 
-    private densePolygons: DensePolygon[] = new Array();
+    protected densePolygons: DensePolygon[] = new Array();
 
     protected selectedId: {
         value: [number, number, number] | null
@@ -252,13 +255,13 @@ export class SelectController extends Controller {
     }
 }
 
-export class LockController extends Controller {
-    protected renderer: Renderer;
+export class LockController extends SelectController {
 
-    protected gmask: GMask;
+    public lockType: "instance" | "class" = "class";
 
-    constructor(renderer: Renderer, gmask: GMask) {
-        super();
+    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
+            send: (event: Event) => boolean, contours: PIXIGraphics) {
+        super(renderer, gmask, selectedId, send, contours);
         this.renderer = renderer;
         this.gmask = gmask;
         this.onPointerDownLock = this.onPointerDownLock.bind(this);
@@ -266,20 +269,47 @@ export class LockController extends Controller {
 
     activate() {
         this.renderer.stage.on('mousedown', this.onPointerDownLock);
+        this.contours.visible = true;
+        if (this.selectedId.value) {
+            
+            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+            updateDisplayedSelection(this.contours, this.densePolygons);
+        }
     }
 
     deactivate() {
         this.renderer.stage.removeListener('mousedown', this.onPointerDownLock);
+        this.contours.visible = false;
     }
 
     protected onPointerDownLock(evt: PIXIInteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
-        const fId = fuseId(id);
-        if (this.gmask.lockedInstances.has(fId)) {
-            this.gmask.lockedInstances.delete(fId);
-        } else {
-            this.gmask.lockedInstances.add(fId);
+        if (this.lockType === "instance") {
+            const fId = fuseId(id);
+            if (this.gmask.lockedInstances.has(fId)) {
+                this.gmask.lockedInstances.delete(fId);
+            } else {
+                this.gmask.lockedInstances.add(fId);
+            }
+        } else if (this.lockType === "class") {
+            const cls = id[2];
+            const currentLockedClasses = [...this.gmask.lockedInstances].map((id) => unfuseId(id)[2]);
+            if (currentLockedClasses.includes(cls)) {
+                // remove all instances of class from the locked instances
+                this.gmask.fusedIds.forEach((fId) => {
+                    if (unfuseId(fId)[2] == cls) {
+                        this.gmask.lockedInstances.delete(fId);
+                    }
+                });
+            } else {
+                // add all instances of class to locked instances
+                this.gmask.fusedIds.forEach((fId) => {
+                    if (unfuseId(fId)[2] == cls) {
+                        this.gmask.lockedInstances.add(fId);
+                    }
+                });
+            }
         }
         this.gmask.recomputeColor();
     }
@@ -305,14 +335,20 @@ export class CreateController extends Controller {
     // roi ratio size w.r.t smaller side of image
     public roiRatio: { height: number, width: number } = { height: 0.15, width: 0.05 };
 
+    protected selectedId: {
+        value: [number, number, number] | null
+    };
+
     private send: (event: Event) => boolean;
 
     constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
+                selectedId: {value: [number, number, number] | null},
                 send: (event: Event) => boolean ) {
         super();
         this.renderer = renderer;
         this.gmask = gmask;
         this.targetClass = targetClass;
+        this.selectedId = selectedId;
         this.send = send;
         this.renderer.stage.addChild(this.roi);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
@@ -324,6 +360,10 @@ export class CreateController extends Controller {
         this.renderer.stage.on('mousedown', this.onPointerDownSelectionPolygon);
         this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
         this.initRoi();
+        if (this.selectedId.value) {
+            this.selectedId.value = null;
+            this.send(new CustomEvent('selection', {detail: null}));
+        }
     }
 
     deactivate() {
@@ -445,11 +485,11 @@ export class MaskManager extends EventTarget {
         this.selectedId = { value: selectedId };
         this.renderer.stage.addChild(this.contour);
         this.modes = {
-            'create': new CreateController(this.renderer, this.gmask, this.targetClass, this.dispatchEvent.bind(this)),
+            'create': new CreateController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
             'select': new SelectController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
             'edit-add': new EditionAddController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
             'edit-remove': new EditionRemoveController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'lock': new LockController(this.renderer, this.gmask)
+            'lock': new LockController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour)
         };
         this.modes[this.mode].activate();
     }
@@ -623,4 +663,3 @@ export function drawDashedPolygon(polygon: Point[], contours: PIXIGraphics) {
         contours.drawPolygon(polygon);
     }
 }
-

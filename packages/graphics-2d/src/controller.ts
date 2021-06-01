@@ -65,7 +65,23 @@ export class ShapesEditController extends Controller {
         // triggered on selection object change
         observe(this.targetShapes, (prop: string, value?: any) => {
             switch(prop) {
-                case 'set':
+                case 'set': {
+                    // clear all drawn selection(s)
+                    this.graphics.forEach((o) => {
+                        o.state = 'none';
+                        this.setShapeInteraction(o);
+                        o.draw();
+                    });
+                    // add new selection(s)
+                    value = Array.isArray(value) ? value: [value];
+                    value.forEach((v: ShapeData) => {
+                        const o = this.getGraphic(v)!;
+                        o.state = 'box';
+                        this.setShapeInteraction(o);
+                        o.draw();
+                    });
+                    break;
+                }
                 case 'add': {
                     // add new selection
                     value = Array.isArray(value) ? value: [value];
