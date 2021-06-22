@@ -10,154 +10,18 @@ import { Renderer } from './renderer';
 import { GMask, GraphicPolygon } from './graphics';
 import { unfuseId, fuseId, getPolygonExtrema,
         extremaUnion, convertIndexToDict, DensePolygon,
-        getDensePolysExtrema } from './utils-mask';
+        getDensePolysExtrema, arraysMatch } from './utils-mask';
 import { Graphics as PIXIGraphics, Point} from 'pixi.js'
 import { observable } from '@pixano/core';
 import { Controller } from './controller-base';
+import { rgbToHex } from '@pixano/core/lib/utils';
 
 export enum EditionMode {
     ADD_TO_INSTANCE = 'add_to_instance',
-    REMOVE_FROM_INSTANCE = 'remove_from_instance'
+    REMOVE_FROM_INSTANCE = 'remove_from_instance',
+    NEW_INSTANCE = 'new_instance'
 }
 
-export class EditionController extends Controller {
-
-    protected renderer: Renderer;
-
-    protected gmask: GMask;
-
-    public contours = new PIXIGraphics();
-
-    // temporary polygon
-    public tempPolygon: GraphicPolygon | null = null;
-
-    private densePolygons: DensePolygon[] = new Array();
-
-    protected selectedId: {
-        value: [number, number, number] | null
-    };
-
-    public send: (event: Event) => boolean;
-
-    public mode: EditionMode = EditionMode.ADD_TO_INSTANCE;
-
-    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean, contours: PIXIGraphics) {
-        super();
-        this.renderer = renderer;
-        this.gmask = gmask;
-        this.selectedId = selectedId;
-        this.send = send;
-        this.contours = contours;
-        this.onKeyDown = this.onKeyDown.bind(this);
-        this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
-        this.onPointerDownSelectionPolygon = this.onPointerDownSelectionPolygon.bind(this);
-    }
-
-    activate() {
-        this.renderer.stage.on('mousedown', this.onPointerDownSelectionPolygon);
-        this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
-        this.contours.visible = true;
-    }
-
-    deactivate() {
-        this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectionPolygon);
-        this.renderer.stage.removeListener('pointermove', this.onPointerMoveTempPolygon);
-        this.contours.visible = false;
-    }
-
-    protected onKeyDown(evt: KeyboardEvent) {
-        if (!this.selectedId.value) {
-            // nothing to edit
-            return;
-        }
-        if (evt.key === 'Enter') {
-            if (this.tempPolygon) {
-                this.tempPolygon.popNode();
-                const vertices: any[] = new Array(0.5 * this.tempPolygon.data.geometry.vertices.length)
-                    .fill(0)
-                    .map(() => ({x: 0, y: 0}));
-                this.tempPolygon.data.geometry.vertices.forEach((v, idx) => {
-                    if (idx % 2 === 0) vertices[Math.floor(idx/2)].x = Math.round(v * this.renderer.imageWidth);
-                    else vertices[Math.floor(idx/2)].y = Math.round(v * this.renderer.imageHeight);
-                });
-                this.renderer.stage.removeChild(this.tempPolygon);
-                this.tempPolygon.destroy();
-                this.tempPolygon = null;
-                if (vertices.length > 2) {
-                    const fillType = (this.mode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
-                    let extrema = undefined;
-                    if (fillType != 'remove') {
-                        extrema = getPolygonExtrema(vertices);
-                        extrema = extremaUnion(extrema, getDensePolysExtrema(this.densePolygons));
-                    }
-                    this.gmask.updateByPolygon(vertices, this.selectedId.value, fillType);
-                    this.densePolygons = getPolygons(this.gmask, this.selectedId.value, extrema);
-                    updateDisplayedSelection(this.contours, this.densePolygons);
-                    this.send(new Event('update'));
-                }
-            }
-        } else if (evt.key === 'Escape') {
-            this.densePolygons = [];
-            if (this.tempPolygon) {
-                this.tempPolygon.destroy();
-                this.renderer.stage.removeChild(this.tempPolygon);
-                updateDisplayedSelection(this.contours, this.densePolygons);
-                this.tempPolygon = null;
-            }
-        }
-    }
-
-    onPointerDownSelectionPolygon(evt: PIXIInteractionEvent) {
-        if (!this.selectedId.value) {
-            // nothing to edit
-            return;
-        }
-        const newPos = this.renderer.getPosition(evt.data);
-        const {x, y} = this.renderer.normalize(newPos);
-
-        if (this.tempPolygon) {
-            // add pts
-            this.tempPolygon.popNode();
-            this.tempPolygon.pushNode(x, y);
-            this.tempPolygon.pushNode(x, y);
-        } else {
-            window.removeEventListener('keydown', this.onKeyDown, false);
-            window.addEventListener('keydown', this.onKeyDown, false);
-            this.tempPolygon = new GraphicPolygon(observable({id: '', color: 'red', geometry: {type: 'polygon', vertices: []}}));
-            this.tempPolygon.pushNode(x, y);
-            this.tempPolygon.pushNode(x, y);
-            this.tempPolygon.scaleX = this.renderer.imageWidth;
-            this.tempPolygon.scaleY = this.renderer.imageHeight;
-            this.renderer.stage.addChild(this.tempPolygon);
-        }
-    }
-
-    onPointerMoveTempPolygon(evt: PIXIInteractionEvent) {
-        if (this.tempPolygon) {
-            const newPos = this.renderer.getPosition(evt.data);
-            const {x, y} = this.renderer.normalize(newPos);
-            this.tempPolygon.popNode()
-            this.tempPolygon.pushNode(x, y)
-        }
-    }
-}
-
-export class EditionAddController extends EditionController {
-    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean, contours: PIXIGraphics) {
-        super(renderer, gmask, selectedId, send, contours);
-        this.mode = EditionMode.ADD_TO_INSTANCE;
-    }
-}
-
-export class EditionRemoveController extends EditionController {
-    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean, contours: PIXIGraphics) {
-        super(renderer, gmask, selectedId, send, contours);
-        this.mode = EditionMode.REMOVE_FROM_INSTANCE;
-    }
-}
 
 export class SelectController extends Controller {
     protected renderer: Renderer;
@@ -175,13 +39,13 @@ export class SelectController extends Controller {
     public send: (event: Event) => boolean;
 
     constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean, contours: PIXIGraphics) {
+                send: (event: Event) => boolean) {
         super();
         this.renderer = renderer;
         this.gmask = gmask;
         this.selectedId = selectedId;
-        this.contours = contours;
         this.send = send;
+        this.renderer.stage.addChild(this.contours);
         this.onPointerDownSelectInstance = this.onPointerDownSelectInstance.bind(this);
         this.onKeySelectionDown = this.onKeySelectionDown.bind(this);
     }
@@ -190,6 +54,13 @@ export class SelectController extends Controller {
         this.renderer.stage.on('mousedown', this.onPointerDownSelectInstance);
         window.addEventListener('keydown', this.onKeySelectionDown, false);
         this.contours.visible = true;
+        if (this.selectedId.value && !arraysMatch(this.selectedId.value, [0,0,0])) {
+            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+            updateDisplayedSelection(this.contours, this.densePolygons);
+        } else {
+            this.densePolygons = [];
+            this.contours.clear();
+        }
     }
 
     deactivate() {
@@ -209,34 +80,6 @@ export class SelectController extends Controller {
         this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
         updateDisplayedSelection(this.contours, this.densePolygons);
         this.send(new CustomEvent('selection', { detail: this.selectedId.value }));
-    }
-
-    /**
-     * Draw dashed polygons to contour graphics
-     * @param polygon
-     */
-    protected drawDashedPolygon(polygon: Point[]) {
-        const dashed = false;
-        if (dashed) {
-            for(let i = 0; i< polygon.length; i++){
-                const p1 = polygon[i];
-                let p2;
-                if(i === polygon.length-1) {
-                    p2 = polygon[0];
-                }
-                else {
-                    p2 = polygon[i+1];
-                }
-                if (dashed) {
-                    this.contours.moveTo(0.5 * (p2.x + p1.x), 0.5 * (p2.y + p1.y));
-                } else {
-                    this.contours.moveTo(p1.x, p1.y);
-                }
-                this.contours.lineTo(p2.x, p2.y);
-            }
-        } else {
-            this.contours.drawPolygon(polygon);
-        }
     }
 
     public deselect() {
@@ -260,8 +103,8 @@ export class LockController extends SelectController {
     public lockType: "instance" | "class" = "class";
 
     constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-            send: (event: Event) => boolean, contours: PIXIGraphics) {
-        super(renderer, gmask, selectedId, send, contours);
+            send: (event: Event) => boolean) {
+        super(renderer, gmask, selectedId, send);
         this.renderer = renderer;
         this.gmask = gmask;
         this.onPointerDownLock = this.onPointerDownLock.bind(this);
@@ -315,7 +158,12 @@ export class LockController extends SelectController {
     }
 }
 
-export class CreateController extends Controller {
+/**
+ * Add/edit instance to mask using polygon interaction.
+ * Note: contrary to CreateController, you do not need to use EditionAddController or
+ * EditionRemoveController to edit this new instance. Keyboard shortcuts specify which edition type you use.
+ */
+export class CreateBrushController extends Controller {
 
     protected renderer: Renderer;
 
@@ -325,6 +173,190 @@ export class CreateController extends Controller {
 
     // temporary polygon
     public tempPolygon: GraphicPolygon | null = null;
+
+    private roi = new PIXIGraphics();
+
+    private roiMatrix = new Float32Array();
+
+    public contours = new PIXIGraphics();
+
+    protected densePolygons: DensePolygon[] = new Array();
+
+    // roi ratio radius in pixels
+    public roiRadius: number = 5;
+
+    protected selectedId: {
+        value: [number, number, number] | null
+    };
+
+    private send: (event: Event) => boolean;
+
+    public editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+
+    private isActive: boolean = false;
+
+    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
+                selectedId: {value: [number, number, number] | null},
+                send: (event: Event) => boolean ) {
+        super();
+        this.renderer = renderer;
+        this.gmask = gmask;
+        this.targetClass = targetClass;
+        this.selectedId = selectedId;
+        this.send = send;
+        this.renderer.stage.addChild(this.roi);
+        this.renderer.stage.addChild(this.contours);
+        this.onPointerMoveBrush = this.onPointerMoveBrush.bind(this);
+        this.onPointerDownBrush = this.onPointerDownBrush.bind(this);
+        this.onPointerUpBrush = this.onPointerUpBrush.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+    }
+
+    activate() {
+        this.renderer.stage.on('mousedown', this.onPointerDownBrush);
+        this.renderer.stage.on('pointermove', this.onPointerMoveBrush);
+        this.renderer.stage.on('pointerupoutside', this.onPointerUpBrush);
+        window.addEventListener('keydown', this.onKeyDown, false);
+        this.initRoi();
+        this.contours.visible = true;
+        if (this.selectedId.value) {
+            this.densePolygons = getPolygons(this.gmask, this.selectedId.value!);
+            updateDisplayedSelection(this.contours, this.densePolygons);
+        } else {
+            this.densePolygons = [];
+            this.contours.clear();
+        }
+    }
+
+    deactivate() {
+        this.renderer.stage.removeListener('mousedown', this.onPointerDownBrush);
+        this.renderer.stage.removeListener('pointermove', this.onPointerMoveBrush);
+        this.renderer.stage.removeListener('pointerupoutside', this.onPointerUpBrush);
+        window.removeEventListener('keydown', this.onKeyDown, false);
+        this.roi.clear();
+        this.contours.visible = false;
+    }
+
+    initRoi() {
+
+        // get target color
+        const color = this.gmask.pixelToColor(0,0,this.targetClass.value);
+        const hex = rgbToHex(...color);
+        this.roi.cacheAsBitmap = false;
+        this.roi.clear();
+        this.roi.beginFill(parseInt(hex, 16));
+        this.roi.drawCircle(0, 0, this.roiRadius);
+        this.roi.endFill();
+        this.roi.x = this.renderer.mouse.x;
+        this.roi.y = this.renderer.mouse.y;
+        this.roi.cacheAsBitmap = true;
+
+        // compute binary array
+        this.roiMatrix = new Float32Array((2*this.roiRadius)*(2*this.roiRadius));
+        this.roiMatrix.fill(0);
+        const r2 = this.roiRadius * this.roiRadius;
+        for (let x = 0; x < this.roiRadius * 2; x++) {
+            for (let y = 0; y < this.roiRadius * 2; y++) {
+                let dx = Math.abs(this.roiRadius - x - 0.5);
+                let dy = Math.abs(this.roiRadius - y - 0.5);
+                dx *= dx;
+                dy *= dy;
+                this.roiMatrix[x+this.roiRadius*2*y] = (dx + dy <= r2) ? 1 : 0;
+            }
+        }        
+    }
+
+    getTargetValue(): [number, number, number] {
+        if (this.editionMode == EditionMode.NEW_INSTANCE) {
+            const cls = this.gmask.clsMap.get(this.targetClass.value);
+            const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
+            const value = [newId[0], newId[1], this.targetClass.value] as [number, number, number];
+            this.selectedId.value = value;
+            return value;
+        } else if ((this.editionMode == EditionMode.ADD_TO_INSTANCE || this.editionMode == EditionMode.REMOVE_FROM_INSTANCE)
+                && this.selectedId.value) {
+            return this.selectedId.value;
+        }
+        return [0,0,0];
+    }
+
+    onPointerDownBrush(evt: any) {
+        this.isActive = true;
+        this.roi.x = this.renderer.mouse.x;
+        this.roi.y = this.renderer.mouse.y;
+
+        if (evt.data.button === 0 && !evt.data.originalEvent.ctrlKey && !evt.data.originalEvent.shiftKey) {
+            // create
+            this.editionMode = EditionMode.NEW_INSTANCE;
+        } else if (evt.data.button === 0 && evt.data.originalEvent.shiftKey && this.selectedId.value != null) {
+            // union
+            this.editionMode = EditionMode.ADD_TO_INSTANCE;
+        } else if (evt.data.button === 0 && evt.data.originalEvent.ctrlKey && this.selectedId.value != null) {
+            // remove
+            this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
+        }
+        const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+        this.gmask.updateByMaskInRoi(this.roiMatrix,
+            [this.roi.x - this.roiRadius, this.roi.y - this.roiRadius, this.roi.x + this.roiRadius, this.roi.y + this.roiRadius],
+            this.getTargetValue(), fillType
+        );
+    }
+
+    onPointerMoveBrush(evt: PIXIInteractionEvent) {
+        const newPos = this.renderer.getPosition(evt.data);
+        this.roi.x = newPos.x;
+        this.roi.y = newPos.y;
+        if (this.isActive) {
+            const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+            this.gmask.updateByMaskInRoi(this.roiMatrix,
+                [this.roi.x - this.roiRadius, this.roi.y - this.roiRadius, this.roi.x + this.roiRadius, this.roi.y + this.roiRadius],
+                this.getTargetValue(), fillType
+            );
+        }
+    }
+
+    onPointerUpBrush() {
+        if (this.isActive) {
+            this.send(new Event('update'));
+            this.densePolygons = getPolygons(this.gmask, this.selectedId.value!);
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this.gmask.fusedIds.add(fuseId(this.selectedId.value!));
+            this.dispatchEvent(new Event('update'));
+        }
+        this.isActive = false;
+    }
+
+    protected onKeyDown(evt: KeyboardEvent) {
+        if (evt.code == "NumpadAdd" || evt.key == "+") {
+            this.roiRadius += 1;
+            this.initRoi();   
+        }  else if (evt.code == "NumpadSubtract" || evt.key == "-") {
+            this.roiRadius = Math.max(this.roiRadius - 1, 1);
+            this.initRoi();    
+        }
+    }
+}
+
+
+/**
+ * Add new instance to mask using polygon interaction.
+ * Note: use EditionAddController or EditionRemoveController to edit this new instance.
+ */
+export class CreatePolygonController extends Controller {
+
+    protected renderer: Renderer;
+
+    protected gmask: GMask;
+
+    public targetClass: { value: number };
+
+    // temporary polygon
+    public tempPolygon: GraphicPolygon | null = null;
+
+    private densePolygons: DensePolygon[] = new Array();
+
+    // contour of selected instance
+    public contours = new PIXIGraphics();
 
     private roi = new PIXIGraphics();
 
@@ -341,6 +373,8 @@ export class CreateController extends Controller {
 
     private send: (event: Event) => boolean;
 
+    public editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+
     constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
                 selectedId: {value: [number, number, number] | null},
                 send: (event: Event) => boolean ) {
@@ -351,6 +385,7 @@ export class CreateController extends Controller {
         this.selectedId = selectedId;
         this.send = send;
         this.renderer.stage.addChild(this.roi);
+        this.renderer.stage.addChild(this.contours);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
         this.onPointerDownSelectionPolygon = this.onPointerDownSelectionPolygon.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
@@ -360,9 +395,13 @@ export class CreateController extends Controller {
         this.renderer.stage.on('mousedown', this.onPointerDownSelectionPolygon);
         this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
         this.initRoi();
+        this.contours.visible = true;
         if (this.selectedId.value) {
-            this.selectedId.value = null;
-            this.send(new CustomEvent('selection', {detail: null}));
+            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+            updateDisplayedSelection(this.contours, this.densePolygons);
+        } else {
+            this.densePolygons = [];
+            this.contours.clear();
         }
     }
 
@@ -370,6 +409,7 @@ export class CreateController extends Controller {
         this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectionPolygon);
         this.renderer.stage.removeListener('pointermove', this.onPointerMoveTempPolygon);
         this.roi.clear();
+        this.contours.visible = false;
     }
 
     initRoi() {
@@ -433,14 +473,21 @@ export class CreateController extends Controller {
                 this.renderer.stage.removeChild(this.tempPolygon);
                 this.tempPolygon = null;
                 if (vertices.length > 2) {
-                    const cls = this.gmask.clsMap.get(this.targetClass.value);
-                    const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0];
-                    const newValue: [number, number, number] = [newId[0], newId[1], this.targetClass.value];
+                    const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+                    const newValue: [number, number, number] = this.getTargetValue();
                     this.gmask.fusedIds.add(fuseId(newValue));
-                    this.gmask.updateByPolygon(vertices, newValue, 'add');
+                    let extrema = undefined;
+                    if (fillType != 'remove') {
+                        extrema = getPolygonExtrema(vertices);
+                        extrema = extremaUnion(extrema, getDensePolysExtrema(this.densePolygons));
+                    }
+                    this.gmask.updateByPolygon(vertices, newValue, fillType);
+                    this.densePolygons = getPolygons(this.gmask, newValue, extrema);
+                    updateDisplayedSelection(this.contours, this.densePolygons);
                     this.send(new Event('update'));
                     this.initRoi();
                 }
+
             }
         }
         else if (evt.key === 'Escape'){
@@ -452,7 +499,52 @@ export class CreateController extends Controller {
             }
         }
     }
+
+    getTargetValue(): [number, number, number] {
+        if (this.editionMode == EditionMode.NEW_INSTANCE) {
+            const cls = this.gmask.clsMap.get(this.targetClass.value);
+            const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
+            const value = [newId[0], newId[1], this.targetClass.value] as [number, number, number];
+            this.selectedId.value = value;
+            return value;
+        } else if ((this.editionMode == EditionMode.ADD_TO_INSTANCE || this.editionMode == EditionMode.REMOVE_FROM_INSTANCE)
+                    && this.selectedId.value) {
+            return this.selectedId.value;
+        }
+        return [0,0,0];
+    }
 }
+
+
+export class EditionAddController extends CreatePolygonController {
+    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
+            selectedId: {value: [number, number, number] | null},
+            send: (event: Event) => boolean) {
+        super(renderer, gmask, targetClass, selectedId, send);
+        this.editionMode = EditionMode.ADD_TO_INSTANCE;
+    }
+}
+
+
+export class EditionRemoveController extends CreatePolygonController {
+    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
+            selectedId: {value: [number, number, number] | null},
+            send: (event: Event) => boolean) {
+        super(renderer, gmask, targetClass, selectedId, send);
+        this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
+    }
+}
+
+
+export class CreateController extends CreatePolygonController {
+    constructor(args: any) {
+        //@ts-ignore
+        super(...args);
+        // For deprecated notice
+        console.warn("This class is obsolete. Please use CreatePolygonController instead.")
+    }
+};
+
 
 /**
  * Manage set of interactive shapes
@@ -485,11 +577,12 @@ export class MaskManager extends EventTarget {
         this.selectedId = { value: selectedId };
         this.renderer.stage.addChild(this.contour);
         this.modes = {
-            'create': new CreateController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
-            'select': new SelectController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'edit-add': new EditionAddController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'edit-remove': new EditionRemoveController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour),
-            'lock': new LockController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this), this.contour)
+            'create': new CreatePolygonController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
+            'create-brush': new CreateBrushController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
+            'select': new SelectController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this)),
+            'edit-add': new EditionAddController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
+            'edit-remove': new EditionRemoveController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
+            'lock': new LockController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this))
         };
         this.modes[this.mode].activate();
     }
@@ -616,6 +709,9 @@ export class MaskManager extends EventTarget {
  * @param extrema (optional) the box research zone [xMin, yMin, xMax, yMax]
  */
 export function getPolygons(mask: GMask, targetId: [number, number, number], extrema?: number[]): DensePolygon[] {
+    if (arraysMatch(targetId, [0,0,0])) {
+        return [];
+    }
     const blobs = mask.getBlobs(targetId, extrema);
     const newPolys: DensePolygon[] = [];
     for (const [, blob] of blobs) {

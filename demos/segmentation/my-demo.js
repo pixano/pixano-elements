@@ -9,6 +9,7 @@ import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
   createPencil,
+  paintBrush,
   magicSelect,
   subtract,
   union,
@@ -83,7 +84,12 @@ class MyDemo extends LitElement {
       this.mask = pixels;
     }
     this.element.maskVisuMode = 'INSTANCE';
-    this.element.targetClass = 2;
+    this.element.clsMap = {
+      0: [0,0,0,0],
+      1: [255,0,0,1],
+      2: [0,255,0,0]
+    };
+    this.element.targetClass = 1;
   }
 
   fullScreen() {
@@ -98,6 +104,7 @@ class MyDemo extends LitElement {
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
           <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
           <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
           <p class="icon" title="Subtract" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
           <p class="icon" title="Union" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
