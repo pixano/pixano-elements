@@ -6,7 +6,7 @@
  */
 
 import { customElement, property} from 'lit-element';
-import { MaskManager, CreateController } from './controller-mask';
+import { MaskManager, CreatePolygonController } from './controller-mask';
 import { GMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
@@ -45,7 +45,7 @@ export class Segmentation extends Canvas {
                                           this._graphicMask,
                                           this.selectedId);
   @property({type: Boolean})
-  public showroi : boolean = (this.maskManager.modes.create as CreateController).showRoi;
+  public showroi : boolean = (this.maskManager.modes.create as CreatePolygonController).showRoi;
 
   constructor() {
     super();
@@ -64,7 +64,7 @@ export class Segmentation extends Canvas {
       if (evt.key === "Alt") {
         this.switchMode();
       }
-  });
+    });
   }
 
   get targetClass() {
@@ -83,7 +83,11 @@ export class Segmentation extends Canvas {
   // [r, g, b, isInstance]
   // if class is instanciable, isInstance = 1 else 0
   set clsMap(clsMap: Map<number, [number, number, number, number]>) {
-    this._graphicMask.clsMap = clsMap;
+    if (clsMap instanceof Map) {
+      this._graphicMask.clsMap = clsMap;
+    } else if (typeof clsMap === "object") {
+      this._graphicMask.clsMap = new Map(Object.entries(clsMap).map(([k,n]) => ([Number(k),n]))) as any;
+    }
   }
 
   public getMask() {
@@ -134,7 +138,7 @@ export class Segmentation extends Canvas {
     }
 
     if (changedProperties.has('showroi')) {
-      const controller = this.maskManager.modes.create as CreateController;
+      const controller = this.maskManager.modes.create as CreatePolygonController;
       controller.showRoi = this.showroi;
     }
   }

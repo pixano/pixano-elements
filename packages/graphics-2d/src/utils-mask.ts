@@ -182,3 +182,18 @@ export const distinctColors: [number, number, number][] = [
     [0, 0, 128], // 18 dark blue
     [128, 128, 128] // 19 grey
 ];
+
+export const arraysMatch = (arr1: any[], arr2: any[]) => {
+
+	// Check if the arrays are the same length
+	if (arr1.length !== arr2.length) return false;
+
+	// Check if all items exist and are in the same order
+	for (var i = 0; i < arr1.length; i++) {
+		if (arr1[i] !== arr2[i]) return false;
+	}
+
+	// Otherwise, return true
+	return true;
+
+};
