@@ -1,4 +1,4 @@
-import { ShapesEditController } from './controller';
+import { ShapesEditController, ShapeCreateController } from './controller';
 import { Tracker } from '@pixano/ai/lib/tracker';
 
 /**
@@ -60,5 +60,18 @@ export class TrackingSmartController extends ShapesEditController {
             ]
             this.emitUpdate();
         });
+    }
+}
+
+
+export class ClickController extends ShapeCreateController {
+
+    protected onRootDown(evt: PIXI.InteractionEvent) {
+        const pointer = (evt.data.originalEvent as PointerEvent);
+        if (pointer.buttons === 2 || pointer.buttons === 4) {
+            return;
+        }
+        const mouse = this.renderer.getPosition(evt.data);
+        this.dispatchEvent(new CustomEvent('point', {detail: this.renderer.normalize(mouse)}));
     }
 }

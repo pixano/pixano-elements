@@ -165,6 +165,7 @@ export class ShapesEditController extends Controller {
     }
 
     public activate() {
+        super.activate();
         // handle update mode for each shape
         this.graphics.forEach((s) => {
             s.interactive = true;
@@ -173,10 +174,12 @@ export class ShapesEditController extends Controller {
         });
         this.drawDefaultShapesDecoration();
         this.renderer.stage.interactive = true;
+        this.renderer.stage.removeListener('pointerdown', this.onRootDown);
         this.renderer.stage.on('pointerdown', this.onRootDown);
     }
 
     public deactivate() {
+        super.deactivate();
         this.graphics.forEach((s) => {
             s.interactive = false;
             s.buttonMode = false;
@@ -506,6 +509,7 @@ export abstract class ShapeCreateController extends Controller {
     }
 
     public activate() {
+        super.activate();
         this.cross.visible = true;
         const pos = this.renderer.mouse;
         this.cross.cx = pos.x;
@@ -527,6 +531,7 @@ export abstract class ShapeCreateController extends Controller {
     }
 
     public deactivate() {
+        super.deactivate();
         this.cross.visible = false;
         const shape = this.tmpShape as Graphic;
         if (shape) {
