@@ -84,7 +84,7 @@ export class Canvas2d extends Canvas {
     });
 
     this.observeShapeForDisplay();
-    this.modes[this.mode].activate();
+    // this.modes[this.mode].activate();
   }
 
   switchMode() {
@@ -224,6 +224,7 @@ export class Canvas2d extends Canvas {
       }
       case 'Escape': {
         this.targetShapes.clear();
+        this.notifySelection(this.selectedShapeIds);
         break;
       }
     }
@@ -234,6 +235,7 @@ export class Canvas2d extends Canvas {
     this.modes[mode] = controller;
     if (mode === this.mode) {
       this.modes[mode].activate();
+      
     }
     return this;
   }
@@ -276,7 +278,7 @@ export class Canvas2d extends Canvas {
     if (nextShape) {
       this.targetShapes.set([nextShape]);
       // send selection notification
-      this.notifySelection(this.selectedShapeIds)
+      this.notifySelection(this.selectedShapeIds);
     }
   }
 
