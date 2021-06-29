@@ -1,5 +1,5 @@
 /**
- * Implementations of segmentation mask editor.
+ * Implementations of panoptic segmentation mask editor.
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
@@ -7,7 +7,7 @@
 
 import { customElement, property} from 'lit-element';
 import { MaskManager, CreatePolygonController } from './controller-mask';
-import { GMask } from './graphics';
+import { GraphicMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
 
@@ -36,8 +36,8 @@ export class Segmentation extends Canvas {
   protected selectedId: [number, number, number] = [0,0,0];
 
   // container of mask
-  // never destroyed
-  protected _graphicMask: GMask = new GMask();
+  // never destroyed, only updated
+  protected _graphicMask: GraphicMask = new GraphicMask();
 
   private newMaskLoaded: boolean = false;
 
@@ -58,12 +58,11 @@ export class Segmentation extends Canvas {
     this.maskManager.addEventListener('selection', (evt: any) => {
       this.dispatchEvent(new CustomEvent('selection', { detail: evt.detail }));
     });
+    // Empty mask on image load
     this.addEventListener('load', this.onImageChanged.bind(this));
 
     window.addEventListener('keydown', (evt) => {
-      if (evt.key === "Alt") {
-        this.switchMode();
-      }
+      if (evt.key === "Alt") { this.switchMode(); }
     });
   }
 
@@ -75,7 +74,9 @@ export class Segmentation extends Canvas {
     this.maskManager.targetClass.value = clsIdx;
   }
 
-  get clsMap() {
+  // Map of class indices and their color (+ if they are instances or semantic)
+  // e.g. <1, [255, 0, 0, isInstance (instance = 1, semantic = 0)]
+  get clsMap(): Map<number, [number, number, number, number]> {
     return this._graphicMask.clsMap;
   }
 
@@ -90,27 +91,30 @@ export class Segmentation extends Canvas {
     }
   }
 
+  /**
+   * Get base64 encoding of the panoptic segmentation mask
+   */
   public getMask() {
     return this._graphicMask.getBase64();
   }
 
+  /**
+   * Set the panoptic segmentation mask from a base64 encoding
+   */
   public setMask(buffer: string) {
     this.newMaskLoaded = true;
     this._graphicMask.setBase64(buffer);
   }
 
+  /**
+   * Empy segmentation mask
+   */
   public setEmpty() {
     if (this.renderer.imageWidth === 0 || this.renderer.imageHeight === 0) {
       return;
     }
     this._graphicMask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
     this.maskManager.selectedId.value = [-1, -1, -1];
-  }
-
-  protected onImageChanged() {
-    if (!this.newMaskLoaded) {
-      this.setEmpty();
-    }
   }
 
   /**
@@ -143,12 +147,19 @@ export class Segmentation extends Canvas {
     }
   }
 
+  /**
+   * Fill selected region with current selectedId
+   */
   public fillSelection() {
     if (this.maskManager.selectedId.value) {
       this.maskManager.fillSelection(this.maskManager.selectedId.value);
     }
   }
 
+  /**
+   * Replace the class of the selected region
+   * @param newClass class index to replace the selected region with
+   */
   public fillSelectionWithClass(newClass: number) {
     if (this.maskManager.selectedId.value) {
       const currClass = this.maskManager.selectedId.value[2];
@@ -158,6 +169,7 @@ export class Segmentation extends Canvas {
         const nextIdx = this._graphicMask.getNextId();
         newId = [nextIdx[0], nextIdx[1], newId[2]];
       } else if (!this.clsMap.get(newClass)![3]) {
+        // remove instance indices if the new class is semantic
         newId = [0, 0, newId[2]];
       }
       this.maskManager.fillSelection(newId);
@@ -196,10 +208,22 @@ export class Segmentation extends Canvas {
     this.maskManager.filterAll(numPixels)
   }
 
-  switchMode() {
+  /**
+   * Switch interaction mode
+   */
+  public switchMode() {
     const modes = Object.keys(this.maskManager.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
     this.mode = modes[(currentIdx + 1) % modes.length] as any;
     this.dispatchEvent(new Event("mode"));
+  }
+
+  /**
+   * Called on image change
+   */
+  protected onImageChanged() {
+    if (!this.newMaskLoaded) {
+      this.setEmpty();
+    }
   }
 }

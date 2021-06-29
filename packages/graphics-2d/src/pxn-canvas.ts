@@ -57,10 +57,8 @@ export class Canvas extends GenericDisplay {
     super();
     this.authorizedType = 'image';
     this.dispatchEvent = this.dispatchEvent.bind(this);
-    this.viewControls.addEventListener("zoom", (evt:any) => {this.zoom = evt.detail});
-    this.addEventListener('load', (evt: any) => {
-      this.data = evt.detail;
-    });
+    this.viewControls.addEventListener("zoom", (evt:any) => this.zoom = evt.detail);
+    this.addEventListener('load', (evt: any) => this.data = evt.detail);
   }
 
   connectedCallback() {

@@ -3,7 +3,7 @@ import { BoxSegmentation } from '@pixano/ai/lib/box-segmentation';
 import { observable } from '@pixano/core';
 import { ShapeCreateController } from './controller';
 import { Renderer } from './renderer';
-import { GMask } from './graphics';
+import { GraphicMask } from './graphics';
 import { fuseId } from './utils-mask';
 import { GraphicRectangle } from './graphics';
 
@@ -13,7 +13,7 @@ export class SmartCreateController extends ShapeCreateController {
 
     public targetClass: { value: number };
 
-    public gmask: GMask;
+    public gmask: GraphicMask;
 
     private segmentationCreator: BoxSegmentation = new BoxSegmentation();
 
@@ -23,7 +23,7 @@ export class SmartCreateController extends ShapeCreateController {
       super(props);
       this.renderer = props.renderer || new Renderer();
       this.targetClass = props.targetClass || { value: 1};
-      this.gmask = props.gmask || new GMask();
+      this.gmask = props.gmask || new GraphicMask();
       this.segmentationCreator = new BoxSegmentation(this.model);
     }
 

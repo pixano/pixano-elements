@@ -6,7 +6,7 @@
  */
 
 import { Brush } from './graphic-brush';
-import { GMask } from './graphic-mask';
+import { GraphicMask } from './graphic-mask';
 import { GraphicPolygon, GraphicMultiPolygon } from './graphic-polygon';
 import { GraphicRectangle } from './graphic-rectangle';
 import { GraphicGraph } from './graphic-graph';
@@ -17,7 +17,7 @@ export {
   CONTROL_POINTS,
   Brush,
   DrawingCross,
-  GMask,
+  GraphicMask,
   GraphicGraph,
   GraphicPolygon,
   GraphicMultiPolygon,
