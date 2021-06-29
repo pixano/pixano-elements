@@ -119,6 +119,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
           category: detection.category
         });
         this.shapes.add(shape);
+        this.emitCreate();
       }
     } else {
       console.info("No detection");

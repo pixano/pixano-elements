@@ -1,20 +1,21 @@
 /**
- * Implementation of segmentation mask handler.
+ * Implementation of segmentation mask interaction manager.
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
  */
 
 import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
+import { observable } from '@pixano/core';
+import { rgbToHex } from '@pixano/core/lib/utils';
 import { Renderer } from './renderer';
-import { GMask, GraphicPolygon } from './graphics';
+import { GraphicMask, GraphicPolygon } from './graphics';
 import { unfuseId, fuseId, getPolygonExtrema,
         extremaUnion, convertIndexToDict, DensePolygon,
         getDensePolysExtrema, arraysMatch } from './utils-mask';
 import { Graphics as PIXIGraphics, Point} from 'pixi.js'
-import { observable } from '@pixano/core';
 import { Controller } from './controller-base';
-import { rgbToHex } from '@pixano/core/lib/utils';
+
 
 export enum EditionMode {
     ADD_TO_INSTANCE = 'add_to_instance',
@@ -22,29 +23,28 @@ export enum EditionMode {
     NEW_INSTANCE = 'new_instance'
 }
 
-
+/**
+ * Basic interaction that selects region when clicked on it.
+ * Construction arguments are partially the public class properties (renderer, gmask, ...).
+ */
 export class SelectController extends Controller {
-    protected renderer: Renderer;
+    public renderer: Renderer;
 
-    protected gmask: GMask;
+    public gmask: GraphicMask;
 
-    public contours = new PIXIGraphics();
-
-    protected densePolygons: DensePolygon[] = new Array();
-
-    protected selectedId: {
+    public selectedId: {
         value: [number, number, number] | null
     };
 
-    public send: (event: Event) => boolean;
+    protected contours = new PIXIGraphics();
 
-    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean) {
+    protected densePolygons: DensePolygon[] = new Array();
+
+    constructor(props: Partial<SelectController> = {}) {
         super();
-        this.renderer = renderer;
-        this.gmask = gmask;
-        this.selectedId = selectedId;
-        this.send = send;
+        this.renderer = props.renderer || new Renderer();
+        this.gmask = props.gmask || new GraphicMask();
+        this.selectedId = props.selectedId || { value: null };
         this.renderer.stage.addChild(this.contours);
         this.onPointerDownSelectInstance = this.onPointerDownSelectInstance.bind(this);
         this.onKeySelectionDown = this.onKeySelectionDown.bind(this);
@@ -79,7 +79,7 @@ export class SelectController extends Controller {
         this.selectedId.value = id;
         this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
         updateDisplayedSelection(this.contours, this.densePolygons);
-        this.send(new CustomEvent('selection', { detail: this.selectedId.value }));
+        this.dispatchEvent(new CustomEvent('selection', { detail: this.selectedId.value }));
     }
 
     public deselect() {
@@ -87,7 +87,7 @@ export class SelectController extends Controller {
             this.densePolygons = [];
             updateDisplayedSelection(this.contours, this.densePolygons);
             this.selectedId.value = null;
-            this.send(new CustomEvent('selection', {detail: null}));
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
         }
     }
 
@@ -100,13 +100,11 @@ export class SelectController extends Controller {
 
 export class LockController extends SelectController {
 
-    public lockType: "instance" | "class" = "class";
+    public lockType: "instance" | "class";
 
-    constructor(renderer: Renderer, gmask: GMask, selectedId: {value: [number, number, number] | null},
-            send: (event: Event) => boolean) {
-        super(renderer, gmask, selectedId, send);
-        this.renderer = renderer;
-        this.gmask = gmask;
+    constructor(props: Partial<LockController> = {}) {
+        super(props);
+        this.lockType = props.lockType || "class";
         this.onPointerDownLock = this.onPointerDownLock.bind(this);
     }
 
@@ -114,7 +112,6 @@ export class LockController extends SelectController {
         this.renderer.stage.on('mousedown', this.onPointerDownLock);
         this.contours.visible = true;
         if (this.selectedId.value) {
-            
             this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
             updateDisplayedSelection(this.contours, this.densePolygons);
         }
@@ -165,14 +162,14 @@ export class LockController extends SelectController {
  */
 export class CreateBrushController extends Controller {
 
-    protected renderer: Renderer;
+    public renderer: Renderer;
 
-    protected gmask: GMask;
+    public gmask: GraphicMask;
 
     public targetClass: { value: number };
 
     // temporary polygon
-    public tempPolygon: GraphicPolygon | null = null;
+    protected tempPolygon: GraphicPolygon | null = null;
 
     private roi = new PIXIGraphics();
 
@@ -180,30 +177,25 @@ export class CreateBrushController extends Controller {
 
     public contours = new PIXIGraphics();
 
-    protected densePolygons: DensePolygon[] = new Array();
-
     // roi ratio radius in pixels
     public roiRadius: number = 5;
 
-    protected selectedId: {
+    public selectedId: {
         value: [number, number, number] | null
     };
 
-    private send: (event: Event) => boolean;
-
     public editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+
+    protected densePolygons: DensePolygon[] = new Array();
 
     private isActive: boolean = false;
 
-    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
-                selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean ) {
-        super();
-        this.renderer = renderer;
-        this.gmask = gmask;
-        this.targetClass = targetClass;
-        this.selectedId = selectedId;
-        this.send = send;
+    constructor(props: Partial<CreateBrushController> = {}) {
+        super(props);
+        this.renderer = props.renderer || new Renderer();
+        this.gmask = props.gmask || new GraphicMask();
+        this.targetClass = props.targetClass || { value: 0 };
+        this.selectedId = props.selectedId || { value: null };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveBrush = this.onPointerMoveBrush.bind(this);
@@ -237,6 +229,10 @@ export class CreateBrushController extends Controller {
         this.contours.visible = false;
     }
 
+    /**
+     * Display temporary filled circle around cursor to indicate
+     * the brush pixels.
+     */
     initRoi() {
 
         // get target color
@@ -266,6 +262,10 @@ export class CreateBrushController extends Controller {
         }        
     }
 
+    /**
+     * Utility function to retrieve the mask value to next be created
+     * depending on the edition mode (new, add, remove).
+     */
     getTargetValue(): [number, number, number] {
         if (this.editionMode == EditionMode.NEW_INSTANCE) {
             const cls = this.gmask.clsMap.get(this.targetClass.value);
@@ -280,7 +280,11 @@ export class CreateBrushController extends Controller {
         return [0,0,0];
     }
 
-    onPointerDownBrush(evt: any) {
+    /**
+     * Mouse press to start brushing
+     * @param evt PIXIInteractionEvent
+     */
+    onPointerDownBrush(evt: PIXIInteractionEvent) {
         this.isActive = true;
         this.roi.x = this.renderer.mouse.x;
         this.roi.y = this.renderer.mouse.y;
@@ -302,6 +306,10 @@ export class CreateBrushController extends Controller {
         );
     }
 
+    /**
+     * Mouse move when brushing
+     * @param evt PIXIInteractionEvent
+     */
     onPointerMoveBrush(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         this.roi.x = newPos.x;
@@ -315,9 +323,11 @@ export class CreateBrushController extends Controller {
         }
     }
 
+    /**
+     * Mouse release after brushing
+     */
     onPointerUpBrush() {
         if (this.isActive) {
-            this.send(new Event('update'));
             this.densePolygons = getPolygons(this.gmask, this.selectedId.value!);
             updateDisplayedSelection(this.contours, this.densePolygons);
             this.gmask.fusedIds.add(fuseId(this.selectedId.value!));
@@ -326,6 +336,10 @@ export class CreateBrushController extends Controller {
         this.isActive = false;
     }
 
+    /**
+     * On keyboard press
+     * @param evt KeyboardEvent
+     */
     protected onKeyDown(evt: KeyboardEvent) {
         if (evt.code == "NumpadAdd" || evt.key == "+") {
             this.roiRadius += 1;
@@ -344,21 +358,15 @@ export class CreateBrushController extends Controller {
  */
 export class CreatePolygonController extends Controller {
 
-    protected renderer: Renderer;
+    public renderer: Renderer;
 
-    protected gmask: GMask;
+    public gmask: GraphicMask;
 
     public targetClass: { value: number };
 
-    // temporary polygon
-    public tempPolygon: GraphicPolygon | null = null;
-
-    private densePolygons: DensePolygon[] = new Array();
-
-    // contour of selected instance
-    public contours = new PIXIGraphics();
-
-    private roi = new PIXIGraphics();
+    public selectedId: {
+        value: [number, number, number] | null
+    };
 
     // show roi rectangle around cursor
     // as indicator of minimal annotation size.
@@ -367,23 +375,27 @@ export class CreatePolygonController extends Controller {
     // roi ratio size w.r.t smaller side of image
     public roiRatio: { height: number, width: number } = { height: 0.15, width: 0.05 };
 
-    protected selectedId: {
-        value: [number, number, number] | null
-    };
+    ///// Internal properties
 
-    private send: (event: Event) => boolean;
+    // coordinates of contour polygons
+    private densePolygons: DensePolygon[] = new Array();
 
-    public editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+    // graphic contour of selected instance
+    private contours = new PIXIGraphics();
 
-    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
-                selectedId: {value: [number, number, number] | null},
-                send: (event: Event) => boolean ) {
+    private roi = new PIXIGraphics();
+
+    // temporary polygon
+    protected tempPolygon: GraphicPolygon | null = null;
+
+    protected editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+
+    constructor(props: Partial<CreatePolygonController> = {}) {
         super();
-        this.renderer = renderer;
-        this.gmask = gmask;
-        this.targetClass = targetClass;
-        this.selectedId = selectedId;
-        this.send = send;
+        this.renderer = props.renderer || new Renderer();
+        this.gmask = props.gmask || new GraphicMask();
+        this.targetClass = props.targetClass || { value: 0 };
+        this.selectedId = props.selectedId || { value: null };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
@@ -425,6 +437,10 @@ export class CreatePolygonController extends Controller {
         this.roi.visible = this.showRoi;
     }
 
+    /**
+     * Mouse down to add node to polygon
+     * @param evt PIXIInteractionEvent
+     */
     onPointerDownSelectionPolygon(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         const {x, y} = this.renderer.normalize(newPos);
@@ -445,6 +461,10 @@ export class CreatePolygonController extends Controller {
         }
     }
 
+    /**
+     * Mouse move to place next polygon node
+     * @param evt PIXIInteractionEvent
+     */
     onPointerMoveTempPolygon(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         if (this.tempPolygon) {
@@ -457,6 +477,10 @@ export class CreatePolygonController extends Controller {
         }
     }
 
+    /**
+     * On keyboard press
+     * @param evt KeyboardEvent
+     */
     protected onKeyDown(evt: KeyboardEvent) {
         if (evt.key === 'Enter') {
             // End polygon creation
@@ -484,7 +508,7 @@ export class CreatePolygonController extends Controller {
                     this.gmask.updateByPolygon(vertices, newValue, fillType);
                     this.densePolygons = getPolygons(this.gmask, newValue, extrema);
                     updateDisplayedSelection(this.contours, this.densePolygons);
-                    this.send(new Event('update'));
+                    this.dispatchEvent(new Event('update'));
                     this.initRoi();
                 }
 
@@ -500,6 +524,10 @@ export class CreatePolygonController extends Controller {
         }
     }
 
+    /**
+     * Utility function to retrieve the mask value to next be created
+     * depending on the edition mode (new, add, remove).
+     */
     getTargetValue(): [number, number, number] {
         if (this.editionMode == EditionMode.NEW_INSTANCE) {
             const cls = this.gmask.clsMap.get(this.targetClass.value);
@@ -517,29 +545,24 @@ export class CreatePolygonController extends Controller {
 
 
 export class EditionAddController extends CreatePolygonController {
-    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
-            selectedId: {value: [number, number, number] | null},
-            send: (event: Event) => boolean) {
-        super(renderer, gmask, targetClass, selectedId, send);
+    constructor(props: Partial<CreatePolygonController> = {}) {
+        super(props);
         this.editionMode = EditionMode.ADD_TO_INSTANCE;
     }
 }
 
 
 export class EditionRemoveController extends CreatePolygonController {
-    constructor(renderer: Renderer, gmask: GMask, targetClass: { value: number } = { value: 1},
-            selectedId: {value: [number, number, number] | null},
-            send: (event: Event) => boolean) {
-        super(renderer, gmask, targetClass, selectedId, send);
+    constructor(props: Partial<CreatePolygonController> = {}) {
+        super(props);
         this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
     }
 }
 
 
 export class CreateController extends CreatePolygonController {
-    constructor(args: any) {
-        //@ts-ignore
-        super(...args);
+    constructor(props: any) {
+        super(props);
         // For deprecated notice
         console.warn("This class is obsolete. Please use CreatePolygonController instead.")
     }
@@ -558,7 +581,7 @@ export class MaskManager extends EventTarget {
         value: [number, number, number] | null
     };
 
-    protected gmask: GMask;
+    protected gmask: GraphicMask;
 
     // contour of selected instance
     public contour = new PIXIGraphics();
@@ -570,19 +593,19 @@ export class MaskManager extends EventTarget {
     public targetClass: { value: number } = { value: 1 };
 
     constructor(renderer: Renderer = new Renderer(),
-                gmask: GMask = new GMask(), selectedId: [number, number, number] = [0, 0, 0]) {
+                gmask: GraphicMask = new GraphicMask(), selectedId: [number, number, number] = [0, 0, 0]) {
         super();
         this.renderer = renderer;
         this.gmask = gmask;
         this.selectedId = { value: selectedId };
         this.renderer.stage.addChild(this.contour);
         this.modes = {
-            'create': new CreatePolygonController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
-            'create-brush': new CreateBrushController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
-            'select': new SelectController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this)),
-            'edit-add': new EditionAddController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
-            'edit-remove': new EditionRemoveController(this.renderer, this.gmask, this.targetClass, this.selectedId, this.dispatchEvent.bind(this)),
-            'lock': new LockController(this.renderer, this.gmask, this.selectedId, this.dispatchEvent.bind(this))
+            'create': new CreatePolygonController({...this} as any),
+            'create-brush': new CreateBrushController({...this} as any),
+            'select': new SelectController({...this} as any),
+            'edit-add': new EditionAddController({...this} as any),
+            'edit-remove': new EditionRemoveController({...this} as any),
+            'lock': new LockController({...this} as any)
         };
         this.modes[this.mode].activate();
     }
@@ -708,7 +731,7 @@ export class MaskManager extends EventTarget {
  * @param targetId the id of the blobs to be found
  * @param extrema (optional) the box research zone [xMin, yMin, xMax, yMax]
  */
-export function getPolygons(mask: GMask, targetId: [number, number, number], extrema?: number[]): DensePolygon[] {
+export function getPolygons(mask: GraphicMask, targetId: [number, number, number], extrema?: number[]): DensePolygon[] {
     if (arraysMatch(targetId, [0,0,0])) {
         return [];
     }
