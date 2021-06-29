@@ -10,10 +10,10 @@ export interface Point {
 }
 
 export interface Rectangle {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    l: number;
+    t: number;
+    r: number;
+    b: number;
 }
 
 export interface Detection {

@@ -6,7 +6,8 @@
  */
 
 import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
-import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
+// import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
+import { PixelToBoundingBox } from "@pixano/ai/lib/lapnet";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, utils } from '@pixano/core';
 import { customElement, property } from "lit-element";
@@ -21,7 +22,7 @@ const IOU_THRESHOLD = 0.5;
  */
 class SmartRectangleCreateController extends ShapeCreateController {
 
-  private boundingBoxCreator: PixelToBoundingBox;
+  boundingBoxCreator: PixelToBoundingBox;
 
   private roi: PIXIGraphics = new PIXIGraphics();
 
@@ -85,20 +86,14 @@ class SmartRectangleCreateController extends ShapeCreateController {
     this.isCreating = true;
     const mouseData = this.renderer.getPosition(evt.data);
     const click: AIPoint = { x: mouseData.x, y: mouseData.y };
-    const detection = await this.boundingBoxCreator.predict(
-      click,
-      this.renderer.htmlImageElement
-    );
+    const detection = await this.boundingBoxCreator.predict(click, this.renderer.htmlImageElement);
 
     if (detection !== null) {
-      const l = detection.boundingBox.x / this.renderer.imageWidth;
-      const t = detection.boundingBox.y / this.renderer.imageHeight;
-      const r =
-        (detection.boundingBox.x + detection.boundingBox.width) /
-        this.renderer.imageWidth;
-      const b =
-        (detection.boundingBox.y + detection.boundingBox.height) /
-        this.renderer.imageHeight;
+
+      const l = detection.boundingBox.l / this.renderer.imageWidth;
+      const t = detection.boundingBox.t / this.renderer.imageHeight;
+      const r = detection.boundingBox.r / this.renderer.imageWidth;
+      const b = detection.boundingBox.b / this.renderer.imageHeight;
 
       // discard the detection if it overlaps with existing boxes
       let overlap = false;
@@ -112,9 +107,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
 
       if (!overlap) {
         const shape = observable({
-          id: Math.random()
-            .toString(36)
-            .substring(7),
+          id: Math.random().toString(36).substring(7),
           geometry: { type: "rectangle", vertices: [l, t, r, b] },
           category: detection.category
         });
@@ -122,7 +115,7 @@ class SmartRectangleCreateController extends ShapeCreateController {
         this.emitCreate();
       }
     } else {
-      console.info("No detection");
+      console.info("No detection :(");
     }
   }
 
@@ -162,14 +155,23 @@ export class SmartRectangle extends Rectangle {
   mode: string = "edit";
 
   @property({ type: Number }) scale = 1;
+  @property({type: String}) modelPath = '';
 
   constructor() {
     super();
-    this.setController('smart-create', new SmartRectangleCreateController({ renderer: this.renderer, shapes: this.shapes }));
+    this.setController('smart-create', new SmartRectangleCreateController({ renderer: this.renderer, shapes: this.shapes, dispatchEvent: this.dispatchEvent }));
   }
 
   get smartController() {
     return (this.modes['smart-create'] as SmartRectangleCreateController);
+  }
+
+  public updated(changeProps: any){
+    super.updated(changeProps);
+    if (changeProps.has('modelPath')){
+      this.smartController.boundingBoxCreator.modelPath = this.modelPath;
+      this.smartController.load();
+    }
   }
 
   public roiUp() {
