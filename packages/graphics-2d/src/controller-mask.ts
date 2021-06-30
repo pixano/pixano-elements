@@ -312,15 +312,24 @@ export class CreateBrushController extends Controller {
      */
     onPointerMoveBrush(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
-        this.roi.x = newPos.x;
-        this.roi.y = newPos.y;
         if (this.isActive) {
             const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
             this.gmask.updateByMaskInRoi(this.roiMatrix,
-                [this.roi.x - this.roiRadius, this.roi.y - this.roiRadius, this.roi.x + this.roiRadius, this.roi.y + this.roiRadius],
+                [newPos.x - this.roiRadius, newPos.y - this.roiRadius, newPos.x + this.roiRadius, newPos.y + this.roiRadius],
+                this.getTargetValue(), fillType
+            );
+			// filling space between successive mousepoints to enable easy surface painting
+			//... assuming roiMatrix is a circle
+			//... filling by a strait line even if the user describes a curve
+			const alpha = Math.atan2((newPos.y-this.roi.y),(newPos.x-this.roi.x));
+			const dy = Math.trunc(-Math.cos(alpha)*this.roiRadius);
+			const dx = Math.trunc(Math.sin(alpha)*this.roiRadius);
+			this.gmask.updateByPolygon([new Point(this.roi.x+dx,this.roi.y+dy),new Point(this.roi.x-dx,this.roi.y-dy),new Point(newPos.x-dx,newPos.y-dy),new Point(newPos.x+dx,newPos.y+dy)],
                 this.getTargetValue(), fillType
             );
         }
+        this.roi.x = newPos.x;
+        this.roi.y = newPos.y;
     }
 
     /**

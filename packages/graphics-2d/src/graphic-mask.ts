@@ -297,7 +297,7 @@ export class GraphicMask extends PIXIContainer {
      * Update panoptic mask with a localised submask and a panoptic value
      * @param mask binary flatten array
      * @param box [l,t,r,b] search area
-     * @param newVal 
+     * @param newVal new pixel/class value (corresponds to color for rendering)
      */
     public updateByMaskInRoi(mask: Float32Array, box: [number, number, number, number],
                              newVal: [number, number, number], fillType: 'add' | 'remove' ='add') {
@@ -350,11 +350,11 @@ export class GraphicMask extends PIXIContainer {
 
     /**
      * Update panoptic mask with a polygon to be filled with given panoptic value
-     * @param polygon 
-     * @param id 
-     * @param fillType 
+     * @param polygon an array of points (points must be represented by integers)
+     * @param id new pixel/class value (corresponds to color for rendering)
+     * @param fillType 'add' or 'remove'
      */
-    public updateByPolygon(polygon: Point[], id: [number, number, number], fillType='add') {
+    public updateByPolygon(polygon: Point[], id: [number, number, number], fillType: 'add' | 'remove' ='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
         const [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
         if (this.lockedInstances.has(fuseId(id))) {
