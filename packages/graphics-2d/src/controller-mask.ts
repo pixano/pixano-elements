@@ -285,9 +285,12 @@ export class CreateBrushController extends Controller {
      * @param evt PIXIInteractionEvent
      */
     onPointerDownBrush(evt: PIXIInteractionEvent) {
+        if (evt.data.button == 1) return;//middle button : nothing to do
+        
         this.isActive = true;
         this.roi.x = this.renderer.mouse.x;
         this.roi.y = this.renderer.mouse.y;
+
 
         if (evt.data.button === 0 && !evt.data.originalEvent.ctrlKey && !evt.data.originalEvent.shiftKey) {
             // create
@@ -299,6 +302,7 @@ export class CreateBrushController extends Controller {
             // remove
             this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
         }
+
         const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
         this.gmask.updateByMaskInRoi(this.roiMatrix,
             [this.roi.x - this.roiRadius, this.roi.y - this.roiRadius, this.roi.x + this.roiRadius, this.roi.y + this.roiRadius],
@@ -318,13 +322,13 @@ export class CreateBrushController extends Controller {
                 [newPos.x - this.roiRadius, newPos.y - this.roiRadius, newPos.x + this.roiRadius, newPos.y + this.roiRadius],
                 this.getTargetValue(), fillType
             );
-			// filling space between successive mousepoints to enable easy surface painting
-			//... assuming roiMatrix is a circle
-			//... filling by a strait line even if the user describes a curve
-			const alpha = Math.atan2((newPos.y-this.roi.y),(newPos.x-this.roi.x));
-			const dy = Math.trunc(-Math.cos(alpha)*this.roiRadius);
-			const dx = Math.trunc(Math.sin(alpha)*this.roiRadius);
-			this.gmask.updateByPolygon([new Point(this.roi.x+dx,this.roi.y+dy),new Point(this.roi.x-dx,this.roi.y-dy),new Point(newPos.x-dx,newPos.y-dy),new Point(newPos.x+dx,newPos.y+dy)],
+            // filling space between successive mousepoints to enable easy surface painting
+            //... assuming roiMatrix is a circle
+            //... filling by a strait line even if the user describes a curve
+            const alpha = Math.atan2((newPos.y-this.roi.y),(newPos.x-this.roi.x));
+            const dy = Math.trunc(-Math.cos(alpha)*this.roiRadius);
+            const dx = Math.trunc(Math.sin(alpha)*this.roiRadius);
+            this.gmask.updateByPolygon([new Point(this.roi.x+dx,this.roi.y+dy),new Point(this.roi.x-dx,this.roi.y-dy),new Point(newPos.x-dx,newPos.y-dy),new Point(newPos.x+dx,newPos.y+dy)],
                 this.getTargetValue(), fillType
             );
         }

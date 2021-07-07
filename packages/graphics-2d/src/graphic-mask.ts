@@ -302,17 +302,28 @@ export class GraphicMask extends PIXIContainer {
     public updateByMaskInRoi(mask: Float32Array, box: [number, number, number, number],
                              newVal: [number, number, number], fillType: 'add' | 'remove' ='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
+
+        //respect image boundaries
         const width = box[2]-box[0];
-        const height = box[3]-box[1];
+        const roi = [(box[0]>0) ? box[0] : 0,
+                    (box[1]>0) ? box[1] : 0,
+                    (box[2]<this.canvas.width) ? box[2] : this.canvas.width,
+                    (box[3]<this.canvas.height) ? box[3] : this.canvas.height];
+        const widthroi = roi[2]-roi[0];
+        const heightroi = roi[3]-roi[1];
+        const decx = (box[0]<0) ? -box[0] : 0;
+        const decy = (box[1]<0) ? -box[1] : 0;
+
+
         const color = this.pixelToColor(...newVal);
         const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
         const [id1, id2, cls] = newVal;
         if (fillType === 'add') {
-            for (let x = 0; x < width; x++) {
-                for (let y = 0; y < height; y++) {
-                    const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
+            for (let x = 0; x < widthroi; x++) {
+                for (let y = 0; y < heightroi; y++) {
+                    const idx = (x + roi[0] + (y + roi[1]) * this.canvas.width);
                     const pixId = this.pixelId(idx);
-                    if (mask[y * width + x] === 1 && !this.lockedInstances.has(fuseId(pixId))) {
+                    if (mask[(y+decy)*width + (x+decx)] === 1 && !this.lockedInstances.has(fuseId(pixId))) {
                         this.orig!.data[4 * idx] = id1;
                         this.orig!.data[4 * idx + 1] = id2;
                         this.orig!.data[4 * idx + 2] = cls;
@@ -326,11 +337,11 @@ export class GraphicMask extends PIXIContainer {
             }
         } else if (fillType === 'remove') {
             const fusedVal = fuseId(newVal);
-            for (let x = 0; x < width; x++) {
-                for (let y = 0; y < height; y++) {
-                    const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
+            for (let x = 0; x < widthroi; x++) {
+                for (let y = 0; y < heightroi; y++) {
+                    const idx = (x + roi[0] + (y + roi[1]) * this.canvas.width);
                     const pixId = this.pixelId(idx);
-                    if (mask[y * width + x] === 1 && !this.lockedInstances.has(fuseId(pixId))
+                    if (mask[(y+decy)*width + (x+decx)] === 1 && !this.lockedInstances.has(fuseId(pixId))
                         && fuseId(pixId) == fusedVal) {
                         this.orig!.data[4 * idx] = 0;
                         this.orig!.data[4 * idx + 1] = 0;
@@ -356,7 +367,13 @@ export class GraphicMask extends PIXIContainer {
      */
     public updateByPolygon(polygon: Point[], id: [number, number, number], fillType: 'add' | 'remove' ='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
-        const [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
+        let [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
+        //respect image boundaries
+        if (xMin<0) xMin=0;
+        if (yMin<0) yMin=0;
+        if (xMax>this.canvas.width) xMax=this.canvas.width-1;
+        if (yMax>this.canvas.height) yMax=this.canvas.height-1;
+
         if (this.lockedInstances.has(fuseId(id))) {
             // do not update locked instances
             return;
