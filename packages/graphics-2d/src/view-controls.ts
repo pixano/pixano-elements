@@ -84,58 +84,43 @@ export class ViewControls extends EventTarget {
      * @param evt
      */
     public onWheel(evt: WheelEvent) {
-        if (evt.ctrlKey) {
-          evt.preventDefault();
-        }
-        // Manipulate the scale based on direction
-        const distance = this.wheelDistance(evt) / 5 * this.viewer.s;
-        // if (this.s == this.smin && distance <= 0) {
-        //   return;
-        // }
-        const so = this.viewer.s;
-        this.viewer.s += distance;
-        const x = evt.offsetX;
-        const y = evt.offsetY;
-
-        // Check to see that the scale is not outside of the specified bounds
-        if (this.viewer.s > this.viewer.smax) {
-            this.viewer.s = this.viewer.smax;
-        } else if (this.viewer.s < this.viewer.smin) {
-            // center placeholder if zoom is minimal
-            this.viewer.s = this.viewer.smin;
-            this.viewer.computeDrawableArea(this.viewer.canvasWidth, this.viewer.canvasHeight,
-                this.viewer.imageWidth, this.viewer.imageHeight, true);
-            this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
-            this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
-        }
-        this.viewer.sx = (this.viewer.sx - x) * (this.viewer.s / so) + x;
-        this.viewer.sy = (this.viewer.sy - y) * (this.viewer.s / so) + y;
-        this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
-            this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
-        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
-        this.triggerOnZoom();
-        this.computeHitArea();
+        if (evt.ctrlKey) evt.preventDefault();
+        const scaleFactor = 1.0+Math.sign(this.wheelDistance(evt))*0.1;
+        this.zoomFct(scaleFactor, [evt.x, evt.y]);
     }
 
     public zoomIn() {
-        this.viewer.s *= 1.1;
-        this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
-            this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
-        this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
-        this.triggerOnZoom();
-        this.computeHitArea();
+        this.zoomFct(1.1, [this.viewer.rw/2, this.viewer.rh/2]);
     }
 
     public zoomOut() {
-        this.viewer.s *= 0.9;
-        if (this.viewer.s < this.viewer.smin) {
-            // center placeholder if zoom is minimal
+        this.zoomFct(0.9, [this.viewer.rw/2, this.viewer.rh/2]);
+    }
+
+    /**
+     * Generalized zoom function
+     * @param scaleFactor scale factor to be applied
+     * @param center point where the zoom will be centered
+     */
+    public zoomFct(scaleFactor: number, center: [number, number]) {
+        // apply new scale
+        const oldscale = this.viewer.s;
+        this.viewer.s *= scaleFactor;
+        // Check to see that the scale is not outside of the specified bounds
+        if (this.viewer.s >= this.viewer.smax) {
+            this.viewer.s = this.viewer.smax;
+        } else if (this.viewer.s <= this.viewer.smin) {
             this.viewer.s = this.viewer.smin;
+            // center placeholder if zoom is minimal
             this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
             this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
+        } else {
+            // apply zoom center (sx and sy are offsets)
+            this.viewer.sx = (this.viewer.sx - center[0]) * (this.viewer.s / oldscale) + center[0];
+            this.viewer.sy = (this.viewer.sy - center[1]) * (this.viewer.s / oldscale) + center[1];
         }
-        this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth,
-            this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
+        // apply changes
+        this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth, this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
         this.computeHitArea();
