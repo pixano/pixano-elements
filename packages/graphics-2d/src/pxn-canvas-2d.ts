@@ -283,18 +283,6 @@ export class Canvas2d extends Canvas {
   }
 
   /**
-   * Snackbar temporary appearance
-   * To display mode instructions.
-   * @param text
-   */
-  protected showTooltip(text: string) {
-    const x = this.shadowRoot!.getElementById("snackbar")!;
-    x.className = "show";
-    x.innerHTML = text;
-    setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
-  }
-
-  /**
    * Called on every property change
    * @param changedProperty
    */
