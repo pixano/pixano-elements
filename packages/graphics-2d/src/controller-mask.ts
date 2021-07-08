@@ -225,7 +225,9 @@ export class CreateBrushController extends Controller {
         this.renderer.stage.removeListener('pointermove', this.onPointerMoveBrush);
         this.renderer.stage.removeListener('pointerupoutside', this.onPointerUpBrush);
         window.removeEventListener('keydown', this.onKeyDown, false);
+        this.roi.cacheAsBitmap = false;
         this.roi.clear();
+        this.roi.cacheAsBitmap = true;
         this.contours.visible = false;
     }
 
@@ -612,6 +614,7 @@ export class MaskManager extends EventTarget {
         this.gmask = gmask;
         this.selectedId = { value: selectedId };
         this.renderer.stage.addChild(this.contour);
+        // creating default controler
         this.modes = {
             'create': new CreatePolygonController({...this} as any),
             'create-brush': new CreateBrushController({...this} as any),
@@ -623,6 +626,11 @@ export class MaskManager extends EventTarget {
         this.modes[this.mode].activate();
     }
 
+    /**
+     * Change the controler linked to the mode:
+     * @param mode string, the mode whome controler has to be changed
+     * @param controller the new controler
+     */
     public setController(mode: string, controller: Controller) {
         if (mode === this.mode && this.modes[mode]) {
             // remove active base controller
