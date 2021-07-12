@@ -75,7 +75,7 @@ master  <------push------  github <--merge-- master <--merge--> p2
 
 Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et codes internes/propriétaires** :  
 
-- ne pas inclure le présent fichier [README_INTERNE.md](./README_INTERNE.md)
+- ne pas inclure le présent fichier [README_INTERNE.md](./README_INTERNE.md), ni le .gitlab-ci.yml
 - ne pas inclure le dossier [doc_interne](./doc_interne)
 - ne pas inclure les fichiers équipés d'une balise "propriétaire"
 - ne pas inclure les blocs de code entourés de d'une balise "propriétaire"
@@ -95,12 +95,13 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 - revue de code
 
 ## publier
-### 0. maj de la version de publication
+### 0. maj de la version de publication
 	node changeversion.js X.Y.Z
 ### 1. push
 	git commit -m "release X.Y.Z"
+	git tag -m "vX.Y.Z" "vX.Y.Z"
 	# pousser les modifs sur le fork
-	git push upstream github:master
+	git push upstream github:master --tags
 ### 2. pull-request
 Le reste se passe sur [github](https://github.com) :
 
@@ -127,7 +128,10 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 - les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
 - la documentation interne (à **ne pas** reporter sur le github) est séparée de la documentation publique : elle est intégralement stockée dans le dossier [doc_interne](./doc_interne) et le fichier [README_INTERNE.md](./README_INTERNE.md)
 - la documentation publique est entièrement rédigée à destination des utilisateurs github et ne doit faire aucune référence à notre fonctionnement interne
-
+## exemple de balise à placer en début de fichier
+	#####################################
+	###### INTERNE, ne pas livrer #######
+	#####################################
 
 
 
