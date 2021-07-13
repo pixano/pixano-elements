@@ -6,7 +6,7 @@ Contenu de ce document :
 
 # organisation/gestion des dépôts
 ## version opensource publiée sur github
-- [dépôt](https://github.com/pixano/pixano-app) opensource sous licence [CeCILL-C](./LICENSE.txt)
+- [dépôt](https://github.com/pixano/pixano-elements) opensource sous licence [CeCILL-C](./LICENSE.txt)
 - contient tous les modules et codes issus de l'EdA
 - étiquettes de versions : vX.Y.Z
 - **on ne devrait jamais pousser directement sur ce dépôt !** Il faut toujours passer par les pull-request pour sécuriser et générer du trafic (voir [procédure](#procedure-de-publication)).
@@ -95,6 +95,7 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 
 ### finalisation
 - revue de code
+- clean code: `npm run tslint`
 
 ## publier
 ### 0. maj de la version de publication
@@ -126,6 +127,13 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	npm publish packages/graphics-2d
 	npm publish packages/core
 
+### 5. publication of the documentation
+    npm run docs
+	git clone https://github.com/pixano/pixano.github.io.git
+	cp -r docs pixano.github.io/docs
+	git commit -a -m "release X.Y.Z"
+	git tag -m "vX.Y.Z" "vX.Y.Z"
+	git push --tags
 
 # règles de développement
 - les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
