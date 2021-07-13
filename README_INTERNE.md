@@ -54,7 +54,7 @@ master  <------push------  github <--merge-- master <--merge--> p2
 
 
 
-# procédure de publication
+# procédure de publication opensource
 ## prérequis
 ### sur github
 - créer un compte $MONCOMPTE sur [github](https://github.com)
@@ -69,8 +69,9 @@ master  <------push------  github <--merge-- master <--merge--> p2
 	git fetch
 	git fetch upstream
 	# intégrer nos modifs à la branche github
-	##git merge master github
+	## git merge master github
 	# procéder par cherry-pick pour plus de sécurité (ne pas inclure les commits purement internes)
+	# git cherry-pick b4cb0b18^..d5e075f2 (all commits from x to y) or git cherry-pick d5e075f2
 	git cherry-pick A^..B
 
 Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et codes internes/propriétaires** :  
@@ -83,14 +84,15 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 ## vérification et validation du code
 ### vérifications "à la main"
 	npm run build
+	npm run build:umd
 	npx serve demos/cuboid/
 	npx serve demos/polygon/
 	npx serve demos/segmentation-interactive/
 	npx serve demos/graph/
-	npx serve demos/polygon-http/
 	npx serve demos/smart-rectangle/
 	npx serve demos/rectangle/
 	npx serve demos/tracking/
+
 ### finalisation
 - revue de code
 
@@ -106,7 +108,7 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 Le reste se passe sur [github](https://github.com) :
 
 	- sur le fork $MONCOMPTE : "pull-request" => "create pull request => "Create pull request"
-	- sur le comppte pixano : aller dans "merge pull request", "confirm"
+	- sur le compte pixano : aller dans "merge pull request", "confirm"
 ### 3. release
 Transformer le tag en release github (permet de rendre le dernier tag plus visible) :
 
@@ -116,21 +118,23 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	- dans "Release title", remettre la version vX.Y.Z
 	- "Update release"
 ### 4. publication npm
+	# if not logged already
+	# contact pixano@cea.fr for more information
+	npm login
 	npm publish packages/core
 	npm publish packages/ai
 	npm publish packages/graphics-2d
 	npm publish packages/core
 
 
-
-
-# rêgles de développement
+# règles de développement
 - les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
 - la documentation interne (à **ne pas** reporter sur le github) est séparée de la documentation publique : elle est intégralement stockée dans le dossier [doc_interne](./doc_interne) et le fichier [README_INTERNE.md](./README_INTERNE.md)
 - la documentation publique est entièrement rédigée à destination des utilisateurs github et ne doit faire aucune référence à notre fonctionnement interne
+
 ## exemple de balise à placer en début de fichier
 	#####################################
-	###### INTERNE, ne pas livrer #######
+	###### INTERNAL, do not publish #####
 	#####################################
 
 
