@@ -63,16 +63,22 @@ master  <------push------  github <--merge-- master <--merge--> p2
 	git remote add upstream git@github.com:$MONCOMPTE/pixano-elements.git
 	git fetch upstream
 	git checkout -b github upstream/master
+### avoir cloné le site web
+	cd .. ; git clone git@github.com:pixano/pixano.github.io.git ; cd -
+
+## mettre à jour son fork
+- sur son fork github, appuyer sur "Fetch upstream", puis "Fetch and merge"
 
 ## préparer la publication
 	# être sûr d'avoir les dépôts à jour
 	git fetch
 	git fetch upstream
+	git checkout github
 	# intégrer nos modifs à la branche github
 	## git merge master github
 	# procéder par cherry-pick pour plus de sécurité (ne pas inclure les commits purement internes)
 	# git cherry-pick b4cb0b18^..d5e075f2 (all commits from x to y) or git cherry-pick d5e075f2
-	git cherry-pick A^..B
+	git cherry-pick commitSHA
 
 Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et codes internes/propriétaires** :  
 
@@ -87,10 +93,11 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 	npm run build:umd
 	npx serve demos/cuboid/
 	npx serve demos/polygon/
-	npx serve demos/segmentation-interactive/
 	npx serve demos/graph/
-	npx serve demos/smart-rectangle/
+	npx serve demos/segmentation/
+	npx serve demos/segmentation-interactive/
 	npx serve demos/rectangle/
+	npx serve demos/smart-rectangle/
 	npx serve demos/tracking/
 
 ### finalisation
@@ -98,26 +105,37 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 - clean code: `npm run tslint`
 
 ## publier
-### 0. maj de la version de publication
-	node changeversion.js X.Y.Z
 ### 1. push
-	git commit -m "release X.Y.Z"
-	git tag -m "vX.Y.Z" "vX.Y.Z"
+	VERSION=0.5.14
+	#maj de la version de publication
+	node changeversion.js $VERSION
+	git commit -m "release $VERSION"
+	git tag -m "v$VERSION" "v$VERSION"
 	# pousser les modifs sur le fork
-	git push upstream github:master --tags
+	git push upstream github:master --follow-tags
 ### 2. pull-request
 Le reste se passe sur [github](https://github.com) :
 
-	- sur le fork $MONCOMPTE : "pull-request" => "create pull request => "Create pull request"
-	- sur le compte pixano : aller dans "merge pull request", "confirm"
+	- sur le fork $MONCOMPTE : onglet "Pull requests" => "New pull request" => "Create pull request" => "Create pull request"
+	- des vérifications automatiques sont effectuées par github
+	- sur le compte pixano : aller dans "Merge pull request" => "Confirm merge"
 ### 3. release
 Transformer le tag en release github (permet de rendre le dernier tag plus visible) :
 
-	- aller sur la page des [tags](https://github.com/bbsaclay/test/tags)
-	- sélectionner le dernier tag
-	- "Edit release"
+<!--	NE FONCTIONNE PAS (encore?) car les tags ne sont pas exportés lors des pull request-->
+<!--	- aller sur la page des [tags](https://github.com/pixano/pixano-elements/tags)-->
+<!--	- sélectionner le dernier tag-->
+<!--	- "Edit release"-->
+<!--	- dans "Release title", remettre la version vX.Y.Z-->
+<!--	- "Update release"-->
+	
+	- aller sur la page des [release](https://github.com/pixano/pixano-elements/releases)
+	- bouton "Draft a new release"
+	- "Tag version" vX.Y.Z
 	- dans "Release title", remettre la version vX.Y.Z
-	- "Update release"
+	- "Publish release"
+	
+	
 ### 4. publication npm
 	# if not logged already
 	# contact pixano@cea.fr for more information
@@ -125,15 +143,15 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	npm publish packages/core
 	npm publish packages/ai
 	npm publish packages/graphics-2d
-	npm publish packages/core
+	npm publish packages/graphics-3d
 
 ### 5. publication of the documentation
-    npm run docs
-	git clone https://github.com/pixano/pixano.github.io.git
-	cp -r docs pixano.github.io/docs
-	git commit -a -m "release X.Y.Z"
-	git tag -m "vX.Y.Z" "vX.Y.Z"
-	git push --tags
+	npm run docs
+	rm -r ../pixano.github.io/docs ; cp -r docs ../pixano.github.io/docs
+	cd ../pixano.github.io/
+	git commit -a -m "release $VERSION"
+	git tag -m "v$VERSION" "v$VERSION"
+	git push --follow-tags
 
 # règles de développement
 - les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
