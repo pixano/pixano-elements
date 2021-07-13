@@ -101,11 +101,11 @@ class MyDemo extends LitElement {
           <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
           <p class="icon" title="Smart instance" @click=${() => this.element.mode = 'smart-create'}>${borderOuter}</p>
           <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
-          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
-          <p class="icon" title="Union" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
+          <p class="icon" title="Subtract (Ctrl)" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
+          <p class="icon" title="Union (Shift)" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
           <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
-          <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
-          <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+          <p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+          <p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
         </div>       
       </div>
     `;
