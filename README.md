@@ -130,7 +130,7 @@ Please follow our [coding guidelines](./documentation/coding_guidelines.md) for 
 
 ### Pull request
 
-```
+```bash
 # Fork the repo from the upstream remote repo to your personal github
 # Then clone the repo into local machine to work locally and do some changes
 # Then configure the git remote for the fork
