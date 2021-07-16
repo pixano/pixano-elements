@@ -18,6 +18,20 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.
 
+## Table of content
+  * [Requirements](#requirements)
+      - [Node installation on Windows](#node-installation-on-windows)
+      - [Node installation on Ubuntu](#node-installation-on-ubuntu)
+      - [Other Operating Systems](#other-operating-systems)
+  * [Run demo](#run-demo)
+    + [Components overview](#components-overview)
+  * [Documentation](#documentation)
+  * [Contributing](#contributing)
+    + [Getting started](#getting-started)
+    + [Pull request](#pull-request)
+  * [Change log](#change-log)
+  * [License](#license)
+
 ## Requirements
 
 Pixano requires WebGL to be activated in your browser. If you see the following error in you console `WebGL unsupported in this browser`, please [activate](https://superuser.com/questions/836832/how-can-i-enable-webgl-in-my-browser) it.
@@ -81,9 +95,9 @@ Each package can contain multiple web components which are regrouped by affinity
 | [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-annotation/) |
 | [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [demo](http://pixano.cea.fr/3d-bounding-box/) |
 
-## 📚 Documentation
+## Documentation
 
-Check out the [TypeDoc](https://pixano.github.io/docs/docs) documentation. Each package's usage and API is also documented:
+📚 Check out the [TypeDoc](https://pixano.github.io/docs/docs) documentation. Each package's usage and API is also documented:
 - [graphics-2d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
 - [graphics-3d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
 
@@ -114,11 +128,28 @@ To create a new component, check our [tutorial](./documentation/how_to_create_a_
 
 Please follow our [coding guidelines](./documentation/coding_guidelines.md) for your contributions.
 
+### Pull request
+
+```
+# Fork the repo from the upstream remote repo to your personal github
+# Then clone the repo into local machine to work locally and do some changes
+# Then configure the git remote for the fork
+git remote add upstream git@github.com:pixano/pixano-elements.git
+# Important: sync your local forked repo with the remote repo
+# Or use cherry-pick if you want to make sure to not include some internal commits
+git pull upstream master
+# Merge the changes from upstream/master into your local master branch
+git checkout master
+git merge upstream/master
+# Then in the browser navigate to the original URL of the original pixano-elements repo
+# Click on “Create Pull Request”
+```
+
 ## Change log
 
 [Releases](https://github.com/pixano/pixano-elements/releases)
 
-# License
+## License
 
 Pixano is released under the [CeCILL-C](LICENSE.txt) license, a free software license
  adapted to both international and French legal matters that is fully compatible
