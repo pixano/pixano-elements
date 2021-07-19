@@ -6,10 +6,17 @@
  */
 
 import { customElement, property} from 'lit-element';
-import { MaskManager, CreatePolygonController } from './controller-mask';
+import { Controller } from './controller-base';
+import { CreateBrushController,
+  CreatePolygonController,
+  SelectController,
+  EditionAddController,
+  EditionRemoveController,
+  LockController } from './controller-mask';
 import { GraphicMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
+import { unfuseId, convertIndexToDict } from './utils-mask';
 
 /**
  * `<pxn-segmentation>` Basic segmentation editor.
@@ -33,31 +40,41 @@ export class Segmentation extends Canvas {
 
   public opacity: number = 0.60;
 
-  protected selectedId: [number, number, number] = [0,0,0];
+  public _selectedId: {
+    value: [number, number, number] | null
+  } = { value: null };
+
+  public _targetClass: { value: number } = { value: 1 };
 
   // container of mask
   // never destroyed, only updated
-  protected _graphicMask: GraphicMask = new GraphicMask();
+  protected gmask: GraphicMask = new GraphicMask();
 
   private newMaskLoaded: boolean = false;
 
-  protected maskManager = new MaskManager(this.renderer,
-                                          this._graphicMask,
-                                          this.selectedId);
+  public modes: {
+    [key: string]: Controller;
+  };
+
   @property({type: Boolean})
-  public showroi : boolean = (this.maskManager.modes.create as CreatePolygonController).showRoi;
+  public showroi : boolean;
 
   constructor() {
     super();
-    this.renderer.labelLayer.addChild(this._graphicMask);
+    this.renderer.labelLayer.addChild(this.gmask);
     this.renderer.labelLayer.alpha = this.opacity;
 
-    this.maskManager.addEventListener('update', () => {
-      this.dispatchEvent(new Event('update'));
-    });
-    this.maskManager.addEventListener('selection', (evt: any) => {
-      this.dispatchEvent(new CustomEvent('selection', { detail: evt.detail }));
-    });
+    this.modes = {
+      'create': new CreatePolygonController({...this} as any),
+      'create-brush': new CreateBrushController({...this} as any),
+      'select': new SelectController({...this} as any),
+      'edit-add': new EditionAddController({...this} as any),
+      'edit-remove': new EditionRemoveController({...this} as any),
+      'lock': new LockController({...this} as any)
+    };
+    this.showroi = (this.modes.create as CreatePolygonController).showRoi;
+
+
     // Empty mask on image load
     this.addEventListener('load', this.onImageChanged.bind(this));
 
@@ -66,18 +83,26 @@ export class Segmentation extends Canvas {
     });
   }
 
+  get selectedId() {
+    return this._selectedId.value;
+  }
+
+  set selectedId(id: [number, number, number] | null) {
+    this._selectedId.value = id;
+  }
+
   get targetClass() {
-    return this.maskManager.targetClass.value;
+    return this._targetClass.value;
   }
 
   set targetClass(clsIdx: number) {
-    this.maskManager.targetClass.value = clsIdx;
+    this._targetClass.value = clsIdx;
   }
 
   // Map of class indices and their color (+ if they are instances or semantic)
   // e.g. <1, [255, 0, 0, isInstance (instance = 1, semantic = 0)]
   get clsMap(): Map<number, [number, number, number, number]> {
-    return this._graphicMask.clsMap;
+    return this.gmask.clsMap;
   }
 
   // Map of class indices and their color
@@ -85,9 +110,9 @@ export class Segmentation extends Canvas {
   // if class is instanciable, isInstance = 1 else 0
   set clsMap(clsMap: Map<number, [number, number, number, number]>) {
     if (clsMap instanceof Map) {
-      this._graphicMask.clsMap = clsMap;
+      this.gmask.clsMap = clsMap;
     } else if (typeof clsMap === "object") {
-      this._graphicMask.clsMap = new Map(Object.entries(clsMap).map(([k,n]) => ([Number(k),n]))) as any;
+      this.gmask.clsMap = new Map(Object.entries(clsMap).map(([k,n]) => ([Number(k),n]))) as any;
     }
   }
 
@@ -95,7 +120,7 @@ export class Segmentation extends Canvas {
    * Get base64 encoding of the panoptic segmentation mask
    */
   public getMask() {
-    return this._graphicMask.getBase64();
+    return this.gmask.getBase64();
   }
 
   /**
@@ -103,7 +128,7 @@ export class Segmentation extends Canvas {
    */
   public setMask(buffer: string) {
     this.newMaskLoaded = true;
-    this._graphicMask.setBase64(buffer);
+    this.gmask.setBase64(buffer);
   }
 
   /**
@@ -113,8 +138,8 @@ export class Segmentation extends Canvas {
     if (this.renderer.imageWidth === 0 || this.renderer.imageHeight === 0) {
       return;
     }
-    this._graphicMask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
-    this.maskManager.selectedId.value = [-1, -1, -1];
+    this.gmask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
+    this.selectedId = [-1, -1, -1];
   }
 
   /**
@@ -126,34 +151,56 @@ export class Segmentation extends Canvas {
 
     if (changedProperties.has('mask') && this.mask && this.mask instanceof ImageData) {
       this.newMaskLoaded = true;
-      this._graphicMask.initialize(this.mask);
-      this.maskManager.selectedId.value = [-1, -1, -1];
+      this.gmask.initialize(this.mask);
+      this.selectedId = [-1, -1, -1];
     }
     if (changedProperties.has('mode') && this.mode) {
-      this.maskManager.setMode(this.mode);
+      const prevMode = changedProperties.get('mode');
+      this.setMode(prevMode, this.mode);
     }
 
     if (changedProperties.has('maskVisuMode') && this.maskVisuMode) {
-      this._graphicMask.maskVisuMode = this.maskVisuMode;
-      const curMask  = this._graphicMask.getValue();
+      this.gmask.maskVisuMode = this.maskVisuMode;
+      const curMask  = this.gmask.getValue();
       if (curMask instanceof ImageData) {
-        this._graphicMask.recomputeColor();
+        this.gmask.recomputeColor();
       }
     }
 
     if (changedProperties.has('showroi')) {
-      const controller = this.maskManager.modes.create as CreatePolygonController;
+      const controller = this.modes.create as CreatePolygonController;
       controller.showRoi = this.showroi;
     }
   }
 
   /**
+   * Handle new mode set:
+   * 1. Reset canvas to default "mode-free" (no interaction)
+   * 2. Apply interactions of new mode
+   * @param mode string
+   */
+   public setMode(prevMode: string, newMode: string) {
+    if (prevMode === newMode) {
+      return;
+    }
+    if (this.modes[prevMode]) {
+        // Restore default state
+        this.modes[prevMode].deactivate();
+    }
+    // Set up new mode state
+    this.modes[newMode]?.activate();
+    this.mode = newMode as any;
+    this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
+  }
+
+  /**
    * Fill selected region with current selectedId
    */
-  public fillSelection() {
-    if (this.maskManager.selectedId.value) {
-      this.maskManager.fillSelection(this.maskManager.selectedId.value);
-    }
+  public fillSelection(newId: [number, number, number]) {
+    if (this.selectedId) {
+      this.gmask.replaceValue(this.selectedId, newId);
+      this.selectedId = newId;
+  }
   }
 
   /**
@@ -161,18 +208,18 @@ export class Segmentation extends Canvas {
    * @param newClass class index to replace the selected region with
    */
   public fillSelectionWithClass(newClass: number) {
-    if (this.maskManager.selectedId.value) {
-      const currClass = this.maskManager.selectedId.value[2];
-      let newId: [number, number, number] = [ this.maskManager.selectedId.value[0],  this.maskManager.selectedId.value[1], newClass];
+    if (this._selectedId.value) {
+      const currClass = this._selectedId.value[2];
+      let newId: [number, number, number] = [ this._selectedId.value[0],  this._selectedId.value[1], newClass];
       if (this.clsMap.get(newClass)![3] && !this.clsMap.get(currClass)![3]) {
         // new class is instance and was semantic before: new instance idx
-        const nextIdx = this._graphicMask.getNextId();
+        const nextIdx = this.gmask.getNextId();
         newId = [nextIdx[0], nextIdx[1], newId[2]];
       } else if (!this.clsMap.get(newClass)![3]) {
         // remove instance indices if the new class is semantic
         newId = [0, 0, newId[2]];
       }
-      this.maskManager.fillSelection(newId);
+      this.fillSelection(newId);
     }
   }
 
@@ -205,17 +252,60 @@ export class Segmentation extends Canvas {
    * Remove little blobs
    */
   public filterLittle(numPixels: number = 10) {
-    this.maskManager.filterAll(numPixels)
+    this.gmask.fusedIds.forEach((id) => {
+      this.filterId(unfuseId(id), numPixels)
+    });
+    this.dispatchEvent(new Event('update'));
   }
+
+  /**
+     * Remove all blobs of selected id with number of pixels below 'blobMinSize'
+     * TODO: multiple ids in a single loop
+     * @param targetId the id of the blobs to be found
+     * @param blobMinSize
+     */
+   protected filterId(targetId: [number, number, number], blobMinSize: number){
+    const blobs = this.gmask.getBlobs(targetId)
+    for (const [,blob] of blobs){
+        if (blob.nbPixels < blobMinSize) {
+            blob.contours.forEach(contour => {
+                const arr = convertIndexToDict(contour.points, this.gmask.canvas.width + 1);
+                if (contour.type === 'external') {
+                    this.gmask.updateByPolygon(arr, targetId, 'remove')
+                }
+                else {
+                    this.gmask.updateByPolygon(arr, targetId, 'add')
+                }
+            });
+        }
+    }
+}
 
   /**
    * Switch interaction mode
    */
   public switchMode() {
-    const modes = Object.keys(this.maskManager.modes);
+    const modes = Object.keys(this.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
     this.mode = modes[(currentIdx + 1) % modes.length] as any;
     this.dispatchEvent(new Event("mode"));
+  }
+
+  /**
+     * Change the controler linked to the mode:
+     * @param mode string, the mode whome controler has to be changed
+     * @param controller the new controler
+     */
+   public setController(mode: string, controller: Controller) {
+    if (mode === this.mode && this.modes[mode]) {
+        // remove active base controller
+        this.modes[mode].deactivate();
+        this.modes[mode] = controller;
+        this.modes[mode].activate();
+    } else {
+        this.modes[mode] = controller;
+    }
+    return this;
   }
 
   /**
