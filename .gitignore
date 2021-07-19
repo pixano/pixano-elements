@@ -16,3 +16,4 @@ packages/*/dist
 *package-lock.json
 *-bundle.js
 *tsconfig.tsbuildinfo
+/docs
