@@ -32,7 +32,7 @@ export class SelectController extends Controller {
 
     public gmask: GraphicMask;
 
-    public selectedId: {
+    public _selectedId: {
         value: [number, number, number] | null
     };
 
@@ -44,7 +44,7 @@ export class SelectController extends Controller {
         super();
         this.renderer = props.renderer || new Renderer();
         this.gmask = props.gmask || new GraphicMask();
-        this.selectedId = props.selectedId || { value: null };
+        this._selectedId = props._selectedId || { value: null };
         this.renderer.stage.addChild(this.contours);
         this.onPointerDownSelectInstance = this.onPointerDownSelectInstance.bind(this);
         this.onKeySelectionDown = this.onKeySelectionDown.bind(this);
@@ -54,8 +54,8 @@ export class SelectController extends Controller {
         this.renderer.stage.on('mousedown', this.onPointerDownSelectInstance);
         window.addEventListener('keydown', this.onKeySelectionDown, false);
         this.contours.visible = true;
-        if (this.selectedId.value && !arraysMatch(this.selectedId.value, [0,0,0])) {
-            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+        if (this._selectedId.value && !arraysMatch(this._selectedId.value, [0,0,0])) {
+            this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
             updateDisplayedSelection(this.contours, this.densePolygons);
         } else {
             this.densePolygons = [];
@@ -76,17 +76,17 @@ export class SelectController extends Controller {
             this.deselect();
             return;
         }
-        this.selectedId.value = id;
-        this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+        this._selectedId.value = id;
+        this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
         updateDisplayedSelection(this.contours, this.densePolygons);
-        this.dispatchEvent(new CustomEvent('selection', { detail: this.selectedId.value }));
+        this.dispatchEvent(new CustomEvent('selection', { detail: this._selectedId.value }));
     }
 
     public deselect() {
-        if (this.selectedId.value) {
+        if (this._selectedId.value) {
             this.densePolygons = [];
             updateDisplayedSelection(this.contours, this.densePolygons);
-            this.selectedId.value = null;
+            this._selectedId.value = null;
             this.dispatchEvent(new CustomEvent('selection', {detail: null}));
         }
     }
@@ -111,8 +111,8 @@ export class LockController extends SelectController {
     activate() {
         this.renderer.stage.on('mousedown', this.onPointerDownLock);
         this.contours.visible = true;
-        if (this.selectedId.value) {
-            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+        if (this._selectedId.value) {
+            this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
             updateDisplayedSelection(this.contours, this.densePolygons);
         }
     }
@@ -166,7 +166,7 @@ export class CreateBrushController extends Controller {
 
     public gmask: GraphicMask;
 
-    public targetClass: { value: number };
+    public _targetClass: { value: number };
 
     // temporary polygon
     protected tempPolygon: GraphicPolygon | null = null;
@@ -180,7 +180,7 @@ export class CreateBrushController extends Controller {
     // roi ratio radius in pixels
     public roiRadius: number = 5;
 
-    public selectedId: {
+    public _selectedId: {
         value: [number, number, number] | null
     };
 
@@ -194,8 +194,8 @@ export class CreateBrushController extends Controller {
         super(props);
         this.renderer = props.renderer || new Renderer();
         this.gmask = props.gmask || new GraphicMask();
-        this.targetClass = props.targetClass || { value: 0 };
-        this.selectedId = props.selectedId || { value: null };
+        this._targetClass = props._targetClass || { value: 0 };
+        this._selectedId = props._selectedId || { value: null };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveBrush = this.onPointerMoveBrush.bind(this);
@@ -211,8 +211,8 @@ export class CreateBrushController extends Controller {
         window.addEventListener('keydown', this.onKeyDown, false);
         this.initRoi();
         this.contours.visible = true;
-        if (this.selectedId.value) {
-            this.densePolygons = getPolygons(this.gmask, this.selectedId.value!);
+        if (this._selectedId.value) {
+            this.densePolygons = getPolygons(this.gmask, this._selectedId.value!);
             updateDisplayedSelection(this.contours, this.densePolygons);
         } else {
             this.densePolygons = [];
@@ -238,7 +238,7 @@ export class CreateBrushController extends Controller {
     initRoi() {
 
         // get target color
-        const color = this.gmask.pixelToColor(0,0,this.targetClass.value);
+        const color = this.gmask.pixelToColor(0,0,this._targetClass.value);
         const hex = rgbToHex(...color);
         this.roi.cacheAsBitmap = false;
         this.roi.clear();
@@ -270,14 +270,14 @@ export class CreateBrushController extends Controller {
      */
     getTargetValue(): [number, number, number] {
         if (this.editionMode == EditionMode.NEW_INSTANCE) {
-            const cls = this.gmask.clsMap.get(this.targetClass.value);
+            const cls = this.gmask.clsMap.get(this._targetClass.value);
             const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
-            const value = [newId[0], newId[1], this.targetClass.value] as [number, number, number];
-            this.selectedId.value = value;
+            const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
+            this._selectedId.value = value;
             return value;
         } else if ((this.editionMode == EditionMode.ADD_TO_INSTANCE || this.editionMode == EditionMode.REMOVE_FROM_INSTANCE)
-                && this.selectedId.value) {
-            return this.selectedId.value;
+                && this._selectedId.value) {
+            return this._selectedId.value;
         }
         return [0,0,0];
     }
@@ -297,10 +297,10 @@ export class CreateBrushController extends Controller {
         if (evt.data.button === 0 && !evt.data.originalEvent.ctrlKey && !evt.data.originalEvent.shiftKey) {
             // create
             this.editionMode = EditionMode.NEW_INSTANCE;
-        } else if (evt.data.button === 0 && evt.data.originalEvent.shiftKey && this.selectedId.value != null) {
+        } else if (evt.data.button === 0 && evt.data.originalEvent.shiftKey && this._selectedId.value != null) {
             // union
             this.editionMode = EditionMode.ADD_TO_INSTANCE;
-        } else if (evt.data.button === 0 && evt.data.originalEvent.ctrlKey && this.selectedId.value != null) {
+        } else if (evt.data.button === 0 && evt.data.originalEvent.ctrlKey && this._selectedId.value != null) {
             // remove
             this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
         }
@@ -343,9 +343,9 @@ export class CreateBrushController extends Controller {
      */
     onPointerUpBrush() {
         if (this.isActive) {
-            this.densePolygons = getPolygons(this.gmask, this.selectedId.value!);
+            this.densePolygons = getPolygons(this.gmask, this._selectedId.value!);
             updateDisplayedSelection(this.contours, this.densePolygons);
-            this.gmask.fusedIds.add(fuseId(this.selectedId.value!));
+            this.gmask.fusedIds.add(fuseId(this._selectedId.value!));
             this.dispatchEvent(new Event('update'));
         }
         this.isActive = false;
@@ -377,9 +377,9 @@ export class CreatePolygonController extends Controller {
 
     public gmask: GraphicMask;
 
-    public targetClass: { value: number };
+    public _targetClass: { value: number };
 
-    public selectedId: {
+    public _selectedId: {
         value: [number, number, number] | null
     };
 
@@ -406,11 +406,11 @@ export class CreatePolygonController extends Controller {
     protected editionMode: EditionMode = EditionMode.NEW_INSTANCE;
 
     constructor(props: Partial<CreatePolygonController> = {}) {
-        super();
+        super(props);
         this.renderer = props.renderer || new Renderer();
         this.gmask = props.gmask || new GraphicMask();
-        this.targetClass = props.targetClass || { value: 0 };
-        this.selectedId = props.selectedId || { value: null };
+        this._targetClass = props._targetClass || { value: 0 };
+        this._selectedId = props._selectedId || { value: null };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
@@ -423,8 +423,8 @@ export class CreatePolygonController extends Controller {
         this.renderer.stage.on('pointermove', this.onPointerMoveTempPolygon);
         this.initRoi();
         this.contours.visible = true;
-        if (this.selectedId.value) {
-            this.densePolygons = getPolygons(this.gmask, this.selectedId.value);
+        if (this._selectedId.value) {
+            this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
             updateDisplayedSelection(this.contours, this.densePolygons);
         } else {
             this.densePolygons = [];
@@ -436,7 +436,13 @@ export class CreatePolygonController extends Controller {
         this.renderer.stage.removeListener('mousedown', this.onPointerDownSelectionPolygon);
         this.renderer.stage.removeListener('pointermove', this.onPointerMoveTempPolygon);
         this.roi.clear();
+        this.contours.clear();
         this.contours.visible = false;
+        if (this.tempPolygon) {
+            this.tempPolygon.destroy();
+            this.renderer.stage.removeChild(this.tempPolygon);
+            this.tempPolygon = null;
+        }
     }
 
     initRoi() {
@@ -545,14 +551,14 @@ export class CreatePolygonController extends Controller {
      */
     getTargetValue(): [number, number, number] {
         if (this.editionMode == EditionMode.NEW_INSTANCE) {
-            const cls = this.gmask.clsMap.get(this.targetClass.value);
+            const cls = this.gmask.clsMap.get(this._targetClass.value);
             const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
-            const value = [newId[0], newId[1], this.targetClass.value] as [number, number, number];
-            this.selectedId.value = value;
+            const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
+            this._selectedId.value = value;
             return value;
         } else if ((this.editionMode == EditionMode.ADD_TO_INSTANCE || this.editionMode == EditionMode.REMOVE_FROM_INSTANCE)
-                    && this.selectedId.value) {
-            return this.selectedId.value;
+                    && this._selectedId.value) {
+            return this._selectedId.value;
         }
         return [0,0,0];
     }
@@ -584,164 +590,7 @@ export class CreateController extends CreatePolygonController {
 };
 
 
-/**
- * Manage set of interactive shapes
- */
-export class MaskManager extends EventTarget {
-    protected renderer: Renderer;
 
-    public mode: string = 'select';
-
-    public selectedId: {
-        value: [number, number, number] | null
-    };
-
-    protected gmask: GraphicMask;
-
-    // contour of selected instance
-    public contour = new PIXIGraphics();
-
-    public modes: {
-        [key: string]: Controller;
-    };
-
-    public targetClass: { value: number } = { value: 1 };
-
-    constructor(renderer: Renderer = new Renderer(),
-                gmask: GraphicMask = new GraphicMask(), selectedId: [number, number, number] = [0, 0, 0]) {
-        super();
-        this.renderer = renderer;
-        this.gmask = gmask;
-        this.selectedId = { value: selectedId };
-        this.renderer.stage.addChild(this.contour);
-        // creating default controler
-        this.modes = {
-            'create': new CreatePolygonController({...this} as any),
-            'create-brush': new CreateBrushController({...this} as any),
-            'select': new SelectController({...this} as any),
-            'edit-add': new EditionAddController({...this} as any),
-            'edit-remove': new EditionRemoveController({...this} as any),
-            'lock': new LockController({...this} as any)
-        };
-        this.modes[this.mode].activate();
-    }
-
-    /**
-     * Change the controler linked to the mode:
-     * @param mode string, the mode whome controler has to be changed
-     * @param controller the new controler
-     */
-    public setController(mode: string, controller: Controller) {
-        if (mode === this.mode && this.modes[mode]) {
-            // remove active base controller
-            this.modes[mode].deactivate();
-            this.modes[mode] = controller;
-            this.modes[mode].activate();
-        } else {
-            this.modes[mode] = controller;
-        }
-        return this;
-    }
-
-    /**
-     * Handle new mode set:
-     * 1. Reset canvas to "mode-free" (no interaction)
-     * 2. Apply interactions of new mode
-     * @param mode string
-     */
-    public setMode(mode: string) {
-        if (mode !== this.mode) {
-            if (this.modes[this.mode]) {
-                // Restore default state
-                this.modes[this.mode].deactivate();
-            }
-            if (this.modes[mode]) {
-                // Set up new mode state
-                this.modes[mode].activate();
-            }
-            this.mode = mode;
-        }
-    }
-
-    /**
-     * Remove all blobs with total number of pixels below 'blobMinSize'
-     * @param blobMinSize
-     */
-    public filterAll(blobMinSize: number) {
-        this.gmask.fusedIds.forEach((id) => {
-            this.filterId(unfuseId(id), blobMinSize)
-        });
-        this.dispatchEvent(new Event('update'));
-    }
-
-    /**
-     * Remove all blobs of selected id with number of pixels below 'blobMinSize'
-     * TODO: multiple ids in a single loop
-     * @param targetId the id of the blobs to be found
-     * @param blobMinSize
-     */
-    protected filterId(targetId: [number, number, number], blobMinSize: number){
-        const blobs = this.gmask.getBlobs(targetId)
-        for (const [,blob] of blobs){
-            if (blob.nbPixels < blobMinSize) {
-                blob.contours.forEach(contour => {
-                    const arr = convertIndexToDict(contour.points, this.gmask.canvas.width + 1);
-                    if (contour.type === 'external') {
-                        this.gmask.updateByPolygon(arr, targetId, 'remove')
-                    }
-                    else {
-                        this.gmask.updateByPolygon(arr, targetId, 'add')
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * Fill current selection polygons
-     * with provided target id
-     * @param id target id
-     */
-    public fillSelection(id: [number, number, number]) {
-        // to do: replace image data values
-        // image data
-        if (this.selectedId.value) {
-            this.gmask.replaceValue(this.selectedId.value, id);
-            this.selectedId.value = id;
-        }
-    }
-
-    /**
-     * Fill mask from polygons
-     * 1: pixel contained in one of polygons
-     * 0: pixel not contained
-     * @param polygons
-     */
-    protected createMaskFromPolygons(polygons: DensePolygon[]): ImageData {
-        const canvas = document.createElement('canvas') as HTMLCanvasElement;
-        canvas.width = this.renderer.imageWidth;
-        canvas.height = this.renderer.imageHeight;
-        const ctx = canvas.getContext('2d')!;
-        polygons.forEach((poly) => {
-            if (poly.type === 'external')
-                ctx.fillStyle = `rgb(1, 0, 0)`; // Foreground
-            else
-                ctx.fillStyle = 'rgb(0, 0, 0)'; // Background
-            const data = poly.data;
-
-            ctx.beginPath();
-            ctx.moveTo(data[0].x, data[0].y);
-            for(let i = 1; i < data.length; i++){
-                const p = data[i];
-                ctx.lineTo(p.x, p.y);
-            }
-            ctx.lineTo(data[0].x, data[0].y);
-            ctx.closePath();
-            ctx.fill();
-        });
-        return ctx.getImageData(0, 0, canvas.width, canvas.height);
-    }
-}
 
 //// utils //////
 /////////////////

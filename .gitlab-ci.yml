@@ -1,0 +1,48 @@
+#####################################
+###### INTERNAL, do not publish #####
+#####################################
+# Documentation dédiée à l'utilisation de ce fichier par gitlab : https://docs.gitlab.com/ee/ci/yaml/
+# Explications pour le déploiement npm dans ce cadre : https://www.exclamationlabs.com/blog/continuous-deployment-to-npm-using-gitlab-ci/
+
+
+build_node10:
+  stage: build
+  image: node:10
+  before_script:
+    - npm install
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN!"
+    - npm run bootstrap
+    - npm run build
+    - echo "fin"
+
+build_node12:
+  stage: build
+  image: node:12
+  before_script:
+    - npm install
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN!"
+    - npm run bootstrap
+    - npm run build
+    - echo "fin"
+
+build_node14:
+  stage: build
+  image: node:14
+  before_script:
+    - npm install
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN!"
+    - npm run bootstrap
+    - npm run build
+    - echo "fin"
