@@ -98,6 +98,10 @@ class MyDemo extends LitElement {
     }
   }
 
+  onUpdate() {
+    console.log('on update')
+  }
+
   get rightPanel() {
     return html`
       <div class="right-panel">
@@ -119,7 +123,7 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation image="${this.image}" disablefullscreen>
+          <pxn-segmentation image="${this.image}" @update="${this.onUpdate}" disablefullscreen>
           </pxn-segmentation>
           ${this.rightPanel}
         </main>`;

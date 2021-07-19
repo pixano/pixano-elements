@@ -258,7 +258,7 @@ export class Canvas2d extends Canvas {
     this.modes[newMode]?.activate();
     this.mode = newMode;
     this.notifyMode();
-}
+  }
 
 
   /**
