@@ -130,19 +130,39 @@ Please follow our [coding guidelines](./documentation/coding_guidelines.md) for 
 
 ### Pull request
 
+Starting from scratch :
 ```bash
-# Fork the repo from the upstream remote repo to your personal github
-# Then clone the repo into local machine to work locally and do some changes
-# Then configure the git remote for the fork
-git remote add upstream git@github.com:pixano/pixano-elements.git
-# Important: sync your local forked repo with the remote repo
-# Or use cherry-pick if you want to make sure to not include some internal commits
-git pull upstream master
-# Merge the changes from upstream/master into your local master branch
-git checkout master
-git merge upstream/master
-# Then in the browser navigate to the original URL of the original pixano-elements repo
+# 1. Start by cloning the original repository
+git clone https://github.com/pixano/pixano-elements.git
+# 2. Fork the repo (Fork button at https://github.com/pixano/pixano-elements) to your personal github
+# Then configure the git remote for the fork ($MY_ACCOUNT is your personal github)
+git remote add upstream https://github.com/$MY_ACCOUNT/pixano-elements.git
+git fetch upstream
+# 3. Create a new branch for dedicated bug fix or new feature
+git checkout -b feature-xyz upstream/master
+# 4. Do your changes in feature-xyz branch :)
+git commit -a -m "Add xyz feature"
+git push -u upstream feature-xyz
+# Then make sure your branch is up to date with the original repository
+git merge origin/master
+# 5. Then in the browser navigate to the original URL of the original pixano-elements repo
 # Click on “Create Pull Request”
+```
+From an existing clone with many changes (whether you want to publish all or only one of the changes) :
+```bash
+# 1. Instead of making a new clone, use your existing one and add two upsteams:
+# One for your fork and one for the original repository:
+git remote add upstream-fork https://github.com/$MY_ACCOUNT/pixano-elements.git
+git remote add upstream-origin https://github.com/pixano/pixano-elements.git
+# 2. Create a new branch for dedicated bug fix or new feature
+git checkout -b feature-xyz upstream-fork/master
+# 3. Cherry pick from commit from your enriched branch (replace by your targeted commit)
+# Or merge all if you want to publish everything
+git cherry-pick 52cd7ez # or git merge my_existing_branch
+git push -u upstream-fork feature-xyz
+# 4. Make sure you're up-to-date with you upstream-origin
+git merge upstream-origin/master
+# 5. Create pull request like described above
 ```
 
 ## Change log
