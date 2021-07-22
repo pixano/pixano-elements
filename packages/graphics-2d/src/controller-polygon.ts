@@ -242,6 +242,7 @@ export class PolygonCreateController extends ShapeCreateController {
             const m = this.renderer.getPosition(evt.data);
             const shape = this.tmpShape as GraphicPolygon;
             if (shape && this.isDbClick >= 0 && m.x === this.mouse.x && m.y === this.mouse.y) {
+                this.isCreating = false;
                 this.createPolygon();
                 return;
             }
