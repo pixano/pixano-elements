@@ -163,7 +163,8 @@ export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
  * Switch two tracks at given timestamp.
  * @param tracks tracks to be switched
  */
-export function switchTrack(t1: TrackData, t2: TrackData, fIdx: number) {
+export function switchTrack(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string, fIdx: number) {
+    var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
     const ks1 = [...Object.values(t1.keyShapes)];
     const ks2 = [...Object.values(t2.keyShapes)];
     t1.keyShapes = ks1.filter((k) => k.timestamp < fIdx)
@@ -182,7 +183,8 @@ export function switchTrack(t1: TrackData, t2: TrackData, fIdx: number) {
  * If they overlap but not at current time, do as above with the first timestamp of overlap.
  * @param tracks tracks to be merged
  */
-export function mergeTracks(tracks: {[key: string]: TrackData}, t1: TrackData, t2: TrackData, fIx: number) {
+export function mergeTracks(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string, fIx: number) {
+    var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 
     // check overlapping
     const keys = [
@@ -212,6 +214,7 @@ export function mergeTracks(tracks: {[key: string]: TrackData}, t1: TrackData, t
                         .reduce((map, obj) => ({...map, [obj.timestamp]: obj}), {});
         delete tracks[t2.id];
     }
+    return t1.id
 }
 
 export function getNewTrackId(tracks: {[key: string]: TrackData}): string {
@@ -244,7 +247,8 @@ export function convertShapes(tracks: {[key: string]: TrackData}, fIdx: number):
  * Split track into two tracks
  * @param t
  */
-export function splitTrack(t: TrackData, fIdx: number, tracks: {[key: string]: TrackData}): TrackData {
+export function splitTrack(tId: string, fIdx: number, tracks: {[key: string]: TrackData}): TrackData {
+    var t = tracks[tId];
     const newTrackId = getNewTrackId(tracks);
 
     // create keyshape for current frame and previous frame

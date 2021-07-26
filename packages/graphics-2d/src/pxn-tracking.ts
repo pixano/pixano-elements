@@ -45,7 +45,7 @@ export class Tracking extends Rectangle {
     displayMode: 'show_all' | 'show_selected' = 'show_all';
 
     @property({ type: Object })
-    public selectedTracks: Set<TrackData> = new Set();
+    public selectedTrackIds: Set<string> = new Set();
 
     categories: any[] = [
         { name: 'person', color: "#eca0a0", properties: [
@@ -108,12 +108,12 @@ export class Tracking extends Rectangle {
         this.addEventListener('create', (e) => {
             // if there is a selected track, add keyshape
             // else create a new track
-            if (this.selectedTracks.size) {
-                const currentTrack = this.selectedTracks.values().next().value;
+            if (this.selectedTrackIds.size) {
+                const currentTrackId = this.selectedTrackIds.values().next().value;
                 this.addNewKeyShapes([
                   {
                     ...JSON.parse(JSON.stringify((e as any).detail)),
-                    id: currentTrack.id
+                    id: currentTrackId
                   }
                 ]);
             } else {
@@ -129,7 +129,7 @@ export class Tracking extends Rectangle {
             this.requestUpdate();
         });
         this.addEventListener('delete-track', () => {
-            this.selectedTracks.clear();
+            this.selectedTrackIds.clear();
             this.drawTracks();
             this.requestUpdate();
         });
@@ -141,8 +141,8 @@ export class Tracking extends Rectangle {
         this.addEventListener('selection', () => {
             // unselect track is shape is unselected
             if (!this.targetShapes.size) {
-                this.selectedTracks.clear();
-                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+                this.selectedTrackIds.clear();
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
             }
 
         });
@@ -170,16 +170,16 @@ export class Tracking extends Rectangle {
         const editController = (this.modes.edit as ShapesEditController);
         editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
             const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
-            const t = this.tracks[shape.id];
+            const trackId = shape.id;
             if (isShiftKey) {
-                if (!this.selectedTracks.has(t)) {
-                    this.selectedTracks.add(this.tracks[shape.id]);
-                    this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks }));
+                if (!this.selectedTrackIds.has(trackId)) {
+                    this.selectedTrackIds.add(trackId);
+                    this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds }));
                 }
-            } else if (!this.selectedTracks.has(t)) {
-                this.selectedTracks.clear();
-                this.selectedTracks.add(this.tracks[shape.id]);
-                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+            } else if (!this.selectedTrackIds.has(trackId)) {
+                this.selectedTrackIds.clear();
+                this.selectedTrackIds.add(trackId);
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
             }
             return firstClick;
         }
@@ -187,10 +187,10 @@ export class Tracking extends Rectangle {
             if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
                 return;
             }
-            if (this.selectedTracks.size) {
-                this.selectedTracks.clear();
+            if (this.selectedTrackIds.size) {
+                this.selectedTrackIds.clear();
                 this.targetShapes.clear();
-                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
             }
         }
     }
@@ -210,7 +210,7 @@ export class Tracking extends Rectangle {
     drawTracks() {
         this.shapes = this.convertShapes(this.timestamp) as any;
         // update selection to be displayed
-        const selectedIds = [...this.selectedTracks].map((t) => t.id.toString());
+        const selectedIds = [...this.selectedTrackIds]; 
         this.selectedShapeIds = selectedIds;
     }
 
@@ -220,7 +220,7 @@ export class Tracking extends Rectangle {
      */
     convertShapes(timestamp: number): ShapeData[] {
         const tracks = this.displayMode === 'show_all' ?
-                this.tracks : [...this.selectedTracks].reduce((map, obj) => ({...map, [obj.id]: obj}), {});
+                this.tracks : [...this.selectedTrackIds].reduce((map, id) => ({...map, [id]: this.tracks[id]}), {});
         return convertShapes(tracks, timestamp);
     }
 
@@ -242,8 +242,8 @@ export class Tracking extends Rectangle {
             labels: {}
         };
         this.tracks[newTrackId] = newTrack;
-        this.selectedTracks.clear();
-        this.selectedTracks.add(newTrack);
+        this.selectedTrackIds.clear();
+        this.selectedTrackIds.add(newTrackId);
         this.selectedShapeIds = [newTrack.id];
         this.drawTracks();
         this.dispatchEvent(new CustomEvent('create-track', { detail: newTrack }));
@@ -255,10 +255,10 @@ export class Tracking extends Rectangle {
      * Split track into two tracks
      * @param t
      */
-    splitTrack(t: TrackData) {
-        const newTrack = splitTrack(t, this.timestamp, this.tracks);
-        this.selectedTracks.clear();
-        this.selectedTracks.add(newTrack);
+    splitTrack(tId: string) {
+        const newTrack = splitTrack(tId, this.timestamp, this.tracks);
+        this.selectedTrackIds.clear();
+        this.selectedTrackIds.add(newTrack.id);
         this.dispatchEvent(new Event('update-tracks'));
     }
 
@@ -270,23 +270,25 @@ export class Tracking extends Rectangle {
      * If they overlap but not at current time, do as above with the first timestamp of overlap.
      * @param tracks tracks to be merged
      */
-    mergeTracks(tracks: Set<TrackData>) {
+    mergeTracks(tracks: Set<string>) {
         if (tracks.size !== 2) {
             return;
         }
-        const [t1, t2] = [...tracks];
-        mergeTracks(this.tracks, t1, t2, this.timestamp);
+        const [t1Id, t2Id] = [...tracks];
+        var mergedTrackId = mergeTracks(this.tracks, t1Id, t2Id, this.timestamp);
+        this.selectedTrackIds.clear();
+        this.selectedTrackIds.add(mergedTrackId);
         this.dispatchEvent(new Event('update-tracks'));
     }
 
     /**
      * Switch two tracks at given timestamp.
-     * @param tracks tracks to be switched
+     * @param trackIds tracks to be switched
      */
-    switchTrack(tracks: Set<TrackData>) {
-        if (tracks.size === 2) {
-            const [t1, t2] = [...tracks];
-            switchTrack(t1, t2, this.timestamp);
+    switchTrack(trackIds: Set<string>) {
+        if (trackIds.size === 2) {
+            const [t1Id, t2Id] = [...trackIds]
+            switchTrack(this.tracks, t1Id, t2Id, this.timestamp);
             this.dispatchEvent(new Event('update-tracks'));
         }
     }
@@ -301,9 +303,9 @@ export class Tracking extends Rectangle {
 
     addNewKeyShapes(shapes: ShapeData[]) {
         shapes.forEach((s) => {
-            const t = [...this.selectedTracks].find((tr) => tr.id === s.id);
-            if (t) {
-                setKeyShape(this.tracks[t.id], this.timestamp, {...getShape(t, this.timestamp).keyshape!, ...s});
+            const tId = [...this.selectedTrackIds].find((id) => id === s.id);
+            if (tId) {
+                setKeyShape(this.tracks[tId], this.timestamp, {...getShape(this.tracks[tId], this.timestamp).keyshape!, ...s});
             }
         });
         this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
@@ -439,16 +441,17 @@ export class Tracking extends Rectangle {
         return html`
         <div class="card">
             <p style="display: inline-flex; width: -webkit-fill-available; height: 20px;">
-                <span>Tracks</span>
-                <span style="display: inline-flex; align-items: center;">${this.selectedTracks.size === 2 ? html`
-                    <mwc-icon-button title="Switch track" @click=${() => this.switchTrack(this.selectedTracks)} icon="shuffle"></mwc-icon-button>
-                    <mwc-icon-button title="Merge track" @click=${() => this.mergeTracks(this.selectedTracks)}>${mergeTracksIcon}</mwc-icon-button>` : ``}
+                <span>Selected tracks</span>
+                <span style="display: inline-flex; align-items: center;">${this.selectedTrackIds.size === 2 ? html`
+                    <mwc-icon-button title="Switch track" @click=${() => this.switchTrack(this.selectedTrackIds)} icon="shuffle"></mwc-icon-button>
+                    <mwc-icon-button title="Merge track" @click=${() => this.mergeTracks(this.selectedTrackIds)}>${mergeTracksIcon}</mwc-icon-button>` : ``}
                 </span>
             </p>
             <div>
-                ${[...this.selectedTracks].map((t) => {
+                ${[...this.selectedTrackIds].map((tId) => {
+                    const t = this.tracks[tId];
                     const currentShape = getShape(t, this.timestamp).keyshape;
-                    const color = trackColors[parseInt(t.id) % trackColors.length];
+                    const color = trackColors[parseInt(tId) % trackColors.length];
                     let isHidden = true;
                     const disabled = currentShape == null;
                     if (currentShape) {
@@ -468,7 +471,7 @@ export class Tracking extends Rectangle {
                                 <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
                                 <mwc-icon-button title="Go to previous keyframe" @click=${() => this.goToPreviousKeyFrame(t)} icon="keyboard_arrow_left"></mwc-icon-button>
                                 <mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
-                                <mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t)}>${cutTrack}</mwc-icon-button>
+                                <mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
                                 <mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
                             </div>
                         </div>
@@ -485,8 +488,8 @@ export class Tracking extends Rectangle {
         <div style="display: flex; height: 100%;">
             <div style="position: relative; min-width: 100px; width: 100%;">${super.render()}</div>
             <div style="flex: 0 0 300px; background: #f9f9f9; padding: 10px;">
-                <mwc-button @click=${() => {this.selectedTracks.clear(); this.mode = 'create';}} icon="add"
-                            class="new-button ${!this.selectedTracks.size ? 'fill': ''}"
+                <mwc-button @click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}} icon="add"
+                            class="new-button ${!this.selectedTrackIds.size ? 'fill': ''}"
                             style="width: 100%; flex-direction: column;">New</mwc-button>
                 ${this.selectionSection}
             </div>
