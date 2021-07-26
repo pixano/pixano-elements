@@ -177,13 +177,17 @@ export function switchTrack(tracks: {[key: string]: TrackData}, t1Id: string, t2
 
 /**
  * Merge two tracks.
- * If they do not overlap, do concatenation of keyshapes.
- * If they overlap at current timestamp, cut both tracks at timestamp and join the older left-side sub-track
- *    with the newer right-side sub-track. Create tracks with remaining sub-tracks.
- * If they overlap but not at current time, do as above with the first timestamp of overlap.
- * @param tracks tracks to be merged
+ * Do the concatenation of keyshapes if the two tracks do not overlap.
+ * @param tracks the set of tracks
+ * @param t1Id the id of the first track
+ * @param t2Id the id of the second track
+ * @returns a object containing the id `trackId` of the merged track and the
+ * list `keysIntersection` of the frames at which the tracks overlaps.
+ * If the tracks do not overlap, `keysIntersection` is empty.
+ * If the tracks overlap, an empty string is returned instead of the id
+ * of the merged track.
  */
-export function mergeTracks(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string, fIx: number) {
+export function mergeTracks(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string) {
     var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 
     // check overlapping
@@ -192,29 +196,17 @@ export function mergeTracks(tracks: {[key: string]: TrackData}, t1Id: string, t2
         [...Object.keys(sortDictByKey(t2.keyShapes))]
     ];
     const olderTrackIdx = keys[0][0] < keys[1][0] ? 0 : 1;
-    const isDisjoint = keys[olderTrackIdx].slice(-1)[0] < keys[1 - olderTrackIdx][0];
+    const keysIntersection = keys[0].filter(value => keys[1].includes(value));
+    const isDisjoint = keysIntersection.length == 0;
     [t1, t2] = olderTrackIdx ? [t2, t1] : [t1, t2];
     // they do not overlap, concatenation of keyshapes.
+    var trackId = ""
     if (isDisjoint) {
+        trackId = t1.id;
         t1.keyShapes = {...t1.keyShapes, ...t2.keyShapes};
         delete tracks[t2.id];
-    } else {
-        const s1 = getShape(t1, fIx).keyshape;
-        const s2 = getShape(t2, fIx).keyshape;
-        // overlap timestamp
-        const tps = s1?.isNextHidden && !isKeyShape(t1, fIx) ||
-                    s2?.isNextHidden && !isKeyShape(t2, fIx) ?
-                    parseInt(keys[1 - olderTrackIdx][0]) : fIx;
-        const [ks1l,] = [...Object.values(t1.keyShapes)]
-                .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
-        const [, ks2r] = [...Object.values(t2.keyShapes)]
-                .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
-
-        t1.keyShapes = [...ks1l, ... ks2r]
-                        .reduce((map, obj) => ({...map, [obj.timestamp]: obj}), {});
-        delete tracks[t2.id];
     }
-    return t1.id
+    return {trackId, keysIntersection};
 }
 
 export function getNewTrackId(tracks: {[key: string]: TrackData}): string {

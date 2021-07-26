@@ -296,10 +296,7 @@ export class Tracking extends Rectangle {
 
     /**
      * Merge two tracks.
-     * If they do not overlap, do concatenation of keyshapes.
-     * If they overlap at current timestamp, cut both tracks at timestamp and join the older left-side sub-track
-     *    with the newer right-side sub-track. Create tracks with remaining sub-tracks.
-     * If they overlap but not at current time, do as above with the first timestamp of overlap.
+     * If they do not overlap, do concatenation of keyshapes else display an error message.
      * @param tracks tracks to be merged
      */
     mergeTracks(tracks: Set<string>) {
@@ -307,10 +304,14 @@ export class Tracking extends Rectangle {
             return;
         }
         const [t1Id, t2Id] = [...tracks];
-        var mergedTrackId = mergeTracks(this.tracks, t1Id, t2Id, this.timestamp);
-        this.selectedTrackIds.clear();
-        this.selectedTrackIds.add(mergedTrackId);
-        this.dispatchEvent(new Event('update-tracks'));
+        const mergeResult = mergeTracks(this.tracks, t1Id, t2Id);
+        if (mergeResult.trackId !== "") {
+            this.selectedTrackIds.clear();
+            this.selectedTrackIds.add(mergeResult.trackId);
+            this.dispatchEvent(new Event('update-tracks'));
+        } else {
+            this.mergeErrorDialog(t1Id, t2Id, mergeResult.keysIntersection);
+        }
     }
 
     /**
@@ -460,6 +461,17 @@ export class Tracking extends Rectangle {
     }
 
     /**
+     * Merge error dialog
+     */
+    mergeErrorDialog(t1Id : string, t2Id : string, keysIntersection : string[]) {
+        var mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
+        var message = this.shadowRoot!.getElementById("dialog-merge-error-message");
+        message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".</br>"
+            + "Tracks intersect at frames: " + keysIntersection;
+        mergeErrorDialog!.open = true;
+    }
+
+    /**
      * Return HTML dialog element
      */
     protected get dialog(): any {
@@ -573,6 +585,10 @@ export class Tracking extends Rectangle {
                 dialogAction="cancel">
                 Cancel
             </mwc-button>
+        </mwc-dialog>
+        <mwc-dialog heading="Merge conflict" id="dialog-merge-error">
+            <div id="dialog-merge-error-message"></div>
+            <mwc-button slot="primaryAction" dialogAction="close">Ok</mwc-button>
         </mwc-dialog>
         `;
       }
