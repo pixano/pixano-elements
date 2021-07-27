@@ -157,7 +157,12 @@ export class Tracking extends Rectangle {
 
             this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
             this.drawTracks();
-        })
+        });
+        window.addEventListener('keydown', (evt) => {
+            if (evt.key === "r") {
+                this.mergeTracks(this.selectedTrackIds);
+            }
+        });
         this.handleTrackSelection();
         this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
         // this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
