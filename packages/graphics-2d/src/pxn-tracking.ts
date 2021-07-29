@@ -68,7 +68,7 @@ export class Tracking extends Rectangle {
             .card {
                 box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 3px 0px;
                 border-radius: 5px;
-                width: 300px;
+                width: 100%;
                 background: white;
                 margin-top: 20px;
                 --mdc-icon-size: 20px;
@@ -538,7 +538,7 @@ export class Tracking extends Rectangle {
         return html`
         <div style="display: flex; height: 100%;">
             <div style="position: relative; min-width: 100px; width: 100%;">${super.render()}</div>
-            <div style="flex: 0 0 300px; background: #f9f9f9; padding: 10px;">
+            <div style="flex: 0 0 300px; background: #f9f9f9; padding: 10px; overflow-y: auto;">
                 <mwc-button @click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}} icon="add"
                             class="new-button ${!this.selectedTrackIds.size ? 'fill': ''}"
                             style="width: 100%; flex-direction: column;">New</mwc-button>
