@@ -161,6 +161,14 @@ export class Tracking extends Rectangle {
         window.addEventListener('keydown', (evt) => {
             if (evt.key === "r") {
                 this.mergeTracks(this.selectedTrackIds);
+            } else if (evt.key === "f") {
+                if (this.selectedTrackIds.size === 1) {
+                    this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+                }
+            } else if (evt.key === "l") {
+                if (this.selectedTrackIds.size === 1) {
+                    this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+                }
             }
         });
         this.handleTrackSelection();
@@ -408,6 +416,22 @@ export class Tracking extends Rectangle {
     }
 
     /**
+     * Go to the first frame of a given track
+     * @param t
+     */
+    goToFirstFrame(t: TrackData) {
+        this.timestamp = parseInt(Object.keys(t.keyShapes)[0]);
+    }
+
+    /**
+     * Go to the last frame of a given track
+     * @param t
+     */
+     goToLastFrame(t: TrackData) {
+        this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0]);
+    }
+
+    /**
      * Open track delete confirmation pop-up
      * @param tId track id
      */
@@ -471,11 +495,14 @@ export class Tracking extends Rectangle {
                                 ${this.categories.map((c) => html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`)}
                             </mwc-select>
                             ${currentShape ? categoryProps.map((prop: any) => this.htmlProperty(prop, t)) : html``}
-                            <div style="margin-left: auto; display: flex; justify-content: space-between;">
-                                <mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
-                                <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
+                            <div style="width: 100%;">
                                 <mwc-icon-button title="Go to previous keyframe" @click=${() => this.goToPreviousKeyFrame(t)} icon="keyboard_arrow_left"></mwc-icon-button>
                                 <mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
+                                <mwc-icon-button title="Go to first frame" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
+                                <mwc-icon-button title="Go to last frame" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
+                                </br>
+                                <mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
+                                <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
                                 <mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
                                 <mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
                             </div>
