@@ -326,3 +326,16 @@ export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c
                             '#00b7ff', '#0077a6', '#004b69', '#96e1ff', '#3c7f99', '#002aff', '#001891', '#2a387d', '#7a91ff',
                             '#4400ff', '#230085', '#15014d', '#533b96', '#b296ff', '#895eff', '#ff00fb', '#850083', '#360035',
                             '#fc95fb', '#8f278e', '#a86da8', '#873587', '#ff0062', '#bf2e66', '#73002c'];
+
+function colorComponentToHex(c: number) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+export function invertColor(rgb : string) {
+    rgb = rgb.substring(1);
+    var r = 255 - parseInt(rgb.substring(0,2), 16)
+    var g = 255 - parseInt(rgb.substring(2,4), 16)
+    var b = 255 - parseInt(rgb.substring(4,6), 16)
+    return "#" + colorComponentToHex(r) + colorComponentToHex(g) + colorComponentToHex(b)
+}
