@@ -29,7 +29,8 @@ import { getShape,
     splitTrack,
     getNewTrackId,
     mergeTracks,
-    getClosestFrames } from './utils-video';
+    getClosestFrames,
+    invertColor } from './utils-video';
 import { ShapesEditController } from './controller';
 // import { TrackingSmartController } from './controller-tracking';
 import { ClickController } from "./controller-tracking";
@@ -54,6 +55,8 @@ export class Tracking extends Rectangle {
         ]},
         { name: 'car', color: "green", properties: [] }
     ];
+
+    protected isShiftKeyPressed: boolean = false;
 
     static get styles() {
         return [
@@ -97,6 +100,14 @@ export class Tracking extends Rectangle {
                 display: inline-block;
                 margin-top: 44px;
               }
+            .track-button {
+                display: inline-block;
+                margin: 2px 5px;
+                cursor: pointer;
+                user-select: none;
+                padding: 2px 5px;
+                border-radius: 3px;
+            }
         `];
     }
 
@@ -170,6 +181,11 @@ export class Tracking extends Rectangle {
                     this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
                 }
             }
+
+            this.isShiftKeyPressed = evt.shiftKey;
+        });
+        window.addEventListener('keyup', (evt) => {
+            this.isShiftKeyPressed = evt.shiftKey;
         });
         this.handleTrackSelection();
         this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
@@ -183,17 +199,7 @@ export class Tracking extends Rectangle {
         const editController = (this.modes.edit as ShapesEditController);
         editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
             const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
-            const trackId = shape.id;
-            if (isShiftKey) {
-                if (!this.selectedTrackIds.has(trackId)) {
-                    this.selectedTrackIds.add(trackId);
-                    this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds }));
-                }
-            } else if (!this.selectedTrackIds.has(trackId)) {
-                this.selectedTrackIds.clear();
-                this.selectedTrackIds.add(trackId);
-                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
-            }
+            this.selectTrack(shape.id, isShiftKey);
             return firstClick;
         }
         editController.onRootDown = (evt: any) => {
@@ -205,6 +211,19 @@ export class Tracking extends Rectangle {
                 this.targetShapes.clear();
                 this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
             }
+        }
+    }
+
+    protected selectTrack(trackId : string, isShiftKey : boolean) {
+        if (isShiftKey) {
+            if (!this.selectedTrackIds.has(trackId)) {
+                this.selectedTrackIds.add(trackId);
+                this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds }));
+            }
+        } else if (!this.selectedTrackIds.has(trackId)) {
+            this.selectedTrackIds.clear();
+            this.selectedTrackIds.add(trackId);
+            this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
         }
     }
 
@@ -524,6 +543,19 @@ export class Tracking extends Rectangle {
                             class="new-button ${!this.selectedTrackIds.size ? 'fill': ''}"
                             style="width: 100%; flex-direction: column;">New</mwc-button>
                 ${this.selectionSection}
+                <div class="card">
+                    <p>${Object.keys(this.tracks).length} tracks</p>
+                    <div style="padding: 5px; text-align: center;">
+                        ${Object.keys(this.tracks).map((id) => {
+                            const backgroundColor = trackColors[parseInt(id) % trackColors.length];
+                            return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
+                                @click=${() => {
+                                    this.selectTrack(id, this.isShiftKeyPressed);
+                                    this.goToFirstFrame(this.tracks[id]);
+                                }}>${id}</div>`;
+                        })}
+                    </div>
+                </div>
             </div>
         </div>
         <mwc-dialog id="dialog">
