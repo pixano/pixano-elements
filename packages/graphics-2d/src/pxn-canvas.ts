@@ -88,6 +88,7 @@ export class Canvas extends GenericDisplay {
   set data(img: HTMLImageElement) {
     if (img && img !== this.renderer.image) {
       this.renderer.image = img;
+	  this.viewControls.reinit();
     }
   }
 
