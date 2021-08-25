@@ -107,9 +107,9 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
-          <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
+          <p class="icon" title="Add instance (Polygon)" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Add instance (Brush)" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+          <p class="icon" title="Select instance" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
           <p class="icon" title="Subtract (Ctrl)" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
           <p class="icon" title="Union (Shift)" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
           <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
