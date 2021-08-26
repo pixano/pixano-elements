@@ -187,7 +187,7 @@ export class CreateBrushController extends Controller {
         value: [number, number, number] | null
     };
 
-    public editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+    public _editionMode: { value: EditionMode };
 
     protected densePolygons: DensePolygon[] = new Array();
 
@@ -199,6 +199,7 @@ export class CreateBrushController extends Controller {
         this.gmask = props.gmask || new GraphicMask();
         this._targetClass = props._targetClass || { value: 0 };
         this._selectedId = props._selectedId || { value: null };
+        this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
 		this.nextId = props._selectedId || { value: null };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
@@ -245,15 +246,15 @@ export class CreateBrushController extends Controller {
     initRoi() {
         this.roi.cacheAsBitmap = false;
         this.roi.clear();
-		if (this.editionMode == EditionMode.NEW_INSTANCE) {
+		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
 			let color = this.gmask.pixelToColor(...this.getNextTargetValue());
         	let hex = rgbToHex(...color);
             this.roi.beginFill(parseInt(hex, 16));
-        } else if (this.editionMode == EditionMode.ADD_TO_INSTANCE) {
+        } else if (this._editionMode.value == EditionMode.ADD_TO_INSTANCE) {
 			let color = this.gmask.pixelToColor(...this.getTargetValue());
         	let hex = rgbToHex(...color);
 			this.roi.beginFill(parseInt(hex, 16));
-		} else if (this.editionMode == EditionMode.REMOVE_FROM_INSTANCE) {
+		} else if (this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE) {
 			let color = this.gmask.pixelToColor(...this.getTargetValue());
         	let hex = rgbToHex(...color);
 			this.roi.lineStyle(1,parseInt(hex, 16), 1, 0.5, true);
@@ -305,13 +306,13 @@ export class CreateBrushController extends Controller {
     onPointerDownBrush(evt: PIXIInteractionEvent) {
         if (evt.data.button == 1) return;//middle button : nothing to do
         
-		if (this.editionMode === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue();//goto next value if new_instance mode is selected
+		if (this._editionMode.value === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue();//goto next value if new_instance mode is selected
 
         this.isActive = true;
         this.roi.x = this.renderer.mouse.x;
         this.roi.y = this.renderer.mouse.y;
 		
-        const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+        const fillType = (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
         this.gmask.updateByMaskInRoi(this.roiMatrix,
             [this.roi.x - this.roiRadius, this.roi.y - this.roiRadius, this.roi.x + this.roiRadius, this.roi.y + this.roiRadius],
             this.getTargetValue(), fillType
@@ -325,7 +326,7 @@ export class CreateBrushController extends Controller {
     onPointerMoveBrush(evt: PIXIInteractionEvent) {
         const newPos = this.renderer.getPosition(evt.data);
         if (this.isActive) {
-            const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+            const fillType = (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
             this.gmask.updateByMaskInRoi(this.roiMatrix,
                 [newPos.x - this.roiRadius, newPos.y - this.roiRadius, newPos.x + this.roiRadius, newPos.y + this.roiRadius],
                 this.getTargetValue(), fillType
@@ -371,11 +372,11 @@ export class CreateBrushController extends Controller {
 			this.initRoi();
         } else if (evt.shiftKey) {
             // shift down = union
-            this.editionMode = EditionMode.ADD_TO_INSTANCE;
+            this._editionMode.value = EditionMode.ADD_TO_INSTANCE;
 			this.initRoi();
         } else if (evt.ctrlKey) {
             // ctrl down = remove
-            this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
+            this._editionMode.value = EditionMode.REMOVE_FROM_INSTANCE;
 			this.initRoi();
         }
     }
@@ -385,7 +386,7 @@ export class CreateBrushController extends Controller {
      */
 	protected onKeyUp() {
 		// shift or ctrl released = return to default = create
-		this.editionMode = EditionMode.NEW_INSTANCE;
+		this._editionMode.value = EditionMode.NEW_INSTANCE;
 		this.initRoi();
     }
 }
@@ -427,7 +428,7 @@ export class CreatePolygonController extends Controller {
     // temporary polygon
     protected tempPolygon: GraphicPolygon | null = null;
 
-    protected editionMode: EditionMode = EditionMode.NEW_INSTANCE;
+    public _editionMode: { value: EditionMode };
 
     constructor(props: Partial<CreatePolygonController> = {}) {
         super(props);
@@ -435,6 +436,7 @@ export class CreatePolygonController extends Controller {
         this.gmask = props.gmask || new GraphicMask();
         this._targetClass = props._targetClass || { value: 0 };
         this._selectedId = props._selectedId || { value: null };
+		this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
@@ -542,7 +544,7 @@ export class CreatePolygonController extends Controller {
                 this.renderer.stage.removeChild(this.tempPolygon);
                 this.tempPolygon = null;
                 if (vertices.length > 2) {
-                    const fillType = (this.editionMode === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
+                    const fillType = (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
                     const newValue: [number, number, number] = this.getTargetValue();
                     this.gmask.fusedIds.add(fuseId(newValue));
                     let extrema = undefined;
@@ -574,46 +576,19 @@ export class CreatePolygonController extends Controller {
      * depending on the edition mode (new, add, remove).
      */
     getTargetValue(): [number, number, number] {
-        if (this.editionMode == EditionMode.NEW_INSTANCE) {
+        if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
             const cls = this.gmask.clsMap.get(this._targetClass.value);
             const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
             const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
             this._selectedId.value = value;
             return value;
-        } else if ((this.editionMode == EditionMode.ADD_TO_INSTANCE || this.editionMode == EditionMode.REMOVE_FROM_INSTANCE)
+        } else if ((this._editionMode.value == EditionMode.ADD_TO_INSTANCE || this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE)
                     && this._selectedId.value) {
             return this._selectedId.value;
         }
         return [0,0,0];
     }
 }
-
-
-export class EditionAddController extends CreatePolygonController {
-    constructor(props: Partial<CreatePolygonController> = {}) {
-        super(props);
-        this.editionMode = EditionMode.ADD_TO_INSTANCE;
-    }
-}
-
-
-export class EditionRemoveController extends CreatePolygonController {
-    constructor(props: Partial<CreatePolygonController> = {}) {
-        super(props);
-        this.editionMode = EditionMode.REMOVE_FROM_INSTANCE;
-    }
-}
-
-
-export class CreateController extends CreatePolygonController {
-    constructor(props: any) {
-        super(props);
-        // For deprecated notice
-        console.warn("This class is obsolete. Please use CreatePolygonController instead.")
-    }
-};
-
-
 
 
 //// utils //////
