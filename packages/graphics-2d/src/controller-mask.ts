@@ -178,7 +178,7 @@ export class CreateBrushController extends Controller {
     public contours = new PIXIGraphics();
 
     // roi ratio radius in pixels
-    public roiRadius: number = 5;
+    public roiRadius: number = -1;
 
     public _selectedId: {
         value: [number, number, number] | null
@@ -244,6 +244,9 @@ export class CreateBrushController extends Controller {
      * the brush pixels.
      */
     initRoi() {
+		if (this.roiRadius==-1) {//first call : we compute the optimal roiRadius regarding image size
+			this.roiRadius = Math.trunc(Math.min(this.renderer.imageHeight, this.renderer.imageWidth)/144);
+		}		
         this.roi.cacheAsBitmap = false;
         this.roi.clear();
 		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
