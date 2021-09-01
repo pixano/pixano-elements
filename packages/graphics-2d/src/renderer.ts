@@ -53,6 +53,12 @@ export class Renderer extends PIXI.Application {
 
     public enableOutsideDrawing: boolean = false;
 
+    public domElement: HTMLElement = document.createElement('div');
+
+    public bubbles: HTMLElement[] = [];
+
+    private mouseCoordinates: HTMLElement = document.createElement('span');
+
     private _brightness: number = 1;
 
     private filter: any = new PIXI.filters.ColorMatrixFilter();
@@ -152,6 +158,8 @@ export class Renderer extends PIXI.Application {
             0, 0, 1, 0, 0,
             0, 0, 0, 1, 0,
         ];
+        this.domElement.appendChild(this.view);
+        this.initMouseCoordinates();
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
 
@@ -161,11 +169,12 @@ export class Renderer extends PIXI.Application {
         while (container.firstChild) {
             container.firstChild.remove();
         }
-        container.appendChild(this.view);
+        container.appendChild(this.domElement);
         const rgb = hexToRgb255(this.renderer.backgroundColor);
         container.style.backgroundColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
         this.resizeTo = container;
         this.resize();
+        // this.addBubble();
     }
 
     public setBackgroundColor(color: string) {
@@ -224,6 +233,15 @@ export class Renderer extends PIXI.Application {
             pt.y = Math.min(Math.max(0, pt.y), this.imageHeight);
         }
         return pt;
+    }
+
+    /**
+     * Position relative to stage to absolution canvas position
+     * @param x 
+     * @param y 
+     */
+    public toAbsolutePosition(x: number, y: number): {x: number, y: number} {
+        return this.stage.toGlobal({x, y});
     }
 
     /**
@@ -331,6 +349,46 @@ export class Renderer extends PIXI.Application {
 
     public delete(s: PIXI.Container) {
         s.destroy();
+    }
+
+    public initMouseCoordinates() {
+        this.mouseCoordinates.appendChild(document.createTextNode('oy'));
+        this.mouseCoordinates.style.position = 'absolute';
+        this.mouseCoordinates.style.padding = '5px';
+        this.mouseCoordinates.style.background = '#f3f3f58f';
+        this.mouseCoordinates.style[('pointer-events' as any)] = 'none';
+        this.domElement.appendChild(this.mouseCoordinates);
+    }
+
+    public updateMouseCoordinates() {
+        const mouse = this.stage.toLocal(this.renderer.plugins.interaction.mouse.global);
+        this.mouseCoordinates.style.bottom = '0px';
+        this.mouseCoordinates.style.right = '0px';
+        this.mouseCoordinates.firstChild!.textContent = `(${Math.floor(mouse.x)}px,${Math.floor(mouse.y)}px)`;
+    }
+
+    public addBubble() {
+        const span = document.createElement('span');
+        span.appendChild(document.createTextNode(''));
+        span.style.position = 'absolute';
+        span.style[('pointer-events' as any)] = 'none';
+        this.domElement.appendChild(span);
+        this.bubbles.push(span);
+    }
+
+    public moveBubble(x: number, y: number, text?: string) {
+        if (this.bubbles.length) {
+            this.bubbles[0].style.left = `${Math.floor(x)}px`;
+            this.bubbles[0].style.top = `${Math.floor(y)}px`;
+            if (text) {
+                this.bubbles[0].firstChild!.textContent = text;
+            }
+        }
+    }
+
+    public removeBubbles() {
+        this.bubbles.forEach((b) => this.domElement.removeChild(b));
+        this.bubbles = [];
     }
 
     public destroy() {

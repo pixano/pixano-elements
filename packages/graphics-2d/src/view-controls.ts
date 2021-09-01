@@ -27,19 +27,21 @@ export class ViewControls extends EventTarget {
         this.onPanUp = this.onPanUp.bind(this);
         this.onEdgeMove = this.onEdgeMove.bind(this);
         this.onWheel = this.onWheel.bind(this);
+        this.onMove = this.onMove.bind(this);
         if (viewer) {
             this.enableZoom();
             this.viewer.stage.interactive = true;
             this.viewer.stage.on('pointerdown', this.onPanInit);
+            this.viewer.stage.on('pointermove', this.onMove);
         }
     }
 
     public disableZoom() {
-        this.viewer.view.removeEventListener('wheel', this.onWheel);
+        this.viewer.domElement.removeEventListener('wheel', this.onWheel);
     }
 
     public enableZoom() {
-        this.viewer.view.addEventListener('wheel', this.onWheel, {passive: false});
+        this.viewer.domElement.addEventListener('wheel', this.onWheel, {passive: false});
     }
 
     public computeHitArea() {
@@ -85,8 +87,10 @@ export class ViewControls extends EventTarget {
      */
     public onWheel(evt: WheelEvent) {
         if (evt.ctrlKey) evt.preventDefault();
+        // compute wheel mouse target relative to stage
+        const canvasBounds = this.viewer.view.getBoundingClientRect();
         const scaleFactor = 1.0+Math.sign(this.wheelDistance(evt))*0.1;
-        this.zoomFct(scaleFactor, [evt.x, evt.y]);
+        this.zoomFct(scaleFactor, [evt.x - canvasBounds.left, evt.y - canvasBounds.top]);
     }
 
     public zoomIn() {
@@ -109,6 +113,8 @@ export class ViewControls extends EventTarget {
         // Check to see that the scale is not outside of the specified bounds
         if (this.viewer.s >= this.viewer.smax) {
             this.viewer.s = this.viewer.smax;
+            this.viewer.sx = (this.viewer.sx - center[0]) * (this.viewer.s / oldscale) + center[0];
+            this.viewer.sy = (this.viewer.sy - center[1]) * (this.viewer.s / oldscale) + center[1];
         } else if (this.viewer.s <= this.viewer.smin) {
             this.viewer.s = this.viewer.smin;
             // center placeholder if zoom is minimal
@@ -124,6 +130,10 @@ export class ViewControls extends EventTarget {
         this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
         this.triggerOnZoom();
         this.computeHitArea();
+    }
+
+    public onMove() {
+        this.viewer.updateMouseCoordinates();
     }
 
     /**
