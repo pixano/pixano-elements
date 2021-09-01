@@ -13,6 +13,19 @@ export class ViewControls extends EventTarget {
 
     private init: {x: number, y: number} = {x: 0, y: 0};
 
+	public reinit() {
+		// zoom
+		this.viewer.s=1;
+		// apply zoom center (sx and sy are offsets)
+		this.viewer.sx = 0;
+		this.viewer.sy = 0;
+		// apply changes
+		this.viewer.stage.scale.set(this.viewer.s * this.viewer.rw / this.viewer.imageWidth, this.viewer.s * this.viewer.rh / this.viewer.imageHeight);
+		this.viewer.stage.position.set(this.viewer.rx * this.viewer.s + this.viewer.sx, this.viewer.ry * this.viewer.s + this.viewer.sy);
+		this.triggerOnZoom();
+		this.computeHitArea();
+	}
+
     private isPanning: boolean = false;
 
     protected viewer: Renderer;
