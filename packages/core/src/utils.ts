@@ -356,3 +356,518 @@ export function shuffle(a: any[]) {
     }
     return a;
 }
+
+//////////// segmentation mask to polygons
+export class RegBlob {
+    public contours: Contour[] = new Array();
+    public readonly cls: number;
+    public nbPixels: number = 0;
+  
+    constructor(cls: number){
+      this.cls = cls
+    }
+}
+
+export interface Contour {
+    points: number[];
+    type: string;
+}
+
+export class BlobExtractor2d {
+
+    private width: number;
+    private height: number;
+    private augW: number;
+    private augH: number;
+    private max: number;
+    private pos: number[];
+  
+    private withExtrema = false;
+    private extrema: number[]
+  
+    private augData: number[];
+    public blobs: Map<number, RegBlob> = new Map();
+    public label: number[];
+    private augLabel: number[];
+  
+    static BACKGROUND = null;
+    static UNSET = -1;
+    static MARKED = -2;
+    static CONNEXITY = 4;
+  
+    public targetId: number;
+  
+    constructor(data: number[], width: number, height: number, augData?: number[], vertexExtrema?: number[]) {
+        this.width = width;
+        this.height = height;
+        this.augW = width + 2;
+        this.augH = height + 2
+        data = data || [];
+        let [xMin, yMin, xMax, yMax] = [0,0,0,0]
+        if (vertexExtrema){
+            [xMin, yMin, xMax, yMax] = vertexExtrema
+            xMax = xMax - 1;
+            yMax = yMax - 1
+            this.extrema = [xMin, yMin, xMax, yMax]
+            this.withExtrema = true;
+        } else {
+            this.extrema = [0, 1, this.augW - 1, this.augH - 2];
+        }
+  
+        this.max = this.augH * this.augW;
+        this.pos = [1, this.augW + 1, this.augW, this.augW - 1, -1, -this.augW - 1, -this.augW, -this.augW + 1];
+  
+        this.label = new Array(this.width * this.height);
+  
+        if (augData)
+          this.augData = augData;
+        else
+          this.augData = this.addBorders(data);
+  
+        if (vertexExtrema)
+          this.extrema = [xMin, yMin + 1, xMax + 2, yMax + 1];
+  
+        this.augLabel = new Array(this.max);
+        this.targetId = 0;
+    }
+  
+    /**
+     * @param pos Pixel position in augmented image (can be zero padded image or point image)
+     * @param augW Width of augmented image
+     * @returns Pixel position in original image
+     */
+    protected origPos(pos: number, augW: number) {
+        const y = pos / augW | 0;
+        const x = pos % augW;
+        // x - 1 : original x in original data
+        // y - 1 : original y in original data
+        return (y - 1) * (augW - 2) + x - 1;
+    }
+  
+    /**
+     * Add borders with zeros around an image
+     * @param data The image, stored in a 1D list
+     * @returns The new image (1D list) with zeros borders
+     */
+    protected addBorders(data: number[]) {
+        const augData = new Array((this.augW)*(this.augH));
+        const [xMin, yMin, xMax, yMax] = this.extrema;
+        if (this.withExtrema){
+          for (let x = xMin; x <= xMax + 2 ; x++){
+            for (let y = yMin; y <= yMax + 2; y++) {
+              const i = y * this.augW + x
+              if (x === xMin || y === yMin || x === xMax + 2 || y === yMax + 2) {
+                augData[i] = BlobExtractor2d.BACKGROUND;
+              }
+              else {
+                augData[i] = data[i - (this.width + 2*y + 1)];
+              }
+            }
+          }
+        }
+        else {
+          for (let x = 0; x < this.augW; x++){
+            for (let y = 0; y < this.augH; y++) {
+              const i = y * this.augW + x
+              if (x === 0 || y === 0 || x === this.width + 1 || y === this.height + 1) {
+                augData[i] = BlobExtractor2d.BACKGROUND;
+              }
+              else {
+                augData[i] = data[i - (this.width + 2*y + 1)];
+              }
+            }
+          }
+        }
+        return augData;
+    }
+  
+    protected strPtToPos(pixPos: number, strPos: string) {
+        const pixY = pixPos / this.augW | 0;
+        const ptPos = (() => {
+          switch(strPos) {
+            case 'tl':
+              return pixPos + pixY;
+            case 'tr':
+              return pixPos + pixY + 1;
+            case 'bl':
+              return pixPos + (this.augW + 1) + pixY;
+            default:
+            case 'br':
+              return pixPos + (this.augW + 1) + pixY + 1;
+          }
+        })();
+        return this.origPos(ptPos, this.augW + 1);
+    }
+  
+    public addPoints(contour: Contour, oldPos: number, oldQ: number, newQ: number){
+        const newAdded = new Array();
+        switch(oldQ){
+          case 0:
+            switch(newQ)
+            {
+              case 0:
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                break;
+              case 2:
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                break;
+              case 4:
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                break;
+              case 6:
+                break;
+            }
+            break;
+          case 2:
+            switch(newQ)
+            {
+              case 0:
+                break;
+              case 2:
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                break;
+              case 4:
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                break;
+              case 6:
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                break;
+            }
+            break;
+  
+          case 4:
+            switch(newQ)
+            {
+              case 0:
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                break;
+              case 2:
+                break;
+              case 4:
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                break;
+              case 6:
+                newAdded.push(this.strPtToPos(oldPos, "bl"));
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                break;
+            }
+            break;
+  
+          case 6:
+            switch(newQ)
+            {
+              case 0:
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                break;
+              case 2:
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                newAdded.push(this.strPtToPos(oldPos, "tr"));
+                newAdded.push(this.strPtToPos(oldPos, "br"));
+                break;
+              case 4:
+                break;
+              case 6:
+                newAdded.push(this.strPtToPos(oldPos, "tl"));
+                break;
+            }
+            break;
+        }
+        contour.points.push(...newAdded)
+        return contour;
+    }
+  
+    /**
+     * Returns next pixel of contour
+     * @param S Current contour pixel
+     * @param p Current index of connexity array
+     * @returns A dictionary with next pixel of contour and its associated connexity index
+     */
+    protected tracer(S: number, p: number) {
+        let d = 0;
+        while (d < 8) {
+            const q = (p + d) % 8;
+            const T = S + this.pos[q];
+            // Make sure we are inside image
+            if (T < 0 || T >= this.max)
+              continue;
+  
+            if (this.augData[T] === this.targetId)
+              return {T, q};
+  
+            this.augLabel[T] = BlobExtractor2d.MARKED;
+            if (BlobExtractor2d.CONNEXITY === 8)
+              d++
+            else
+              d = d + 2
+        }
+        // No move
+        return {T:S, q:-1};
+    }
+  
+    /**
+     * Computes a contour
+     * @param S Offset of starting point
+     * @param C Label count
+     * @param external Boolean Is this internal or external tracing
+     * @returns The computed contour and the number of pixels of the contour
+     */
+    protected contourTracing(S: number, C: number, external: boolean): [Contour, number] {
+        let p: number;
+        if (BlobExtractor2d.CONNEXITY === 8)
+            p = external ? 7 : 3;
+        else
+            p = external ? 0 : 2;
+  
+        let contour = {type:external ? "external": "internal", points: new Array()};
+        const addedPixels = new Set<number>();
+  
+        // Find out our default next pos (from S)
+        let tmp = this.tracer(S, p);
+        const T2 = tmp.T;
+        let q  = tmp.q;
+  
+        this.augLabel[S] = C;
+        addedPixels.add(S)
+  
+        // Single pixel check
+        if (T2 === S){
+            if (BlobExtractor2d.CONNEXITY === 4){
+                contour.points.push(this.strPtToPos(S, "tl"));
+                contour.points.push(this.strPtToPos(S, "tr"));
+                contour.points.push(this.strPtToPos(S, "br"));
+                contour.points.push(this.strPtToPos(S, "bl"));
+            }
+            return [contour, addedPixels.size];
+        }
+  
+        let Tnext   = T2;
+        let T       = T2;
+        while ( T !== S || Tnext !== T2 ) {
+            this.augLabel[Tnext] = C;
+            if (!addedPixels.has(Tnext))
+              addedPixels.add(Tnext);
+  
+            T = Tnext;
+            if (BlobExtractor2d.CONNEXITY === 8)
+                p = (q + 5) % 8;
+            else
+                p = (q + 6) % 8;
+  
+            tmp = this.tracer(T, p);
+  
+            if (BlobExtractor2d.CONNEXITY === 4)
+              contour = this.addPoints(contour, T, q, tmp.q);
+  
+            Tnext = tmp.T;
+            q     = tmp.q;
+        }
+        return [contour, addedPixels.size];
+    };
+  
+    /**
+     * Performs the blob extraction
+     * @param targetId the target id of the blobs to find
+     * @param needLabel whether we need the computed mask
+     */
+    public extract(targetId: number, needLabel: boolean = false) {
+        this.targetId = targetId;
+        for (let i = this.extrema[0]; i <= this.extrema[2]; i++){
+          for (let j = this.extrema[1]; j <= this.extrema[3]; j++){
+            const posi = i + j * this.augW;
+            this.augLabel[posi] = BlobExtractor2d.UNSET;
+          }
+        }
+        let c = 0;
+        let y = this.extrema[1];
+        do {
+          let x = this.extrema[0];
+          do {
+            const offset = y * this.augW + x;
+            // We skip white pixels or previous labeled pixels
+            if (this.augData[offset] !== this.targetId)
+                continue;
+  
+            // Step 1 - P not labelled, and above pixel is white
+            if (this.augData[offset - this.augW] !== this.targetId && this.augLabel[offset] === BlobExtractor2d.UNSET) {
+                // P must be external contour
+                this.blobs.set(c, new RegBlob(c));
+                const [contour, nbPixels] = this.contourTracing(offset, c, true);
+                this.blobs.get(c)!.contours.push(contour);
+                this.blobs.get(c)!.nbPixels += nbPixels;
+                c++;
+            }
+  
+            // Step 2 - Below pixel is white, and unmarked
+            if (this.augData[offset + this.augW] !== this.targetId && this.augLabel[offset + this.augW] === BlobExtractor2d.UNSET) {
+                // Use previous pixel label, unless this is already labelled
+                let n = this.augLabel[offset - 1];
+                if (this.augLabel[offset] !== BlobExtractor2d.UNSET)
+                    n = this.augLabel[offset];
+  
+                // P must be a internal contour
+                const [contour, nbPixels] = this.contourTracing(offset, n, false);
+                const b = this.blobs.get(n);
+                if (b) {
+                    b.contours.push(contour);
+                    b.nbPixels += nbPixels;
+                }
+            }
+            // Step 3 - Not dealt within previous two steps
+            if (this.augLabel[offset] === BlobExtractor2d.UNSET) {
+                const n = this.augLabel[offset - 1] || 0;
+                // Assign P the value of N
+                this.augLabel[offset] = n;
+                const b = this.blobs.get(n);
+                if (b) { b.nbPixels += 1; }
+            }
+  
+          } while (x++ <= this.extrema[2]);
+        } while (y++ <= this.extrema[3]);
+  
+        if (needLabel) {
+            for (let x2 = 0; x2 < this.width; x2++){
+                for (let y2 = 0; y2 < this.height; y2++) {
+                    const offset = x2 + y2 * this.width
+                    this.label[offset] = this.augLabel[offset + this.width + 2 * y2 + 3]
+                }
+            }
+        }
+    }
+  }
+
+  /**
+ * Convert an array of points stored using row order into an array of pixels (pixel format : {x:x_value, y:y_value})
+ * @param indexes an array of points stored row order, indexes[0] => x=0,y=0, indexes[1] => x=1,y=0, ...
+ * @param width the width of the image
+ */
+ export function convertIndexToDict(indexes: number[], width: number): [number, number][] {
+    return indexes.map((idx) => {
+        const y = ((idx /  width | 0)/1.01);
+        const x = ((idx % width)/1.01);
+        return [x, y];
+    });
+}
+
+
+//// polygon simplifier
+/**
+ * Square distance between 2 points
+ * @param p1
+ * @param p2
+ */
+function getSqDist(p1: [number, number], p2: [number, number]) {
+    const dx = p1[0] - p2[0];
+    const dy = p1[1] - p2[1];
+    return dx * dx + dy * dy;
+}
+
+/**
+ * Square distance from a point to a segment
+ * @param p Point
+ * @param p1 Point 1 of segment
+ * @param p2 Point 2 of segment
+ */
+function getSqSegDist(p: [number, number], p1: [number, number], p2: [number, number]) {
+    let [x, y] = p1;
+    let dx = p2[0] - x;
+    let dy = p2[1] - y;
+    if (dx !== 0 || dy !== 0) {
+        const t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
+        if (t > 1) {
+            x = p2[0];
+            y = p2[1];
+
+        } else if (t > 0) {
+            x += dx * t;
+            y += dy * t;
+        }
+    }
+    dx = p[0] - x;
+    dy = p[1] - y;
+    return dx * dx + dy * dy;
+}
+
+/**
+ * Basic distance-based simplification
+ * @param points Array of points
+ * @param sqTolerance
+ */
+function simplifyRadialDist(points: [number, number][], sqTolerance: number) {
+
+    let prevPoint = points[0];
+    const newPoints = [prevPoint];
+    let point: [number, number] = [-1, -1];
+
+    for (point of points) {
+        if (getSqDist(point, prevPoint) > sqTolerance) {
+            newPoints.push(point);
+            prevPoint = point;
+        }
+    }
+    if (prevPoint !== point) newPoints.push(point);
+
+    return newPoints;
+}
+
+/**
+ * Simplify polygon
+ * @param points Array of points
+ * @param first
+ * @param last
+ * @param sqTolerance
+ * @param simplified
+ */
+function simplifyDPStep(points: [number, number][], first: number, last: number, sqTolerance: number, simplified: number[][]) {
+    let maxSqDist = sqTolerance;
+    let index: number = -1;
+
+    for (let i = first + 1; i < last; i++) {
+        const sqDist = getSqSegDist(points[i], points[first], points[last]);
+
+        if (sqDist > maxSqDist) {
+            index = i;
+            maxSqDist = sqDist;
+        }
+    }
+
+    if (maxSqDist > sqTolerance) {
+        if (index - first > 1) simplifyDPStep(points, first, index, sqTolerance, simplified);
+        simplified.push(points[index]);
+        if (last - index > 1) simplifyDPStep(points, index, last, sqTolerance, simplified);
+    }
+}
+
+// simplification using Ramer-Douglas-Peucker algorithm
+function simplifyDouglasPeucker(points: [number, number][], sqTolerance: number) {
+    const last = points.length - 1;
+    const simplified = [points[0]];
+    simplifyDPStep(points, 0, last, sqTolerance, simplified);
+    simplified.push(points[last]);
+    return simplified;
+}
+
+/**
+ * Simplify polygon
+ * @param points Array<[number, number]> input points
+ * @param tolerance number
+ * @param highestQuality
+ */
+export function simplify(points: [number, number][], tolerance: number = 1, highestQuality: boolean = false) {
+
+  if (points.length <= 2) return points;
+
+  const sqTolerance = tolerance * tolerance;
+  points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
+  points = simplifyDouglasPeucker(points, sqTolerance);
+
+  return points;
+}

@@ -565,6 +565,8 @@ export abstract class ShapeCreateController extends Controller {
         this.cross.cx = mouse.x;
         this.cross.cy = mouse.y;
         this.cross.draw();
+        const pt2 = this.renderer.toAbsolutePosition(mouse.x, mouse.y);
+        this.renderer.moveBubble(pt2.x, pt2.y);
     }
 
     protected onRootUp() {
