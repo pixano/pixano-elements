@@ -54,13 +54,13 @@ master  <------push------  github <--merge-- master <--merge--> p2
 
 
 
-# procédure de publication opensource
-## prérequis
-### sur github
-- créer un compte $MONCOMPTE sur [github](https://github.com)
-- y créer un fork du [dépôt original](https://github.com/pixano/pixano-elements)
-### initialiser le dépôt correctement (branche remote)
-	git remote add upstream git@github.com:$MONCOMPTE/pixano-elements.git
+# Open-source publication procedure
+## prerequisite
+### on github
+- create a [github](https://github.com) $MYACCOUNT account 
+- create a fork of the [original repository](https://github.com/pixano/pixano-elements)
+### initialize the repository remote branch
+	git remote add upstream git@github.com:$MYACCOUNT/pixano-elements.git
 	git fetch upstream
 	git checkout -b github upstream/master
 ### avoir cloné le site web

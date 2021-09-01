@@ -10,9 +10,8 @@ import { Controller } from './controller-base';
 import { CreateBrushController,
   CreatePolygonController,
   SelectController,
-  EditionAddController,
-  EditionRemoveController,
-  LockController } from './controller-mask';
+  LockController,
+  EditionMode} from './controller-mask';
 import { GraphicMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
@@ -44,6 +43,8 @@ export class Segmentation extends Canvas {
     value: [number, number, number] | null
   } = { value: null };
 
+  public _editionMode: { value: EditionMode } = { value: EditionMode.NEW_INSTANCE };
+
   public _targetClass: { value: number } = { value: 1 };
 
   // container of mask
@@ -63,13 +64,12 @@ export class Segmentation extends Canvas {
     super();
     this.renderer.labelLayer.addChild(this.gmask);
     this.renderer.labelLayer.alpha = this.opacity;
+	this._editionMode.value = EditionMode.NEW_INSTANCE;
 
     this.modes = {
       'create': new CreatePolygonController({...this} as any),
       'create-brush': new CreateBrushController({...this} as any),
       'select': new SelectController({...this} as any),
-      'edit-add': new EditionAddController({...this} as any),
-      'edit-remove': new EditionRemoveController({...this} as any),
       'lock': new LockController({...this} as any)
     };
     this.showroi = (this.modes.create as CreatePolygonController).showRoi;
@@ -89,6 +89,18 @@ export class Segmentation extends Canvas {
 
   set selectedId(id: [number, number, number] | null) {
     this._selectedId.value = id;
+  }
+
+  get editionMode() {
+	return this._editionMode.value;
+  }
+  /**
+   * change edition mode from outside and take it into account
+   */
+  set editionMode(editionMode_: EditionMode) {
+	if (this._editionMode.value == editionMode_) this._editionMode.value = EditionMode.NEW_INSTANCE;//exception : clicking again on the same button returns to default mode
+	else this._editionMode.value = editionMode_;
+	if (this.modes[this.mode] instanceof CreateBrushController) this.modes[this.mode].reset();//... not really the best way just to call initRoi()...
   }
 
   get targetClass() {
@@ -188,6 +200,8 @@ export class Segmentation extends Canvas {
         this.modes[prevMode].deactivate();
     }
     // Set up new mode state
+		console.log("pxn activate====",this._editionMode.value)
+	
     this.modes[newMode]?.activate();
     this.mode = newMode as any;
     this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
