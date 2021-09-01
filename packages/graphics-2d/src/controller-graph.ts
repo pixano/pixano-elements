@@ -150,6 +150,8 @@ export class GraphCreateController extends ShapeCreateController {
         super.activate();
         if (settings.showVertexName) {
             this.renderer.stage.addChild(this.nodeText);
+            // this.renderer.addBubble();
+            // this.renderer.moveBubble(this.renderer.mouse.x - 10, this.renderer.mouse.y - 10, settings.vertexNames[0]);
             this.nodeText.text = settings.vertexNames[0];
             this.nodeText.position.x = this.renderer.mouse.x - this.nodeText.width - 10;
             this.nodeText.position.y = this.renderer.mouse.y - this.nodeText.height - 10;
@@ -160,6 +162,7 @@ export class GraphCreateController extends ShapeCreateController {
         super.deactivate();
         if (settings.showVertexName) {
             this.renderer.stage.removeChild(this.nodeText);
+            // this.renderer.removeBubbles();
         }
     }
 
