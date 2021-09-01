@@ -38,7 +38,7 @@ export class Canvas2d extends Canvas {
   public enableOutsideDrawing: boolean = false;
 
   // set of 2d shapes to be drawn by the element
-  private _shapes: ObservableSet<ShapeData>;
+  protected _shapes: ObservableSet<ShapeData>;
 
   // set of selected 2d shapes
   public targetShapes: ObservableSet<ShapeData> = new ObservableSet();

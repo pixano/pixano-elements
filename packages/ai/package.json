@@ -14,6 +14,7 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
+    "@pixano/core": "0.5.15",
     "@tensorflow-models/coco-ssd": "^2.0.3",
     "@tensorflow/tfjs": "^1.7.3",
     "@tensorflow/tfjs-converter": "^1.7.3",
