@@ -341,10 +341,10 @@ export class CreateBrushController extends Controller {
      * @param evt KeyboardEvent
      */
     protected onKeyDown(evt: KeyboardEvent) {
-        if (evt.code == "NumpadAdd" || evt.key == "+") {
+        if (evt.code == "NumpadAdd" || evt.key == "z") { //"+") {
             this.roiRadius += 1;
             this.initRoi();   
-        }  else if (evt.code == "NumpadSubtract" || evt.key == "-") {
+        }  else if (evt.code == "NumpadSubtract" || evt.key == "a") { //"-") {
             this.roiRadius = Math.max(this.roiRadius - 1, 1);
             this.initRoi();    
         }
