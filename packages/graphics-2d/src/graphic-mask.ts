@@ -419,6 +419,13 @@ export class GraphicMask extends PIXIContainer {
         this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
         this.colorMask.texture.update();
     }
+	/**
+	 * Delete an instance
+	 * @param id instance to delete
+	 */
+	public deleteInstance(id: [number, number, number]) {
+		this.replaceValue(id, [0, 0, 0]);//replace all corresponding mask's pixels
+	}
 
     /**
      * Get region blob contour for a given panoptic value
