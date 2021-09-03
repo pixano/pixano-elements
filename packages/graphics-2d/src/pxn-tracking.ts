@@ -31,7 +31,7 @@ import { getShape,
     mergeTracks,
     getClosestFrames } from './utils-video';
 import { ShapesEditController } from './controller';
-// import { TrackingSmartController } from './controller-tracking';
+import { TrackingSmartController } from './controller-tracking';
 import { ClickController } from "./controller-tracking";
 import { style2d } from './style';
 
@@ -160,7 +160,7 @@ export class Tracking extends Rectangle {
         })
         this.handleTrackSelection();
         this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
-        // this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
+        this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
     }
 
     /**

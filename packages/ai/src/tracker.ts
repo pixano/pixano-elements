@@ -56,7 +56,7 @@ export class Tracker {
             return Promise.resolve();
         }
         return new Promise((resolve) => {
-            tf.loadGraphModel('models/oceanBis_tfjs/model.json').then((model) => {
+            tf.loadGraphModel('oceanBis_tfjs/model.json').then((model) => {
                 this.model = model;
                 // run idle the model once
                 const templateTensor = tf.zeros([1, 3, this.p.exemplar_size, this.p.exemplar_size]);
