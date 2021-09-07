@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@pixano/core": "0.5.15",
-    "@tensorflow-models/coco-ssd": "^2.0.3",
-    "@tensorflow/tfjs": "^1.7.3",
-    "@tensorflow/tfjs-converter": "^1.7.3",
-    "@tensorflow/tfjs-core": "^1.7.3"
+    "@tensorflow-models/coco-ssd": "2.2.2",
+    "@tensorflow/tfjs": "3.3.0",
+    "@tensorflow/tfjs-converter": "3.3.0",
+    "@tensorflow/tfjs-core": "3.3.0"
   },
   "scripts": {
     "build": "tsc --build",
