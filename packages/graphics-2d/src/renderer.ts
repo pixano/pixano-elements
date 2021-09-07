@@ -63,6 +63,20 @@ export class Renderer extends PIXI.Application {
 
     private filter: any = new PIXI.filters.ColorMatrixFilter();
 
+    /**
+     * Getter of the canvas width
+     */
+    get canvasWidth() {
+        return (this.domElement.parentNode as HTMLElement)?.offsetWidth || this.domElement.offsetWidth || 800;
+    }
+
+    /**
+     * Getter of the canvas height
+     */
+    get canvasHeight() {
+        return (this.domElement.parentNode as HTMLElement)?.offsetHeight || this.domElement.offsetHeight || 800;
+    }
+
     get imageWidth() {
         return Math.round(this.htmlImageElement.width);
     }
@@ -287,27 +301,6 @@ export class Renderer extends PIXI.Application {
         this.sy = 0.5 * (1 - this.s) * this.rh;
     }
 
-    /**
-     * Getter of the canvas width
-     */
-    get canvasWidth() {
-        try {
-            return (this.view.parentNode as HTMLDivElement).offsetWidth
-        } catch {
-            return 800;
-        }
-    }
-
-    /**
-     * Getter of the canvas height
-     */
-    get canvasHeight() {
-        try {
-            return (this.view.parentNode as HTMLDivElement).offsetHeight
-        } catch {
-            return 800;
-        }
-    }
 
     /**
      * Compute dimensions based on the HTML renderer view
@@ -355,6 +348,8 @@ export class Renderer extends PIXI.Application {
         this.mouseCoordinates.appendChild(document.createTextNode('oy'));
         this.mouseCoordinates.style.position = 'absolute';
         this.mouseCoordinates.style.padding = '5px';
+        this.mouseCoordinates.style.bottom = '0px';
+        this.mouseCoordinates.style.right = '0px';
         this.mouseCoordinates.style.background = '#f3f3f58f';
         this.mouseCoordinates.style[('pointer-events' as any)] = 'none';
         this.domElement.appendChild(this.mouseCoordinates);
@@ -362,9 +357,9 @@ export class Renderer extends PIXI.Application {
 
     public updateMouseCoordinates() {
         const mouse = this.stage.toLocal(this.renderer.plugins.interaction.mouse.global);
-        this.mouseCoordinates.style.bottom = '0px';
-        this.mouseCoordinates.style.right = '0px';
-        this.mouseCoordinates.firstChild!.textContent = `(${Math.floor(mouse.x)}px,${Math.floor(mouse.y)}px)`;
+        const x = Math.floor(Math.max(Math.min(mouse.x, this.imageWidth),0));
+        const y = Math.floor(Math.max(Math.min(mouse.y, this.imageHeight),0));
+        this.mouseCoordinates.firstChild!.textContent = `(${x}px,${y}px)`;
     }
 
     public addBubble() {
