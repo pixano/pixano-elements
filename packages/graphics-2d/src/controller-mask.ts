@@ -207,7 +207,7 @@ export class CreateBrushController extends Controller {
         this.onPointerDownBrush = this.onPointerDownBrush.bind(this);
         this.onPointerUpBrush = this.onPointerUpBrush.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
-		this.onKeyUp = this.onKeyUp.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
     }
 
     activate() {
@@ -244,27 +244,26 @@ export class CreateBrushController extends Controller {
      * the brush pixels.
      */
     initRoi() {
-		if (this.roiRadius==-1) {//first call : we compute the optimal roiRadius regarding image size
-			this.roiRadius = Math.trunc(Math.min(this.renderer.imageHeight, this.renderer.imageWidth)/144);
-		}		
+        if (this.roiRadius==-1) {//first call : we compute the optimal roiRadius regarding image size
+                this.roiRadius = Math.trunc(Math.min(this.renderer.imageHeight, this.renderer.imageWidth)/144);
+        }		
         this.roi.cacheAsBitmap = false;
         this.roi.clear();
-		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getNextTargetValue());
+        if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
+        	let color = this.gmask.pixelToColor(...this.getNextTargetValue());
         	let hex = rgbToHex(...color);
-            this.roi.beginFill(parseInt(hex, 16));
+        	this.roi.beginFill(parseInt(hex, 16));
         } else if (this._editionMode.value == EditionMode.ADD_TO_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getTargetValue());
+        	let color = this.gmask.pixelToColor(...this.getTargetValue());
         	let hex = rgbToHex(...color);
-			this.roi.beginFill(parseInt(hex, 16));
-		} else if (this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getTargetValue());
+        	this.roi.beginFill(parseInt(hex, 16));
+        } else if (this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE) {
+        	let color = this.gmask.pixelToColor(...this.getTargetValue());
         	let hex = rgbToHex(...color);
-			this.roi.lineStyle(1,parseInt(hex, 16), 1, 0.5, true);
-		}
-		this.roi.drawCircle(0, 0, this.roiRadius);
-		this.roi.endFill();
-
+        	this.roi.lineStyle(1,parseInt(hex, 16), 1, 0.5, true);
+        }
+        this.roi.drawCircle(0, 0, this.roiRadius);
+        this.roi.endFill();
         this.roi.x = this.renderer.mouse.x;
         this.roi.y = this.renderer.mouse.y;
         this.roi.cacheAsBitmap = true;
@@ -292,7 +291,8 @@ export class CreateBrushController extends Controller {
 		if (this._selectedId.value) if (this._selectedId.value.toString() != [-1,-1,-1].toString()) return this._selectedId.value;
 		return [0,0,0];
     }
-	/**
+
+    /**
      * Utility function to retrieve the mask value to next be created
      */
 	getNextTargetValue(): [number, number, number] {
@@ -309,7 +309,7 @@ export class CreateBrushController extends Controller {
     onPointerDownBrush(evt: PIXIInteractionEvent) {
         if (evt.data.button == 1) return;//middle button : nothing to do
         
-		if (this._editionMode.value === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue();//goto next value if new_instance mode is selected
+        if (this._editionMode.value === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue(); //goto next value if new_instance mode is selected
 
         this.isActive = true;
         this.roi.x = this.renderer.mouse.x;
@@ -359,7 +359,7 @@ export class CreateBrushController extends Controller {
             this.dispatchEvent(new Event('update'));
         }
         this.isActive = false;
-		this.initRoi();
+        this.initRoi();
     }
 
     /**
@@ -369,10 +369,10 @@ export class CreateBrushController extends Controller {
     protected onKeyDown(evt: KeyboardEvent) {
         if (evt.code == "NumpadAdd" || evt.key == "+") {
             this.roiRadius += 1;
-			this.initRoi();
+            this.initRoi();
         } else if (evt.code == "NumpadSubtract" || evt.key == "-") {
             this.roiRadius = Math.max(this.roiRadius - 1, 1);
-			this.initRoi();
+            this.initRoi();
         } else if (evt.shiftKey) {
             // shift down = union
             this._editionMode.value = EditionMode.ADD_TO_INSTANCE;
@@ -439,7 +439,7 @@ export class CreatePolygonController extends Controller {
         this.gmask = props.gmask || new GraphicMask();
         this._targetClass = props._targetClass || { value: 0 };
         this._selectedId = props._selectedId || { value: null };
-		this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
+        this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
         this.renderer.stage.addChild(this.roi);
         this.renderer.stage.addChild(this.contours);
         this.onPointerMoveTempPolygon = this.onPointerMoveTempPolygon.bind(this);
