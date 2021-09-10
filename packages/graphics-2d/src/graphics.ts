@@ -12,6 +12,7 @@ import { GraphicRectangle } from './graphic-rectangle';
 import { GraphicGraph } from './graphic-graph';
 import { DrawingCross } from './graphic-drawing-cross';
 import { Graphic, CONTROL_POINTS } from './graphic';
+import { GraphicLine } from './graphic-line';
 
 export {
   CONTROL_POINTS,
@@ -22,5 +23,6 @@ export {
   GraphicPolygon,
   GraphicMultiPolygon,
   GraphicRectangle,
+  GraphicLine,
   Graphic
 }

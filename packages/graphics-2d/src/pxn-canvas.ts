@@ -58,6 +58,7 @@ export class Canvas extends GenericDisplay {
     this.authorizedType = 'image';
     this.dispatchEvent = this.dispatchEvent.bind(this);
     this.viewControls.addEventListener("zoom", (evt:any) => this.zoom = evt.detail);
+    this.viewControls.addEventListener("update-display", (evt:any) => {this.dispatchEvent(new CustomEvent(evt.type, evt))});
     this.addEventListener('load', (evt: any) => this.data = evt.detail);
   }
 
@@ -88,7 +89,7 @@ export class Canvas extends GenericDisplay {
   set data(img: HTMLImageElement) {
     if (img && img !== this.renderer.image) {
       this.renderer.image = img;
-	  this.viewControls.reinit();
+      this.viewControls.reinit();
     }
   }
 

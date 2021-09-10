@@ -153,7 +153,7 @@ export abstract class GenericDisplay extends LitElement {
         }
       }
 
-      public nextFrame() {
+      public nextFrame() : Promise<void> {
         return new Promise((resolve) => {
           if (!this.isSequence) {
             resolve();

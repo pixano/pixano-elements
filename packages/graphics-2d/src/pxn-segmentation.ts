@@ -200,8 +200,6 @@ export class Segmentation extends Canvas {
         this.modes[prevMode].deactivate();
     }
     // Set up new mode state
-		console.log("pxn activate====",this._editionMode.value)
-	
     this.modes[newMode]?.activate();
     this.mode = newMode as any;
     this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
