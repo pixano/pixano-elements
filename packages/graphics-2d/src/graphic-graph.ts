@@ -171,6 +171,11 @@ export class GraphicGraph extends Graphic {
       this.data.geometry.visibles = [...this.data.geometry.visibles!, true];
     }
 
+    public popNode() {
+      this.data.geometry.vertices = this.data.geometry.vertices.slice(0, -2);
+      this.data.geometry.visibles = this.data.geometry.visibles?.slice(0, -1);
+    }
+
     public removeAllListeners() {
       super.removeAllListeners();
       this.nodes.forEach((n) => {

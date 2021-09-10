@@ -6,7 +6,6 @@
  */
 
 import * as PIXI from 'pixi.js';
-
 import { colorToHex, hexToRgb255 } from './utils';
 
 // Pixi.js Warning: gl.getProgramInfoLog() Programs with more than
@@ -17,6 +16,8 @@ interface RendererOptions {
     color?: string;
     container?: HTMLDivElement
 }
+
+type EventListener<T extends Event> = (event: T) => void;
 
 /**
  * PxnRenderer is an class used to draw object annotation on the
@@ -62,6 +63,41 @@ export class Renderer extends PIXI.Application {
     private _brightness: number = 1;
 
     private filter: any = new PIXI.filters.ColorMatrixFilter();
+
+    listeners = new Map<string, EventListener<any>[]>();
+
+    addEventListener<T extends Event>(type: string, listener: EventListener<T>) {
+      const listeners = this.listeners.get(type);
+      if (listeners) {
+        listeners.push(listener);
+      } else {
+        this.listeners.set(type, [listener]);
+      }
+    }
+
+    removeEventListener<T extends Event>(type: string, listener: EventListener<T>) {
+      const listeners = this.listeners.get(type);
+      if (listeners) {
+        const i = listeners.indexOf(listener);
+        if (i >= 0) {
+          listeners.splice(i, 1);
+        }
+      }
+    }
+
+    dispatchEvent(event: Event) {
+      const listeners = this.listeners.get(event.type);
+
+      if (listeners) {
+        for (const listener of listeners) {
+          listener.call(this, event);
+        }
+        return !event.defaultPrevented;
+
+      } else {
+        return true;
+      }
+    }
 
     /**
      * Getter of the canvas width
@@ -130,7 +166,7 @@ export class Renderer extends PIXI.Application {
             this.canvasHeight / this.stage.scale.y);
         this.backgroundSprite.filters = [this.filter];
         if (notifyNewImageSize) {
-            this.onImageSizeChange();
+            this.dispatchEvent(new Event('resize'))
         }
     }
 
@@ -176,8 +212,6 @@ export class Renderer extends PIXI.Application {
         this.initMouseCoordinates();
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
-
-    public onImageSizeChange() {}
 
     public setContainer(container: HTMLDivElement = document.createElement('div')) {
         while (container.firstChild) {
