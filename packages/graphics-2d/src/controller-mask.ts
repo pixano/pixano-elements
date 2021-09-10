@@ -94,7 +94,10 @@ export class SelectController extends Controller {
     protected onKeySelectionDown(evt: KeyboardEvent) {
         if (evt.key === 'Escape') {
             this.deselect();
-        }
+        } else if (evt.key === 'Delete') {
+			if (this._selectedId.value) this.gmask.deleteInstance(this._selectedId.value);
+			this.deselect();
+		}
     }
 }
 
