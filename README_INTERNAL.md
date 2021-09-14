@@ -1,7 +1,9 @@
 **ATTENTION :** ce document est interne et ne doit en aucun cas être publié sur le github !  
-La documentation publique se trouver dans le [README.md](./README.md).
+La documentation publique doit se trouver dans le [README.md](./README.md).  
+La liste des modifications/corrections prévues dans ce code se trouve dans le [TODO_INTERNAL.md](./TODO_INTERNAL.md). Ce fichier doit rester interne et ne pas se retrouver sur le github.
 
-Contenu de ce document :  
+Contenu de ce document :
+
 [[_TOC_]]
 
 # organisation/gestion des dépôts
