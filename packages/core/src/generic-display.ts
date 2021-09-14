@@ -4,7 +4,7 @@
  * @license CECILL-C
  */
 
-import { html, LitElement, property, TemplateResult } from 'lit-element';
+import { html, internalProperty, LitElement, property, TemplateResult } from 'lit-element';
 import './playback-control';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
@@ -24,8 +24,8 @@ export abstract class GenericDisplay extends LitElement {
       public maxFrameIdx: number | null = null;
       public pendingLoad: boolean | null = null;
 
-      @property({type: Number})
-      public targetFrameIdx: number | null = null;
+	  @internalProperty()
+      private _targetFrameIdx: number | null = null;
 
       // either use list item index as timestamp
       // or look for timestamp value in filename
@@ -101,7 +101,7 @@ export abstract class GenericDisplay extends LitElement {
                   if (this.playback) {
                     this.playback.set(0);
                   } else {
-                    this.frame = 0;
+                    this.frameIdx = 0;
                   }
                 });
         }
@@ -109,14 +109,14 @@ export abstract class GenericDisplay extends LitElement {
       }
 
       get timestamp(): number {
-        return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frame].timestamp : 0;
+        return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frameIdx].timestamp : 0;
       }
 
       set timestamp(timestamp: number){
         if (this.loader instanceof SequenceLoader) {
           const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
           if (frameIdx !== -1) {
-            this.frame = frameIdx;
+            this.frameIdx = frameIdx;
           }
         }
       }
@@ -124,27 +124,28 @@ export abstract class GenericDisplay extends LitElement {
       /**
        * Get frame index
        */
-      get frame(): number {
-        return this.targetFrameIdx || 0;
+      get frameIdx(): number {
+        return this._targetFrameIdx || 0;
       }
 
       /**
        * Set frame to load
        * @param {number} frameIndex - index of frame to load
        */
-      set frame(frameIndex: number) {
+      set frameIdx(frameIndex: number) {
+		  console.log("set frame")
         if (!this.isSequence) {
           return;
         }
         const maxFrameIdx = this.maxFrameIdx as number;
         const loader = this.loader as SequenceLoader;
         if (frameIndex >= 0 && frameIndex <= maxFrameIdx) {
-          this.targetFrameIdx = frameIndex;
+          this._targetFrameIdx = frameIndex;
           if (this.pendingLoad) {
             return;
           }
           this.pendingLoad = true;
-          loader.peekFrame(this.targetFrameIdx).then((data: any) => {
+          loader.peekFrame(this._targetFrameIdx).then((data: any) => {
             this.pendingLoad = false;
             this.notifyInputLoaded(data);
             this.notifyTimestampChanged();
@@ -165,10 +166,10 @@ export abstract class GenericDisplay extends LitElement {
           if (this.playback) {
             this.playback.setNext();
           } else {
-            const currIdx = this.targetFrameIdx as number;
+            const currIdx = this._targetFrameIdx as number;
             const maxIdx = this.maxFrameIdx as number;
             if (currIdx < maxIdx) {
-              this.frame = currIdx + 1;
+              this.frameIdx = currIdx + 1;
             }
           }
         });
@@ -179,7 +180,7 @@ export abstract class GenericDisplay extends LitElement {
        * @param {CustomEvent} evt
        */
       onSliderChange(evt: CustomEvent) {
-        this.frame = evt.detail;
+		  this.frameIdx = evt.detail;
       }
 
       get isSequence() {
@@ -191,7 +192,7 @@ export abstract class GenericDisplay extends LitElement {
       }
 
       private notifyTimestampChanged() {
-        this.dispatchEvent(new CustomEvent('timestamp', { detail: this.targetFrameIdx }));
+        this.dispatchEvent(new CustomEvent('timestamp', { detail: this._targetFrameIdx }));
       }
 
       display(): TemplateResult {
