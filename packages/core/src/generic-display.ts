@@ -117,6 +117,7 @@ export abstract class GenericDisplay extends LitElement {
           const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
           if (frameIdx !== -1) {
             this.frame = frameIdx;
+            this.playback?.set(frameIdx);
           }
         }
       }
