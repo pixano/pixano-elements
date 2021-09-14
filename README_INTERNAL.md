@@ -135,8 +135,18 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	- bouton "Draft a new release"
 	- "Tag version" vX.Y.Z
 	- dans "Release title", remettre la version vX.Y.Z
+	- compléter les commentaires :
+		- sous la forme :
+```
+### nomModule (par exmple graphics-2d)
+
+* description commit 1
+* description commit 2
+* ...
+```
+		- Pour lister facilement les descriptions de commits :
+			git log v0.5.14..v0.5.15
 	- "Publish release"
-	
 	
 ### 4. publication npm
 	# if not logged already
