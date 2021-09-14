@@ -54,8 +54,6 @@ master  <------push------  github <--merge-- master <--merge--> p2
 *On entend par "régulièrement" : tous les 6 mois environs, idéalement lors de deux campagnes à la rentrée de septembre et celle de janvier. Libre à chacun évidement de faire ces merges plus régulièrement ou au fil de l'eau.*
 
 
-
-
 # Open-source publication procedure
 ## prerequisite
 ### on github
@@ -164,6 +162,27 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	git commit -a -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
 	git push --follow-tags
+
+
+# Update gitlab code from github open-source repo
+## mettre à jour son fork par rapport au github
+- sur son fork github, appuyer sur "Fetch upstream", puis "Fetch and merge"
+
+## récupérer et fusionner les modifs
+	# mettre à jour le dépôts distant
+	git fetch
+	git fetch upstream
+	git checkout github
+	git pull
+	# fusionner
+	git checkout master
+	git merge github
+	# en cas de confilt
+	git mergetool
+	# une fois que tout est validé et testé => finalisation
+	git commit
+	git push origin master
+
 
 # règles de développement
 - les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
