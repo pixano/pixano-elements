@@ -7,7 +7,7 @@
 
 import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
 import { Renderer } from './renderer';
-import { ObservableSet, observe } from '@pixano/core';
+import { ObservableSet, observe, unobserve } from '@pixano/core';
 import { ShapeData } from './types';
 import { Graphic, DrawingCross, CONTROL_POINTS } from './graphics';
 import { bounds } from './utils';
@@ -39,6 +39,8 @@ export class ShapesEditController extends Controller {
 
     protected previousPos: {x: number, y: number} = {x: 0, y: 0};
 
+    protected observer: any = null;
+
     set updated(updated: boolean) {
         this._updated = updated;
         if (updated) {
@@ -63,7 +65,7 @@ export class ShapesEditController extends Controller {
         this.graphics = props.graphics || new Set();
         // automatic update shape display
         // triggered on selection object change
-        observe(this.targetShapes, (prop: string, value?: any) => {
+        this.observer = (prop: string, value?: any) => {
             switch(prop) {
                 case 'set': {
                     // clear all drawn selection(s)
@@ -111,7 +113,7 @@ export class ShapesEditController extends Controller {
                     break;
                 }
             }
-        });
+        };
         this.bindings();
     }
 
@@ -165,7 +167,7 @@ export class ShapesEditController extends Controller {
     }
 
     public activate() {
-        super.activate();
+        observe(this.targetShapes, this.observer);
         // handle update mode for each shape
         this.graphics.forEach((s) => {
             s.interactive = true;
@@ -179,8 +181,10 @@ export class ShapesEditController extends Controller {
     }
 
     public deactivate() {
-        super.deactivate();
+        unobserve(this.targetShapes, this.observer);
         this.graphics.forEach((s) => {
+            s.state = 'none';
+            this.setShapeInteraction(s);
             s.interactive = false;
             s.buttonMode = false;
             s.removeAllListeners();
@@ -482,6 +486,10 @@ export abstract class ShapeCreateController extends Controller {
 
     public shapes: ObservableSet<ShapeData>;
 
+    public targetShapes: ObservableSet<ShapeData>;
+
+    public graphics: Set<Graphic>;
+
     // internal properties
     protected cross: DrawingCross = new DrawingCross();
 
@@ -492,13 +500,34 @@ export abstract class ShapeCreateController extends Controller {
 
     protected mouse: {x: number, y: number} = {x: 0, y: 0};
 
+    protected observer: any = null;
+
+    readonly id: string = Math.random().toString(36).substring(2);
+
+    private onImageSizeChange: () => void;
+
     constructor(props: Partial<ShapeCreateController> = {}) {
         super(props);
-
         this.renderer = props.renderer || new Renderer();
         this.shapes = props.shapes || new ObservableSet();
+        this.targetShapes = props.targetShapes || new ObservableSet();
+        this.graphics = props.graphics || new Set();
         this.renderer.stage.addChild(this.cross);
+        this.observer = () => {
+            this.graphics.forEach((o) => {
+                o.state = this.getShape(o.data.id) ? 'contour' : 'none';
+                o.draw();
+            });
+        };
         this.bindings();
+        this.onImageSizeChange = () => {
+            const p = this.renderer.mouse;
+            this.cross.cx = p.x;
+            this.cross.cy = p.y;
+            this.cross.scaleX = this.renderer.imageWidth;
+            this.cross.scaleY = this.renderer.imageHeight;
+            this.cross.draw();
+        }
     }
 
     protected bindings() {
@@ -509,7 +538,7 @@ export abstract class ShapeCreateController extends Controller {
     }
 
     public activate() {
-        super.activate();
+        observe(this.targetShapes, this.observer);
         this.cross.visible = true;
         const pos = this.renderer.mouse;
         this.cross.cx = pos.x;
@@ -520,18 +549,12 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.on('pointerdown', this.onRootDown);
         this.renderer.stage.on('pointermove', this.onRootMove);
         this.renderer.stage.on('pointerupoutside', this.onRootUp);
-        this.renderer.onImageSizeChange = () => {
-            const p = this.renderer.mouse;
-            this.cross.cx = p.x;
-            this.cross.cy = p.y;
-            this.cross.scaleX = this.renderer.imageWidth;
-            this.cross.scaleY = this.renderer.imageHeight;
-            this.cross.draw();
-        }
+        this.renderer.addEventListener('resize', this.onImageSizeChange);
+        
     }
 
     public deactivate() {
-        super.deactivate();
+        unobserve(this.targetShapes, this.observer);
         this.cross.visible = false;
         const shape = this.tmpShape as Graphic;
         if (shape) {
@@ -542,11 +565,18 @@ export abstract class ShapeCreateController extends Controller {
         this.renderer.stage.removeListener('pointerdown', this.onRootDown);
         this.renderer.stage.removeListener('pointermove', this.onRootMove);
         this.renderer.stage.removeListener('pointerupoutside', this.onRootUp);
-        this.renderer.onImageSizeChange = () => {};
+        this.renderer.removeEventListener('resize', this.onImageSizeChange);
     }
 
     protected emitCreate() {
-        this.emit('create', [...this.shapes].pop());
+        const newShape = [...this.shapes].pop();
+        this.targetShapes.set([newShape!]);
+        this.emit('create', newShape);
+        this.emit('selection', [...this.targetShapes].map((data) => data.id));
+    }
+
+    protected emitUpdate() {
+        this.dispatchEvent(new Event('update'));
     }
 
     protected abstract onRootDown(evt: PIXIInteractionEvent): void;
@@ -565,9 +595,28 @@ export abstract class ShapeCreateController extends Controller {
         this.cross.cx = mouse.x;
         this.cross.cy = mouse.y;
         this.cross.draw();
+        // const pt2 = this.renderer.toAbsolutePosition(mouse.x, mouse.y);
+        // this.renderer.moveBubble(pt2.x, pt2.y);
     }
 
     protected onRootUp() {
         // Implement your own onRootUp method when inheriting.
     };
+
+    /**
+     * Retrieve graphical shape for a given shape data
+     * @param s
+     */
+     protected getGraphic(s: ShapeData) {
+        let graphic = [...this.graphics].find((o) => o.data === s);
+        if (!graphic) {
+            // find graphic with required id
+            graphic = [...this.graphics].find((o) => o.data.id === s.id);
+        }
+        return graphic;
+    }
+
+    protected getShape(id: string) {
+        return [...this.targetShapes].find((s) => s.id === id);
+    }
 }

@@ -146,10 +146,17 @@ export class GraphCreateController extends ShapeCreateController {
         strokeThickness: 5,
     });
 
+    constructor(props: Partial<GraphCreateController> = {}) {
+        super(props);
+        this.onKeyDownCreate = this.onKeyDownCreate.bind(this);
+    }
+
     public activate() {
         super.activate();
         if (settings.showVertexName) {
             this.renderer.stage.addChild(this.nodeText);
+            // this.renderer.addBubble();
+            // this.renderer.moveBubble(this.renderer.mouse.x - 10, this.renderer.mouse.y - 10, settings.vertexNames[0]);
             this.nodeText.text = settings.vertexNames[0];
             this.nodeText.position.x = this.renderer.mouse.x - this.nodeText.width - 10;
             this.nodeText.position.y = this.renderer.mouse.y - this.nodeText.height - 10;
@@ -160,6 +167,7 @@ export class GraphCreateController extends ShapeCreateController {
         super.deactivate();
         if (settings.showVertexName) {
             this.renderer.stage.removeChild(this.nodeText);
+            // this.renderer.removeBubbles();
         }
     }
 
@@ -195,6 +203,7 @@ export class GraphCreateController extends ShapeCreateController {
             this.renderer.stage.addChild(this.tmpShape);
             this.tmpShape.draw();
             this.nodeText.text = settings.vertexNames[1] || "";
+            window.addEventListener('keydown', this.onKeyDownCreate);
         }
         // update node text position
         if (settings.showVertexName) {
@@ -223,5 +232,23 @@ export class GraphCreateController extends ShapeCreateController {
         shape.destroy();
         this.tmpShape = null;
         this.emitCreate();
+        window.removeEventListener('keydown', this.onKeyDownCreate);
+    }
+
+    /**
+     * Handle keyboard events
+     */
+     protected onKeyDownCreate(event: KeyboardEvent) {
+        switch (event.key) {
+            case 'Backspace': {
+                // delete last node
+                const obj = this.tmpShape as GraphicGraph;
+                if (obj.data.geometry.vertices.length > 2) {
+                    obj.popNode();
+                    const l = obj.data.geometry.vertices.length * 0.5;
+                    this.nodeText.text = settings.vertexNames[l];
+                }
+            }
+        }
     }
 }
