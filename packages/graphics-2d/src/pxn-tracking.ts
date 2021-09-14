@@ -29,7 +29,8 @@ import { getShape,
     splitTrack,
     getNewTrackId,
     mergeTracks,
-    getClosestFrames } from './utils-video';
+    getClosestFrames,
+	getNumKeyShapes} from './utils-video';
 import { ShapesEditController } from './controller';
 // import { TrackingSmartController } from './controller-tracking';
 import { ClickController } from "./controller-tracking";
@@ -109,6 +110,7 @@ export class Tracking extends Rectangle {
             // if there is a selected track, add keyshape
             // else create a new track
             if (this.selectedTracks.size) {
+				// add keyshape
                 const currentTrack = this.selectedTracks.values().next().value;
                 this.addNewKeyShapes([
                   {
@@ -117,9 +119,9 @@ export class Tracking extends Rectangle {
                   }
                 ]);
             } else {
+				// new track
                 this.newTrack(e);
             }
-            //this.newTrack(e);
         });
         this.addEventListener('update-tracks', () => {
             this.drawTracks();
@@ -136,25 +138,22 @@ export class Tracking extends Rectangle {
         this.addEventListener('update', () => {
             // when updating instance, create or edit keyshape
             this.addNewKeyShapes([...this.targetShapes]);
-
         });
         this.addEventListener('selection', () => {
-            // unselect track is shape is unselected
+            // unselect track if shape is unselected
             if (!this.targetShapes.size) {
                 this.selectedTracks.clear();
                 this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTracks}));
             }
-
         });
         this.addEventListener('delete', (evt: any) => {
             const ids = evt.detail;
             ids.forEach((id: string) => {
                 if (isKeyShape(this.tracks[id], this.timestamp)) {
                     deleteShape(this.tracks[id], this.timestamp);
+					if (!getNumKeyShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
                 }
             });
-            // if track is empty remove it ?
-
             this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
             this.drawTracks();
         })
@@ -246,9 +245,8 @@ export class Tracking extends Rectangle {
         this.selectedTracks.add(newTrack);
         this.selectedShapeIds = [newTrack.id];
         this.drawTracks();
-        this.dispatchEvent(new CustomEvent('create-track', { detail: newTrack }));
         this.requestUpdate();
-        // this.mode = 'edit';
+        this.mode = 'edit';//back to edit mode after each new creation
     }
 
     /**
@@ -385,7 +383,7 @@ export class Tracking extends Rectangle {
     goToPreviousKeyFrame(t: TrackData) {
         const [prev,] = getClosestFrames(t, this.timestamp);
         if (prev >= 0) {
-            this.timestamp = prev;
+			this.playback!.set(prev);
         }
     }
 
@@ -396,7 +394,7 @@ export class Tracking extends Rectangle {
     goToNextKeyFrame(t: TrackData) {
         const [,next] = getClosestFrames(t, this.timestamp);
         if (isFinite(next)) {
-            this.timestamp = next;
+			this.playback!.set(next);
         }
     }
 
@@ -482,9 +480,9 @@ export class Tracking extends Rectangle {
 
     render() {
         return html`
-        <div style="display: flex; height: 100%;">
+        <div style="display: flex; height: 100%">
             <div style="position: relative; min-width: 100px; width: 100%;">${super.render()}</div>
-            <div style="flex: 0 0 300px; background: #f9f9f9; padding: 10px;">
+            <div style="flex: 0 0 300px; background: #f9f9f9; padding: 10px">
                 <mwc-button @click=${() => {this.selectedTracks.clear(); this.mode = 'create';}} icon="add"
                             class="new-button ${!this.selectedTracks.size ? 'fill': ''}"
                             style="width: 100%; flex-direction: column;">New</mwc-button>
