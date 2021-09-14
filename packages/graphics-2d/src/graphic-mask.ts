@@ -167,18 +167,16 @@ export class GraphicMask extends PIXIContainer {
      * @returns [r,g,b] 
      */
     public pixelToColor(id1: number, id2: number, cls: number): [number, number, number] {
-        if (cls === 0)
-            return [0, 0, 0];
-        if (this.maskVisuMode === MaskVisuMode.INSTANCE) {
-            const id = fuseId([id1, id2, cls]);
-            return distinctColors[id % distinctColors.length];
-        }
-        if (this.maskVisuMode === MaskVisuMode.SEMANTIC) {
-            const c = this.clsMap.get(cls);
-            if (c) {
-                return [c[0], c[1], c[2]];
-            }
-        }
+        if (cls === 0) return [0, 0, 0];
+		const c = this.clsMap.get(cls);
+		if (!c) return [0, 0, 0];
+		if ((this.maskVisuMode === MaskVisuMode.SEMANTIC) || (c[3]==0)) {//if this is a semantic category (c[3]==0) => one class = one color, no mather if we are in INSTANCE or SEMANTIC mode
+			return [c[0], c[1], c[2]];
+		} else if (this.maskVisuMode === MaskVisuMode.INSTANCE) {//if c[3]==1, this is an instance category => each instance should have its own color in INSTANCE mode
+			const id = fuseId([id1, id2, cls]);
+			return distinctColors[id % distinctColors.length];
+		}
+		console.log("this should never happen");
         return [0, 0, 0];
     }
 
@@ -421,6 +419,13 @@ export class GraphicMask extends PIXIContainer {
         this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
         this.colorMask.texture.update();
     }
+	/**
+	 * Delete an instance
+	 * @param id instance to delete
+	 */
+	public deleteInstance(id: [number, number, number]) {
+		this.replaceValue(id, [0, 0, 0]);//replace all corresponding mask's pixels
+	}
 
     /**
      * Get region blob contour for a given panoptic value

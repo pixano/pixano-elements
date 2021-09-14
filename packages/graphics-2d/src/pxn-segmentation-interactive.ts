@@ -27,10 +27,10 @@ export class SegmentationInteractive extends Segmentation {
   constructor() {
     super();
     this.maskVisuMode = MaskVisuMode.INSTANCE;
-    this.maskManager.setController('smart-create', new SmartCreateController({
+    this.setController('smart-create', new SmartCreateController({
         renderer: this.renderer,
-        gmask: this._graphicMask,
-        targetClass: this.maskManager.targetClass,
+        gmask: this.gmask,
+        targetClass: this._targetClass,
         dispatchEvent: this.dispatchEvent})
     );
   }
@@ -38,7 +38,7 @@ export class SegmentationInteractive extends Segmentation {
   updated(changedProperties: any) {
     super.updated(changedProperties);
     if (changedProperties.has('model')) {
-      (this.maskManager.modes['smart-create'] as SmartCreateController).load(this.model);
+      (this.modes['smart-create'] as SmartCreateController).load(this.model);
     }
   }
 }
