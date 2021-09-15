@@ -1,6 +1,6 @@
 {
   "name": "@pixano/ai",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "description": "AI tools for annotations",
   "author": "Pixano Authors <pixano@cea.fr>",
   "license": "CECILL-C",
@@ -14,7 +14,7 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
-    "@pixano/core": "0.5.15",
+    "@pixano/core": "0.5.16",
     "@tensorflow-models/coco-ssd": "2.2.2",
     "@tensorflow/tfjs": "3.3.0",
     "@tensorflow/tfjs-converter": "3.3.0",
