@@ -6,7 +6,6 @@
  */
 
 import * as PIXI from 'pixi.js';
-
 import { colorToHex, hexToRgb255 } from './utils';
 
 // Pixi.js Warning: gl.getProgramInfoLog() Programs with more than
@@ -17,6 +16,8 @@ interface RendererOptions {
     color?: string;
     container?: HTMLDivElement
 }
+
+type EventListener<T extends Event> = (event: T) => void;
 
 /**
  * PxnRenderer is an class used to draw object annotation on the
@@ -53,9 +54,64 @@ export class Renderer extends PIXI.Application {
 
     public enableOutsideDrawing: boolean = false;
 
+    public domElement: HTMLElement = document.createElement('div');
+
+    public bubbles: HTMLElement[] = [];
+
+    private mouseCoordinates: HTMLElement = document.createElement('span');
+
     private _brightness: number = 1;
 
     private filter: any = new PIXI.filters.ColorMatrixFilter();
+
+    listeners = new Map<string, EventListener<any>[]>();
+
+    addEventListener<T extends Event>(type: string, listener: EventListener<T>) {
+      const listeners = this.listeners.get(type);
+      if (listeners) {
+        listeners.push(listener);
+      } else {
+        this.listeners.set(type, [listener]);
+      }
+    }
+
+    removeEventListener<T extends Event>(type: string, listener: EventListener<T>) {
+      const listeners = this.listeners.get(type);
+      if (listeners) {
+        const i = listeners.indexOf(listener);
+        if (i >= 0) {
+          listeners.splice(i, 1);
+        }
+      }
+    }
+
+    dispatchEvent(event: Event) {
+      const listeners = this.listeners.get(event.type);
+
+      if (listeners) {
+        for (const listener of listeners) {
+          listener.call(this, event);
+        }
+        return !event.defaultPrevented;
+
+      } else {
+        return true;
+      }
+    }
+
+    /**
+     * Getter of the canvas width
+     */
+    get canvasWidth() {
+        return (this.domElement.parentNode as HTMLElement)?.offsetWidth || this.domElement.offsetWidth || 800;
+    }
+
+    /**
+     * Getter of the canvas height
+     */
+    get canvasHeight() {
+        return (this.domElement.parentNode as HTMLElement)?.offsetHeight || this.domElement.offsetHeight || 800;
+    }
 
     get imageWidth() {
         return Math.round(this.htmlImageElement.width);
@@ -110,7 +166,7 @@ export class Renderer extends PIXI.Application {
             this.canvasHeight / this.stage.scale.y);
         this.backgroundSprite.filters = [this.filter];
         if (notifyNewImageSize) {
-            this.onImageSizeChange();
+            this.dispatchEvent(new Event('resize'))
         }
     }
 
@@ -152,20 +208,21 @@ export class Renderer extends PIXI.Application {
             0, 0, 1, 0, 0,
             0, 0, 0, 1, 0,
         ];
+        this.domElement.appendChild(this.view);
+        this.initMouseCoordinates();
         window.addEventListener('resize', this.resizeWindow.bind(this));
     }
-
-    public onImageSizeChange() {}
 
     public setContainer(container: HTMLDivElement = document.createElement('div')) {
         while (container.firstChild) {
             container.firstChild.remove();
         }
-        container.appendChild(this.view);
+        container.appendChild(this.domElement);
         const rgb = hexToRgb255(this.renderer.backgroundColor);
         container.style.backgroundColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
         this.resizeTo = container;
         this.resize();
+        // this.addBubble();
     }
 
     public setBackgroundColor(color: string) {
@@ -227,6 +284,15 @@ export class Renderer extends PIXI.Application {
     }
 
     /**
+     * Position relative to stage to absolution canvas position
+     * @param x 
+     * @param y 
+     */
+    public toAbsolutePosition(x: number, y: number): {x: number, y: number} {
+        return this.stage.toGlobal({x, y});
+    }
+
+    /**
      * Compute drawable area based on canvas dimensions and image size.
      * Change rh, rw, rw, ry
      * @param canvasWidth width of html canvas
@@ -269,27 +335,6 @@ export class Renderer extends PIXI.Application {
         this.sy = 0.5 * (1 - this.s) * this.rh;
     }
 
-    /**
-     * Getter of the canvas width
-     */
-    get canvasWidth() {
-        try {
-            return (this.view.parentNode as HTMLDivElement).offsetWidth
-        } catch {
-            return 800;
-        }
-    }
-
-    /**
-     * Getter of the canvas height
-     */
-    get canvasHeight() {
-        try {
-            return (this.view.parentNode as HTMLDivElement).offsetHeight
-        } catch {
-            return 800;
-        }
-    }
 
     /**
      * Compute dimensions based on the HTML renderer view
@@ -331,6 +376,48 @@ export class Renderer extends PIXI.Application {
 
     public delete(s: PIXI.Container) {
         s.destroy();
+    }
+
+    public initMouseCoordinates() {
+        this.mouseCoordinates.appendChild(document.createTextNode('oy'));
+        this.mouseCoordinates.style.position = 'absolute';
+        this.mouseCoordinates.style.padding = '5px';
+        this.mouseCoordinates.style.bottom = '0px';
+        this.mouseCoordinates.style.right = '0px';
+        this.mouseCoordinates.style.background = '#f3f3f58f';
+        this.mouseCoordinates.style[('pointer-events' as any)] = 'none';
+        this.domElement.appendChild(this.mouseCoordinates);
+    }
+
+    public updateMouseCoordinates() {
+        const mouse = this.stage.toLocal(this.renderer.plugins.interaction.mouse.global);
+        const x = Math.floor(Math.max(Math.min(mouse.x, this.imageWidth),0));
+        const y = Math.floor(Math.max(Math.min(mouse.y, this.imageHeight),0));
+        this.mouseCoordinates.firstChild!.textContent = `(${x}px,${y}px)`;
+    }
+
+    public addBubble() {
+        const span = document.createElement('span');
+        span.appendChild(document.createTextNode(''));
+        span.style.position = 'absolute';
+        span.style[('pointer-events' as any)] = 'none';
+        this.domElement.appendChild(span);
+        this.bubbles.push(span);
+    }
+
+    public moveBubble(x: number, y: number, text?: string) {
+        if (this.bubbles.length) {
+            this.bubbles[0].style.left = `${Math.floor(x)}px`;
+            this.bubbles[0].style.top = `${Math.floor(y)}px`;
+            if (text) {
+                this.bubbles[0].firstChild!.textContent = text;
+            }
+        }
+    }
+
+    public removeBubbles() {
+        this.bubbles.forEach((b) => this.domElement.removeChild(b));
+        this.bubbles = [];
     }
 
     public destroy() {

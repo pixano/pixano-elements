@@ -5,7 +5,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
-
+import { BlobExtractor2d, simplify, convertIndexToDict } from '@pixano/core/lib/utils';
 /**
  * Detection from click with a mobilenet ssd.
  */
@@ -69,6 +69,10 @@ export class BoxSegmentation {
     image: HTMLImageElement | HTMLCanvasElement
   ): Promise<Float32Array> {
 
+    if (!this.model) {
+      return Promise.resolve(new Float32Array((box[3]-box[1])*(box[2]-box[0])));
+    }
+
     const targetSize = 256;
     const padding = 0.15;
     const threshold = 0.5;
@@ -88,6 +92,37 @@ export class BoxSegmentation {
 
     const res = await prediction.data() as Float32Array;
     return res;
+  }
+
+  /* Predict object mask in bounding box.
+  *
+  * @param `box`: Bounding box (x1,y1,x2,y2)
+  * @param `image`
+  */
+  async predictPolygon(box: [number, number, number, number], image: HTMLImageElement | HTMLCanvasElement):
+      Promise<number[]> {
+    // predict segmentation mask
+    console.log('predict polygon', this)
+    const mask = await this.predict(box, image);
+    
+    // convert mask to polygon
+    let pts: [number, number][] = []
+    const blobExtractor = new BlobExtractor2d([...mask], box[2]-box[0], box[3]-box[1]);
+    blobExtractor.extract(1);
+    if (blobExtractor.blobs.size == 1) {
+        blobExtractor.blobs.get(0)!.contours.forEach((ctr: any) => {
+            if (ctr.type === 'external') {
+                pts = simplify(convertIndexToDict(ctr.points,  box[2]-box[0] + 1), 2);
+            }
+        })
+    }
+    const globalX = pts.map(v => (v[0] + box[0]) / image.width);
+    const globalY = pts.map(v => (v[1] + box[1]) / image.height);
+    const vertices = new Array(globalX.length * 2);
+    for(let idx = 0; idx < globalX.length * 2; idx++){
+        vertices[idx] = idx % 2 ? globalY[(idx - 1) / 2] : globalX[(idx) / 2];
+    }
+    return vertices;
   }
 
   /**
