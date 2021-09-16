@@ -1,6 +1,6 @@
 {
   "name": "demo-cuboid",
-  "version": "0.5.15",
+  "version": "0.5.2",
   "private": true,
   "description": "Cuboid demo",
   "author": "Pixano Authors <pixano@cea.fr>",
@@ -20,8 +20,8 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@pixano/graphics-3d": "0.5.15",
-    "@pixano/core": "0.5.15",
+    "@pixano/graphics-3d": "0.5.2",
+    "@pixano/core": "0.5.2",
     "lit-element": "2.4.0"
   }
 }
