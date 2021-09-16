@@ -139,7 +139,7 @@ During the merge / before commiting, **do not include / delete files and interna
 	node changeversion.js $VERSION
 	git add package.json */*/package.json
 	git tag -m "vi$VERSION" "vi$VERSION"
-	git push origin master --tags
+	git push origin master --follow-tags
 #### 2. pull-request
 The rest is on [github](https://github.com) :
 
