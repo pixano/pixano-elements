@@ -37,10 +37,15 @@ Contenu de ce document :
 ```
 github                                      gitlab  
 ------                     ---------------------------------------  
-                                                    <--merge--> p1  
-master  <------push------  github <--merge-- master <--merge--> p2  
-                                                    <--merge--> p2  
-                                                    ...  
+                                                               <--merge--> p1  
+master  <----pull-request----  github <--cherry-picks-- master <--merge--> p2  
+                                                               <--merge--> p2  
+
+
+
+                                                               <--merge--> p1  
+master  ------- pull ------->  github  --- merge --->   master <--merge--> p2  
+                                                               <--merge--> p2  
 ```
 
 ## cas particulier d'un dépôt projet devant utiliser tuleap
@@ -121,18 +126,21 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 ### 3) publication effective
 #### 1. push
 	VERSION=0.5.16
-	#maj de la version de publication
+	# maj de la version de publication
 	node changeversion.js $VERSION
 	git add package.json */*/package.json
 	git commit -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
 	# pousser les modifs sur le fork
 	git push upstream github:master --follow-tags
-<!-- MANQUE DANS LA PROCÉDURE : report du tag sur master -->
-<!-- git checkout master -->
-<!-- git tag -m "v$VERSION" "v$VERSION" -->
-<!-- git push origin master -->
-<!-- PROBLÈME : on ne peut pas avoir 2 tags du même nom sur un même dépôt, même si l'autre branche est upstream -->
+
+	# report du tag sur master
+	git checkout master
+	#OU git checkout f5f56daf si le commit de référence n'est pas le dernier
+	node changeversion.js $VERSION
+	git add package.json */*/package.json
+	git tag -m "vi$VERSION" "vi$VERSION"
+	git push origin master --tags
 #### 2. pull-request
 Le reste se passe sur [github](https://github.com) :
 
