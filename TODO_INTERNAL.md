@@ -1,7 +1,7 @@
 Ce fichier contient la liste des modifications/corrections prévues dans ce code. Ce fichier doit rester interne et ne pas se retrouver sur le github.  
 Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalité concernée.  
 
-#Tags :
+#Tags :
 - [#interface] : modification concernant l'interface utilisateur : la visualisation, les boutons, etc
 - [#bug] : bogue
 	- [#firefox] : bogue lié uniquement à firefox
@@ -21,14 +21,15 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] Tester [pyodide](https://pyodide.org/en/stable/) : permettrait de simplifier l'utilisation combinée du python avec le javascript (run Python inside a web browser)
 - [ ] trouver un endroit où stocker les fichiers de modèles et de démo (publics ou internes) => le dépôt est devenu très lourd !!
 - [ ] revoir la procédure de livraison car la "Release V0.5.15 (#8)" a merdée (code non voulu inclu + release pas crée sur github) + il ne devrait pas y avoir de contributions directement sur le github
-- [x] [#feature] add options to interaction modes (e.g. brush and polygon : option 1 (create), option 2 (add), option 3 (remove))
+- [x] [#feature] add options to interaction modes (e.g. brush and polygon : option 1 (create), option 2 (add), option 3 (remove))
 - [o] [#feature] lancer ocean (https://github.com/researchmm/TracKit) en python avec une image/instance de test pour pouvoir valider/corriger la version javascript
 - [ ] [#feature] widget jupyter de pixano-element en python pour permettre une exploitation plus facile dans le process (à la manière de 51)
 - [ ] [#interface] il faudrait que le mode en court change l'état du bouton pour qu'on sache tout de suite dans quel mode on est (c'est le cas dans l'app)
-- [ ] [#bug] Add `current=${this.targetFrameIdx}` in generic-display
-- [ ] [#bug] Add observer as variable in controllers
+- [o] [#bug] Add `current=${this.targetFrameIdx}` in generic-display
+- [o] [#bug] Add observer as variable in controllers
 - [ ] [#feature] Replace observer by fast-json
-
+- [ ] [#feature] Add update display and setOffet in view-controller
+- [x] [#feature] Add mouse position coordinates
 
 ## npx serve demos/polygon/
 - [ ] [#interface] quel est le plus pratique :
@@ -44,7 +45,8 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] [#bogue] supprimer une instance ne fonctionne pas
 - [ ] [#interface] il manque la possibilité de fusionner des masques quand on s'est planté (à valider)
 - [x] [#interface] changer noms "Add Instance" en "Add Instance (Polygon)" et "Add Instance (Brush)"
-- [?] [#interface] trop de boutons, il faut qu'on fasse la modifs des boutons dont tu as parlé
+- [?] [#interface] trop de boutons, il faut qu'on fasse la modifs des boutons dont tu as parlé: générer les boutons de mode et sous-mode à partir du code JS (ex: ctrl/shift)(attention à garder le menu paramétrable - à rajouter ou enlever / changer le style) (ajouter aussi les raccourcis)
+- [x] [#interface] accélérer les calculs (trop long pour une image de grande taille) : réécriture générique de BlobExtractor.extract
 - [o] [#interface] accélérer les calculs (trop long pour une image de grande taille) :
 	1. méthode extract de BlobExtractor : 3-4s minimum à chaque appel (et il y en a à chaque sélection de mode, à chaque fois qu'on termine une zone, à chaque fois qu'on sélectionne une zone)
 		- => réécriture générique de BlobExtractor.extract :
@@ -58,7 +60,6 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 				- on pourrait aussi gagner en calculant pour chaque instance une boite englobante (et effectuer les calculs à l'intérieur). Cette boite pourrait d'ailleurs être utile dans la base de données.
 	2. l'affichage en direct de la zone couverte par le brush est également lente, mais c'est moins génant (plus compréhensible par un utilisateur en tout cas)
 		- => le tracé n'est pas négligeable (autour de 200-300ms en général), mais il y a d'autres temps plus importants et génants qui sont cachés... une idée d'où çà peut venir ?
-- [?] ctrl/shift : boutons devraient apparaitre/disparaitre en fonction de la sélection
 - [x] ctrl/shift : le curseur doit indiquer si on est entrain d'ajouter ou retirer
 - [x] ctrl/shift : réécriture pour rendre cohérent les boutons et le clavier
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
@@ -84,19 +85,11 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#bug] Add Pixi import in controller-tracking
 
 ## npx serve demos/graph/
-- [ ] [#feature #eurovanille] nombre et intitulés des keypoints réglables dynamiquement ou sans modification de code en dur
-- [ ] [#feature] Add backspace capacity in graph to remove last keypoint in creation mode
+- [x] [#feature #eurovanille] nombre et intitulés des keypoints réglables dynamiquement ou sans modification de code en dur
+- [x] [#feature] Add backspace capacity in graph to remove last keypoint in creation mode
 
 
 - ?
-	- [ ] [#other] Replace {...this} by this in controllers ?
-	- [ ] [#feature] Add update display and setOffet in view-controller
+	- [ ] [#other] Replace {...this} by this in controllers ?
 	- [ ] [#feature] update 3d graphics with Valeo branch
 	- [ ] [#feature] remove image extension criteria to include file ending differently
-
-
-
-
-
-
-
