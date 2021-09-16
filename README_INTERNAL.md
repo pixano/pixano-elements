@@ -54,8 +54,8 @@ master  <------push------  github <--merge-- master <--merge--> p2
 *On entend par "régulièrement" : tous les 6 mois environs, idéalement lors de deux campagnes à la rentrée de septembre et celle de janvier. Libre à chacun évidement de faire ces merges plus régulièrement ou au fil de l'eau.*
 
 
-# Open-source publication procedure
-## prerequisite
+# A) Open-source publication procedure
+## 1. Prerequisite (only the first time)
 ### on github
 - create a [github](https://github.com) $MYACCOUNT account 
 - create a fork of the [original repository](https://github.com/pixano/pixano-elements)
@@ -63,18 +63,18 @@ master  <------push------  github <--merge-- master <--merge--> p2
 	git remote add upstream git@github.com:$MYACCOUNT/pixano-elements.git
 	git fetch upstream
 	git checkout -b github upstream/master
-### avoir cloné le site web
+### clone the web landing page
 	cd .. ; git clone git@github.com:pixano/pixano.github.io.git ; cd -
 
-## mettre à jour son fork
-- sur son fork github, appuyer sur "Fetch upstream", puis "Fetch and merge"
+## 2. Update your fork
+- on your fork github (on github.com), click on "Fetch upstream", then "Fetch and merge"
 
-## préparer la publication
+## 3. Prepate the publication
 	# être sûr d'avoir les dépôts à jour
 	git fetch
 	git fetch upstream
-	git checkout github
-	# intégrer nos modifs à la branche github
+	git checkout github 
+	# integrate our gitlab master modifications into the github branch
 	## git merge master github
 	# procéder par cherry-pick pour plus de sécurité (ne pas inclure les commits purement internes)
 	# git cherry-pick b4cb0b18^..d5e075f2 (all commits from x to y) or git cherry-pick d5e075f2
@@ -164,7 +164,7 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	git push --follow-tags
 
 
-# Update gitlab code from github open-source repo
+# B) Update gitlab code from github open-source repo
 ## mettre à jour son fork par rapport au github
 - sur son fork github, appuyer sur "Fetch upstream", puis "Fetch and merge"
 
