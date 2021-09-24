@@ -65,17 +65,17 @@ export class Canvas2d extends Canvas {
       });
     });
     this.modes = {
-      edit: new ShapesEditController({ renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent })
+      edit: new ShapesEditController({ ...this } as any)
     }
-    this.renderer.onImageSizeChange = () => {
+    this.renderer.addEventListener('resize', () => {
       // this.renderer.clearLabels();
       // this.graphics.clear();
       this.graphics.forEach((s: Graphic) => {
           s.scaleX = this.renderer.imageWidth || 100;
           s.scaleY = this.renderer.imageHeight || 100;
           s.draw();
-      });
-    }
+      })}
+    );
 
     window.addEventListener('keydown', (evt) => {
       if (evt.key === "Alt") {
@@ -233,10 +233,9 @@ export class Canvas2d extends Canvas {
   public setController(mode: string, controller: Controller) {
     this.modes[mode]?.deactivate(); // deactive already existing mode in cas active
     this.modes[mode] = controller;
-    if (mode === this.mode) {
-      this.modes[mode].activate();
-      
-    }
+    // if (mode === this.mode) {
+    //   this.modes[mode].activate();
+    // }
     return this;
   }
 
@@ -250,6 +249,7 @@ export class Canvas2d extends Canvas {
     if (prevMode === newMode) {
       return;
     }
+    prevMode = prevMode == null ? "edit": prevMode;
     if (this.modes[prevMode]) {
         // Restore default state
         this.modes[prevMode].deactivate();

@@ -1,96 +1,115 @@
-**ATTENTION :** ce document est interne et ne doit en aucun cas être publié sur le github !  
-La documentation publique se trouver dans le [README.md](./README.md).
+**ATTENTION :** this document is internal and must not be published on the github !  
+The public documentation must be in the [README.md](./README.md).  
+The list of planned code modifications/corrections are in [TODO_INTERNAL.md](./TODO_INTERNAL.md). This file must also stay internal and not be published on the github !
 
-Contenu de ce document :  
+Document content :
+
 [[_TOC_]]
 
-# organisation/gestion des dépôts
-## version opensource publiée sur github
-- [dépôt](https://github.com/pixano/pixano-elements) opensource sous licence [CeCILL-C](./LICENSE.txt)
-- contient tous les modules et codes issus de l'EdA
-- étiquettes de versions : vX.Y.Z
-- **on ne devrait jamais pousser directement sur ce dépôt !** Il faut toujours passer par les pull-request pour sécuriser et générer du trafic (voir [procédure](#procedure-de-publication)).
+# organisation/repository management
+## opensource version published on github
+- [repository](https://github.com/pixano/pixano-elements) opensource under licence [CeCILL-C](./LICENSE.txt)
+- contains all modules and codes from SoTA
+- version tags : vX.Y.Z
+- **never push directly on the github !** You must always go through pull-requests to secure and generate traffic (see [procedure](#procedure-de-publication)).
 
-## version interne publiée sur notre gitlab
-### branche remote github
-- cette branche est une copie locale du dépôt github **forké**. Elle n'est utilisée que pour préparer et effectuer les publications (ou plus rarement pour récupérer du code du github s'il est en avance sur master du gitlab).
-- pour chaque nouvelle version à publier sur le github :
-	- on la prépare sur cette branche
-	- on la teste et valide sur cette branche
-	- on l'étiquette sur cette branche
-	- on la pousse sur le github forké avant de faire une pull-request sur le dépôt original (voir [procédure détaillée](#procedure-de-publication))
-### branche master
-- branche par défaut récupérée par tout nouveau contributeur
-- version la plus à jour, elle contient, en plus des fonctionnalités présentes sur le dépôt github, toutes les fonctionnalités intelligentes utilisables en interne labo et avec nos partenaires
-- regroupe "régulièrement" les avancées projets (sauf les code projets qui restent propriétaires d'une entreprise en particulier)
-- étiquettes de versions : viX.Y.Z
-### autres branches
-- une branche par projet (industriel, thèse, stage)
-- chacune de ces branche dérive de master
-- toutes les fonctionnalités ou corrections suffisamment matures sont poussées "régulièrement" sur le master (merge ou cherry-pick selon le cas)
-- en fin de projet, toute la branche est fusionnée avec master
-- étiquettes de versions (le cas échéant) : vipX.Y.Z ou étiquette spécifique à l'industriel (par exemple : vipX.Y.Z_arcure, vipX.Y.Z_valeo, etc)
+## internal version published on our gitlab
+### remote github branch
+- this branch is a local copy of the github repository **forké**. It is only used to prepare and do publications (or more rarely to retrieve github code if it is ahead  on the gitlab master).
+- for each new version to publish on the github :
+	- you prepare it on this branch
+	- you test it on this branch
+	- you tag it on this branch
+	- you push it on your forked github before doing a oull-request on the original repository (see [detailed procedure](#procedure-de-publication))
+### master branch
+- default branch to retrieve for all new user
+- version the most up-to-date, it contains, more than the github functionnalities, all smart functions usable internally and with our partners
+- regroup "regularly" the project novelties (except for porjet code which stay proprietary for given company)
+- version tags : viX.Y.Z
+### other branches
+- one branch per project (industrial, thesis, internship)
+- each branch comes from master
+- all functionnalities or corrections mature enough are push "regularly" on the master (merge or cherry-pick depending on the case)
+- at the end of the project, the branch is fused with the master
+- version tags (if appropriate) : vipX.Y.Z or specific tag for the partner (eg. vipX.Y.Z_arcure, vipX.Y.Z_valeo, etc)
 
-### schématiquement :
+### schematically :
 ```
 github                                      gitlab  
 ------                     ---------------------------------------  
-                                                    <--merge--> p1  
-master  <------push------  github <--merge-- master <--merge--> p2  
-                                                    <--merge--> p2  
-                                                    ...  
+                                                               <--merge--> p1  
+master  <----pull-request----  github <--cherry-picks-- master <--merge--> p2  
+                                                               <--merge--> p2  
+
+
+
+                                                               <--merge--> p1  
+master  ------- pull ------->  github  --- merge --->   master <--merge--> p2  
+                                                               <--merge--> p2  
 ```
 
-## cas particulier d'un dépôt projet devant utiliser tuleap
-- les développements liés au projet sont effectués sur le tuleap par les partenaires et par les membres CEA
-- push "régulier" des avancées tuleap vers la branche du projet sur le gitlab
-- remontée des avancées gitlab vers le tuleap en fonction du besoin, procédure :
-	1. push tuleap vers gitlab (projet)
-	2. merge des branches gitlab master et projet
-	3. push gitlab (projet) vers tuleap
+## particular case of a repository which must be in tuleap
+- the developments linked to the project are done on the tuleap by both the cea and the partners
+- push "regularly" novelties from tuleap to the project branch in gitlab
+- push "regularly" novelties from the gitlab to the tuleap depending on the need, procedure :
+	1. push tuleap to gitlab (project)
+	2. merge gitlab master and project branches
+	3. push gitlab (project) to tuleap
 
-*On entend par "régulièrement" : tous les 6 mois environs, idéalement lors de deux campagnes à la rentrée de septembre et celle de janvier. Libre à chacun évidement de faire ces merges plus régulièrement ou au fil de l'eau.*
+*We mean by "regularly" : every about 6 months, ideally in september and january. You are of course free to do these merges more often.*
 
-
-
+---------------------
 
 # Open-source publication procedure
-## prerequisite
-### on github
+## Prerequisite (only the first time)
+#### have a github account and fork
 - create a [github](https://github.com) $MYACCOUNT account 
 - create a fork of the [original repository](https://github.com/pixano/pixano-elements)
-### initialize the repository remote branch
+#### initialize the repository remote branch
 	git remote add upstream git@github.com:$MYACCOUNT/pixano-elements.git
 	git fetch upstream
 	git checkout -b github upstream/master
-### avoir cloné le site web
+#### clone the web landing page
 	cd .. ; git clone git@github.com:pixano/pixano.github.io.git ; cd -
 
-## mettre à jour son fork
-- sur son fork github, appuyer sur "Fetch upstream", puis "Fetch and merge"
+## Publication
+### 1) Prepate the publication
+1. On github : Update your fork
+	- on your fork github (on github.com), click on "Fetch upstream", then "Fetch and merge"
+2. Locally:
 
-## préparer la publication
-	# être sûr d'avoir les dépôts à jour
-	git fetch
-	git fetch upstream
-	git checkout github
-	# intégrer nos modifs à la branche github
-	## git merge master github
-	# procéder par cherry-pick pour plus de sécurité (ne pas inclure les commits purement internes)
-	# git cherry-pick b4cb0b18^..d5e075f2 (all commits from x to y) or git cherry-pick d5e075f2
-	git cherry-pick commitSHA
+		# make sure the repositories are up-to-date
+		git fetch
+		git fetch upstream
+		git checkout github
+		
+		# integrate our modifications to the github branch
+		# a few usage examples with cherry-pick :
+		# import of the commit number d5e075f2 :
+		git cherry-pick d5e075f2
+		# import of all commits from b4cb0b18 to d5e075f2 both included:
+		git cherry-pick b4cb0b18^..d5e075f2
+		# import of all commits from cfbb3866 (not included) to 74e276acb:
+		git cherry-pick cfbb3866..74e276acb
 
-Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et codes internes/propriétaires** :  
+During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
-- ne pas inclure le présent fichier [README_INTERNE.md](./README_INTERNE.md), ni le .gitlab-ci.yml
-- ne pas inclure le dossier [doc_interne](./doc_interne)
-- ne pas inclure les fichiers équipés d'une balise "propriétaire"
-- ne pas inclure les blocs de code entourés de d'une balise "propriétaire"
+- do not include the present file [README_INTERNE.md](./README_INTERNE.md), nor the .gitlab-ci.yml
+- do not include the folder [doc_interne](./doc_interne)
+- do not include the files with tag "proprietary"
+- do not include with code blocks surrounded by tag "proprietary"
 
-## vérification et validation du code
-### vérifications "à la main"
+### 2) Verify and validate code
+#### clean and recompile "from scratch"
+	# clean
+	rm -rf node_modules
+	rm package-lock.json
+	rm -rf packages/*/node_modules
+	# compile
+	npm i
+	npm run bootstrap
 	npm run build
-	npm run build:umd
+#### verify "by hand"
 	npx serve demos/cuboid/
 	npx serve demos/polygon/
 	npx serve demos/graph/
@@ -99,53 +118,71 @@ Durant le merge / avant le commit, **ne pas inclure / supprimer les fichiers et 
 	npx serve demos/rectangle/
 	npx serve demos/smart-rectangle/
 	npx serve demos/tracking/
-
-### finalisation
-- revue de code
+#### finalisation/code clean
+- code review
 - clean code: `npm run tslint`
 
-## publier
-### 1. push
-	VERSION=0.5.14
-	#maj de la version de publication
+### 3) Publish
+#### 1. push
+	VERSION=0.5.16
+	# update the publication version
 	node changeversion.js $VERSION
+	git add package.json */*/package.json
 	git commit -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
-	# pousser les modifs sur le fork
+	# push modifications on the fork
 	git push upstream github:master --follow-tags
-### 2. pull-request
-Le reste se passe sur [github](https://github.com) :
 
-	- sur le fork $MONCOMPTE : onglet "Pull requests" => "New pull request" => "Create pull request" => "Create pull request"
-	- des vérifications automatiques sont effectuées par github
-	- sur le compte pixano : aller dans "Merge pull request" => "Confirm merge"
-### 3. release
-Transformer le tag en release github (permet de rendre le dernier tag plus visible) :
+	# tag report on master
+	git checkout master
+	#OR git checkout f5f56daf if the reference commit is not the last one
+	node changeversion.js $VERSION
+	git add package.json */*/package.json
+	git tag -m "vi$VERSION" "vi$VERSION"
+	git push origin master --follow-tags
+#### 2. pull-request
+The rest is on [github](https://github.com) :
 
-<!--	NE FONCTIONNE PAS (encore?) car les tags ne sont pas exportés lors des pull request-->
-<!--	- aller sur la page des [tags](https://github.com/pixano/pixano-elements/tags)-->
-<!--	- sélectionner le dernier tag-->
+- on the fork $MYACCOUNT : onglet "Pull requests" => "New pull request" => "Create pull request" => "Create pull request"
+- automatic verifications are made by github
+- on the pixano account : got to "Merge pull request" => "Confirm merge"
+#### 3. release
+Transform the tag in github release (makes the last tag more visible and detailed) :
+<!--	DOES NOT WORK (yet)?) because tags are not exported in pull requests-->
+<!--	- go to the page [tags](https://github.com/pixano/pixano-elements/tags)-->
+<!--	- select the last tag-->
 <!--	- "Edit release"-->
-<!--	- dans "Release title", remettre la version vX.Y.Z-->
+<!--	- in "Release title", put the version vX.Y.Z-->
 <!--	- "Update release"-->
-	
-	- aller sur la page des [release](https://github.com/pixano/pixano-elements/releases)
-	- bouton "Draft a new release"
+
+	- go to the page in [release](https://github.com/pixano/pixano-elements/releases)
+	- button "Draft a new release"
 	- "Tag version" vX.Y.Z
-	- dans "Release title", remettre la version vX.Y.Z
+	- in "Release title", put the version vX.Y.Z
+	- complete the comments :
+		- under the following form :
+```
+### nomModule (eg. graphics-2d)
+
+* description commit 1
+* description commit 2
+* ...
+```
+		- To easily list the commits and descriptions :
+			git log v0.5.15..v0.5.16 --oneline
 	- "Publish release"
 	
-	
-### 4. publication npm
+#### 4. publication npm
 	# if not logged already
 	# contact pixano@cea.fr for more information
+	npm run build:umd
 	npm login
 	npm publish packages/core
 	npm publish packages/ai
 	npm publish packages/graphics-2d
 	npm publish packages/graphics-3d
 
-### 5. publication of the documentation
+#### 5. publication of the documentation
 	npm run docs
 	rm -r ../pixano.github.io/docs ; cp -r docs ../pixano.github.io/docs
 	cd ../pixano.github.io/
@@ -153,12 +190,35 @@ Transformer le tag en release github (permet de rendre le dernier tag plus visib
 	git tag -m "v$VERSION" "v$VERSION"
 	git push --follow-tags
 
-# règles de développement
-- les fonctionalités propriétaires (à **ne pas** reporter sur le github) doivent être bien identifiées : fichier séparé à chaque fois que possible, bloc identifié par des balises autrement
-- la documentation interne (à **ne pas** reporter sur le github) est séparée de la documentation publique : elle est intégralement stockée dans le dossier [doc_interne](./doc_interne) et le fichier [README_INTERNE.md](./README_INTERNE.md)
-- la documentation publique est entièrement rédigée à destination des utilisateurs github et ne doit faire aucune référence à notre fonctionnement interne
+---------------------
 
-## exemple de balise à placer en début de fichier
+# Update gitlab code from github open-source repo
+## update your fork with respect to the github
+- on your fork github, press on "Fetch upstream", then "Fetch and merge"
+
+## retrieve and fuse modifications
+	# update the remote repository
+	git fetch
+	git fetch upstream
+	git checkout github
+	git pull
+	# fuse
+	git checkout master
+	git merge github
+	# in case of conflicts
+	git mergetool
+	# once everything is verified and validated => finalisation
+	git commit
+	git push origin master
+
+---------------------
+
+# developping rules
+- the proprietary functionalities (do **not** report on the github) must be well identified : seperated file each time it is possible or at least a well defined code block
+- internal documentation (do **not** report on the github) is separated from the public documentation : it is stored in the folder [doc_interne](./doc_interne) and file [README_INTERNAL.md](./README_INTERNAL.md)
+- the public documentation is written only for the github users and must not reference to any internal function.
+
+## tag example to put at the beginning of each proprietary file
 	#####################################
 	###### INTERNAL, do not publish #####
 	#####################################

@@ -38,7 +38,7 @@ export class BlobExtractor {
     private augLabel: number[];
 
     static BACKGROUND = null;
-    static UNSET = -1;
+    // static UNSET = -1;//=>undefined will avoid unnecessary computating power
     static MARKED = -2;
     static CONNEXITY = 4;
 
@@ -327,61 +327,133 @@ export class BlobExtractor {
      * @param needLabel whether we need the computed mask
      */
     public extract(targetId: [number, number, number], needLabel: boolean = false) {
-        this.targetId = targetId;
-        for (let i = this.extrema[0]; i <= this.extrema[2]; i++){
-          for (let j = this.extrema[1]; j <= this.extrema[3]; j++){
-            const posi = i + j * this.augW;
-            this.augLabel[posi] = BlobExtractor.UNSET;
-          }
-        }
+        var start = new Date().getTime();
+
+		this.targetId = targetId;
+		// initialising to BlobExtractor.UNSET
+
+		// console.log("avec extrema=",this.withExtrema);
+		// if (this.withExtrema) {
+		// 	var posi = 0;
+		// 	for (let j = this.extrema[1]; j <= this.extrema[3]; j++) {
+		// 		posi = this.extrema[0] + j * this.augW;
+		// 		for (let i = this.extrema[0]; i <= this.extrema[2]; i++) {
+		// 			this.augLabel[posi++] = BlobExtractor.UNSET;
+		// 		}
+		// 	}
+		// } else
+		// for (let i = 0; i <= this.max; i++) this.augLabel[i] = BlobExtractor.UNSET;
+		// this.augLabel = new Array(this.max);
+		// console.log("max=",this.max);
+		// console.log("auglabel=",this.augLabel[450000]);
+
         let c = 0;
-        let y = this.extrema[1];
-        do {
-          let x = this.extrema[0];
-          do {
-            const offset = y * this.augW + x;
-            // We skip white pixels or previous labeled pixels
-            if (!this.isEqualXY(x, y))
-                continue;
+        // let y = this.extrema[1];
+		console.log("f1=",(new Date().getTime()-start));
+		// computing
+		var posi = 0;
+		for (let j = this.extrema[1]; j <= this.extrema[3]; j++) {
+			posi = this.extrema[0] + j * this.augW;
+			for (let i = this.extrema[0]; i <= this.extrema[2]; i++) {
+				if (this.isEqual(posi)) {// We skip white pixels or previous labeled pixels
 
-            // Step 1 - P not labelled, and above pixel is white
-            if (!this.isEqualXY(x, y-1) && this.augLabel[offset] === BlobExtractor.UNSET) {
-                // P must be external contour
-                this.blobs.set(c, new RegBlob(c));
-                const [contour, nbPixels] = this.contourTracing(offset, c, true);
-                this.blobs.get(c)!.contours.push(contour);
-                this.blobs.get(c)!.nbPixels += nbPixels;
-                c++;
-            }
+					// Step 1 - P not labelled, and above pixel is white
+					if (!this.isEqual(posi-this.augW) && this.augLabel[posi] === undefined) {
+						// P must be external contour
+						this.blobs.set(c, new RegBlob(c));
+						const [contour, nbPixels] = this.contourTracing(posi, c, true);
+						this.blobs.get(c)!.contours.push(contour);
+						this.blobs.get(c)!.nbPixels += nbPixels;
+						c++;
+					}
 
-            // Step 2 - Below pixel is white, and unmarked
-            if (!this.isEqualXY(x, y+1) && this.augLabel[offset + this.augW] === BlobExtractor.UNSET) {
-                // Use previous pixel label, unless this is already labelled
-                let n = this.augLabel[offset - 1];
-                if (this.augLabel[offset] !== BlobExtractor.UNSET)
-                    n = this.augLabel[offset];
+					// Step 2 - Below pixel is white, and unmarked
+					if (!this.isEqual(posi+this.augW) && this.augLabel[posi + this.augW] === undefined) {
+						// Use previous pixel label, unless this is already labelled
+						let n = this.augLabel[posi - 1];
+						if (this.augLabel[posi] !== undefined)
+							n = this.augLabel[posi];
 
-                // P must be a internal contour
-                const [contour, nbPixels] = this.contourTracing(offset, n, false);
-                const b = this.blobs.get(n);
-                if (b) {
-                    b.contours.push(contour);
-                    b.nbPixels += nbPixels;
-                }
-            }
-            // Step 3 - Not dealt within previous two steps
-            if (this.augLabel[offset] === BlobExtractor.UNSET) {
-                const n = this.augLabel[offset - 1] || 0;
-                // Assign P the value of N
-                this.augLabel[offset] = n;
-                const b = this.blobs.get(n);
-                if (b) { b.nbPixels += 1; }
-            }
+						// P must be a internal contour
+						const [contour, nbPixels] = this.contourTracing(posi, n, false);
+						const b = this.blobs.get(n);
+						if (b) {
+							b.contours.push(contour);
+							b.nbPixels += nbPixels;
+						}
+					}
 
-          } while (x++ <= this.extrema[2]);
-        } while (y++ <= this.extrema[3]);
+					// Step 3 - Not dealt within previous two steps
+					if (this.augLabel[posi] === undefined) {
+						const n = this.augLabel[posi - 1] || 0;
+						// Assign P the value of N
+						this.augLabel[posi] = n;
+						const b = this.blobs.get(n);
+						if (b) { b.nbPixels += 1; }
+					}
+				}
+				posi++;
+			}
+		}
 
+
+		console.log("f2'=",(new Date().getTime()-start));
+
+
+        // do {
+        //   let x = this.extrema[0];
+        //   do {
+        //     const offset = y * this.augW + x;
+        //     // We skip white pixels or previous labeled pixels
+        //     if (!this.isEqualXY(x, y))
+        //         continue;
+
+        //     // Step 1 - P not labelled, and above pixel is white
+        //     if (!this.isEqualXY(x, y-1) && this.augLabel[offset] === BlobExtractor.UNSET) {
+        //         // P must be external contour
+        //         this.blobs.set(c, new RegBlob(c));
+        //         const [contour, nbPixels] = this.contourTracing(offset, c, true);
+        //         this.blobs.get(c)!.contours.push(contour);
+        //         this.blobs.get(c)!.nbPixels += nbPixels;
+        //         c++;
+        //     }
+
+        //     // Step 2 - Below pixel is white, and unmarked
+        //     if (!this.isEqualXY(x, y+1) && this.augLabel[offset + this.augW] === BlobExtractor.UNSET) {
+        //         // Use previous pixel label, unless this is already labelled
+        //         let n = this.augLabel[offset - 1];
+        //         if (this.augLabel[offset] !== BlobExtractor.UNSET)
+        //             n = this.augLabel[offset];
+
+        //         // P must be a internal contour
+        //         const [contour, nbPixels] = this.contourTracing(offset, n, false);
+        //         const b = this.blobs.get(n);
+        //         if (b) {
+        //             b.contours.push(contour);
+        //             b.nbPixels += nbPixels;
+        //         }
+        //     }
+        //     // Step 3 - Not dealt within previous two steps
+        //     if (this.augLabel[offset] === BlobExtractor.UNSET) {
+        //         const n = this.augLabel[offset - 1] || 0;
+        //         // Assign P the value of N
+        //         this.augLabel[offset] = n;
+        //         const b = this.blobs.get(n);
+        //         if (b) { b.nbPixels += 1; }
+        //     }
+
+        //   } while (x++ <= this.extrema[2]);
+        // } while (y++ <= this.extrema[3]);
+
+		console.log("f2=",(new Date().getTime()-start));
         if (needLabel) {
+			// var posi = 0;
+			// for (let j = 0; j < this.height; j++) {
+			// 	for (let i = 0; i < this.width; i++) {
+			// 		this.label[posi] = this.augLabel[posi + this.width + 2 * j + 3];
+			// 		posi++;
+			// 	}
+			// }
             for (let x2 = 0; x2 < this.width; x2++){
                 for (let y2 = 0; y2 < this.height; y2++) {
                     const offset = x2 + y2 * this.width
@@ -389,6 +461,7 @@ export class BlobExtractor {
                 }
             }
         }
+		console.log("ff=",(new Date().getTime()-start));
     }
 
     isEqualXY(x: number, y: number) {

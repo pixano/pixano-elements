@@ -163,7 +163,8 @@ export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
  * Switch two tracks at given timestamp.
  * @param tracks tracks to be switched
  */
-export function switchTrack(t1: TrackData, t2: TrackData, fIdx: number) {
+export function switchTrack(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string, fIdx: number) {
+    var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
     const ks1 = [...Object.values(t1.keyShapes)];
     const ks2 = [...Object.values(t2.keyShapes)];
     t1.keyShapes = ks1.filter((k) => k.timestamp < fIdx)
@@ -176,13 +177,18 @@ export function switchTrack(t1: TrackData, t2: TrackData, fIdx: number) {
 
 /**
  * Merge two tracks.
- * If they do not overlap, do concatenation of keyshapes.
- * If they overlap at current timestamp, cut both tracks at timestamp and join the older left-side sub-track
- *    with the newer right-side sub-track. Create tracks with remaining sub-tracks.
- * If they overlap but not at current time, do as above with the first timestamp of overlap.
- * @param tracks tracks to be merged
+ * Do the concatenation of keyshapes if the two tracks do not overlap.
+ * @param tracks the set of tracks
+ * @param t1Id the id of the first track
+ * @param t2Id the id of the second track
+ * @returns a object containing the id `trackId` of the merged track and the
+ * list `keysIntersection` of the frames at which the tracks overlaps.
+ * If the tracks do not overlap, `keysIntersection` is empty.
+ * If the tracks overlap, an empty string is returned instead of the id
+ * of the merged track.
  */
-export function mergeTracks(tracks: {[key: string]: TrackData}, t1: TrackData, t2: TrackData, fIx: number) {
+export function mergeTracks(tracks: {[key: string]: TrackData}, t1Id: string, t2Id: string) {
+    var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 
     // check overlapping
     const keys = [
@@ -190,28 +196,17 @@ export function mergeTracks(tracks: {[key: string]: TrackData}, t1: TrackData, t
         [...Object.keys(sortDictByKey(t2.keyShapes))]
     ];
     const olderTrackIdx = keys[0][0] < keys[1][0] ? 0 : 1;
-    const isDisjoint = keys[olderTrackIdx].slice(-1)[0] < keys[1 - olderTrackIdx][0];
+    const keysIntersection = keys[0].filter(value => keys[1].includes(value));
+    const isDisjoint = keysIntersection.length == 0;
     [t1, t2] = olderTrackIdx ? [t2, t1] : [t1, t2];
     // they do not overlap, concatenation of keyshapes.
+    var trackId = ""
     if (isDisjoint) {
+        trackId = t1.id;
         t1.keyShapes = {...t1.keyShapes, ...t2.keyShapes};
         delete tracks[t2.id];
-    } else {
-        const s1 = getShape(t1, fIx).keyshape;
-        const s2 = getShape(t2, fIx).keyshape;
-        // overlap timestamp
-        const tps = s1?.isNextHidden && !isKeyShape(t1, fIx) ||
-                    s2?.isNextHidden && !isKeyShape(t2, fIx) ?
-                    parseInt(keys[1 - olderTrackIdx][0]) : fIx;
-        const [ks1l,] = [...Object.values(t1.keyShapes)]
-                .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
-        const [, ks2r] = [...Object.values(t2.keyShapes)]
-                .reduce(([p, f], e) => (e.timestamp >= tps ? [[...p, e], f] : [p, [...f, e]]), [[], []] as [KeyShapeData[], KeyShapeData[]]);
-
-        t1.keyShapes = [...ks1l, ... ks2r]
-                        .reduce((map, obj) => ({...map, [obj.timestamp]: obj}), {});
-        delete tracks[t2.id];
     }
+    return {trackId, keysIntersection};
 }
 
 export function getNewTrackId(tracks: {[key: string]: TrackData}): string {
@@ -244,7 +239,8 @@ export function convertShapes(tracks: {[key: string]: TrackData}, fIdx: number):
  * Split track into two tracks
  * @param t
  */
-export function splitTrack(t: TrackData, fIdx: number, tracks: {[key: string]: TrackData}): TrackData {
+export function splitTrack(tId: string, fIdx: number, tracks: {[key: string]: TrackData}): TrackData {
+    var t = tracks[tId];
     const newTrackId = getNewTrackId(tracks);
 
     // create keyshape for current frame and previous frame
@@ -322,3 +318,16 @@ export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c
                             '#00b7ff', '#0077a6', '#004b69', '#96e1ff', '#3c7f99', '#002aff', '#001891', '#2a387d', '#7a91ff',
                             '#4400ff', '#230085', '#15014d', '#533b96', '#b296ff', '#895eff', '#ff00fb', '#850083', '#360035',
                             '#fc95fb', '#8f278e', '#a86da8', '#873587', '#ff0062', '#bf2e66', '#73002c'];
+
+function colorComponentToHex(c: number) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+export function invertColor(rgb : string) {
+    rgb = rgb.substring(1);
+    var r = 255 - parseInt(rgb.substring(0,2), 16)
+    var g = 255 - parseInt(rgb.substring(2,4), 16)
+    var b = 255 - parseInt(rgb.substring(4,6), 16)
+    return "#" + colorComponentToHex(r) + colorComponentToHex(g) + colorComponentToHex(b)
+}
