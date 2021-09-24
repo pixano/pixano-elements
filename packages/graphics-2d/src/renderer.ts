@@ -379,7 +379,7 @@ export class Renderer extends PIXI.Application {
     }
 
     public initMouseCoordinates() {
-        this.mouseCoordinates.appendChild(document.createTextNode('oy'));
+        this.mouseCoordinates.appendChild(document.createTextNode(''));
         this.mouseCoordinates.style.position = 'absolute';
         this.mouseCoordinates.style.padding = '5px';
         this.mouseCoordinates.style.bottom = '0px';
