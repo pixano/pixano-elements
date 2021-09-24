@@ -4,6 +4,7 @@
  * @license CECILL-C
  */
 
+// alphabetically ordered color list
 export const colorNames: {[key: string]: string} = {
     aliceblue: "f0f8ff",
     antiquewhite: "faebd7",
@@ -155,6 +156,9 @@ export const colorNames: {[key: string]: string} = {
     yellow: "ff0",
     yellowgreen: "9acd32"
 };
+
+// main colors
+export const colors = ['red', 'blue', 'green', 'yellow', 'pink', 'purple', 'orange', 'cyan'];
 
 export function searchSorted<T>(arr: T[], value: T) {
     for (let i=0; i<arr.length; i++) {
