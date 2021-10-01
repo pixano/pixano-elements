@@ -10,12 +10,19 @@ import { demoStyles,
   fullscreen,
   borderOuter,
   createPencil,
+  paintBrush,
   magicSelect,
   subtract,
   union,
   lock,
   zoomIn,
   zoomOut } from '@pixano/core/lib/style';
+
+const EditionMode = {
+	ADD_TO_INSTANCE: 'add_to_instance',
+	REMOVE_FROM_INSTANCE: 'remove_from_instance',
+	NEW_INSTANCE: 'new_instance'
+};
 
 class MyDemo extends LitElement {
   static get styles() {
@@ -42,7 +49,7 @@ class MyDemo extends LitElement {
         // print mask
         console.log('Mask', this.element.getMask());
       }
-    })
+    });
   }
 
   firstUpdated() {
@@ -83,8 +90,13 @@ class MyDemo extends LitElement {
       ctx.putImageData(pixels, 0, 0, 0, 0, width, height);
       this.mask = pixels;
     }
-    // this.element.maskVisuMode = 'INSTANCE'; // 'SEMANTIC'
-    // this.element.targetClass = 2;
+    this.element.maskVisuMode = 'INSTANCE';
+    this.element.clsMap = {
+      0: [0,0,0,0],
+      1: [255,0,0,1],
+      2: [0,255,0,0]
+    };
+    this.element.targetClass = 1;
   }
 
   fullScreen() {
@@ -94,21 +106,23 @@ class MyDemo extends LitElement {
   }
 
   get rightPanel() {
-    return html`
-      <div class="right-panel">
-        <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
-        <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-          <p class="icon" title="Smart instance" @click=${() => this.element.mode = 'smart-create'}>${borderOuter}</p>
-          <p class="icon" title="Select" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
-          <p class="icon" title="Subtract" @click=${() => this.element.mode = 'edit-remove'}>${subtract}</p>
-          <p class="icon" title="Union" @click=${() => this.element.mode = 'edit-add'}>${union}</p>
-          <p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
-          <p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
-          <p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
-        </div>       
-      </div>
-    `;
+	  return html`
+		<div class="right-panel">
+			<p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
+			<div class="icons">
+			<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+			<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+			<p class="icon" title="Smart instance" @click=${() => this.element.mode = 'smart-create'}>${borderOuter}</p>
+			<hr>
+			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
+			<hr>
+			<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
+			<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
+			<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+			<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+			<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+			</div>       
+		</div>`;
   }
 
   render() {
