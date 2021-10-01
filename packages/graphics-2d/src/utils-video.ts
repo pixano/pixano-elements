@@ -23,7 +23,7 @@ export function generateKey() {
  * @return the key shape if exist, undefined otherwise
  */
 export function getKeyShape(track: TrackData, fIdx: number): KeyShapeData | undefined {
-    return track.keyShapes[fIdx];
+    return track ? track.keyShapes[fIdx] : undefined;
 }
 
 /**
@@ -85,7 +85,6 @@ export function getClosestFrames(track: TrackData, timestamp: number): number[] 
 export function getShape(track: TrackData, timestamp: number) : {keyshape: KeyShapeData | undefined, isLast?: boolean} {
     if (timestamp < 0)
         return {keyshape: undefined};
-
     // If requested shape is a key one return it
     const ks = getKeyShape(track, timestamp);
     if (ks) {
