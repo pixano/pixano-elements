@@ -117,13 +117,11 @@ export class PlaybackControl extends LitElement {
     }
 
     onSliderInput() {
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+		this.set(this.slider.value);
     }
 
     onSliderChange() {
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value, bubbles: false}));
+		this.set(this.slider.value);
     }
 
     firstUpdated() {
@@ -137,13 +135,11 @@ export class PlaybackControl extends LitElement {
     }
 
     setNext() {
-      this.current = Math.min(this.slider.value + 1, this.max);
-      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
+		this.set(Math.min(this.slider.value + 1, this.max));
     }
 
     setBefore() {
-      this.current = Math.max(this.slider.value - 1, 0);
-      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
+		this.set(Math.max(this.slider.value - 1, 0));
     }
 
     public set(value: number) {

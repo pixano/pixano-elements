@@ -38,7 +38,7 @@ export class Canvas2d extends Canvas {
   public enableOutsideDrawing: boolean = false;
 
   // set of 2d shapes to be drawn by the element
-  private _shapes: ObservableSet<ShapeData>;
+  protected _shapes: ObservableSet<ShapeData>;
 
   // set of selected 2d shapes
   public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
@@ -65,17 +65,17 @@ export class Canvas2d extends Canvas {
       });
     });
     this.modes = {
-      edit: new ShapesEditController({ renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent })
+      edit: new ShapesEditController({ ...this } as any)
     }
-    this.renderer.onImageSizeChange = () => {
+    this.renderer.addEventListener('resize', () => {
       // this.renderer.clearLabels();
       // this.graphics.clear();
       this.graphics.forEach((s: Graphic) => {
           s.scaleX = this.renderer.imageWidth || 100;
           s.scaleY = this.renderer.imageHeight || 100;
           s.draw();
-      });
-    }
+      })}
+    );
 
     window.addEventListener('keydown', (evt) => {
       if (evt.key === "Alt") {
@@ -239,10 +239,9 @@ export class Canvas2d extends Canvas {
   public setController(mode: string, controller: Controller) {
     this.modes[mode]?.deactivate(); // deactive already existing mode in cas active
     this.modes[mode] = controller;
-    if (mode === this.mode) {
-      this.modes[mode].activate();
-      
-    }
+    // if (mode === this.mode) {
+    //   this.modes[mode].activate();
+    // }
     return this;
   }
 
@@ -256,6 +255,7 @@ export class Canvas2d extends Canvas {
     if (prevMode === newMode) {
       return;
     }
+    prevMode = prevMode == null ? "edit": prevMode;
     if (this.modes[prevMode]) {
         // Restore default state
         this.modes[prevMode].deactivate();
@@ -264,7 +264,7 @@ export class Canvas2d extends Canvas {
     this.modes[newMode]?.activate();
     this.mode = newMode;
     this.notifyMode();
-}
+  }
 
 
   /**
@@ -286,18 +286,6 @@ export class Canvas2d extends Canvas {
       // send selection notification
       this.notifySelection(this.selectedShapeIds);
     }
-  }
-
-  /**
-   * Snackbar temporary appearance
-   * To display mode instructions.
-   * @param text
-   */
-  protected showTooltip(text: string) {
-    const x = this.shadowRoot!.getElementById("snackbar")!;
-    x.className = "show";
-    x.innerHTML = text;
-    setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
   }
 
   /**

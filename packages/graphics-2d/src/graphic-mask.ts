@@ -167,18 +167,16 @@ export class GraphicMask extends PIXIContainer {
      * @returns [r,g,b] 
      */
     public pixelToColor(id1: number, id2: number, cls: number): [number, number, number] {
-        if (cls === 0)
-            return [0, 0, 0];
-        if (this.maskVisuMode === MaskVisuMode.INSTANCE) {
-            const id = fuseId([id1, id2, cls]);
-            return distinctColors[id % distinctColors.length];
-        }
-        if (this.maskVisuMode === MaskVisuMode.SEMANTIC) {
-            const c = this.clsMap.get(cls);
-            if (c) {
-                return [c[0], c[1], c[2]];
-            }
-        }
+        if (cls === 0) return [0, 0, 0];
+		const c = this.clsMap.get(cls);
+		if (!c) return [0, 0, 0];
+		if ((this.maskVisuMode === MaskVisuMode.SEMANTIC) || (c[3]==0)) {//if this is a semantic category (c[3]==0) => one class = one color, no mather if we are in INSTANCE or SEMANTIC mode
+			return [c[0], c[1], c[2]];
+		} else if (this.maskVisuMode === MaskVisuMode.INSTANCE) {//if c[3]==1, this is an instance category => each instance should have its own color in INSTANCE mode
+			const id = fuseId([id1, id2, cls]);
+			return distinctColors[id % distinctColors.length];
+		}
+		console.log("this should never happen");
         return [0, 0, 0];
     }
 
@@ -297,22 +295,33 @@ export class GraphicMask extends PIXIContainer {
      * Update panoptic mask with a localised submask and a panoptic value
      * @param mask binary flatten array
      * @param box [l,t,r,b] search area
-     * @param newVal 
+     * @param newVal new pixel/class value (corresponds to color for rendering)
      */
     public updateByMaskInRoi(mask: Float32Array, box: [number, number, number, number],
                              newVal: [number, number, number], fillType: 'add' | 'remove' ='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
+
+        //respect image boundaries
         const width = box[2]-box[0];
-        const height = box[3]-box[1];
+        const roi = [(box[0]>0) ? box[0] : 0,
+                    (box[1]>0) ? box[1] : 0,
+                    (box[2]<this.canvas.width) ? box[2] : this.canvas.width,
+                    (box[3]<this.canvas.height) ? box[3] : this.canvas.height];
+        const widthroi = roi[2]-roi[0];
+        const heightroi = roi[3]-roi[1];
+        const decx = (box[0]<0) ? -box[0] : 0;
+        const decy = (box[1]<0) ? -box[1] : 0;
+
+
         const color = this.pixelToColor(...newVal);
         const alpha = (Math.max(...color) === 0) ? 0 : MASK_ALPHA_VALUE;
         const [id1, id2, cls] = newVal;
         if (fillType === 'add') {
-            for (let x = 0; x < width; x++) {
-                for (let y = 0; y < height; y++) {
-                    const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
+            for (let x = 0; x < widthroi; x++) {
+                for (let y = 0; y < heightroi; y++) {
+                    const idx = (x + roi[0] + (y + roi[1]) * this.canvas.width);
                     const pixId = this.pixelId(idx);
-                    if (mask[y * width + x] === 1 && !this.lockedInstances.has(fuseId(pixId))) {
+                    if (mask[(y+decy)*width + (x+decx)] === 1 && !this.lockedInstances.has(fuseId(pixId))) {
                         this.orig!.data[4 * idx] = id1;
                         this.orig!.data[4 * idx + 1] = id2;
                         this.orig!.data[4 * idx + 2] = cls;
@@ -326,11 +335,11 @@ export class GraphicMask extends PIXIContainer {
             }
         } else if (fillType === 'remove') {
             const fusedVal = fuseId(newVal);
-            for (let x = 0; x < width; x++) {
-                for (let y = 0; y < height; y++) {
-                    const idx = (x + box[0] + (y + box[1]) * this.canvas.width);
+            for (let x = 0; x < widthroi; x++) {
+                for (let y = 0; y < heightroi; y++) {
+                    const idx = (x + roi[0] + (y + roi[1]) * this.canvas.width);
                     const pixId = this.pixelId(idx);
-                    if (mask[y * width + x] === 1 && !this.lockedInstances.has(fuseId(pixId))
+                    if (mask[(y+decy)*width + (x+decx)] === 1 && !this.lockedInstances.has(fuseId(pixId))
                         && fuseId(pixId) == fusedVal) {
                         this.orig!.data[4 * idx] = 0;
                         this.orig!.data[4 * idx + 1] = 0;
@@ -350,13 +359,19 @@ export class GraphicMask extends PIXIContainer {
 
     /**
      * Update panoptic mask with a polygon to be filled with given panoptic value
-     * @param polygon 
-     * @param id 
-     * @param fillType 
+     * @param polygon an array of points (points must be represented by integers)
+     * @param id new pixel/class value (corresponds to color for rendering)
+     * @param fillType 'add' or 'remove'
      */
-    public updateByPolygon(polygon: Point[], id: [number, number, number], fillType='add') {
+    public updateByPolygon(polygon: Point[], id: [number, number, number], fillType: 'add' | 'remove' ='add') {
         const pixels = this.ctx.getImageData(0,0,this.canvas.width, this.canvas.height);
-        const [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
+        let [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
+        //respect image boundaries
+        if (xMin<0) xMin=0;
+        if (yMin<0) yMin=0;
+        if (xMax>this.canvas.width) xMax=this.canvas.width-1;
+        if (yMax>this.canvas.height) yMax=this.canvas.height-1;
+
         if (this.lockedInstances.has(fuseId(id))) {
             // do not update locked instances
             return;
@@ -404,6 +419,13 @@ export class GraphicMask extends PIXIContainer {
         this.ctx.putImageData(pixels, 0, 0, 0, 0, this.canvas.width, this.canvas.height);
         this.colorMask.texture.update();
     }
+	/**
+	 * Delete an instance
+	 * @param id instance to delete
+	 */
+	public deleteInstance(id: [number, number, number]) {
+		this.replaceValue(id, [0, 0, 0]);//replace all corresponding mask's pixels
+	}
 
     /**
      * Get region blob contour for a given panoptic value

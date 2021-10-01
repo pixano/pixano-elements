@@ -4,26 +4,16 @@
  * @license CECILL-C
  */
 
-//  import * as ObjectDetectors from '@tensorflow-models/coco-ssd';
- import { Detection, Rectangle, Point } from './structures';
- import * as tf from '@tensorflow/tfjs';
+
+import { Detection, Rectangle, Point } from './structures';
+import * as tf from '@tensorflow/tfjs';
  
-//const MODEL_PATH = './web_model/model.json';
-//tf.loadGraphModel(MODEL_PATH).then((model)=> {
-//   const empty = tf.zeros([1, 3, 384, 512]);
-//   model.executeAsync({'images:0': empty}, ['Identity:0', 'Identity_1:0']).then((output)=>{
-//     console.info('Model loaded', output);
-//     const boxes = (output as any)[0].dataSync()
-//     const scores = (output as any)[1].arraySync()
-//    });
-//  });
- 
- /**
-  * Detection from click with a mobilenet ssd.
-  */
- export class PixelToBoundingBox {
-   private model: tf.GraphModel | null = null;
-   public modelPath = './web_model/model.json';
+/**
+ * Detection from click with a mobilenet ssd.
+ */
+export class PixelToBoundingBox {
+  private model: tf.GraphModel | null = null;
+  public modelPath = './web_model/model.json';
 
   private loadedModelPath = '';
 
@@ -179,13 +169,13 @@
 }
 
 /**
-* Test if a point is inside the given rectangle.
-*
-* @param `p` Point the candidate point.
-* @param `rectangle` Rectangle the target rectangle.
-*
-* Return true if the point `p` is inside the rectangle `rectangle`.
-*/
+ * Test if a point is inside the given rectangle.
+ *
+ * @param `p` Point the candidate point.
+ * @param `rectangle` Rectangle the target rectangle.
+ *
+ * Return true if the point `p` is inside the rectangle `rectangle`.
+ */
 export function isInside(p: Point, rect: Rectangle) {
   return (
     rect.l <= p.x &&

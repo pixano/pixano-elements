@@ -279,14 +279,14 @@ function simplifyDouglasPeucker(points: [number, number][], sqTolerance: number)
 /**
  * Simplify polygon
  * @param points Array<[number, number]> input points
- * @param tolerance
+ * @param tolerance number
  * @param highestQuality
  */
-export function simplify(points: [number, number][], tolerance: number, highestQuality: boolean = false) {
+export function simplify(points: [number, number][], tolerance: number = 1, highestQuality: boolean = false) {
 
   if (points.length <= 2) return points;
 
-  const sqTolerance = tolerance !== undefined ? tolerance * tolerance : 1;
+  const sqTolerance = tolerance * tolerance;
   points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
   points = simplifyDouglasPeucker(points, sqTolerance);
 
