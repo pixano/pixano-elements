@@ -11,6 +11,10 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#doc] mise à jour de la procédure de livraison :
+	- préparation de la livraison par les masters, livraison effective tournante parmis les membres du core pour multiplier les contributeurs visibles à Pixano sans prendre de risque sur la diffusion du contenu
+	- décision de ce qui est puiblique ou non par le core
+	- [ ] gestion de ces livraisons via https://github.com/google/copybara ? => semble parfait sur le papier, mais semble lourd à mettre en place...
 - [ ] [#doc] il faudrait avoir une carte générale des événements : qui les envoie, et à quelle occasion
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [ ] [#interface] mettre en correspndance chaque bouton avec un raccourci clavier (et l'afficher dans l'aide du bouton)
@@ -70,6 +74,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#interface] un message durant le chargement serait sympa
 - [ ] [#interface] idem segmentation : trop de boutons
 - [ ] [#interface] il manque le brush comme dans segmentation
+- [ ] [#feature] faire fonction l'union/soustraction comme pour brush
 
 ## npx serve demos/rectangle/
 - [ ] [#interface] avoir une touche pour créer une nouvelle instance OU enchainer les instances ici ?
