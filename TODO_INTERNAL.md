@@ -70,6 +70,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
 - [x] adapter la taille du brush à la taille de l'image (sur cette image il est minuscule, est-ce vraiment utile ?)
 - [x] segmentation : le choix des couleurs doit être lié à la config choisie et non uniquement au mode
+- [ ] [#feature] possibilité de donner des attributs pour les segments
 
 ## npx serve demos/segmentation-interactive/
 - [ ] [#interface] un message durant le chargement serait sympa
