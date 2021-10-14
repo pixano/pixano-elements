@@ -75,6 +75,10 @@ export class Tracker {
 
     }
 
+	isLoaded() {
+		return this._loaded;
+	}
+
     /**
      * Set initial box
      * @param x left
