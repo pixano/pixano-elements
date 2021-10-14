@@ -186,7 +186,7 @@ export class Tracking extends Rectangle {
         window.addEventListener('keyup', (evt) => {
             this.isShiftKeyPressed = evt.shiftKey;
         });
-		this.setController('edit', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent}));
+		this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}));
         this.handleTrackSelection();
         this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
     }
