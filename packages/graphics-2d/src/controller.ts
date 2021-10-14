@@ -213,6 +213,7 @@ export class ShapesEditController extends Controller {
 
         // default behaviour is
         // cancel action if pointer is right or middle
+		console.log("onObjectDown")
         const button = (evt.data.originalEvent as PointerEvent).button;
         if ( button === 2 || button === 1) {
             return;
@@ -227,8 +228,10 @@ export class ShapesEditController extends Controller {
         // should trigger related observer
         const obj = [...this.graphics].find((o) => o.data === shape);
         if (!obj) {
+			console.log("pas d'obj !!!!")
             return;
         }
+		console.log("->doObjectSelection")
         this.renderer.stage.on('pointermove', this.onObjectMove);
         this.renderer.stage.on('pointerupoutside', this.onObjectUp);
         const changed = this.doObjectSelection(shape, evt.data.originalEvent.shiftKey);

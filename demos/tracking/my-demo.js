@@ -76,6 +76,7 @@ class MyDemo extends LitElement {
   firstUpdated() {
     window.addEventListener('keydown', (evt) => {
       if (evt.key == 't') {
+		  console.log("t")
         this.element.mode = 'tracking';
       }
     });

@@ -186,25 +186,28 @@ export class Tracking extends Rectangle {
         window.addEventListener('keyup', (evt) => {
             this.isShiftKeyPressed = evt.shiftKey;
         });
+		this.setController('edit', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent}));
         this.handleTrackSelection();
         this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
-        this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}))
     }
 
     /**
      * Extend shape controller onObjectDown to handle track selection
      */
     protected handleTrackSelection() {
-        const editController = (this.modes.edit as ShapesEditController);
+        const editController = (this.modes['edit'] as ShapesEditController);
         editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
             const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
             this.selectTrack(shape.id, isShiftKey);
+			console.log("selecttrack=",shape.id)
             return firstClick;
         }
         editController.onRootDown = (evt: any) => {
+			console.log("onRootDown=",evt)
             if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
                 return;
             }
+			console.log("this.selectedTrackIds.size=",this.selectedTrackIds.size)
             if (this.selectedTrackIds.size) {
                 this.selectedTrackIds.clear();
                 this.targetShapes.clear();
