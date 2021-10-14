@@ -198,8 +198,16 @@ export function update_tracks(
 
     const templateTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(template, [2, 0, 1])), 'float32'));
     const searchTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(search, [2, 0, 1])), 'float32'));
-    const [predX1, predY1, predX2, predY2, scores2D] = tf.tidy(() => model.execute({ 'template': templateTensor, 'search': searchTensor }, ['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
-    templateTensor.dispose(); searchTensor.dispose();
+    const [scores2D, predX1, predX2, predY1, predY2] = tf.tidy(() => model.execute(
+		{ 'template': templateTensor, 'search': searchTensor },
+		['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']
+		) as tf.Tensor2D[]);
+	//predX1 = Identity_1:0
+	//predY1 = Identity_3:0
+	//predX2 = Identity_2:0
+	//predY2 = Identity_4:0
+	//scores2D = Identity:0
+	templateTensor.dispose(); searchTensor.dispose();
 
     // size penalty
     const sC = tf.tidy(() => change(sz(predX2.sub(predX1), predY2.sub(predY1)).div(sz_wh(scaledTargetSz)))); // scale penalty
