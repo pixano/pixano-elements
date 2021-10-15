@@ -11,10 +11,10 @@ import { MaskVisuMode } from './graphic-mask';
 import { SmartCreateController } from './controller-mask-interactive';
 
 /**
- * `<pxn-segmentation>` Basic segmentation editor.
- * Use `<pxn-segmentation>` in your document with its src image.
+ * `<pxn-segmentation-interactive>` Advanced segmentation editor with smart segmentation capability.
+ * Use `<pxn-segmentation-interactive>` in your document with its src image.
  * <body>
- *   <pxn-segmentation></pxn-segmentation>
+ *   <pxn-segmentation-interactive></pxn-segmentation-interactive>
  * @customElement
  *
  */
@@ -27,12 +27,8 @@ export class SegmentationInteractive extends Segmentation {
   constructor() {
     super();
     this.maskVisuMode = MaskVisuMode.INSTANCE;
-    this.setController('smart-create', new SmartCreateController({
-        renderer: this.renderer,
-        gmask: this.gmask,
-        targetClass: this._targetClass,
-        dispatchEvent: this.dispatchEvent})
-    );
+	//add smart segmentation creation controller
+	this.modes['smart-create'] = new SmartCreateController({...this} as any);
   }
 
   updated(changedProperties: any) {

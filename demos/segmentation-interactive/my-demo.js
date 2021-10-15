@@ -4,7 +4,7 @@
  * @license CECILL-C
 */
 
-import '@pixano/graphics-2d/lib/pxn-segmentation-interactive';
+import '@pixano/graphics-2d/';
 import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
