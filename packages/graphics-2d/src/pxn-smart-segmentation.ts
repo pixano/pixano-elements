@@ -8,18 +8,18 @@
 import { customElement, property } from 'lit-element';
 import { Segmentation } from './pxn-segmentation';
 import { MaskVisuMode } from './graphic-mask';
-import { SmartCreateController } from './controller-mask-interactive';
+import { SmartCreateController } from './controller-smart-mask';
 
 /**
- * `<pxn-segmentation-interactive>` Advanced segmentation editor with smart segmentation capability.
- * Use `<pxn-segmentation-interactive>` in your document with its src image.
+ * `<pxn-smart-segmentation>` Advanced segmentation editor with smart segmentation capability.
+ * Use `<pxn-smart-segmentation>` in your document with its src image.
  * <body>
- *   <pxn-segmentation-interactive></pxn-segmentation-interactive>
+ *   <pxn-smart-segmentation></pxn-smart-segmentation>
  * @customElement
  *
  */
-@customElement('pxn-segmentation-interactive' as any)
-export class SegmentationInteractive extends Segmentation {
+@customElement('pxn-smart-segmentation' as any)
+export class SmartSegmentation extends Segmentation {
 
   @property({type: String})
   public model: string = 'https://raw.githubusercontent.com/pixano/pixano.github.io/master/models/box_model/model.json';
