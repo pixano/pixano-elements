@@ -128,14 +128,14 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation-interactive image="${this.image}" mode="smart-create" disablefullscreen>
-          </pxn-segmentation-interactive>
+          <pxn-smart-segmentation image="${this.image}" mode="smart-create" disablefullscreen>
+          </pxn-smart-segmentation>
           ${this.rightPanel}
         </main>`;
   }
 
   get element() {
-    return this.shadowRoot.querySelector('pxn-segmentation-interactive');
+    return this.shadowRoot.querySelector('pxn-smart-segmentation');
   }
   
 }
