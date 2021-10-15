@@ -11,10 +11,12 @@ export class TrackingSmartController extends RectangleCreateController {
     nextFrame: () => any;
 
     private tracker = new Tracker();
+	private Box2Track: [number, number, number, number] = [0,0,0,0];
 
     constructor(props: Partial<TrackingSmartController>) {
         super(props);
         this.nextFrame = props.nextFrame || (() => {});
+		this.Box2Track = [0,0,0,0];
     }
 
     bindings() {
@@ -38,7 +40,7 @@ export class TrackingSmartController extends RectangleCreateController {
     keyBindings(e: KeyboardEvent) {
         if (e.key === 'n') {
 			console.log("n")
-            // this.track();
+            this.track(this.Box2Track[0],this.Box2Track[1],this.Box2Track[2],this.Box2Track[3]);
         }
     }
 
@@ -57,20 +59,24 @@ export class TrackingSmartController extends RectangleCreateController {
         const y = Math.round(ymin*this.renderer.imageHeight);
         const w = Math.round(xmax*this.renderer.imageWidth) - x;
         const h = Math.round(ymax*this.renderer.imageHeight) - y;
+		console.log("in=",x,y,w,h)
         this.tracker.initBox(im0, x, y, w, h);
         this.nextFrame().then(() => {
             const im1 = this.renderer.image;
-            const res = this.tracker.run(im1);
+            var res = this.tracker.run(im1);
 			console.log("res=",res)
+			this.Box2Track = [Math.trunc(res[0]),Math.trunc(res[1]),Math.trunc(res[2]),Math.trunc(res[3])];
 
-            // const target = this.targetShapes.values().next().value;
-            // target.geometry.vertices = [
-            //     res[0]/this.renderer.imageWidth,
-            //     res[1]/this.renderer.imageHeight,
-            //     (res[0]+res[2])/this.renderer.imageWidth,
-            //     (res[1]+res[3])/this.renderer.imageHeight
-            // ]
-            // this.emitUpdate();
+            const target = this.targetShapes.values().next().value;
+            target.geometry.vertices = [
+                res[0]/this.renderer.imageWidth,
+                res[1]/this.renderer.imageHeight,
+                (res[0]+res[2])/this.renderer.imageWidth,
+                (res[1]+res[3])/this.renderer.imageHeight
+            ]
+			this.Box2Track = [res[0]/this.renderer.imageWidth,res[1]/this.renderer.imageHeight,(res[0]+res[2])/this.renderer.imageWidth, (res[1]+res[3])/this.renderer.imageHeight];
+			console.log("Box2Track suivante=",this.Box2Track[0],this.Box2Track[1],this.Box2Track[2],this.Box2Track[3])
+            this.emitUpdate();
         });
     }
 
@@ -82,17 +88,19 @@ export class TrackingSmartController extends RectangleCreateController {
         const xmax = Math.max(v[0], v[2]);
         const ymin = Math.min(v[1], v[3]);
         const ymax = Math.max(v[1], v[3]);
-		this.track(xmin,ymin,xmax,ymax)
+		this.Box2Track = [xmin,ymin,xmax,ymax];
+		console.log("in=",xmin,ymin,xmax,ymax)
+		// this.track(this.Box2Track[0],this.Box2Track[1],this.Box2Track[2],this.Box2Track[3]);
 
 
 
-        // shape.data.id = Math.random().toString(36).substring(7);
-        // shape.data.geometry.vertices = [xmin, ymin, xmax, ymax];
-        // this.renderer.stage.removeChild(shape);
-        // shape.destroy();
-        // this.tmpShape = null;
-        // this.shapes.add(shape.data);
-        // this.emitCreate();
+        shape.data.id = Math.random().toString(36).substring(7);
+        shape.data.geometry.vertices = [xmin, ymin, xmax, ymax];
+        this.renderer.stage.removeChild(shape);
+        shape.destroy();
+        this.tmpShape = null;
+        this.shapes.add(shape.data);
+        this.emitCreate();
     }
 }
 

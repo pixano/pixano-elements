@@ -114,6 +114,10 @@ export class Tracking extends Rectangle {
 
     constructor() {
         super();
+		this.modes['tracking'] = new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)});//{ ...this } as any);
+        this.handleTrackSelection();
+        this.modes['point'] = new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent});
+
         this.addEventListener('timestamp', () => {
             this.drawTracks();
         });
@@ -186,9 +190,6 @@ export class Tracking extends Rectangle {
         window.addEventListener('keyup', (evt) => {
             this.isShiftKeyPressed = evt.shiftKey;
         });
-		this.setController('tracking', new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)}));
-        this.handleTrackSelection();
-        this.setController('point', new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
     }
 
     /**
@@ -281,7 +282,7 @@ export class Tracking extends Rectangle {
         this.selectedShapeIds = [newTrack.id];
         this.drawTracks();
         this.requestUpdate();
-        this.mode = 'edit';//back to edit mode after each new creation
+        // this.mode = 'edit';//back to edit mode after each new creation
     }
 
     /**
