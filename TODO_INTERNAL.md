@@ -73,11 +73,11 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] segmentation : le choix des couleurs doit être lié à la config choisie et non uniquement au mode
 - [ ] [#feature] possibilité de donner des attributs pour les segments
 
-## npx serve demos/segmentation-interactive/
+## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa
 - [ ] [#interface] idem segmentation : trop de boutons
 - [ ] [#interface] il manque le brush comme dans segmentation
-- [ ] [#feature] faire fonction l'union/soustraction comme pour brush
+- [x] [#feature] faire fonction l'union/soustraction comme pour brush
 
 ## npx serve demos/rectangle/
 - [ ] [#interface] avoir une touche pour créer une nouvelle instance OU enchainer les instances ici ?
