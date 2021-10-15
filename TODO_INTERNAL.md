@@ -35,6 +35,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#feature] Add update display and setOffet in view-controller
 - [x] [#feature] Add mouse position coordinates
 - [ ] [#feature] Rethink label attributes and when/how to set them
+- [ ] [#feature] pouvoir faire dispariatre/apparaitre toutes les annotations (typiquement pour voir ce qu'il y a derrière)
 
 ## npx serve demos/polygon/
 - [ ] [#interface] quel est le plus pratique :
