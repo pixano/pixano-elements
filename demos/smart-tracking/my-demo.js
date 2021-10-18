@@ -74,13 +74,16 @@ class MyDemo extends LitElement {
   }
 
   firstUpdated() {
-    this.element.categories = [
-      { name: 'car', color: "green", properties: [] },
-      { name: 'truck', color: "#eca0a0", properties: [
-        {name: 'posture', type: 'dropdown', enum: ['toto', 'bending', 'sitting', 'lying'],persistent: false, default: 'toto'},
-        {name: 'difficult', type: 'checkbox',persistent: false, default: false}
-      ]}
-    ];
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key == 't') {
+		  console.log("t")
+        this.element.mode = 'create';
+      }
+    });
+    // this.element.categories = [
+    //   { name: 'car', color: "green", properties: [] },
+    //   { name: 'truck', color: "#eca0a0", properties: [{name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],persistent: false, default: 'standing'}]}
+    // ];
   }
 
 
@@ -89,13 +92,13 @@ class MyDemo extends LitElement {
   }
 
   render() {   
-    return html`<pxn-tracking id="test"
+    return html`<pxn-smart-tracking id="test"
                               .tracks=${this.tracks}
                               .input=${this.images}
                               @create-track=${(e) => console.log('create track', e.detail)}
                               @selection-track=${(e) => console.log('selection track', e.detail)}
                               @update-tracks=${(e) => console.log('update tracks', e.detail)}
-                              @delete-track=${(e) => console.log('delete track', e.detail)}></pxn-tracking>`;
+                              @delete-track=${(e) => console.log('delete track', e.detail)}></pxn-smart-tracking>`;
   }
 }
 

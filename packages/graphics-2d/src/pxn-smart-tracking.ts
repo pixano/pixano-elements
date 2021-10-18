@@ -10,11 +10,10 @@ import '@material/mwc-icon-button';
 import '@material/mwc-icon-button-toggle';
 import '@material/mwc-button';
 import '@material/mwc-select';
-import '@material/mwc-list/mwc-list';
-import '@material/mwc-list/mwc-list-item';
+import '@material/mwc-list/mwc-list.js';
+import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-dialog';
-import '@material/mwc-checkbox';
-import '@material/mwc-formfield';
+import '@material/mwc-list/mwc-list-item';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
@@ -34,12 +33,13 @@ import { getShape,
     invertColor,
 	getNumKeyShapes} from './utils-video';
 import { ShapesEditController } from './controller';
+import { TrackingSmartController } from './controller-tracking';
 import { ClickController } from "./controller-tracking";
 import { style2d } from './style';
 
 
-@customElement('pxn-tracking' as any)
-export class Tracking extends Rectangle {
+@customElement('pxn-smart-tracking' as any)
+export class SmartTracking extends Rectangle {
 
     @property({type: Object})
     public tracks: {[key: string]: TrackData} = {};
@@ -114,6 +114,7 @@ export class Tracking extends Rectangle {
 
     constructor() {
         super();
+		this.modes['create'] = new TrackingSmartController({renderer: this.renderer, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent, nextFrame: this.nextFrame.bind(this)});//{ ...this } as any);
         this.handleTrackSelection();
         this.modes['point'] = new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent});
 
@@ -199,12 +200,15 @@ export class Tracking extends Rectangle {
         editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
             const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
             this.selectTrack(shape.id, isShiftKey);
+			console.log("selecttrack=",shape.id)
             return firstClick;
         }
         editController.onRootDown = (evt: any) => {
+			console.log("onRootDown=",evt)
             if (evt.data.originalEvent.button === 2 || evt.data.originalEvent.button === 1) {
                 return;
             }
+			console.log("this.selectedTrackIds.size=",this.selectedTrackIds.size)
             if (this.selectedTrackIds.size) {
                 this.selectedTrackIds.clear();
                 this.targetShapes.clear();
@@ -278,7 +282,7 @@ export class Tracking extends Rectangle {
         this.selectedShapeIds = [newTrack.id];
         this.drawTracks();
         this.requestUpdate();
-        this.mode = 'edit';//back to edit mode after each new creation
+        // this.mode = 'edit';//back to edit mode after each new creation
     }
 
     /**
@@ -485,15 +489,8 @@ export class Tracking extends Rectangle {
             ${prop.enum.map((v: any) => {
                 return html`<mwc-list-item value="${v}" ?selected="${v === value}">${v}</mwc-list-item>`
             })}
-            </mwc-select>`
-        } else if (shape && prop.type === 'checkbox') {
-            const checked = shape.labels[prop.name];
-            return html`
-            <mwc-formfield label="${prop.name}">
-              <mwc-checkbox ?checked=${checked} @change=${
-                (evt: any) => { this.setProperty(t, prop.name, evt.path[0].checked) }
-              }></mwc-checkbox>
-            </mwc-formfield>`
+            </mwc-select>
+            `
         }
         return html``;
     }
