@@ -575,6 +575,9 @@ export abstract class ShapeCreateController extends Controller {
         const newShape = [...this.shapes].pop();
         this.targetShapes.set([newShape!]);
         this.emit('create', newShape);
+    }
+
+	protected emitSelection() {
         this.emit('selection', [...this.targetShapes].map((data) => data.id));
     }
 

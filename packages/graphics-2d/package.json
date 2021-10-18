@@ -19,8 +19,11 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
+    "@material/mwc-ripple": "0.19.1",
     "@material/mwc-button": "0.19.1",
     "@material/mwc-dialog": "0.19.1",
+    "@material/mwc-formfield": "0.19.1",
+    "@material/mwc-checkbox": "0.19.1",
     "@material/mwc-icon-button": "0.19.1",
     "@material/mwc-icon-button-toggle": "0.19.1",
     "@material/mwc-list": "0.19.1",

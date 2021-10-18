@@ -10,10 +10,11 @@ import '@material/mwc-icon-button';
 import '@material/mwc-icon-button-toggle';
 import '@material/mwc-button';
 import '@material/mwc-select';
-import '@material/mwc-list/mwc-list.js';
-import '@material/mwc-list/mwc-list-item.js';
-import '@material/mwc-dialog';
+import '@material/mwc-list/mwc-list';
 import '@material/mwc-list/mwc-list-item';
+import '@material/mwc-dialog';
+import '@material/mwc-checkbox';
+import '@material/mwc-formfield';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
@@ -489,8 +490,15 @@ export class Tracking extends Rectangle {
             ${prop.enum.map((v: any) => {
                 return html`<mwc-list-item value="${v}" ?selected="${v === value}">${v}</mwc-list-item>`
             })}
-            </mwc-select>
-            `
+            </mwc-select>`
+        } else if (shape && prop.type === 'checkbox') {
+            const checked = shape.labels[prop.name];
+            return html`
+            <mwc-formfield label="${prop.name}">
+              <mwc-checkbox ?checked=${checked} @change=${
+                (evt: any) => { this.setProperty(t, prop.name, evt.path[0].checked) }
+              }></mwc-checkbox>
+            </mwc-formfield>`
         }
         return html``;
     }

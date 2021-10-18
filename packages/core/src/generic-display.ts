@@ -133,7 +133,6 @@ export abstract class GenericDisplay extends LitElement {
        * @param {number} frameIndex - index of frame to load
        */
       set frameIdx(frameIndex: number) {
-		  console.log("set frame")
         if (!this.isSequence) {
           return;
         }
