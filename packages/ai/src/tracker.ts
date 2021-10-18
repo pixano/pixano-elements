@@ -117,7 +117,7 @@ export class Tracker {
     }
 
     run(im: HTMLImageElement) {
-        // console.time('inference')
+        console.time('inference')
         const currentFrame = tf.tidy(() => tf.browser.fromPixels(im).reverse(-1));
 
         const search = tf.tidy(() => get_subwindow_tracking(currentFrame,
@@ -131,7 +131,7 @@ export class Tracker {
             this.p));
         search.dispose();
         const location = cxy_wh_2_rect(this.targetPos, this.targetSz);
-        // console.timeEnd('inference')
+        console.timeEnd('inference')
         return location;
     }
 
@@ -175,6 +175,7 @@ export function update_tracks(
     }): [number, number][] {
     const scaledTargetSz = [targetSz[0] * scaleZ, targetSz[1] * scaleZ];
 
+	var start = new Date().getTime();
     // uncomment this section if using the model which does not including the postprocessing
     // const [grid_to_search_x, grid_to_search_y] = tf.tidy(() => {return grid(p.score_size, p.total_stride, p.instance_size);});
 
@@ -198,10 +199,12 @@ export function update_tracks(
 
     const templateTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(template, [2, 0, 1])), 'float32'));
     const searchTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(search, [2, 0, 1])), 'float32'));
+	console.log("t=",(new Date().getTime()-start));
     const [scores2D, predX1, predX2, predY1, predY2] = tf.tidy(() => model.execute(
 		{ 'template': templateTensor, 'search': searchTensor },
 		['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']
 		) as tf.Tensor2D[]);
+	console.log("t exec=",(new Date().getTime()-start));
 	//predX1 = Identity_1:0
 	//predY1 = Identity_3:0
 	//predX2 = Identity_2:0
@@ -278,6 +281,7 @@ export function update_tracks(
 
     const resW = predW * lr + (1 - lr) * newTargetSz[0];
     const resH = predH * lr + (1 - lr) * newTargetSz[1];
+	console.log("t=",(new Date().getTime()-start));
 
     return [
         [resXs, resYs], // pred_targetPos

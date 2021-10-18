@@ -104,7 +104,7 @@ export class TrackingSmartController extends RectangleCreateController {
     }
 }
 
-
+//... à remonter dasn Canvas2D
 export class ClickController extends ShapeCreateController {
 
     protected onRootDown(evt: PIXI.InteractionEvent) {
