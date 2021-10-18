@@ -114,7 +114,7 @@ During the merge / before commiting, **do not include / delete files and interna
 	npx serve demos/polygon/
 	npx serve demos/graph/
 	npx serve demos/segmentation/
-	npx serve demos/segmentation-interactive/
+	npx serve demos/smart-segmentation/
 	npx serve demos/rectangle/
 	npx serve demos/smart-rectangle/
 	npx serve demos/tracking/

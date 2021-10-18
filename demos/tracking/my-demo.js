@@ -80,10 +80,13 @@ class MyDemo extends LitElement {
         this.element.mode = 'tracking';
       }
     });
-    // this.element.categories = [
-    //   { name: 'car', color: "green", properties: [] },
-    //   { name: 'truck', color: "#eca0a0", properties: [{name: 'posture', type: 'dropdown', enum: ['standing', 'bending', 'sitting', 'lying'],persistent: false, default: 'standing'}]}
-    // ];
+    this.element.categories = [
+      { name: 'car', color: "green", properties: [] },
+      { name: 'truck', color: "#eca0a0", properties: [
+        {name: 'posture', type: 'dropdown', enum: ['toto', 'bending', 'sitting', 'lying'],persistent: false, default: 'toto'},
+        {name: 'difficult', type: 'checkbox',persistent: false, default: false}
+      ]}
+    ];
   }
 
 
