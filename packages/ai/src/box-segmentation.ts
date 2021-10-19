@@ -5,7 +5,7 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
-import { BlobExtractor2d, simplify, convertIndexToDict } from '@pixano/core/lib/utils';
+import { BlobExtractor2d, simplify, convertIndexToDict, checkPathExists} from '@pixano/core/lib/utils';
 /**
  * Detection from click with a mobilenet ssd.
  */
@@ -22,7 +22,7 @@ export class BoxSegmentation {
   }
 
   async load() {
-    if (!this.checkPathExists(this.modelPath)) {
+    if (!checkPathExists(this.modelPath)) {
       console.warn('Unknown path', this.modelPath);
       return;
     }
@@ -41,18 +41,6 @@ export class BoxSegmentation {
       console.info('Model loaded', this.modelPath);
     } catch (err) {
       console.warn('Failed to load model at path', this.modelPath, err);
-    }
-  }
-
-  private checkPathExists(path: string) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('HEAD', path, false);
-    xhr.send();
-
-    if (xhr.status === 404) {
-        return false;
-    } else {
-        return true;
     }
   }
 

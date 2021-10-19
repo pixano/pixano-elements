@@ -21,11 +21,11 @@ export class SmartTracking extends Tracking {
 	@property({type: Boolean})
 	public isTrackTillTheEndChecked: boolean = true;
 
+	@property({type: String})
+	public model: string = 'https://raw.githubusercontent.com/pixano/pixano.github.io/master/models/track_model/model.json';
+
 	constructor() {
 		super();
-		// load the model
-		this.tracker.loadModel().then(() => console.info('Model loaded'));
-
 		// events specific to smart-tracking
 		window.addEventListener('keydown', (evt) => {
 			if (evt.key === 't') {
@@ -34,6 +34,14 @@ export class SmartTracking extends Tracking {
 				else this.trackTillNextFrame();
 			}
 		});
+	}
+
+	updated(changedProperties: any) {
+		super.updated(changedProperties);
+		if (changedProperties.has('model')) {
+			// load the model
+			this.tracker.loadModel(this.model).then(() => console.info('Model loaded'));
+		}
 	}
 
 	protected delay(ms: number) {
