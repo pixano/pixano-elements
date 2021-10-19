@@ -34,9 +34,7 @@ import { getShape,
     invertColor,
 	getNumKeyShapes} from './utils-video';
 import { ShapesEditController } from './controller';
-import { ClickController } from "./controller-tracking";
 import { style2d } from './style';
-
 
 @customElement('pxn-tracking' as any)
 export class Tracking extends Rectangle {
@@ -115,7 +113,6 @@ export class Tracking extends Rectangle {
     constructor() {
         super();
         this.handleTrackSelection();
-        this.modes['point'] = new ClickController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent});
 
         this.addEventListener('timestamp', () => {
             this.drawTracks();

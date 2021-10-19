@@ -174,6 +174,13 @@ export abstract class GenericDisplay extends LitElement {
         });
       }
 
+	  public isLastFrame() : Boolean {
+		const currIdx = this._targetFrameIdx as number;
+		const maxIdx = this.maxFrameIdx as number;
+		if (currIdx >= maxIdx) return true;
+		return false;
+	  }
+
       /**
        * Fired on playback slider update.
        * @param {CustomEvent} evt
