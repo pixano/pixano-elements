@@ -179,7 +179,9 @@ export class Tracking extends Rectangle {
                 if (this.selectedTrackIds.size === 1) {
                     this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
                 }
-            }
+            } else if (evt.key === 'Escape') {
+				this.mode = 'edit';//back to edit mode
+			}
 
             this.isShiftKeyPressed = evt.shiftKey;
         });
@@ -531,8 +533,8 @@ export class Tracking extends Rectangle {
                             <div style="width: 100%;">
                                 <mwc-icon-button title="Go to previous keyframe" @click=${() => this.goToPreviousKeyFrame(t)} icon="keyboard_arrow_left"></mwc-icon-button>
                                 <mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
-                                <mwc-icon-button title="Go to first frame" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
-                                <mwc-icon-button title="Go to last frame" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
+                                <mwc-icon-button title="Go to first frame (f)" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
+                                <mwc-icon-button title="Go to last frame (l)" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
                                 </br>
                                 <mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
                                 <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
