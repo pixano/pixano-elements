@@ -1,5 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import { GraphModel } from '@tensorflow/tfjs';
+import { checkPathExists } from '@pixano/core/lib/utils';
 // tf.setBackend('cpu');
 tf.setBackend('webgl');
 // tf.setBackend('wasm');
@@ -39,6 +40,7 @@ export class Tracker {
 	scaleZ: number = -1;
 
 	_loaded: boolean = false;
+	private loadedModelPath = '';
 
 	constructor() {
 		this.window = tf.tensor([17, 17]) as tf.Tensor2D;
@@ -51,26 +53,41 @@ export class Tracker {
 		}
 	}
 
-	loadModel(): Promise<any> {
+	loadModel(modelPath: string): Promise<any> {
 		if (this._loaded) {
 			return Promise.resolve();
 		}
 		return new Promise((resolve) => {
-			tf.loadGraphModel('oceanBis_tfjs/model.json').then((model) => {
-				this.model = model;
-				// run idle the model once
-				const templateTensor = tf.zeros([1, 3, this.p.exemplar_size, this.p.exemplar_size]);
-				const searchTensor = tf.zeros([1, 3, this.p.instance_size, this.p.instance_size]);
-				tf.tidy(() => this.model!.execute(
-					{ 'template': templateTensor,
-					'search': searchTensor
-					},
-					['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
-				templateTensor.dispose();
-				searchTensor.dispose();
-				this._loaded = true;
-				resolve();
-			});
+			console.log("loading model: ",modelPath)
+
+			if (!checkPathExists(modelPath)) {
+				console.warn('Unknown path', modelPath);
+				return;
+			}
+			if (this.loadedModelPath === modelPath) {
+				console.info('Model already loaded');
+				return;
+			}
+			try {
+				this.loadedModelPath = modelPath;
+				tf.loadGraphModel(modelPath).then((model) => {
+					this.model = model;
+					// run idle the model once
+					const templateTensor = tf.zeros([1, 3, this.p.exemplar_size, this.p.exemplar_size]);
+					const searchTensor = tf.zeros([1, 3, this.p.instance_size, this.p.instance_size]);
+					tf.tidy(() => this.model!.execute(
+						{ 'template': templateTensor,
+						'search': searchTensor
+						},
+						['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
+					templateTensor.dispose();
+					searchTensor.dispose();
+					this._loaded = true;
+					resolve();
+				});
+			} catch (err) {
+				console.warn('Failed to load model at path', modelPath, err);
+			}
 		})
 
 	}
