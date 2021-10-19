@@ -5,9 +5,10 @@
  * @license CECILL-C
  */
 
-import { customElement, html} from 'lit-element';
+import { customElement, html, property} from 'lit-element';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
+import '@material/mwc-switch';
 
 
 
@@ -17,6 +18,9 @@ export class SmartTracking extends Tracking {
 	// smart tracker
 	private tracker = new Tracker();
 
+	@property({type: Boolean})
+	public isTrackTillTheEndChecked: boolean = true;
+
 	constructor() {
 		super();
 		// load the model
@@ -25,11 +29,9 @@ export class SmartTracking extends Tracking {
 		// events specific to smart-tracking
 		window.addEventListener('keydown', (evt) => {
 			if (evt.key === 't') {
-				console.log("start tracking")
-				// if (...) this.trackTillNextFrame();
-				// else this.trackTillTheEnd();
-				// this.track();
-				this.trackTillTheEnd();
+				console.log("start tracking");
+				if (this.isTrackTillTheEndChecked) this.trackTillTheEnd();
+				else this.trackTillNextFrame();
 			}
 		});
 	}
@@ -98,13 +100,20 @@ export class SmartTracking extends Tracking {
 		});
 	}
 
-	/**
-	 * Display information tile of selected tracks
-	 * @param t track item
-	 */
-	get selectionSection() {
+	// overide leftPanel to add tracking properties
+	get leftPanel() {
+		const checked = this.isTrackTillTheEndChecked;
 		return html`
-		${super.selectionSection}
+		<div flexDirection: 'row'>
+			${super.leftPanel}
+			<div class="card">
+				<p>Continuous tracking
+				<mwc-switch ?checked=${checked}
+								title="track ones / track till the end (escape to stop tracking)"
+								@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
+								></mwc-switch></p>
+			</div>
+		</div>
 		`;
 	}
 }
