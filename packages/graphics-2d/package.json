@@ -28,6 +28,7 @@
     "@material/mwc-icon-button-toggle": "0.19.1",
     "@material/mwc-list": "0.19.1",
     "@material/mwc-select": "0.19.1",
+    "@material/mwc-switch": "0.19.1",
     "@pixano/ai": "0.5.16",
     "@pixano/core": "0.5.16",
     "lit-element": "2.4.0",
