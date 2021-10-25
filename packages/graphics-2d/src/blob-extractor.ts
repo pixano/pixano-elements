@@ -327,7 +327,6 @@ export class BlobExtractor {
      * @param needLabel whether we need the computed mask
      */
     public extract(targetId: [number, number, number], needLabel: boolean = false) {
-        var start = new Date().getTime();
 
 		this.targetId = targetId;
 		// initialising to BlobExtractor.UNSET
@@ -347,9 +346,9 @@ export class BlobExtractor {
 		// console.log("max=",this.max);
 		// console.log("auglabel=",this.augLabel[450000]);
 
-        let c = 0;
+    let c = 0;
         // let y = this.extrema[1];
-		console.log("f1=",(new Date().getTime()-start));
+		// console.log("f1=",(new Date().getTime()-start));
 		// computing
 		var posi = 0;
 		for (let j = this.extrema[1]; j <= this.extrema[3]; j++) {
@@ -397,9 +396,6 @@ export class BlobExtractor {
 		}
 
 
-		console.log("f2'=",(new Date().getTime()-start));
-
-
         // do {
         //   let x = this.extrema[0];
         //   do {
@@ -445,7 +441,6 @@ export class BlobExtractor {
         //   } while (x++ <= this.extrema[2]);
         // } while (y++ <= this.extrema[3]);
 
-		console.log("f2=",(new Date().getTime()-start));
         if (needLabel) {
 			// var posi = 0;
 			// for (let j = 0; j < this.height; j++) {
@@ -461,7 +456,6 @@ export class BlobExtractor {
                 }
             }
         }
-		console.log("ff=",(new Date().getTime()-start));
     }
 
     isEqualXY(x: number, y: number) {
