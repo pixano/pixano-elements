@@ -249,11 +249,11 @@ export class Segmentation extends Canvas {
    */
   public toggleMask() {
     if (this.renderer.labelLayer.alpha === this.opacity) {
-      this.renderer.labelLayer.alpha = 1;
-      this.renderer.backgroundSprite.visible = false;
-    } else if (this.renderer.labelLayer.alpha === 1) {
       this.renderer.labelLayer.alpha = 0;
       this.renderer.backgroundSprite.visible = true;
+    } else if (this.renderer.labelLayer.alpha === 0) {
+      this.renderer.labelLayer.alpha = 1;
+      this.renderer.backgroundSprite.visible = false;
     } else {
       this.renderer.backgroundSprite.visible = true;
       this.renderer.labelLayer.alpha = this.opacity;
