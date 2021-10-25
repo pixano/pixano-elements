@@ -11,8 +11,11 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#doc] mise à jour de la procédure de livraison :
+	- préparation de la livraison par les masters, livraison effective tournante parmis les membres du core pour multiplier les contributeurs visibles à Pixano sans prendre de risque sur la diffusion du contenu
+	- décision de ce qui est puiblique ou non par le core
+	- [ ] gestion de ces livraisons via https://github.com/google/copybara ? => semble parfait sur le papier, mais semble lourd à mettre en place...
 - [ ] [#doc] il faudrait avoir une carte générale des événements : qui les envoie, et à quelle occasion
-- [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [ ] [#interface] mettre en correspndance chaque bouton avec un raccourci clavier (et l'afficher dans l'aide du bouton, aide détaillée)
 - [x] [#interface] le zoom est conservé quand on passe d'une image à l'autre (dans app)
 - [o] auto-tests dans gitlab :
@@ -31,6 +34,10 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#feature] Add update display and setOffet in view-controller
 - [x] [#feature] Add mouse position coordinates
 - [ ] [#feature] Rethink label attributes and when/how to set them
+- [x] [#feature] pouvoir faire dispariatre/apparaitre toutes les annotations (typiquement pour voir ce qu'il y a derrière)
+- [ ] [#feature] il faudrait un résumé de ce qui a été étiqueté (par exemple nombre de boites de piéton, nb boite véhicule, etc)
+- [ ] [#interface] rajouter davantage d'infos sur les boutons (bulle avec titre + description, plutôt que titre seul comme aujourd'hui)
+- [ ] [#feature] fonctionner par calque pour permettre des annotations de type différent => à définir plus précisément
 
 ## npx serve demos/polygon/
 - [ ] [#interface] quel est le plus pratique :
@@ -66,14 +73,18 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
 - [x] adapter la taille du brush à la taille de l'image (sur cette image il est minuscule, est-ce vraiment utile ?)
 - [x] segmentation : le choix des couleurs doit être lié à la config choisie et non uniquement au mode
+- [ ] [#feature] possibilité de donner des attributs pour les segments
+- [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 
-## npx serve demos/segmentation-interactive/
+## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa
 - [ ] [#interface] idem segmentation : trop de boutons
 - [ ] [#interface] il manque le brush comme dans segmentation
+- [x] [#feature] faire fonction l'union/soustraction comme pour brush
 
 ## npx serve demos/rectangle/
 - [ ] [#interface] avoir une touche pour créer une nouvelle instance OU enchainer les instances ici ?
+- [ ] [#feature] possibilité des rectangles avec rotation
 
 ## npx serve demos/smart-rectangle/
 - [ ] [#interface] retrouver les boutons de rectangle pour pouvoir sélectionner / corriger / déplacer les instances ?
@@ -84,6 +95,8 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [] ne devrait pas hériter de rectangle : on ne veut pas le limiter aux rectangles
 - [ ] [] d'ailleurs même le fichier ne devrait pas être dans graphics-2D => mais pose problème pour la publication => créer un dépôt dédié aux séries temporelles ? Çà a du sens ?
 - [ ] [#bug] Add Pixi import in controller-tracking
+- [ ] [#interface] play pour jouer toute la séquence
+- [ ] [#interface] aller à la frame numéro N
 
 ## npx serve demos/graph/
 - [x] [#feature #eurovanille] nombre et intitulés des keypoints réglables dynamiquement ou sans modification de code en dur
@@ -95,3 +108,4 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 	- [ ] [#feature] update 3d graphics with Valeo branch
 	- [ ] [#feature] remove image extension criteria to include file ending differently
 	- [ ] ["feature] start guidelines
+

@@ -113,6 +113,17 @@ export class Canvas extends GenericDisplay {
   }
 
   /**
+   * Toggle labels (hide / show)
+   */
+   public toggleLabels() {
+    if (this.hideLabels === false) {
+		this.hideLabels = true;
+    } else {
+		this.hideLabels = false;
+    }
+  }
+
+  /**
    * Handle copy keyboard event
    * Return the string you want to copy
    */
