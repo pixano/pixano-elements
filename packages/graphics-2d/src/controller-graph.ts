@@ -26,6 +26,7 @@ export class GraphsUpdateController extends ShapesEditController {
     }
 
     public activate() {
+        super.activate();
         // handle update mode for each shape
         this.graphics.forEach((s) => {
             if (s instanceof GraphicGraph) {

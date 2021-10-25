@@ -87,12 +87,10 @@ export class Canvas2d extends Canvas {
       }
     });
 
-
     this.observeShapeForDisplay();
     this.modes[this.mode].activate();
   }
 
-  
   switchMode() {
     const modes = Object.keys(this.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
@@ -153,6 +151,7 @@ export class Canvas2d extends Canvas {
         } as ShapeData)
         // Add new object to the list of annotations
         this.shapes.add(shape);
+        this.notifyCreate(shape);
       })
     }
   }

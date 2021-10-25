@@ -6,8 +6,8 @@
  */
 
 import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
-// import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
-import { PixelToBoundingBox } from "@pixano/ai/lib/lapnet";
+import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
+// import { PixelToBoundingBox } from "@pixano/ai/lib/lapnet";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, utils } from '@pixano/core';
 import { customElement, property } from "lit-element";
@@ -169,7 +169,7 @@ export class SmartRectangle extends Rectangle {
   public updated(changeProps: any){
     super.updated(changeProps);
     if (changeProps.has('modelPath')){
-      this.smartController.boundingBoxCreator.modelPath = this.modelPath;
+      // this.smartController.boundingBoxCreator.modelPath = this.modelPath;
       this.smartController.load();
     }
   }
