@@ -399,6 +399,15 @@ export class CreateBrushController extends Controller {
 		this._editionMode.value = EditionMode.NEW_INSTANCE;
 		this.initRoi();
     }
+
+    public deselect() {
+        if (this._selectedId.value) {
+            this.densePolygons = [];
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this._selectedId.value = null;
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
+        }
+    }
 }
 
 

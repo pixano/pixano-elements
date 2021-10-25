@@ -24,7 +24,7 @@ export abstract class GenericDisplay extends LitElement {
       public maxFrameIdx: number | null = null;
       public pendingLoad: boolean | null = null;
 
-	  @internalProperty()
+      @internalProperty()
       private _targetFrameIdx: number | null = null;
 
       // either use list item index as timestamp

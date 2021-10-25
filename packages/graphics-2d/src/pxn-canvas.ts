@@ -89,7 +89,10 @@ export class Canvas extends GenericDisplay {
   set data(img: HTMLImageElement) {
     if (img && img !== this.renderer.image) {
       this.renderer.image = img;
-      this.viewControls.reinit();
+      // Uncomment if you want to reset zoom whenever  changing image.
+      // Note that this is not the default behaviour to keep consistency
+      // For image sequences.
+      // this.viewControls.reinit();
     }
   }
 
