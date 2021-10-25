@@ -73,13 +73,13 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
 - [x] adapter la taille du brush à la taille de l'image (sur cette image il est minuscule, est-ce vraiment utile ?)
 - [x] segmentation : le choix des couleurs doit être lié à la config choisie et non uniquement au mode
-- [ ] [#feature] possibilité de donner des attributs pour les segments
+- [x] [#feature] possibilité de donner des attributs pour les segments
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 
 ## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa
-- [ ] [#interface] idem segmentation : trop de boutons
-- [ ] [#interface] il manque le brush comme dans segmentation
+- [x] [#interface] idem segmentation : trop de boutons
+- [x] [#interface] il manque le brush comme dans segmentation
 - [x] [#feature] faire fonction l'union/soustraction comme pour brush
 
 ## npx serve demos/rectangle/
