@@ -86,24 +86,27 @@ export class GraphicMask extends PIXIContainer {
      * Set the panoptic segmentation mask from given base64 encoding
      * @param buffer 
      */
-    setBase64(buffer: string) {
-      if (typeof buffer !== 'string') {
-        return;
-      }
-      const img = new Image();
-      const self = this;
-      img.onload = () => {
-        self.canvas.width = img.width;
-        self.canvas.height = img.height;
-        self.colorMask.destroy();
-        self.colorMask = new PIXISprite(PIXITexture.from(self.canvas));
-        self.removeChildren();
-        self.addChild(self.colorMask);
-        self.canvas.getContext('2d')!.drawImage(img, 0, 0, img.width, img.height);
-        const maskArray = self.canvas.getContext('2d')!.getImageData(0, 0, self.canvas.width, self.canvas.height);
-        self.setValue(maskArray);
-      };
-      img.src = `data:image/png;base64,${buffer.replace('data:image/png;base64,', '')}`;
+    setBase64(buffer: string): Promise<void> {
+        if (typeof buffer !== 'string') {
+          return Promise.resolve();
+        }
+        const img = new Image();
+        const self = this;
+        return new Promise((res) => {
+          img.onload = () => {
+              self.canvas.width = img.width;
+              self.canvas.height = img.height;
+              self.colorMask.destroy();
+              self.colorMask = new PIXISprite(PIXITexture.from(self.canvas));
+              self.removeChildren();
+              self.addChild(self.colorMask);
+              self.canvas.getContext('2d')!.drawImage(img, 0, 0, img.width, img.height);
+              const maskArray = self.canvas.getContext('2d')!.getImageData(0, 0, self.canvas.width, self.canvas.height);
+              self.setValue(maskArray);
+              res();
+            };
+            img.src = `data:image/png;base64,${buffer.replace('data:image/png;base64,', '')}`;
+        });
     }
 
     /**
