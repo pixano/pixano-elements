@@ -504,6 +504,9 @@ export class Tracking extends Rectangle {
      * @param t track item
      */
     get selectionSection() {
+        const selectedTracks = [...this.selectedTrackIds]
+                    .filter((tId) => this.tracks[tId])
+                    .map((tId) => this.tracks[tId]);
         return html`
         <div class="card">
             <p style="display: inline-flex; width: -webkit-fill-available; height: 20px;">
@@ -514,10 +517,9 @@ export class Tracking extends Rectangle {
                 </span>
             </p>
             <div>
-                ${[...this.selectedTrackIds].map((tId) => {
-                    const t = this.tracks[tId];
+                ${selectedTracks.map((t) => {
                     const currentShape = getShape(t, this.timestamp).keyshape;
-                    const color = trackColors[parseInt(tId) % trackColors.length];
+                    const color = trackColors[parseInt(t.id) % trackColors.length];
                     let isHidden = true;
                     const disabled = currentShape == null;
                     if (currentShape) {
