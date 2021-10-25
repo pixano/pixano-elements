@@ -240,6 +240,7 @@ export class CreateBrushController extends Controller {
         this.roi.clear();
         this.roi.cacheAsBitmap = true;
         this.contours.visible = false;
+		this.contours.clear();
     }
 
     /**

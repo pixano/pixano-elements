@@ -79,5 +79,6 @@ export class RectangleCreateController extends ShapeCreateController {
         this.tmpShape = null;
         this.shapes.add(shape.data);
         this.emitCreate();
+		this.emitSelection();//select the new created rectangle
     }
 }
