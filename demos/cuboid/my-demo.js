@@ -45,10 +45,7 @@ class MyDemo extends LitElement {
     });
     this.element.addEventListener("delete", e => console.log("delete", e.detail));
     this.element.addEventListener("update", e => console.log("update", e.detail));
-    this.element.addEventListener("selection", e => {
-      console.log("select", e.detail);
-      this.target = e.detail;
-    });
+    this.element.addEventListener("selection", e => this.target = e.detail);
     this.element.input = this.pcl;
   }
 
