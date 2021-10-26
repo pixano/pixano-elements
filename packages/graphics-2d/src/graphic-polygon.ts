@@ -193,6 +193,7 @@ export class GraphicPolygon extends Graphic {
             this.drawBox();
         } else if (this.state === 'contour' || this.state === 'nodes') {
             this.box.lineStyle(1, 0XFFFFFF, 1, 0.5, true);
+            this.area.lineStyle(1, 0XFFFFFF, 1, 0.5, true);
             if (this.data.geometry.vertices.length === 4) {
                 this.area.moveTo(points[0], points[1]);
                 this.area.lineTo(points[2], points[3]);

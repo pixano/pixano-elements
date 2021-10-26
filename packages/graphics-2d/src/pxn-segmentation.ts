@@ -51,8 +51,6 @@ export class Segmentation extends Canvas {
   // never destroyed, only updated
   protected gmask: GraphicMask = new GraphicMask();
 
-  private newMaskLoaded: boolean = false;
-
   public modes: {
     [key: string]: Controller;
   };
@@ -131,7 +129,7 @@ export class Segmentation extends Canvas {
   /**
    * Get base64 encoding of the panoptic segmentation mask
    */
-  public getMask() {
+  public getMask(): string {
     return this.gmask.getBase64();
   }
 
@@ -139,8 +137,9 @@ export class Segmentation extends Canvas {
    * Set the panoptic segmentation mask from a base64 encoding
    */
   public setMask(buffer: string) {
-    this.newMaskLoaded = true;
-    this.gmask.setBase64(buffer);
+    try { (this.modes[this.mode] as any).deselect();}
+    catch (err) {}
+    return this.gmask.setBase64(buffer);
   }
 
   /**
@@ -152,6 +151,8 @@ export class Segmentation extends Canvas {
     }
     this.gmask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
     this.selectedId = [-1, -1, -1];
+    try { (this.modes[this.mode] as any).deselect();}
+    catch (err) {}
   }
 
   /**
@@ -162,9 +163,10 @@ export class Segmentation extends Canvas {
     super.updated(changedProperties);
 
     if (changedProperties.has('mask') && this.mask && this.mask instanceof ImageData) {
-      this.newMaskLoaded = true;
       this.gmask.initialize(this.mask);
       this.selectedId = [-1, -1, -1];
+      try { (this.modes[this.mode] as any).deselect();}
+      catch (err) {}
     }
     if (changedProperties.has('mode') && this.mode) {
       const prevMode = changedProperties.get('mode');
@@ -324,8 +326,31 @@ export class Segmentation extends Canvas {
    * Called on image change
    */
   protected onImageChanged() {
-    if (!this.newMaskLoaded) {
+    if (this.gmask.canvas.width !== this.renderer.imageWidth ||
+        this.gmask.canvas.height !== this.renderer.imageHeight) {
+      // create empty mask if current size does not match image size
       this.setEmpty();
+    }
+  }
+
+  /**
+   * Handle copy keyboard event
+   * Return the entire segmentation mask
+   */
+  protected onCopy(): string | void {
+    return this.getMask();
+  }
+
+  /**
+   * Paste copied stuff
+   */
+  onPaste(text: string) {
+    if (text) {
+      this.setMask(text).then(() => {
+        this.dispatchEvent(new Event('update'));
+      })
+      try { (this.modes[this.mode] as any).deselect();}
+      catch (err) {}
     }
   }
 }

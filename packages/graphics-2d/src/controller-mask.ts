@@ -41,7 +41,7 @@ export class SelectController extends Controller {
     protected densePolygons: DensePolygon[] = new Array();
 
     constructor(props: Partial<SelectController> = {}) {
-        super();
+        super(props);
         this.renderer = props.renderer || new Renderer();
         this.gmask = props.gmask || new GraphicMask();
         this._selectedId = props._selectedId || { value: null };
@@ -395,6 +395,15 @@ export class CreateBrushController extends Controller {
 		// shift or ctrl released = return to default = create
 		this._editionMode.value = EditionMode.NEW_INSTANCE;
 		this.initRoi();
+    }
+
+    public deselect() {
+        if (this._selectedId.value) {
+            this.densePolygons = [];
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this._selectedId.value = null;
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
+        }
     }
 }
 

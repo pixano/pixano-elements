@@ -34,6 +34,7 @@ import { getShape,
 	invertColor,
 	getNumKeyShapes} from './utils-video';
 import { ShapesEditController } from './controller';
+// import { ClickController } from "./controller-tracking";
 import { style2d } from './style';
 
 
