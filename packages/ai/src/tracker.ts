@@ -1,12 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
 import { GraphModel } from '@tensorflow/tfjs';
-import { checkPathExists } from '@pixano/core/lib/utils';
-// tf.setBackend('cpu');
+import { loadGraphModel } from './tf-utils';
 tf.setBackend('webgl');
-// tf.setBackend('wasm');
 console.info('Tensorflow Backend :', tf.getBackend());
-// console.log('WEBGL_RENDER_FLOAT32_CAPABLE', tf.ENV.getBool('WEBGL_RENDER_FLOAT32_CAPABLE'));
-// console.log('WEBGL_RENDER_FLOAT32_ENABLED', tf.ENV.getBool('WEBGL_RENDER_FLOAT32_ENABLED'));
 
 
 export class Tracker {
@@ -20,14 +16,14 @@ export class Tracker {
 		window_influence: 0.321, // window_influence: 0.38,
 		lr: 0.730, // lr: 0.765,
 		windowing: 'cosine',
-		exemplar_size: 127,
-		instance_size: 255,
+		template_size: 127,
+		search_size: 255,
 		total_stride: 8,
-		score_size: Math.floor((255 - 127) / 8) + 1 + 8, //	Int((instance_size - exemplar_size)/(total_stride)) + 1 + 8  # for ++
+		score_size: Math.floor((255 - 127) / 8) + 1 + 8, //	Int((search_size - template_size)/(total_stride)) + 1 + 8  # for ++
 		context_amount: 0.5,
 		ratio: 0.93, // ratio: 0.94,
-		small_sz: 255,
-		big_sz: 271
+		// small_sz: 255,
+		// big_sz: 271
 	};
 	window: tf.Tensor2D;
 	template: tf.Tensor3D | null = null;
@@ -38,9 +34,6 @@ export class Tracker {
 	targetPos: [number, number] = [-1, -1];
 	targetSz: [number, number] = [-1, -1];
 	scaleZ: number = -1;
-
-	_loaded: boolean = false;
-	private loadedModelPath = '';
 
 	constructor() {
 		this.window = tf.tensor([17, 17]) as tf.Tensor2D;
@@ -53,47 +46,18 @@ export class Tracker {
 		}
 	}
 
-	loadModel(modelPath: string): Promise<any> {
-		if (this._loaded) {
-			return Promise.resolve();
+	async loadModel(modelPath: string): Promise<any> {
+        this.model = await loadGraphModel(modelPath);
+		if (this.model) {
+			// run idle the model once
+			const templateTensor = tf.zeros([1, 3, this.p.template_size, this.p.template_size]);
+			const searchTensor = tf.zeros([1, 3, this.p.search_size, this.p.search_size]);
+			tf.tidy(() => this.model!.execute(
+				{ 'template': templateTensor, 'search': searchTensor},
+				['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
+			templateTensor.dispose();
+			searchTensor.dispose();
 		}
-		return new Promise((resolve) => {
-			console.log("loading model: ",modelPath)
-
-			if (!checkPathExists(modelPath)) {
-				console.warn('Unknown path', modelPath);
-				return;
-			}
-			if (this.loadedModelPath === modelPath) {
-				console.info('Model already loaded');
-				return;
-			}
-			try {
-				this.loadedModelPath = modelPath;
-				tf.loadGraphModel(modelPath).then((model) => {
-					this.model = model;
-					// run idle the model once
-					const templateTensor = tf.zeros([1, 3, this.p.exemplar_size, this.p.exemplar_size]);
-					const searchTensor = tf.zeros([1, 3, this.p.instance_size, this.p.instance_size]);
-					tf.tidy(() => this.model!.execute(
-						{ 'template': templateTensor,
-						'search': searchTensor
-						},
-						['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
-					templateTensor.dispose();
-					searchTensor.dispose();
-					this._loaded = true;
-					resolve();
-				});
-			} catch (err) {
-				console.warn('Failed to load model at path', modelPath, err);
-			}
-		})
-
-	}
-
-	isLoaded() {
-		return this._loaded;
 	}
 
 	/**
@@ -107,9 +71,11 @@ export class Tracker {
 		if (!im) {
 			return;
 		}
+		// Dispose previous global tensors
+		this.template?.dispose();
+		this.avgChans?.dispose();
+
 		this.box0 = { x, y, w, h };
-		console.info('=======> Preparing Template... <=======');
-		console.log("in=",x,y,w,h)
 		const box = get_axis_aligned_bbox(this.box0!);
 		this.targetPos = [box.cx, box.cy];
 		this.targetSz = [box.w, box.h];
@@ -121,25 +87,23 @@ export class Tracker {
 
 		// pytorch model trained with BGR images.
 		const frameInit = tf.tidy(() => tf.browser.fromPixels(im).reverse(-1));
-		this.avgChans = frameInit.mean([0, 1]);
-
-		this.template = tf.tidy(() => get_subwindow_tracking(frameInit, this.targetPos, this.p.exemplar_size, sZ, this.avgChans!));
+		this.avgChans = tf.tidy(() => frameInit.mean([0, 1]));
+		
+		this.template = tf.tidy(() => get_subwindow_tracking(frameInit, this.targetPos, this.p.template_size, sZ, this.avgChans!));
 		frameInit.dispose();
 
-		this.scaleZ = this.p.exemplar_size / sZ;
-		const dSearch = (this.p.instance_size - this.p.exemplar_size) / 2;  // slightly different from rpn++
+		this.scaleZ = this.p.template_size / sZ;
+		const dSearch = (this.p.search_size - this.p.template_size) / 2;  // slightly different from rpn++
 		const pad = dSearch / this.scaleZ;
 		this.sX = python2round(sZ + 2 * pad);
-		// console.log('ratio', this.sX, box.w, sZ)
 		// sX = 1000;
 	}
 
-	run(im: HTMLImageElement) {
-		console.time('inference')
+	run(im: HTMLImageElement): number[] {
 		const currentFrame = tf.tidy(() => tf.browser.fromPixels(im).reverse(-1));
 
 		const search = tf.tidy(() => get_subwindow_tracking(currentFrame,
-			this.targetPos, this.p.instance_size,
+			this.targetPos, this.p.search_size,
 			this.sX, this.avgChans!));
 		currentFrame.dispose();
 
@@ -149,7 +113,6 @@ export class Tracker {
 			this.p));
 		search.dispose();
 		const location = cxy_wh_2_rect(this.targetPos, this.targetSz);
-		console.timeEnd('inference')
 		return location;
 	}
 
@@ -184,8 +147,8 @@ export function update_tracks(
 		window_influence: number,
 		lr: number,
 		windowing: string,
-		exemplar_size: number,
-		instance_size: number,
+		template_size: number,
+		search_size: number,
 		total_stride: number,
 		score_size: number,
 		context_amount: number,
@@ -193,9 +156,8 @@ export function update_tracks(
 	}): [number, number][] {
 	const scaledTargetSz = [targetSz[0] * scaleZ, targetSz[1] * scaleZ];
 
-	var start = new Date().getTime();
 	// uncomment this section if using the model which does not including the postprocessing
-	// const [grid_to_search_x, grid_to_search_y] = tf.tidy(() => {return grid(p.score_size, p.total_stride, p.instance_size);});
+	// const [grid_to_search_x, grid_to_search_y] = tf.tidy(() => {return grid(p.score_size, p.total_stride, p.search_size);});
 
 	// const templateTensor = tf.tidy(() => {return tf.cast(tf.expandDims(tf.transpose(template, [2, 0, 1])),'float32');});
 	// const searchTensor = tf.tidy(() => {return tf.cast(tf.expandDims(tf.transpose(search, [2, 0, 1])),'float32');});
@@ -217,12 +179,10 @@ export function update_tracks(
 
 	const templateTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(template, [2, 0, 1])), 'float32'));
 	const searchTensor = tf.tidy(() => tf.cast(tf.expandDims(tf.transpose(search, [2, 0, 1])), 'float32'));
-	console.log("t=",(new Date().getTime()-start));
 	const [scores2D, predX1, predX2, predY1, predY2] = tf.tidy(() => model.execute(
 		{ 'template': templateTensor, 'search': searchTensor },
 		['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']
 		) as tf.Tensor2D[]);
-	console.log("t exec=",(new Date().getTime()-start));
 	//predX1 = Identity_1:0
 	//predY1 = Identity_3:0
 	//predX2 = Identity_2:0
@@ -276,8 +236,8 @@ export function update_tracks(
 	let predW = maxPredX2 - maxPredX1;
 	let predH = maxPredY2 - maxPredY1;
 
-	let diffXs = predXs - Math.floor(p.instance_size / 2);
-	let diffYs = predYs - Math.floor(p.instance_size / 2);
+	let diffXs = predXs - Math.floor(p.search_size / 2);
+	let diffYs = predYs - Math.floor(p.search_size / 2);
 
 	diffXs = diffXs / scaleZ;
 	diffYs = diffYs / scaleZ;
@@ -299,7 +259,6 @@ export function update_tracks(
 
 	const resW = predW * lr + (1 - lr) * newTargetSz[0];
 	const resH = predH * lr + (1 - lr) * newTargetSz[1];
-	console.log("t=",(new Date().getTime()-start));
 
 	return [
 		[resXs, resYs], // pred_targetPos

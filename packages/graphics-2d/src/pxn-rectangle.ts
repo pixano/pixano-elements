@@ -16,7 +16,7 @@ import { RectangleCreateController } from './controller-rectangle';
 export class Rectangle extends Canvas2d {
     constructor() {
         super();
-        this.setController('create', new RectangleCreateController({renderer: this.renderer,shapes: this.shapes, dispatchEvent: this.dispatchEvent}));
+        this.setController('create', new RectangleCreateController({...this}));
         this.addEventListener('creating-rectangle', () => {
             this.showTooltip('Drag and release to end rectangle.')
         });

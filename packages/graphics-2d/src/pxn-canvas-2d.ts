@@ -38,7 +38,7 @@ export class Canvas2d extends Canvas {
   public enableOutsideDrawing: boolean = false;
 
   // set of 2d shapes to be drawn by the element
-  protected _shapes: ObservableSet<ShapeData>;
+  public _shapes: ObservableSet<ShapeData>;
 
   // set of selected 2d shapes
   public targetShapes: ObservableSet<ShapeData> = new ObservableSet();
@@ -291,7 +291,7 @@ export class Canvas2d extends Canvas {
    * Called on every property change
    * @param changedProperty
    */
-  protected updated(changedProperties: any) {
+  updated(changedProperties: any) {
     super.updated(changedProperties);
     if (changedProperties.has('mode') && this.mode) {
       const prevMode = changedProperties.get('mode');

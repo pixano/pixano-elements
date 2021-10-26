@@ -230,7 +230,7 @@ export class Tracking extends Rectangle {
 	 * Called on every property change
 	 * @param changedProperty
 	 */
-	protected updated(changedProperties: any) {
+	updated(changedProperties: any) {
 		super.updated(changedProperties);
 		if (changedProperties.has('tracks')) {
 			// Called when we initialize the tracks for the first time
@@ -574,12 +574,9 @@ export class Tracking extends Rectangle {
 
 	get leftPanel() {
 		return html`
-		<div class="card">
-			<mwc-icon-button icon="new_label"
+		<mwc-icon-button icon="new_label"
 								title="New track (n)"
-								@click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}}
-								></mwc-icon-button>
-		</div>
+								@click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}}></mwc-icon-button>
 		`;
 	}
 

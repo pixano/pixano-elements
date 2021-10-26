@@ -16,6 +16,7 @@ class MyDemo extends LitElement {
 		super();
 		const vid = "video/";
 		this.images = Array(10).fill(0).map((_, idx) => vid + `${idx+1}`.padStart(2, '0') + '.png');
+		//this.images = Array(100).fill(0).map((_, idx) => vid + `${idx+1}`.padStart(4, '0') + '.jpg');
 		this.tracks = {};
 	}
 

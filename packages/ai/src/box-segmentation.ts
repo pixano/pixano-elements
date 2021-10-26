@@ -5,7 +5,9 @@
  */
 
 import * as tf from '@tensorflow/tfjs';
-import { BlobExtractor2d, simplify, convertIndexToDict, checkPathExists} from '@pixano/core/lib/utils';
+import { BlobExtractor2d, simplify, convertIndexToDict } from '@pixano/core/lib/utils';
+import { loadGraphModel } from './tf-utils';
+
 /**
  * Detection from click with a mobilenet ssd.
  */
@@ -15,33 +17,17 @@ export class BoxSegmentation {
 
   public modelPath = 'box_model/model.json';
 
-  private loadedModelPath = '';
-
   constructor(path?: string) {
     this.modelPath = path || this.modelPath;
   }
 
-  async load() {
-    if (!checkPathExists(this.modelPath)) {
-      console.warn('Unknown path', this.modelPath);
-      return;
-    }
-    if (this.loadedModelPath === this.modelPath) {
-      console.info('Model already loaded');
-      return;
-    }
-    try {
-      this.loadedModelPath = this.modelPath;
-      this.model = await tf.loadGraphModel(this.modelPath);
-      // run idle the model once
-      const empty = tf.zeros([1, 256, 256, 3]);
-      const prediction = await (this.model as tf.GraphModel).predict(empty) as tf.Tensor4D;
-      prediction.dispose();
-      empty.dispose();
-      console.info('Model loaded', this.modelPath);
-    } catch (err) {
-      console.warn('Failed to load model at path', this.modelPath, err);
-    }
+  async loadModel(url: string = this.modelPath) {
+    this.model = await loadGraphModel(url);
+    // run idle the model once
+    const empty = tf.zeros([1, 256, 256, 3]);
+    const prediction = await (this.model as tf.GraphModel).predict(empty) as tf.Tensor4D;
+    prediction.dispose();
+    empty.dispose();
   }
 
   /**
@@ -72,14 +58,20 @@ export class BoxSegmentation {
     const paddedBox = [cx - 0.5 * width, cy - 0.5 * height, cx + 0.5 * width, cy + 0.5 * height]
         .map(Math.trunc) as [number, number, number, number];
     const crop = this.cropImage(image, paddedBox, targetSize);
-    const input = tf.expandDims(tf.browser.fromPixels(crop)).div(tf.scalar(255));
-    let prediction = await (this.model as tf.GraphModel).predict(input) as tf.Tensor4D;
-    prediction = tf.image.cropAndResize(prediction, [[0.5*padding, 0.5*padding, 1-0.5*padding, 1-0.5*padding]], [0], [box[3]-box[1], box[2]-box[0]])
-    prediction = tf.squeeze(prediction);
-    prediction = tf.cast(prediction.add(1 - threshold), 'int32') as tf.Tensor<tf.Rank.R4>;
 
-    const res = await prediction.data() as Float32Array;
-    return res;
+    const res = tf.tidy(() => {
+      // encapsulate all tfjs in tidy to automatically
+      // dispose all tensors
+      const input = tf.expandDims(tf.browser.fromPixels(crop)).div(tf.scalar(255));
+      const prediction = (this.model as tf.GraphModel).predict(input) as tf.Tensor4D;
+      return  tf.image.cropAndResize(prediction, [[0.5*padding, 0.5*padding, 1-0.5*padding, 1-0.5*padding]], [0], [box[3]-box[1], box[2]-box[0]])
+                      .squeeze()
+                      .add(1 - threshold)
+                      .cast('int32') as tf.Tensor<tf.Rank.R4>
+    });
+    const mask = res.dataSync() as Float32Array;
+    res.dispose();
+    return mask;
   }
 
   /* Predict object mask in bounding box.
