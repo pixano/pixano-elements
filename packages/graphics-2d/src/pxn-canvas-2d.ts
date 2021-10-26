@@ -81,10 +81,14 @@ export class Canvas2d extends Canvas {
       if (evt.key === "Alt") {
         this.switchMode();
       }
+
+      else if (evt.key === "h") {
+        this.hideLabels = !this.hideLabels;
+      }
     });
 
     this.observeShapeForDisplay();
-    // this.modes[this.mode].activate();
+    this.modes[this.mode].activate();
   }
 
   switchMode() {
@@ -147,6 +151,7 @@ export class Canvas2d extends Canvas {
         } as ShapeData)
         // Add new object to the list of annotations
         this.shapes.add(shape);
+        this.notifyCreate(shape);
       })
     }
   }
@@ -295,6 +300,13 @@ export class Canvas2d extends Canvas {
     if (changedProperties.has('enableOutsideDrawing')) {
       this.renderer.enableOutsideDrawing = this.enableOutsideDrawing;
     }
+    if (changedProperties.has('hideLabels')) {
+      if (this.hideLabels == true){
+        this.targetShapes.clear();
+        this.notifySelection([]);
+      }
+    }
+    
   }
 
   protected notifyUpdate(ids: string[]) {

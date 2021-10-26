@@ -1,18 +1,10 @@
-/**
- * Implementations of smart rectangle canvas.
- * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
- * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
- * @license CECILL-C
- */
-
 import { InteractionEvent as PIXIInteractionEvent } from 'pixi.js';
+// uncomment to switch detector
 import { PixelToBoundingBox } from "@pixano/ai/lib/pixel-to-bounding-box";
 // import { PixelToBoundingBox } from "@pixano/ai/lib/lapnet";
 import { Point as AIPoint } from "@pixano/ai/lib/structures";
 import { observable, utils } from '@pixano/core';
-import { customElement, property } from "lit-element";
 import { ShapeCreateController } from "./controller";
-import { Rectangle } from "./pxn-rectangle";
 import { Graphics as PIXIGraphics } from "pixi.js";
 
 const IOU_THRESHOLD = 0.5;
@@ -20,7 +12,7 @@ const IOU_THRESHOLD = 0.5;
 /**
  * Inherit RectanglesManager to handle smart rectangle creation.
  */
-class SmartRectangleCreateController extends ShapeCreateController {
+export class SmartRectangleCreateController extends ShapeCreateController {
 
   boundingBoxCreator: PixelToBoundingBox;
 
@@ -35,8 +27,13 @@ class SmartRectangleCreateController extends ShapeCreateController {
     this.onSmartKeydown = this.onSmartKeydown.bind(this);
   }
 
-  load() {
-    return this.boundingBoxCreator.load();
+  async load(modelPath: string) {
+    this.roi.visible = false;
+    this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
+    await this.boundingBoxCreator.loadModel(modelPath);
+    this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
+    this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
+    this.roi.visible = true;
   }
 
   setScale(value: number) {
@@ -97,21 +94,20 @@ class SmartRectangleCreateController extends ShapeCreateController {
 
       // discard the detection if it overlaps with existing boxes
       let overlap = false;
-      this.shapes.forEach(s => {
+      this._shapes.forEach(s => {
         // compute the IOU of s and d = (l, t, r, b)
         const iou = utils.intersectionOverUnion([l, t, r, b], s.geometry.vertices);
         if (iou > IOU_THRESHOLD && detection.category === s.category) {
           overlap = true;
         }
       });
-
       if (!overlap) {
         const shape = observable({
           id: Math.random().toString(36).substring(7),
           geometry: { type: "rectangle", vertices: [l, t, r, b] },
           category: detection.category
         });
-        this.shapes.add(shape);
+        this._shapes.add(shape);
         this.emitCreate();
       }
     } else {
@@ -144,62 +140,5 @@ class SmartRectangleCreateController extends ShapeCreateController {
       this.boundingBoxCreator.scaleRoiUp();
       this.roiDown();
     }
-  }
-}
-
-
-
-@customElement("pxn-smart-rectangle" as any)
-export class SmartRectangle extends Rectangle {
-
-  mode: string = "edit";
-
-  @property({ type: Number }) scale = 1;
-  @property({type: String}) modelPath = '';
-
-  constructor() {
-    super();
-    this.setController('smart-create', new SmartRectangleCreateController({ renderer: this.renderer, shapes: this.shapes, dispatchEvent: this.dispatchEvent }));
-  }
-
-  get smartController() {
-    return (this.modes['smart-create'] as SmartRectangleCreateController);
-  }
-
-  public updated(changeProps: any){
-    super.updated(changeProps);
-    if (changeProps.has('modelPath')){
-      // this.smartController.boundingBoxCreator.modelPath = this.modelPath;
-      this.smartController.load();
-    }
-  }
-
-  public roiUp() {
-    const mode = this.mode;
-    if (mode === 'smart-create') {
-      this.smartController.roiUp();
-    }
-  }
-
-  public roiDown() {
-    const mode = this.mode;
-    if (mode === 'smart-create') {
-      this.smartController.roiDown();
-    }
-  }
-
-  async firstUpdated() {
-    super.firstUpdated();
-    await this.smartController.load();
-    console.info("Model loaded.");
-    this.dispatchEvent(new Event("ready"));
-  }
-
-  attributeChangedCallback(name: string, oldValue: any, newValue: any) {
-    const mode = this.mode;
-    if (mode === 'smart-create' && name === "scale") {
-      this.smartController.setScale(newValue);
-    }
-    super.attributeChangedCallback(name, oldValue, newValue);
   }
 }
