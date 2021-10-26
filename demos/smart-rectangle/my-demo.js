@@ -125,7 +125,7 @@ class MyDemo extends LitElement {
   constructor() {
     super();
     this.mode = "smart-create"; // overwrite default mode param of element
-    this.image = '111_img6.jpeg';
+    this.image = 'image.jpg'; //'image2.jpeg'; 'image.jpg';
     this.scales = [0.25, 0.5, 1, 1.5, 2];
     this.currentScale = 1;
   }
@@ -209,7 +209,6 @@ class MyDemo extends LitElement {
         <pxn-smart-rectangle
           image="${this.image}"
           mode=${this.mode}
-          modelPath='./web_model/model.json'
           scale="${this.currentScale}"
           @create=${this.onCreate}
           @ready=${this.onReady}

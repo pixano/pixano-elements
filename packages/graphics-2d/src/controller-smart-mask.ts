@@ -43,16 +43,14 @@ export class SmartCreateController extends ShapeCreateController {
 	  this.renderer.stage.addChild(this.contours);
     }
 
-    load(modelPath?: string) {
-      this.model = modelPath || this.model;
-      this.segmentationCreator.modelPath = this.model;
-      this.cross.visible = false;
-      this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
-      this.segmentationCreator.load().then(() => {
+    async load(modelPath?: string) {
+        this.model = modelPath || this.model;
+        this.cross.visible = false;
+        this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
+        await this.segmentationCreator.loadModel(this.model);
         this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
         this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
         this.cross.visible = true;
-      });
     }
 
 	activate() {

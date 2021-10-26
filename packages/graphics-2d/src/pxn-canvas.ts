@@ -38,7 +38,7 @@ export class Canvas extends GenericDisplay {
 
   // renderer class
   // html view is added on firstUpdated
-  protected renderer: Renderer = new Renderer({color: this.color});
+  public renderer: Renderer = new Renderer({color: this.color});
 
   @property({type: Number})
   public zoom: number = this.renderer.s;

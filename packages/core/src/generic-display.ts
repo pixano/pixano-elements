@@ -140,6 +140,7 @@ export abstract class GenericDisplay extends LitElement {
         const loader = this.loader as SequenceLoader;
         if (frameIndex >= 0 && frameIndex <= maxFrameIdx) {
           this._targetFrameIdx = frameIndex;
+          this.playback!.current = frameIndex;
           if (this.pendingLoad) {
             return;
           }
@@ -174,12 +175,12 @@ export abstract class GenericDisplay extends LitElement {
         });
       }
 
-	  public isLastFrame() : Boolean {
-		const currIdx = this._targetFrameIdx as number;
-		const maxIdx = this.maxFrameIdx as number;
-		if (currIdx >= maxIdx) return true;
-		return false;
-	  }
+      public isLastFrame() : Boolean {
+        const currIdx = this._targetFrameIdx as number;
+        const maxIdx = this.maxFrameIdx as number;
+        if (currIdx >= maxIdx) return true;
+        return false;
+      }
 
       /**
        * Fired on playback slider update.
