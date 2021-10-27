@@ -32,7 +32,7 @@ export class Segmentation extends Canvas {
   public mask: ImageData | null = null;
 
   @property({type: String})
-  public mode: 'select' | 'edit-add' | 'edit-remove' | 'create' = 'select';
+  public mode: string = 'edit';
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
@@ -67,7 +67,7 @@ export class Segmentation extends Canvas {
     this.modes = {
       'create': new CreatePolygonController({...this} as any),
       'create-brush': new CreateBrushController({...this} as any),
-      'select': new SelectController({...this} as any),
+      'edit': new SelectController({...this} as any),
       'lock': new LockController({...this} as any)
     };
     this.showroi = (this.modes.create as CreatePolygonController).showRoi;
@@ -197,6 +197,7 @@ export class Segmentation extends Canvas {
     if (prevMode === newMode) {
       return;
     }
+    prevMode = prevMode == null ? "edit": prevMode;
     if (this.modes[prevMode]) {
         // Restore default state
         this.modes[prevMode].deactivate();
@@ -269,7 +270,7 @@ export class Segmentation extends Canvas {
     this.gmask.fusedIds.forEach((id) => {
       this.filterId(unfuseId(id), numPixels)
     });
-    this.dispatchEvent(new Event('update'));
+	this.dispatchEvent(new CustomEvent('update', {detail: this.selectedId}));
   }
 
   /**
@@ -302,7 +303,7 @@ export class Segmentation extends Canvas {
     const modes = Object.keys(this.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
     this.mode = modes[(currentIdx + 1) % modes.length] as any;
-    this.dispatchEvent(new Event("mode"));
+    this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
   }
 
   /**
