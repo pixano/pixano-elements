@@ -116,7 +116,7 @@ class MyDemo extends LitElement {
         this.element.editionMode=EditionMode.NEW_INSTANCE;
         this.element.mode = 'smart-create'}}>${borderOuter}</p>
 			<hr>
-			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
+			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 			<hr>
 			<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 			<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>

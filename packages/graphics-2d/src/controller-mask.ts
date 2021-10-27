@@ -69,7 +69,7 @@ export class SelectController extends Controller {
         this.contours.visible = false;
     }
 
-    protected onPointerDownSelectInstance(evt: PIXIInteractionEvent) {
+    onPointerDownSelectInstance(evt: PIXIInteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
@@ -82,7 +82,7 @@ export class SelectController extends Controller {
         this.dispatchEvent(new CustomEvent('selection', { detail: this._selectedId.value }));
     }
 
-    public deselect() {
+    deselect() {
         if (this._selectedId.value) {
             this.densePolygons = [];
             updateDisplayedSelection(this.contours, this.densePolygons);
@@ -91,11 +91,14 @@ export class SelectController extends Controller {
         }
     }
 
-    protected onKeySelectionDown(evt: KeyboardEvent) {
+    onKeySelectionDown(evt: KeyboardEvent) {
         if (evt.key === 'Escape') {
             this.deselect();
         } else if (evt.key === 'Delete') {
-			if (this._selectedId.value) this.gmask.deleteInstance(this._selectedId.value);
+			if (this._selectedId.value) {
+				this.gmask.deleteInstance(this._selectedId.value);
+				this.dispatchEvent(new CustomEvent('delete', {detail: this._selectedId.value}));
+			}
 			this.deselect();
 		}
     }
@@ -360,7 +363,7 @@ export class CreateBrushController extends Controller {
             this.densePolygons = getPolygons(this.gmask, this._selectedId.value!);
             updateDisplayedSelection(this.contours, this.densePolygons);
             this.gmask.fusedIds.add(fuseId(this._selectedId.value!));
-            this.dispatchEvent(new Event('update'));
+            this.dispatchEvent(new CustomEvent('update', { detail: this._selectedId.value }));
         }
         this.isActive = false;
         this.initRoi();
@@ -571,7 +574,7 @@ export class CreatePolygonController extends Controller {
                     this.gmask.updateByPolygon(vertices, newValue, fillType);
                     this.densePolygons = getPolygons(this.gmask, newValue, extrema);
                     updateDisplayedSelection(this.contours, this.densePolygons);
-                    this.dispatchEvent(new Event('update'));
+					this.dispatchEvent(new CustomEvent('update', { detail: this._selectedId.value }));
                     this.initRoi();
                 }
 
