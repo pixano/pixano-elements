@@ -279,6 +279,7 @@ export class Tracking extends Rectangle {
 		this.drawTracks();
 		this.requestUpdate();
 		this.mode = 'edit';//back to edit mode after each new creation
+		this.dispatchEvent(new Event('create-track'));
 	}
 
 	/**
@@ -574,9 +575,9 @@ export class Tracking extends Rectangle {
 
 	get leftPanel() {
 		return html`
-		<mwc-icon-button icon="new_label"
-								title="New track (n)"
-								@click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}}></mwc-icon-button>
+		<mwc-icon-button icon="edit"
+						title="New track (n)"
+						@click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}}></mwc-icon-button>
 		`;
 	}
 
