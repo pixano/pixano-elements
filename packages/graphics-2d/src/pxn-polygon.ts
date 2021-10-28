@@ -23,8 +23,8 @@ export class Polygon extends Canvas2d {
     constructor() {
         super();
         // interactions with polygons (creation, edition)
-        this.setController('create', new PolygonCreateController({ renderer: this.renderer, shapes: this.shapes, isOpenedPolygon: this.isOpenedPolygon, dispatchEvent: this.dispatchEvent }));
-        this.setController('edit', new PolygonsEditController( { renderer: this.renderer, graphics: this.graphics, targetShapes: this.targetShapes, dispatchEvent: this.dispatchEvent }));
+        this.setController('create', new PolygonCreateController({ ...this }));
+        this.setController('edit', new PolygonsEditController( { ...this }));
         this.addEventListener('creating-polygon', () => {
             this.showTooltip('Press Enter or double click to close polygon. Escape to cancel.')
         });
@@ -34,7 +34,7 @@ export class Polygon extends Canvas2d {
      * Called on every property change
      * @param changedProperty
      */
-    protected updated(changedProperties: any) {
+    updated(changedProperties: any) {
         super.updated(changedProperties);
         if (changedProperties.has('isOpenedPolygon')) {
             (this.modes.create as PolygonCreateController).isOpenedPolygon = this.isOpenedPolygon;
@@ -79,9 +79,12 @@ export class Polygon extends Canvas2d {
                 }
             });
             this.shapes.add(observable(newAnn));
+            const idsToDelete = shapes.map((s) => s.id);
             shapes.forEach((s) => {
                 this.shapes.delete(s);
             });
+            this.notifyDelete(idsToDelete);
+            this.notifyCreate(newAnn);
         }
     }
 
@@ -94,7 +97,7 @@ export class Polygon extends Canvas2d {
             const shape = this.targetShapes.values().next().value;
             if (shape.geometry.type === 'multi_polygon') {
                 shape.geometry.mvertices.forEach((v: number[], idx: number) => {
-                    this.shapes.add(observable({
+                    const newAnn = observable({
                         ...shape,
                         id: shape.id + String(idx),
                         geometry: {
@@ -102,9 +105,13 @@ export class Polygon extends Canvas2d {
                             vertices: v,
                             type: 'polygon'
                         }
-                    }));
+                    });
+                    this.shapes.add(newAnn);
+                    this.notifyCreate(newAnn);
                 });
+                const idToDelete = shape.id;
                 this.shapes.delete(shape);
+                this.notifyDelete([idToDelete]);
             }
         }
     }

@@ -45,10 +45,7 @@ class MyDemo extends LitElement {
     });
     this.element.addEventListener("delete", e => console.log("delete", e.detail));
     this.element.addEventListener("update", e => console.log("update", e.detail));
-    this.element.addEventListener("selection", e => {
-      console.log("select", e.detail);
-      this.target = e.detail;
-    });
+    this.element.addEventListener("selection", e => this.target = e.detail);
     this.element.input = this.pcl;
   }
 
@@ -63,9 +60,9 @@ class MyDemo extends LitElement {
       <div class="right-panel">
         <p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
         <div class="icons">
-          <p class="icon" title="Add instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-          <p class="icon" title="Add instance" @click=${() => this.element.swap()}>${swap}</p>
-        </div>       
+          <p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+          <p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
+        </div>
       </div>
     `;
   }

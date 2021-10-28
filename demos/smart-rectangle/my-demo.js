@@ -125,7 +125,7 @@ class MyDemo extends LitElement {
   constructor() {
     super();
     this.mode = "smart-create"; // overwrite default mode param of element
-    this.image = 'image.jpg';
+    this.image = 'image.jpg'; //'image2.jpeg'; 'image.jpg';
     this.scales = [0.25, 0.5, 1, 1.5, 2];
     this.currentScale = 1;
   }
