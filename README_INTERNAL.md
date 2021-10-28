@@ -91,6 +91,9 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 		git cherry-pick b4cb0b18^..d5e075f2
 		# import of all commits from cfbb3866 (not included) to 74e276acb:
 		git cherry-pick cfbb3866..74e276acb
+		# merge all commits without commit which lets you inspect (and modify) the result before committing
+		# ensure that you `git rm --cached` every internal file/section
+		git merge --no-commit
 
 During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
