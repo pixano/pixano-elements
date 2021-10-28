@@ -95,10 +95,14 @@ Note: `pxn-canvas-2d` inherits from `pxn-canvas`.
 type InteractiveMode =  'edit' | 'create' | 'none';
 
 // pxn-segmentation
-type InteractiveMode =  'select' | 'edit-add' | 'edit-remove' | 'create' | 'none';
+type InteractiveMode =  'edit' | 'create' | 'create-brush' | 'none';
 
 // pxn-smart-rectangle
 type InteractiveMode =  'edit' | 'create' | 'smart-create' | 'none';
+
+
+// pxn-smart-segmentation
+type InteractiveMode =  'edit' | 'create' | 'create-brush' | 'smart-create' | 'none';
 ```
 
 **The 2d shapes have the following format:

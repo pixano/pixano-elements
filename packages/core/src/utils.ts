@@ -875,3 +875,15 @@ export function simplify(points: [number, number][], tolerance: number = 1, high
 
   return points;
 }
+
+export function checkPathExists(path: string) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('HEAD', path, false);
+    xhr.send();
+
+    if (xhr.status === 404) {
+        return false;
+    } else {
+        return true;
+    }
+  }

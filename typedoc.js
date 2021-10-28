@@ -13,10 +13,11 @@ module.exports = {
         'demo-polygon',
         'demo-polygon-http',
         'demo-segmentation',
-        'demo-segmentation-interactive',
+        'demo-smart-segmentation',
         'demo-smart-rectangle',
         'demo-graph',
-        'demo-tracking'
+        'demo-tracking',
+        'demo-smart-tracking'
     ],
     name: '@pixano',
     excludePrivate: true,
