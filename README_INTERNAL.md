@@ -87,13 +87,13 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 		# a few usage examples with cherry-pick :
 		# import of the commit number d5e075f2 :
 		git cherry-pick d5e075f2
-		# import of all commits from b4cb0b18 to d5e075f2 both included:
+		# [or] import of all commits from b4cb0b18 to d5e075f2 both included:
 		git cherry-pick b4cb0b18^..d5e075f2
-		# import of all commits from cfbb3866 (not included) to 74e276acb:
+		# [or] import of all commits from cfbb3866 (not included) to 74e276acb:
 		git cherry-pick cfbb3866..74e276acb
-		# merge all commits without commit which lets you inspect (and modify) the result before committing
+		# [or] merge all commits without commit which lets you inspect (and modify) the result before committing
 		# ensure that you `git rm --cached` every internal file/section
-		git merge --no-commit
+		git merge --no-commit master
 
 During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
