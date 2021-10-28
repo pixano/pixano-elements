@@ -4,7 +4,7 @@
  * @license CECILL-C
 */
 
-import '@pixano/graphics-2d/lib/pxn-segmentation-interactive';
+import '@pixano/graphics-2d/';
 import {html, LitElement} from 'lit-element';
 import { demoStyles,
   fullscreen,
@@ -112,9 +112,11 @@ class MyDemo extends LitElement {
 			<div class="icons">
 			<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 			<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
-			<p class="icon" title="Smart instance" @click=${() => this.element.mode = 'smart-create'}>${borderOuter}</p>
+			<p class="icon" title="Smart instance" @click=${() => {
+        this.element.editionMode=EditionMode.NEW_INSTANCE;
+        this.element.mode = 'smart-create'}}>${borderOuter}</p>
 			<hr>
-			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
+			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 			<hr>
 			<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 			<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
@@ -128,14 +130,14 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation-interactive image="${this.image}" mode="smart-create" disablefullscreen>
-          </pxn-segmentation-interactive>
+          <pxn-smart-segmentation image="${this.image}" mode="smart-create" disablefullscreen>
+          </pxn-smart-segmentation>
           ${this.rightPanel}
         </main>`;
   }
 
   get element() {
-    return this.shadowRoot.querySelector('pxn-segmentation-interactive');
+    return this.shadowRoot.querySelector('pxn-smart-segmentation');
   }
   
 }

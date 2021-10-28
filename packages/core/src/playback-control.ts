@@ -16,7 +16,7 @@ export class PlaybackControl extends LitElement {
     public max: number = 0;
 
     @property({type: Number})
-    private current: number = 0;
+    public current: number = 0;
 
     // utils boolean to force maximal slider fps
     // using keydown of: keySpeed fps
@@ -117,13 +117,11 @@ export class PlaybackControl extends LitElement {
     }
 
     onSliderInput() {
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value}));
+		  this.set(this.slider.value);
     }
 
     onSliderChange() {
-      this.current = this.slider.value;
-      this.dispatchEvent(new CustomEvent('update', { detail: this.slider.value, bubbles: false}));
+		  this.set(this.slider.value);
     }
 
     firstUpdated() {
@@ -137,15 +135,17 @@ export class PlaybackControl extends LitElement {
     }
 
     setNext() {
-      this.current = Math.min(this.slider.value + 1, this.max);
-      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
+		  this.set(Math.min(this.slider.value + 1, this.max));
     }
 
     setBefore() {
-      this.current = Math.max(this.slider.value - 1, 0);
-      this.dispatchEvent(new CustomEvent('update', { detail: this.current}));
+		  this.set(Math.max(this.slider.value - 1, 0));
     }
 
+    /**
+     * Set from inside, notify change
+     * @param value 
+     */
     public set(value: number) {
       this.current = value;
       this.dispatchEvent(new CustomEvent('update', { detail: this.current}));

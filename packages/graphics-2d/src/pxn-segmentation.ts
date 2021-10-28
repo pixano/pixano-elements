@@ -32,7 +32,7 @@ export class Segmentation extends Canvas {
   public mask: ImageData | null = null;
 
   @property({type: String})
-  public mode: 'select' | 'edit-add' | 'edit-remove' | 'create' = 'select';
+  public mode: string = 'edit';
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
@@ -51,8 +51,6 @@ export class Segmentation extends Canvas {
   // never destroyed, only updated
   protected gmask: GraphicMask = new GraphicMask();
 
-  private newMaskLoaded: boolean = false;
-
   public modes: {
     [key: string]: Controller;
   };
@@ -64,12 +62,12 @@ export class Segmentation extends Canvas {
     super();
     this.renderer.labelLayer.addChild(this.gmask);
     this.renderer.labelLayer.alpha = this.opacity;
-	this._editionMode.value = EditionMode.NEW_INSTANCE;
+	  this._editionMode.value = EditionMode.NEW_INSTANCE;
 
     this.modes = {
       'create': new CreatePolygonController({...this} as any),
       'create-brush': new CreateBrushController({...this} as any),
-      'select': new SelectController({...this} as any),
+      'edit': new SelectController({...this} as any),
       'lock': new LockController({...this} as any)
     };
     this.showroi = (this.modes.create as CreatePolygonController).showRoi;
@@ -131,7 +129,7 @@ export class Segmentation extends Canvas {
   /**
    * Get base64 encoding of the panoptic segmentation mask
    */
-  public getMask() {
+  public getMask(): string {
     return this.gmask.getBase64();
   }
 
@@ -139,8 +137,9 @@ export class Segmentation extends Canvas {
    * Set the panoptic segmentation mask from a base64 encoding
    */
   public setMask(buffer: string) {
-    this.newMaskLoaded = true;
-    this.gmask.setBase64(buffer);
+    try { (this.modes[this.mode] as any).deselect();}
+    catch (err) {}
+    return this.gmask.setBase64(buffer);
   }
 
   /**
@@ -152,6 +151,8 @@ export class Segmentation extends Canvas {
     }
     this.gmask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
     this.selectedId = [-1, -1, -1];
+    try { (this.modes[this.mode] as any).deselect();}
+    catch (err) {}
   }
 
   /**
@@ -162,9 +163,10 @@ export class Segmentation extends Canvas {
     super.updated(changedProperties);
 
     if (changedProperties.has('mask') && this.mask && this.mask instanceof ImageData) {
-      this.newMaskLoaded = true;
       this.gmask.initialize(this.mask);
       this.selectedId = [-1, -1, -1];
+      try { (this.modes[this.mode] as any).deselect();}
+      catch (err) {}
     }
     if (changedProperties.has('mode') && this.mode) {
       const prevMode = changedProperties.get('mode');
@@ -195,6 +197,7 @@ export class Segmentation extends Canvas {
     if (prevMode === newMode) {
       return;
     }
+    prevMode = prevMode == null ? "edit": prevMode;
     if (this.modes[prevMode]) {
         // Restore default state
         this.modes[prevMode].deactivate();
@@ -249,11 +252,11 @@ export class Segmentation extends Canvas {
    */
   public toggleMask() {
     if (this.renderer.labelLayer.alpha === this.opacity) {
-      this.renderer.labelLayer.alpha = 1;
-      this.renderer.backgroundSprite.visible = false;
-    } else if (this.renderer.labelLayer.alpha === 1) {
       this.renderer.labelLayer.alpha = 0;
       this.renderer.backgroundSprite.visible = true;
+    } else if (this.renderer.labelLayer.alpha === 0) {
+      this.renderer.labelLayer.alpha = 1;
+      this.renderer.backgroundSprite.visible = false;
     } else {
       this.renderer.backgroundSprite.visible = true;
       this.renderer.labelLayer.alpha = this.opacity;
@@ -267,7 +270,7 @@ export class Segmentation extends Canvas {
     this.gmask.fusedIds.forEach((id) => {
       this.filterId(unfuseId(id), numPixels)
     });
-    this.dispatchEvent(new Event('update'));
+	this.dispatchEvent(new CustomEvent('update', {detail: this.selectedId}));
   }
 
   /**
@@ -300,7 +303,7 @@ export class Segmentation extends Canvas {
     const modes = Object.keys(this.modes);
     const currentIdx = modes.findIndex((m) => m === this.mode);
     this.mode = modes[(currentIdx + 1) % modes.length] as any;
-    this.dispatchEvent(new Event("mode"));
+    this.dispatchEvent(new CustomEvent('mode', {detail: this.mode}));
   }
 
   /**
@@ -324,8 +327,31 @@ export class Segmentation extends Canvas {
    * Called on image change
    */
   protected onImageChanged() {
-    if (!this.newMaskLoaded) {
+    if (this.gmask.canvas.width !== this.renderer.imageWidth ||
+        this.gmask.canvas.height !== this.renderer.imageHeight) {
+      // create empty mask if current size does not match image size
       this.setEmpty();
+    }
+  }
+
+  /**
+   * Handle copy keyboard event
+   * Return the entire segmentation mask
+   */
+  protected onCopy(): string | void {
+    return this.getMask();
+  }
+
+  /**
+   * Paste copied stuff
+   */
+  onPaste(text: string) {
+    if (text) {
+      this.setMask(text).then(() => {
+        this.dispatchEvent(new Event('update'));
+      })
+      try { (this.modes[this.mode] as any).deselect();}
+      catch (err) {}
     }
   }
 }

@@ -38,7 +38,7 @@ export class Canvas extends GenericDisplay {
 
   // renderer class
   // html view is added on firstUpdated
-  protected renderer: Renderer = new Renderer({color: this.color});
+  public renderer: Renderer = new Renderer({color: this.color});
 
   @property({type: Number})
   public zoom: number = this.renderer.s;
@@ -89,7 +89,10 @@ export class Canvas extends GenericDisplay {
   set data(img: HTMLImageElement) {
     if (img && img !== this.renderer.image) {
       this.renderer.image = img;
-      this.viewControls.reinit();
+      // Uncomment if you want to reset zoom whenever  changing image.
+      // Note that this is not the default behaviour to keep consistency
+      // For image sequences.
+      // this.viewControls.reinit();
     }
   }
 
@@ -107,6 +110,17 @@ export class Canvas extends GenericDisplay {
 
   public resize() {
     this.renderer.resize();
+  }
+
+  /**
+   * Toggle labels (hide / show)
+   */
+   public toggleLabels() {
+    if (this.hideLabels === false) {
+		this.hideLabels = true;
+    } else {
+		this.hideLabels = false;
+    }
   }
 
   /**

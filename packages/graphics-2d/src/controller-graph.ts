@@ -26,6 +26,7 @@ export class GraphsUpdateController extends ShapesEditController {
     }
 
     public activate() {
+        super.activate();
         // handle update mode for each shape
         this.graphics.forEach((s) => {
             if (s instanceof GraphicGraph) {
@@ -85,7 +86,7 @@ export class GraphsUpdateController extends ShapesEditController {
             this.isNodeTranslating = true;
             const obj = this.getGraphic((evt as any).shape) as GraphicGraph;
             const node = obj.nodes[this.activeNodeIdx];
-            this.updated = false;
+            this.changed = false;
             node.removeAllListeners('pointermove');
             node.removeAllListeners('pointerupoutside');
             node.on('pointermove', this.onNodeMove.bind(this));
@@ -111,8 +112,8 @@ export class GraphsUpdateController extends ShapesEditController {
             const newPos = this.renderer.getPosition(evt.data);
             const {x, y} = this.renderer.normalize(newPos);
             const obj = this.targetShapes.values().next().value;
-            if (!this.updated) {
-                this.updated = true;
+            if (!this.changed) {
+                this.changed = true;
             }
             if (obj) {
                 obj.geometry.vertices[this.activeNodeIdx * 2] = x;
@@ -127,8 +128,8 @@ export class GraphsUpdateController extends ShapesEditController {
         node.removeAllListeners('pointermove');
         node.removeAllListeners('pointerupoutside');
         this.isNodeTranslating = false;
-        if (this.updated) {
-            this.updated = false;
+        if (this.changed) {
+            this.changed = false;
             this.emitUpdate();
         }
     }
@@ -227,7 +228,7 @@ export class GraphCreateController extends ShapeCreateController {
     public createGraph() {
         const shape = this.tmpShape as GraphicGraph;
         shape.data.id = Math.random().toString(36).substring(7);
-        this.shapes.add(shape.data);
+        this._shapes.add(shape.data);
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;

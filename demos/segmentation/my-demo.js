@@ -108,6 +108,10 @@ class MyDemo extends LitElement {
     console.log('on update')
   }
 
+  onSelection() {
+	console.log('onSelection')
+  }
+
   get rightPanel() {
 	  return html`
 		<div class="right-panel">
@@ -116,7 +120,7 @@ class MyDemo extends LitElement {
 			<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 			<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
 			<hr>
-			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'select'}>${magicSelect}</p>
+			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 			<hr>
 			<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 			<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
@@ -130,7 +134,7 @@ class MyDemo extends LitElement {
   render() {
     return html`
         <main>
-          <pxn-segmentation image="${this.image}" @update="${this.onUpdate}" disablefullscreen>
+          <pxn-segmentation image=${this.image} @update=${this.onUpdate} @selection=${this.onSelection} disablefullscreen>
           </pxn-segmentation>
           ${this.rightPanel}
         </main>`;

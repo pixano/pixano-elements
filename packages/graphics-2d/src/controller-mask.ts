@@ -41,7 +41,7 @@ export class SelectController extends Controller {
     protected densePolygons: DensePolygon[] = new Array();
 
     constructor(props: Partial<SelectController> = {}) {
-        super();
+        super(props);
         this.renderer = props.renderer || new Renderer();
         this.gmask = props.gmask || new GraphicMask();
         this._selectedId = props._selectedId || { value: null };
@@ -69,7 +69,7 @@ export class SelectController extends Controller {
         this.contours.visible = false;
     }
 
-    protected onPointerDownSelectInstance(evt: PIXIInteractionEvent) {
+    onPointerDownSelectInstance(evt: PIXIInteractionEvent) {
         const {x, y} = this.renderer.getPosition(evt.data);
         const id = this.gmask.pixelId(x + y * this.gmask.canvas.width);
         if (id[0] === 0 && id[1] === 0 && id[2] === 0) {
@@ -82,7 +82,7 @@ export class SelectController extends Controller {
         this.dispatchEvent(new CustomEvent('selection', { detail: this._selectedId.value }));
     }
 
-    public deselect() {
+    deselect() {
         if (this._selectedId.value) {
             this.densePolygons = [];
             updateDisplayedSelection(this.contours, this.densePolygons);
@@ -91,11 +91,14 @@ export class SelectController extends Controller {
         }
     }
 
-    protected onKeySelectionDown(evt: KeyboardEvent) {
+    onKeySelectionDown(evt: KeyboardEvent) {
         if (evt.key === 'Escape') {
             this.deselect();
         } else if (evt.key === 'Delete') {
-			if (this._selectedId.value) this.gmask.deleteInstance(this._selectedId.value);
+			if (this._selectedId.value) {
+				this.gmask.deleteInstance(this._selectedId.value);
+				this.dispatchEvent(new CustomEvent('update', {detail: this._selectedId.value}));
+			}
 			this.deselect();
 		}
     }
@@ -240,6 +243,7 @@ export class CreateBrushController extends Controller {
         this.roi.clear();
         this.roi.cacheAsBitmap = true;
         this.contours.visible = false;
+		this.contours.clear();
     }
 
     /**
@@ -359,7 +363,7 @@ export class CreateBrushController extends Controller {
             this.densePolygons = getPolygons(this.gmask, this._selectedId.value!);
             updateDisplayedSelection(this.contours, this.densePolygons);
             this.gmask.fusedIds.add(fuseId(this._selectedId.value!));
-            this.dispatchEvent(new Event('update'));
+            this.dispatchEvent(new CustomEvent('update', { detail: this._selectedId.value }));
         }
         this.isActive = false;
         this.initRoi();
@@ -394,6 +398,15 @@ export class CreateBrushController extends Controller {
 		// shift or ctrl released = return to default = create
 		this._editionMode.value = EditionMode.NEW_INSTANCE;
 		this.initRoi();
+    }
+
+    public deselect() {
+        if (this._selectedId.value) {
+            this.densePolygons = [];
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this._selectedId.value = null;
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
+        }
     }
 }
 
@@ -561,7 +574,7 @@ export class CreatePolygonController extends Controller {
                     this.gmask.updateByPolygon(vertices, newValue, fillType);
                     this.densePolygons = getPolygons(this.gmask, newValue, extrema);
                     updateDisplayedSelection(this.contours, this.densePolygons);
-                    this.dispatchEvent(new Event('update'));
+					this.dispatchEvent(new CustomEvent('update', { detail: this._selectedId.value }));
                     this.initRoi();
                 }
 
