@@ -121,10 +121,10 @@ export class SmartTracking extends Tracking {
 	get leftPanel() {
 		const checked = this.isTrackTillTheEndChecked;
 		return html`
-		<div flexDirection: 'row'>
+		<div>
 			${super.leftPanel}
 			<mwc-icon-button title="Auto track (t)"
-								@click=${() => this.runTracking()}>${track}</mwc-icon-button>
+							@click=${() => this.runTracking()}>${track}</mwc-icon-button>
 			<div class="card">
 				<p>Continuous tracking
 				<mwc-switch ?checked=${checked}

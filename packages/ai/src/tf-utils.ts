@@ -16,12 +16,18 @@ export const isModelCached = (url: string) => {
     const openRequest = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     return new Promise((resolve) => {
         openRequest.onsuccess = () => {
-            const keys = openRequest.result.transaction(INFO_STORE_NAME, 'readwrite')
-                                           .objectStore(INFO_STORE_NAME)
-                                           .getAllKeys();
-            keys.onsuccess = () => {
-                // console.log('Existing keys', keys.result, url, keys.result.includes(url));
-                resolve(keys.result.includes(url));
+            try {
+                const keys = openRequest.result.transaction(INFO_STORE_NAME, 'readwrite')
+                .objectStore(INFO_STORE_NAME)
+                .getAllKeys();
+                keys.onsuccess = () => {
+                    // console.log('Existing keys', keys.result, url, keys.result.includes(url));
+                    resolve(keys.result.includes(url));
+                }
+            } catch(err) {
+                // non-existent tfjs database, clean it
+                indexedDB.deleteDatabase(DATABASE_NAME);
+                resolve(false)
             }
         };
     });
