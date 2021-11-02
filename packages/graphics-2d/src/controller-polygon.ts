@@ -52,7 +52,7 @@ export class PolygonsEditController extends ShapesEditController {
     onObjectUp(e: PIXIInteractionEvent) {
         super.onObjectUp(e);
         const obj = this.getGraphic((e as any).shape) as GraphicPolygon;
-        if (obj && this.reclick && !this.updated) {
+        if (obj && this.reclick && !this.changed) {
             this.reclick = false;
             this.toggle(obj);
         }
@@ -85,7 +85,7 @@ export class PolygonsEditController extends ShapesEditController {
         if (evt.data.originalEvent.buttons !== 2) {
             this.activeNodeIdx = evt.nodeIdx;
             this.isNodeTranslating = true;
-            this.updated = false;
+            this.changed = false;
             this.renderer.stage.on('pointermove', this.onNodeMove);
             this.renderer.stage.on('pointerupoutside', this.onNodeUp);
         } else {
@@ -105,8 +105,8 @@ export class PolygonsEditController extends ShapesEditController {
             xN = Math.max(0, Math.min(1, xN));
             yN = Math.max(0, Math.min(1, yN));
             const obj = this.targetShapes.values().next().value;
-            if (!this.updated) {
-                this.updated = true;
+            if (!this.changed) {
+                this.changed = true;
             }
             if (obj) {
                 obj.geometry.vertices[this.activeNodeIdx * 2] = xN;
@@ -120,13 +120,13 @@ export class PolygonsEditController extends ShapesEditController {
         this.renderer.stage.removeListener('pointermove', this.onNodeMove);
         this.renderer.stage.removeListener('pointerupoutside', this.onNodeUp);
         this.isNodeTranslating = false;
-        if (this.updated) {
+        if (this.changed) {
             if (obj && !obj.isValid()) {
                 obj.data.geometry.vertices = [...this.cachedShape!.geometry.vertices];
             } else {
                 this.emitUpdate();
             }
-            this.updated = false;
+            this.changed = false;
         }
     }
 
@@ -147,9 +147,9 @@ export class PolygonsEditController extends ShapesEditController {
             xN = Math.max(0, Math.min(1, xN));
             yN = Math.max(0, Math.min(1, yN));
             const obj = this.targetShapes.values().next().value as ShapeData;
-            if (!this.updated) {
+            if (!this.changed) {
                 // insert a new polygon node
-                this.updated = true;
+                this.changed = true;
                 obj.geometry.vertices = insertMidNode(obj.geometry.vertices, this.activeNodeIdx);
                 this.activeNodeIdx = (this.activeNodeIdx + 1) % (0.5 * obj.geometry.vertices.length);
             }
@@ -163,7 +163,7 @@ export class PolygonsEditController extends ShapesEditController {
     protected onMidNodeUp(evt: any) {
         if (this.isMidNodeTranslating) {
             this.isMidNodeTranslating = false;
-            if (this.updated) {
+            if (this.changed) {
                 const obj = this.getGraphic((evt as any).shape) as GraphicPolygon;
                 if (obj && !obj.isValid()) {
                     // cancel update;
@@ -172,7 +172,7 @@ export class PolygonsEditController extends ShapesEditController {
                 } else if (obj) {
                     this.emitUpdate();
                 }
-                this.updated = false;
+                this.changed = false;
             }
             this.renderer.stage.removeListener('pointermove', this.onMidNodeMove);
             this.renderer.stage.removeListener('pointerupoutside', this.onMidNodeUp);
@@ -303,7 +303,7 @@ export class PolygonCreateController extends ShapeCreateController {
             return;
         }
         shape.data.id = Math.random().toString(36);
-        this.shapes.add(shape.data);
+        this._shapes.add(shape.data);
         this.renderer.stage.removeChild(shape);
         shape.destroy();
         this.tmpShape = null;

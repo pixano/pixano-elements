@@ -16,6 +16,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 	- décision de ce qui est puiblique ou non par le core
 	- [ ] gestion de ces livraisons via https://github.com/google/copybara ? => semble parfait sur le papier, mais semble lourd à mettre en place...
 - [ ] [#doc] il faudrait avoir une carte générale des événements : qui les envoie, et à quelle occasion
+- [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [ ] [#interface] mettre en correspndance chaque bouton avec un raccourci clavier (et l'afficher dans l'aide du bouton, aide détaillée)
 - [x] [#interface] le zoom est conservé quand on passe d'une image à l'autre (dans app)
 - [o] auto-tests dans gitlab :
@@ -94,9 +95,14 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] [#bogue] après avoir créé une nouvelle instance "new", on ne quitte plus le mode création, on ne peut plus déplacer les boites existantes y compris celle qu'on vient de créer
 - [ ] [] ne devrait pas hériter de rectangle : on ne veut pas le limiter aux rectangles
 - [ ] [] d'ailleurs même le fichier ne devrait pas être dans graphics-2D => mais pose problème pour la publication => créer un dépôt dédié aux séries temporelles ? Çà a du sens ?
-- [ ] [#bug] Add Pixi import in controller-tracking
-- [ ] [#interface] play pour jouer toute la séquence
-- [ ] [#interface] aller à la frame numéro N
+- [-] [#bug] Add Pixi import in controller-tracking
+- [ ] [#bogue] impossible de supprimer une track entre deux keyframes (il réinterpole systématiquement) => nécessaire par exemple quand la cible passe derrière un poteau
+	- => casser la track en créant une keyframe à la frame n-1
+	- => possibilité de continuer la track en sélectionnant son numéro en mode create (et non via "new")
+
+## npx serve demos/smart-tracking/
+- [ ] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
+- [ ] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
 
 ## npx serve demos/graph/
 - [x] [#feature #eurovanille] nombre et intitulés des keypoints réglables dynamiquement ou sans modification de code en dur

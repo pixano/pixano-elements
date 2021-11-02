@@ -34,6 +34,8 @@ export class SmartSegmentation extends Segmentation {
   updated(changedProperties: any) {
     super.updated(changedProperties);
     if (changedProperties.has('model')) {
+      // Current behavior: load DL model on modelPath
+      // Alternative: only load on mode change to smart-create
       (this.modes['smart-create'] as SmartCreateController).load(this.model);
     }
   }

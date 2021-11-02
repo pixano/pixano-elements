@@ -1,62 +1,35 @@
 /**
+ * INTERNAL, DO NOT PUBLISH
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
  */
 
-
+ import * as tf from '@tensorflow/tfjs';
 import { Detection, Rectangle, Point } from './structures';
-import * as tf from '@tensorflow/tfjs';
+import { loadGraphModel } from './tf-utils';
  
 /**
  * Detection from click with a mobilenet ssd.
  */
 export class PixelToBoundingBox {
+
   private model: tf.GraphModel | null = null;
+
   public modelPath = './web_model/model.json';
-
-  private loadedModelPath = '';
-
  
    // Base size of the ROI used by the detector.
    public baseRoiSize = 256;
  
    // Scale of the ROI.
    private scale = 1;
- 
-   async load() {
-    if (!this.checkPathExists(this.modelPath)) {
-      console.warn('Unknown path', this.modelPath);
-      return;
-    }
-    if (this.loadedModelPath === this.modelPath) {
-      console.info('Model already loaded');
-      return;
-    }
-    try {
-      this.loadedModelPath = this.modelPath;
-      this.model = await tf.loadGraphModel(this.modelPath);
-      // run idle the model once
-      //const empty = tf.zeros([1, 3, 384, 512]);
+
+   async loadModel(modelPath: string = this.modelPath): Promise<any> {
+    this.model = await loadGraphModel(modelPath);
+    if (this.model) {
       const empty = tf.zeros([1, 3, this.baseRoiSize, this.baseRoiSize]);
       await this.model.executeAsync({'images:0': empty}, ['Identity:0', 'Identity_1:0']);
-
-      console.info('Model loaded', this.modelPath);
       empty.dispose();
-    } catch (err) {
-      console.warn('Failed to load model at path', this.modelPath, err);
-    }
-  }
-
-  private checkPathExists(path: string) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('HEAD', path, false);
-    xhr.send();
-
-    if (xhr.status === 404) {
-        return false;
-    } else {
-        return true;
     }
   }
  
@@ -69,7 +42,7 @@ export class PixelToBoundingBox {
    async predict(
      p: Point,
      image: HTMLImageElement | HTMLCanvasElement
-   ): Promise<Detection | null> {
+    ): Promise<Detection | null> {
  
     let predictions = [] as Detection[];
 
@@ -96,9 +69,9 @@ export class PixelToBoundingBox {
               score: scores[i], category: '100'
           })  
       }  
-  }
+    }
  
-  let finalDetection: Detection | null = null;
+    let finalDetection: Detection | null = null;
     if (predictions.length > 0) {
         predictions = predictions.filter((pred)=> isInside(p, pred.boundingBox as Rectangle))
         predictions.sort((a, b) => b.score - a.score);
@@ -108,7 +81,7 @@ export class PixelToBoundingBox {
     input.dispose();
     cropPredictions[0].dispose();
     cropPredictions[1].dispose();
-
+    console.log('numTensors: ' + tf.memory().numTensors);
     return finalDetection;
   }
  

@@ -62,7 +62,7 @@ export class Segmentation extends Canvas {
     super();
     this.renderer.labelLayer.addChild(this.gmask);
     this.renderer.labelLayer.alpha = this.opacity;
-	this._editionMode.value = EditionMode.NEW_INSTANCE;
+	  this._editionMode.value = EditionMode.NEW_INSTANCE;
 
     this.modes = {
       'create': new CreatePolygonController({...this} as any),

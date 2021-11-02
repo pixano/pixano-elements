@@ -31,7 +31,7 @@ export class ShapesEditController extends Controller {
 
     private isScaling: boolean = false;
 
-    private _updated: boolean = false;
+    private _changed: boolean = false;
 
     private initialControlIdx: number = -1;
 
@@ -41,9 +41,9 @@ export class ShapesEditController extends Controller {
 
     protected observer: any = null;
 
-    set updated(updated: boolean) {
-        this._updated = updated;
-        if (updated) {
+    set changed(changed: boolean) {
+        this._changed = changed;
+        if (changed) {
             const obj = this.getShape(this.activeObjectId);
             if (obj) {
                 this.cachedShape = JSON.parse(JSON.stringify(obj));
@@ -53,8 +53,8 @@ export class ShapesEditController extends Controller {
         }
     }
 
-    get updated() {
-        return this._updated;
+    get changed() {
+        return this._changed;
     }
 
     constructor(props: Partial<ShapesEditController> = {}) {
@@ -222,11 +222,12 @@ export class ShapesEditController extends Controller {
         this.previousPos = this.renderer.getPosition(evt.data);
         this.activeObjectId = id;
         this.isDragging = true;
-        this.updated = false;
+        this.changed = false;
         // direct update of targets
         // should trigger related observer
         const obj = [...this.graphics].find((o) => o.data === shape);
         if (!obj) {
+			// no object
             return;
         }
         this.renderer.stage.on('pointermove', this.onObjectMove);
@@ -287,8 +288,8 @@ export class ShapesEditController extends Controller {
             if (dx === 0 && dy === 0) {
                 return;
             }
-            if (!this.updated) {
-                this.updated = true;
+            if (!this.changed) {
+                this.changed = true;
             }
             this.targetShapes.forEach(({geometry}) => {
                 geometry.vertices = geometry.vertices
@@ -305,7 +306,7 @@ export class ShapesEditController extends Controller {
         if (obj) {
             this.renderer.stage.removeListener('pointermove', this.onObjectMove);
             this.renderer.stage.removeListener('pointerupoutside', this.onObjectUp);
-            if (this.updated) {
+            if (this.changed) {
                 this.emitUpdate();
             }
         }
@@ -324,7 +325,7 @@ export class ShapesEditController extends Controller {
         // @ts-ignore
         const idx = evt.idx;
         this.activeControlIdx = idx;
-        this.updated = false;
+        this.changed = false;
         this.initialControlIdx = idx;
         if (graphic) {
             graphic.controls[this.activeControlIdx].on('pointermove', (e: any) => {
@@ -343,9 +344,9 @@ export class ShapesEditController extends Controller {
 
     public onControlMove(evt: PIXIInteractionEvent) {
         if (this.isScaling && (evt as any).idx === this.activeControlIdx) {
-            if (!this.updated) {
+            if (!this.changed) {
                 // this.emit('start-update', this.selectToJson());
-                this.updated = true;
+                this.changed = true;
             }
             let xMin = 1;
             let xMax = 0;
@@ -423,8 +424,8 @@ export class ShapesEditController extends Controller {
                 this.isScaling = false;
                 this.activeControlIdx = -1;
                 this.initialControlIdx = -1;
-                if (this.updated) {
-                    this.updated = false;
+                if (this.changed) {
+                    this.changed = false;
                     this.emitUpdate();
                 }
             }
@@ -484,7 +485,7 @@ export abstract class ShapeCreateController extends Controller {
     // arguments
     public renderer: Renderer;
 
-    public shapes: ObservableSet<ShapeData>;
+    public _shapes: ObservableSet<ShapeData>;
 
     public targetShapes: ObservableSet<ShapeData>;
 
@@ -509,7 +510,7 @@ export abstract class ShapeCreateController extends Controller {
     constructor(props: Partial<ShapeCreateController> = {}) {
         super(props);
         this.renderer = props.renderer || new Renderer();
-        this.shapes = props.shapes || new ObservableSet();
+        this._shapes = props._shapes || new ObservableSet();
         this.targetShapes = props.targetShapes || new ObservableSet();
         this.graphics = props.graphics || new Set();
         this.renderer.stage.addChild(this.cross);
@@ -569,7 +570,7 @@ export abstract class ShapeCreateController extends Controller {
     }
 
     protected emitCreate() {
-        const newShape = [...this.shapes].pop();
+        const newShape = [...this._shapes].pop();
         this.targetShapes.set([newShape!]);
         this.emit('create', newShape);
     }

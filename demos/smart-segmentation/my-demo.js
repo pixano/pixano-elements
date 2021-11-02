@@ -112,7 +112,9 @@ class MyDemo extends LitElement {
 			<div class="icons">
 			<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 			<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
-			<p class="icon" title="Smart instance" @click=${() => this.element.mode = 'smart-create'}>${borderOuter}</p>
+			<p class="icon" title="Smart instance" @click=${() => {
+        this.element.editionMode=EditionMode.NEW_INSTANCE;
+        this.element.mode = 'smart-create'}}>${borderOuter}</p>
 			<hr>
 			<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 			<hr>
