@@ -91,18 +91,17 @@ export class GraphicMask extends PIXIContainer {
           return Promise.resolve();
         }
         const img = new Image();
-        const self = this;
         return new Promise((res) => {
           img.onload = () => {
-              self.canvas.width = img.width;
-              self.canvas.height = img.height;
-              self.colorMask.destroy();
-              self.colorMask = new PIXISprite(PIXITexture.from(self.canvas));
-              self.removeChildren();
-              self.addChild(self.colorMask);
-              self.canvas.getContext('2d')!.drawImage(img, 0, 0, img.width, img.height);
-              const maskArray = self.canvas.getContext('2d')!.getImageData(0, 0, self.canvas.width, self.canvas.height);
-              self.setValue(maskArray);
+			this.canvas.width = img.width;
+			this.canvas.height = img.height;
+			this.colorMask.destroy();
+			this.colorMask = new PIXISprite(PIXITexture.from(this.canvas));
+			this.removeChildren();
+			this.addChild(this.colorMask);
+			this.canvas.getContext('2d')!.drawImage(img, 0, 0, img.width, img.height);
+              const maskArray = this.canvas.getContext('2d')!.getImageData(0, 0, this.canvas.width, this.canvas.height);
+              this.setValue(maskArray);
               res();
             };
             img.src = `data:image/png;base64,${buffer.replace('data:image/png;base64,', '')}`;

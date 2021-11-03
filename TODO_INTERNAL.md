@@ -67,6 +67,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [x] [#interface] possibilité d'utiliser tab comme dans les autres plugins
 - [x] [#interface] connecter taggleLabels et toggleMask pour standardiser
+- [ ] [#bogue] get copy/paste to work
 
 ## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa
