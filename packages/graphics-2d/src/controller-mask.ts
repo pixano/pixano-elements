@@ -55,8 +55,7 @@ export class SelectController extends Controller {
         window.addEventListener('keydown', this.onKeySelectionDown, false);
         this.contours.visible = true;
         if (this._selectedId.value && !arraysMatch(this._selectedId.value, [0,0,0])) {
-            this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
-            updateDisplayedSelection(this.contours, this.densePolygons);
+            this.select(this._selectedId.value);
         } else {
             this.densePolygons = [];
             this.contours.clear();
@@ -76,10 +75,7 @@ export class SelectController extends Controller {
             this.deselect();
             return;
         }
-        this._selectedId.value = id;
-        this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
-        updateDisplayedSelection(this.contours, this.densePolygons);
-        this.dispatchEvent(new CustomEvent('selection', { detail: this._selectedId.value }));
+        this.select(id);
     }
 
     deselect() {
@@ -90,6 +86,15 @@ export class SelectController extends Controller {
             this.dispatchEvent(new CustomEvent('selection', {detail: null}));
         }
     }
+
+	select(selectedId: [number,number,number]) {
+		if (selectedId) {
+			this._selectedId.value = selectedId;
+			this.densePolygons = getPolygons(this.gmask, selectedId);
+			updateDisplayedSelection(this.contours, this.densePolygons);
+			this.dispatchEvent(new CustomEvent('selection', { detail: selectedId }));
+		}
+	}
 
     onKeySelectionDown(evt: KeyboardEvent) {
         if (evt.key === 'Escape') {

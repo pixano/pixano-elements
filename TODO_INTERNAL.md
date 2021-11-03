@@ -11,6 +11,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#interface] use the same key bindings everywere it is possible (and choose between implementing it in controller or in pxn-*)
 - [ ] [#doc] mise à jour de la procédure de livraison :
 	- préparation de la livraison par les masters, livraison effective tournante parmis les membres du core pour multiplier les contributeurs visibles à Pixano sans prendre de risque sur la diffusion du contenu
 	- décision de ce qui est puiblique ou non par le core
@@ -38,6 +39,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#bug] Doit faire un rebase pour supprimer les gros fichiers de l'historique
 - [ ] [#feature] fichiers à supprimer si pb (compléter commande cleanall)
 - [ ] [#bug] modifier le readme de la démo de l'element seul
+- [x] [#interface] raccourci clavier pour Toggle Labels
 
 ## npx serve demos/polygon/
 - [ ] [#interface] quel est le plus pratique :
@@ -63,6 +65,8 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
 - [x] [#feature] possibilité de donner des attributs pour les segments
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
+- [x] [#interface] possibilité d'utiliser tab comme dans les autres plugins
+- [x] [#interface] connecter taggleLabels et toggleMask pour standardiser
 
 ## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa

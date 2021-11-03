@@ -214,10 +214,6 @@ export class Canvas2d extends Canvas {
     super.keyBinding(evt);
     const event = evt as KeyboardEvent;
     switch (event.key) {
-      case 'Tab': {
-        this.onTabulation.bind(this)(event);
-        break;
-      }
       case 'Delete': {
         // delete selected shapes and send notification
         const deletedIds = this.selectedShapeIds;
