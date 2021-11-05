@@ -62,12 +62,13 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 				- on pourrait aussi gagner en calculant pour chaque instance une boite englobante (et effectuer les calculs à l'intérieur). Cette boite pourrait d'ailleurs être utile dans la base de données.
 	2. l'affichage en direct de la zone couverte par le brush est également lente, mais c'est moins génant (plus compréhensible par un utilisateur en tout cas)
 		- => le tracé n'est pas négligeable (autour de 200-300ms en général), mais il y a d'autres temps plus importants et génants qui sont cachés... une idée d'où çà peut venir ?
+- [o] [#interface] ne plus utiliser un masque unique avec identité RGB, mais un masque binaire par instance (et une identité par un seul id) => plus simple à comprendre et gérer et potentiellement plus rapide si bien géré
 - [ ] ajouter un bouton filterLittle comme dans pixano-app
 - [x] [#feature] possibilité de donner des attributs pour les segments
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [x] [#interface] possibilité d'utiliser tab comme dans les autres plugins
 - [x] [#interface] connecter taggleLabels et toggleMask pour standardiser
-- [ ] [#bogue] get copy/paste to work
+- [ ] [#bogue] segmentation : get copy/paste to work
 
 ## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa

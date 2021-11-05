@@ -29,18 +29,20 @@ export class SmartCreateController extends ShapeCreateController {
         value: [number, number, number] | null
     };
     protected contours = new PIXIGraphics();
-    protected densePolygons: DensePolygon[] = new Array();
+    public densePolygons: DensePolygon[] = new Array();
 	public _editionMode: { value: EditionMode };
 
     constructor(props: Partial<SmartCreateController> = {}) {
       super(props);
       this.renderer = props.renderer || new Renderer();
+	  this.densePolygons = props.densePolygons || new Array();
       this._targetClass = props._targetClass || { value: 0 };
       this.gmask = props.gmask || new GraphicMask();
       this.segmentationCreator = new BoxSegmentation(this.model);
 	  this._selectedId = props._selectedId || { value: null };
 	  this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
 	  this.renderer.stage.addChild(this.contours);
+	  this.onKeyDown = this.onKeyDown.bind(this);
     }
 
     async load(modelPath?: string) {
@@ -63,12 +65,33 @@ export class SmartCreateController extends ShapeCreateController {
             this.densePolygons = [];
             this.contours.clear();
         }
+        window.addEventListener('keydown', this.onKeyDown, false);
     }
 
     deactivate() {
 		super.deactivate();
         this.contours.clear();
         this.contours.visible = false;
+        window.removeEventListener('keydown', this.onKeyDown, false);
+    }
+
+	/**
+     * On keyboard press (down)
+     * @param evt KeyboardEvent
+     */
+    onKeyDown(evt: KeyboardEvent) {
+        if (evt.key === 'Escape') {
+            this.deselect();
+        }
+    }
+
+    deselect() {
+        if (this._selectedId.value) {
+            this.densePolygons = [];
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this._selectedId.value = null;
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
+        }
     }
 
     onRootDown(evt: PIXIInteractionEvent) {

@@ -15,7 +15,7 @@ import { CreateBrushController,
 import { GraphicMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
-import { fuseId, unfuseId, convertIndexToDict } from './utils-mask';
+import { fuseId, unfuseId, convertIndexToDict, DensePolygon } from './utils-mask';
 
 /**
  * `<pxn-segmentation>` Basic segmentation editor.
@@ -36,6 +36,10 @@ export class Segmentation extends Canvas {
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
+
+  // coordinates of contour polygons
+  @property({type: Array})
+  public densePolygons: DensePolygon[] = new Array();
 
   public opacity: number = 0.60;
 
