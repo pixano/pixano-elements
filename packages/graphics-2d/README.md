@@ -361,3 +361,11 @@ interface ModeDetail {
 | ------------ | ---------------- | 
 | `Escape`     | `Unselect shapes` |
 | `Delete`     | `Delete selected shapes` |
+
+
+#### segmentation / controller-mask
+
+| Key          | Description      |
+| ------------ | ---------------- | 
+| `Escape`     | `Unselect instance` |
+| `Delete`     | `Delete selected instance` |

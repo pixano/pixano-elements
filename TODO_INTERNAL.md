@@ -11,6 +11,10 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#feature] nouveau module de classification
+- [ ] [#doc] tabulations/espaces uniformisée dans tous les fichiers
+- [ ] [#feature] créer une liste des objets étiquetés => pour l'app, séparation avec la sélection de la classe => s'inspirer des tiles du tracking : tout peut être uniformisé ici : liste des objets = liste des tracks, tile = modifs des attributs d'un objet/track
+- [ ] [#doc] afficher le numéro de version de piwano-element correspondant au dernier commit ou tag + possibilité de le récupérer facilement depuis app
 - [ ] [#interface] use the same key bindings everywere it is possible (and choose between implementing it in controller or in pxn-*)
 - [ ] [#doc] mise à jour de la procédure de livraison :
 	- préparation de la livraison par les masters, livraison effective tournante parmis les membres du core pour multiplier les contributeurs visibles à Pixano sans prendre de risque sur la diffusion du contenu
@@ -20,7 +24,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#interface] mettre l'opacité/transparence en paramètre réglable directement dans l'affichage avec un slider (en plus ou en remplamcent du bouton "Switch opacity")
 - [ ] [#interface] mettre en correspndance chaque bouton avec un raccourci clavier (et l'afficher dans l'aide du bouton, aide détaillée)
 - [x] [#interface] le zoom est conservé quand on passe d'une image à l'autre (dans app)
-- [ ] [#interface] pour les séquences d'images, on veut que le zoom reste le même d'une image à l'autre
+- [ ] [#interface] pour les séquences d'images, on veut que le zoom reste le même d'une image à l'autre => mettre une option à cocher ? (cohée par défaut dans tracking et décochée par défaut le reste du temps ?)
 - [o] auto-tests dans gitlab :
 	- => j'ai fait le boulot pour pixano-elements, mais gitlab est mal configuré et n'arrive pas à faire tourner les tests (manque de "runners")
 	- => il faudra que je vois dans les paramètres d'admin de gitlab si je peux arranger çà
@@ -69,6 +73,8 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] [#interface] possibilité d'utiliser tab comme dans les autres plugins
 - [x] [#interface] connecter taggleLabels et toggleMask pour standardiser
 - [ ] [#bogue] segmentation : get copy/paste to work
+- [ ] [#bogue] tab : les éléments supprimés restent dans la liste
+- [ ] [#bogue] tab : implémnetation du shift+tab comme pour les canvas2d
 
 ## npx serve demos/smart-segmentation/
 - [ ] [#interface] un message durant le chargement serait sympa
@@ -82,14 +88,15 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#interface] retrouver les boutons de rectangle pour pouvoir sélectionner / corriger / déplacer les instances ?
 
 ## npx serve demos/tracking/
-- [ ] [] ne devrait pas hériter de rectangle : on ne veut pas le limiter aux rectangles
-- [ ] [] d'ailleurs même le fichier ne devrait pas être dans graphics-2D => mais pose problème pour la publication => créer un dépôt dédié aux séries temporelles ? Çà a du sens ?
+- [ ] [#feature] ne devrait pas hériter de rectangle : on ne veut pas le limiter aux rectangles
+- [ ] [#feature] d'ailleurs même le fichier ne devrait pas être dans graphics-2D => mais pose problème pour la publication => créer un dépôt dédié aux séries temporelles ? Çà a du sens ?
 - [-] [#bug] Add Pixi import in controller-tracking
 - [ ] [#bogue] impossible de supprimer une track entre deux keyframes (il réinterpole systématiquement) => nécessaire par exemple quand la cible passe derrière un poteau
 	- => casser la track en créant une keyframe à la frame n-1
 	- => possibilité de continuer la track en sélectionnant son numéro en mode create (et non via "new")
 - [ ] [#bogue] interpolation à changer
 - [ ] [#bogue] tracking à l'envers
+- [ ] [#feature] on veut que le zoom reste le même d'une image à l'autre, contrairement au fonctionnemnt hors tracking
 
 ## npx serve demos/smart-tracking/
 - [ ] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
