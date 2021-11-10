@@ -88,7 +88,7 @@ export class BoxSegmentation {
 		let pts: [number, number][] = []
 		const blobExtractor = new BlobExtractor2d([...mask], box[2] - box[0], box[3] - box[1]);
 		blobExtractor.extract(1);
-		if (blobExtractor.blobs.size == 1) {
+		if (blobExtractor.blobs.size === 1) {
 			blobExtractor.blobs.get(0)!.contours.forEach((ctr: any) => {
 				if (ctr.type === 'external') {
 					pts = simplify(convertIndexToDict(ctr.points, box[2] - box[0] + 1), 2);

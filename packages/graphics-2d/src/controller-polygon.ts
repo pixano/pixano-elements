@@ -308,6 +308,6 @@ export class PolygonCreateController extends ShapeCreateController {
 		shape.destroy();
 		this.tmpShape = null;
 		this.emitCreate();
-		this.emitSelection();//select the new created polygon
+		this.emitSelection();// select the new created polygon
 	}
 }

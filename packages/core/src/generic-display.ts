@@ -73,7 +73,7 @@ export abstract class GenericDisplay extends LitElement {
 
 	/**
 	 * Load data from source file or sequence of files
-	 *	@param {string | string[]} source - media file name or list of media file names
+	 * @param {string | string[]} source - media file name or list of media file names
 	 */
 	set input(source: string | string[]) {
 		this._source = source;
@@ -175,7 +175,7 @@ export abstract class GenericDisplay extends LitElement {
 		});
 	}
 
-	public isLastFrame(): Boolean {
+	public isLastFrame(): boolean {
 		const currIdx = this._targetFrameIdx as number;
 		const maxIdx = this.maxFrameIdx as number;
 		if (currIdx >= maxIdx) return true;
@@ -211,9 +211,9 @@ export abstract class GenericDisplay extends LitElement {
 	 * if the component displays a sequence.
 	 * You can override the default "slider" slot by your own html child. E.g:
 	 * `
-	 *	<pxn-cuboid>
-	 *		<div slot="slider">Slider</div>
-	 *	</pxn-cuboid>
+	 * 	<pxn-cuboid>
+	 * 		<div slot="slider">Slider</div>
+	 * 	</pxn-cuboid>
 	 * `
 	 */
 	render() {

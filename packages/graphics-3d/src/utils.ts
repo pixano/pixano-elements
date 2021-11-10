@@ -386,8 +386,8 @@ export function filterCentralArea(pointBuffer: Float32Array, rmin: number = 3, r
  * @param zmin search grid is [zmin, 0] (zmin negative)
  * @param delta search grid step
  * @returns zl : bottom z value of higher density layer
- *					zh : top z value of higher density layer (zl + delta)
- *					mean : mean inside layer of higher density
+ * 			zh : top z value of higher density layer (zl + delta)
+ * 			mean : mean inside layer of higher density
  */
 export function findHighDensityZ(points: [number, number, number][], zmin: number, delta = 0.25): {
 	zl: number, zh: number, mean: number
@@ -473,7 +473,7 @@ export const cubeToCoordinates = (cube: Cuboid) => {
 
 	// add bottom cross
 	// edges = [...edges,
-	//	 [0, 2], [1, 3]
+	// 	[0, 2], [1, 3]
 	// ]
 	// add front cross
 	edges = [...edges,

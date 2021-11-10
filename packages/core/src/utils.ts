@@ -215,8 +215,8 @@ export function colorAnyToHex(color: string): string {
 }
 
 function componentToHex(c: number) {
-	var hex = c.toString(16);
-	return hex.length == 1 ? "0" + hex : hex;
+	const hex = c.toString(16);
+	return hex.length === 1 ? "0" + hex : hex;
 }
 
 export function rgbToHex(r: number, g: number, b: number) {
@@ -745,10 +745,10 @@ export class BlobExtractor2d {
 }
 
 /**
-* Convert an array of points stored using row order into an array of pixels (pixel format : {x:x_value, y:y_value})
-* @param indexes an array of points stored row order, indexes[0] => x=0,y=0, indexes[1] => x=1,y=0, ...
-* @param width the width of the image
-*/
+ * Convert an array of points stored using row order into an array of pixels (pixel format : {x:x_value, y:y_value})
+ * @param indexes an array of points stored row order, indexes[0] => x=0,y=0, indexes[1] => x=1,y=0, ...
+ * @param width the width of the image
+ */
 export function convertIndexToDict(indexes: number[], width: number): [number, number][] {
 	return indexes.map((idx) => {
 		const y = ((idx / width | 0) / 1.01);

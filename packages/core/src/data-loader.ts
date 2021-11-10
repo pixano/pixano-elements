@@ -39,7 +39,7 @@ export class VideoCache {
 	}
 
 	getNextIdxToLoad(start: number) {
-		const idx = this.frames.slice(start + 1).findIndex((f) => f.data == null);
+		const idx = this.frames.slice(start + 1).findIndex((f) => f.data === null);
 		if (idx !== -1) {
 			return start + 1 + idx;
 		} else {
@@ -66,16 +66,16 @@ export class VideoCache {
 	 * Get the number of currently loaded frames in the cache.
 	 */
 	getNumLoadedFrames() {
-		return this.frames.filter((f) => f.data != null).length;
+		return this.frames.filter((f) => f.data !== null).length;
 	}
 
 	getLoadedBetween(a: number, b: number) {
-		return this.frames.slice(a, b).filter((f) => f.data != null).length;
+		return this.frames.slice(a, b).filter((f) => f.data !== null).length;
 	}
 
 	getMaxLoaded() {
 		const revArray = this.frames.slice().reverse();
-		const lastIdx = revArray.findIndex((f) => f.data != null);
+		const lastIdx = revArray.findIndex((f) => f.data !== null);
 		return this.frames.length - lastIdx;
 	}
 
@@ -88,11 +88,11 @@ export class VideoCache {
 
 	isLoadedByTimestamp(timestamp: number) {
 		const index = this.frames.findIndex((f) => f.timestamp === timestamp);
-		return index !== -1 && this.frames[index].data != null;
+		return index !== -1 && this.frames[index].data !== null;
 	}
 
 	isLoadedByIndex(idx: number) {
-		return this.frames[idx] && this.frames[idx].data != null;
+		return this.frames[idx] && this.frames[idx].data !== null;
 	}
 
 	/**
@@ -100,7 +100,7 @@ export class VideoCache {
 	 * @param id frame id in the cache
 	 */
 	getFrameByIndex(idx: number) {
-		return (this.frames[idx] && this.frames[idx].data != null) ? this.frames[idx].data : null;
+		return (this.frames[idx] && this.frames[idx].data !== null) ? this.frames[idx].data : null;
 	}
 
 	/**
@@ -206,13 +206,13 @@ function read(path: string | string[], type: 'image' | 'pcl' | 'all' = 'all'): P
 	if (typeof path === 'string') {
 		if ((type === 'image' || type === 'all')) {
 			// we must only accept images
-			if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) != null) {
+			if (path.match(/\.(jpeg|jpg|gif|png)$|data:image|blob:/) !== null) {
 				return readImage(path);
 			}
 		} else if ((type === 'pcl' || type === 'all')) {
 			// we must only accept point clouds
 			const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
-			if (path.match(/\.(bin)$|blob:/) != null) {
+			if (path.match(/\.(bin)$|blob:/) !== null) {
 				return readPcl(path);
 			} else if (base64regex.test(path)) {
 				return readBase64Array(path);
@@ -295,7 +295,7 @@ export class SequenceLoader extends EventTarget {
 	 */
 	peekFrame(idx: number) {
 		const requestedFrame = this.cache.getFrameByIndex(idx);
-		if (requestedFrame == null) {
+		if (requestedFrame === null) {
 			return this.abortLoading().then(() => {
 				this.cache.clearData();
 				return this.load(idx);

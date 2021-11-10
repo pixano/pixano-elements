@@ -97,7 +97,7 @@ export class GraphicGraph extends Graphic {
 	draw() {
 		this.area.clear();
 		this.data.geometry.edges!.forEach((edge) => {
-			let edgeColor = settings.edgeColorType == "default" ? this.hex : settings.nodeColors[edge[0]]
+			let edgeColor = settings.edgeColorType === "default" ? this.hex : settings.nodeColors[edge[0]]
 			edgeColor = this.state === 'nodes' || this.state === 'box' ? 0X426eff : edgeColor;
 			this.area.lineStyle(3, edgeColor || 0xFFFFFF, 1, 0.5, true);
 			const sX = Math.round(this.data.geometry.vertices[edge[0] * 2] * this.scaleX);
@@ -143,8 +143,8 @@ export class GraphicGraph extends Graphic {
 		}
 		if (this.state !== 'contour' && this.state !== 'nodes') {
 			// if (this.state === 'box') {
-			//		 this.nodes.forEach((c) => { c.interactive = false; });
-			//		 this.drawBox();
+			// 		 this.nodes.forEach((c) => { c.interactive = false; });
+			// 		 this.drawBox();
 			// }
 		} else if (this.state === 'contour' || this.state === 'nodes') {
 			this.controls.forEach((c) => { c.interactive = false; });

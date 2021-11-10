@@ -285,8 +285,8 @@ export class Renderer extends PIXI.Application {
 
 	/**
 	 * Position relative to stage to absolution canvas position
-	 * @param x 
-	 * @param y 
+	 * @param x
+	 * @param y
 	 */
 	public toAbsolutePosition(x: number, y: number): { x: number, y: number } {
 		return this.stage.toGlobal({ x, y });

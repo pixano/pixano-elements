@@ -76,9 +76,9 @@ export class SmartCreateController extends ShapeCreateController {
 	}
 
 	/**
-		 * On keyboard press (down)
-		 * @param evt KeyboardEvent
-		 */
+	 * On keyboard press (down)
+	 * @param evt KeyboardEvent
+	 */
 	onKeyDown(evt: KeyboardEvent) {
 		if (evt.key === 'Escape') {
 			this.deselect();
@@ -161,17 +161,17 @@ export class SmartCreateController extends ShapeCreateController {
 	}
 
 	/**
-		 * Utility function to retrieve the mask value to next be created
-		 * depending on the edition mode (new, add, remove).
-		 */
+	 * Utility function to retrieve the mask value to next be created
+	 * depending on the edition mode (new, add, remove).
+	 */
 	getTargetValue(): [number, number, number] {
-		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
+		if (this._editionMode.value === EditionMode.NEW_INSTANCE) {
 			const cls = this.gmask.clsMap.get(this._targetClass.value);
 			const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
 			const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
 			this._selectedId.value = value;
 			return value;
-		} else if ((this._editionMode.value == EditionMode.ADD_TO_INSTANCE || this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE)
+		} else if ((this._editionMode.value === EditionMode.ADD_TO_INSTANCE || this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE)
 			&& this._selectedId.value) {
 			return this._selectedId.value;
 		}

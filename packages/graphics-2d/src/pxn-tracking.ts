@@ -183,9 +183,9 @@ export class Tracking extends Rectangle {
 					this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
 				}
 			} else if (evt.key === 'n') {
-				this.mode = 'create';//new track => create mode
+				this.mode = 'create';// new track => create mode
 			} else if (evt.key === 'Escape') {
-				this.mode = 'edit';//back to edit mode
+				this.mode = 'edit';// back to edit mode
 			}
 
 			this.isShiftKeyPressed = evt.shiftKey;
@@ -199,7 +199,7 @@ export class Tracking extends Rectangle {
 	 * Extend shape controller onObjectDown to handle track selection
 	 */
 	protected handleTrackSelection() {
-		const editController = (this.modes['edit'] as ShapesEditController);
+		const editController = (this.modes.edit as ShapesEditController);
 		editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
 			const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
 			this.selectTrack(shape.id, isShiftKey);
@@ -282,7 +282,7 @@ export class Tracking extends Rectangle {
 		this.selectedShapeIds = [newTrack.id];
 		this.drawTracks();
 		this.requestUpdate();
-		this.mode = 'edit';//back to edit mode after each new creation
+		this.mode = 'edit';// back to edit mode after each new creation
 		this.dispatchEvent(new Event('create-track'));
 	}
 
@@ -467,8 +467,8 @@ export class Tracking extends Rectangle {
 	 * Merge error dialog
 	 */
 	mergeErrorDialog(t1Id: string, t2Id: string, keysIntersection: string[]) {
-		var mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
-		var message = this.shadowRoot!.getElementById("dialog-merge-error-message");
+		const mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
+		const message = this.shadowRoot!.getElementById("dialog-merge-error-message");
 		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".</br>"
 			+ "Tracks intersect at frames: " + keysIntersection;
 		mergeErrorDialog!.open = true;
@@ -522,7 +522,7 @@ export class Tracking extends Rectangle {
 			const currentShape = getShape(t, this.timestamp).keyshape;
 			const color = trackColors[parseInt(tId) % trackColors.length];
 			let isHidden = true;
-			const disabled = currentShape == null;
+			const disabled = currentShape === null;
 			if (currentShape) {
 				isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
 			}

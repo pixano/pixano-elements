@@ -165,7 +165,7 @@ export class CreateModeController extends BasicEventTarget {
 				}
 				case "autoGround": {
 					const defaultHeight = 2;
-					const groundZ = this.groundSegmentation.groundZ == null ? 0 : this.groundSegmentation.groundZ;
+					const groundZ = this.groundSegmentation.groundZ === null ? 0 : this.groundSegmentation.groundZ;
 					box = {
 						position: [x, y, groundZ + 0.5 * defaultHeight],
 						size: [l, w, defaultHeight],

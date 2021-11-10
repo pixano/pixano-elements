@@ -15,7 +15,7 @@ export function unfuseId(fId: number): [number, number, number] {
 /**
  * Fused id is idx1 + 256*idx2 + 256*256*cls
  * @param id [idx1, idx2, cls]
- * @returns 
+ * @returns
  */
 export function fuseId(id: [number, number, number]): number {
 	return id[0] + 256 * id[1] + 256 * 256 * id[2];
@@ -194,7 +194,7 @@ export const arraysMatch = (arr1: any[], arr2: any[]) => {
 	if (arr1.length !== arr2.length) return false;
 
 	// Check if all items exist and are in the same order
-	for (var i = 0; i < arr1.length; i++) {
+	for (let i = 0; i < arr1.length; i++) {
 		if (arr1[i] !== arr2[i]) return false;
 	}
 

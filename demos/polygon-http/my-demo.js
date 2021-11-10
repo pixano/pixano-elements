@@ -33,7 +33,7 @@ class MyDemo extends LitElement {
 		this.mode = 'edit'; // overwrite default mode param of element
 		this.image = "image.jpg";
 		window.addEventListener('keydown', (evt) => {
-			if (evt.key == 'Alt') {
+			if (evt.key === 'Alt') {
 				this.element.mode = this.element.mode === 'edit' ? 'create': 'edit';
 			}
 		});

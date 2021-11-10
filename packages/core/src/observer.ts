@@ -38,9 +38,9 @@ export function observable<T extends object>(obj: T): T {
 
 /**
  * Observable subclass of Set. - observers will be called:
- *	- when an element is added with arguments 'add' and the element
- *	- when an element is deleted with arguments 'delete' and the element
- *	- when the set is cleared with argument 'clear'
+ * 	- when an element is added with arguments 'add' and the element
+ * 	- when an element is deleted with arguments 'delete' and the element
+ * 	- when the set is cleared with argument 'clear'
  */
 export class ObservableSet<T> extends Set<T> {
 	constructor(...args: any[]) {	// TODO: call add to initialize items
@@ -96,9 +96,9 @@ export class ObservableSet<T> extends Set<T> {
 
 /**
  * Observable subclass of Map. - observers will be called:
- *	- when an element is set with arguments 'set' and the element
- *	- when an element is deleted with arguments 'delete' and the element
- *	- when the set is cleared with argument 'clear'
+ * 	- when an element is set with arguments 'set' and the element
+ * 	- when an element is deleted with arguments 'delete' and the element
+ * 	- when the set is cleared with argument 'clear'
  */
 export class ObservableMap<K, T> extends Map<K, T> {
 	constructor(...args: any[]) {	// TODO: call add to initialize items

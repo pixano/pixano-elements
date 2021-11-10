@@ -23,7 +23,7 @@ import { fuseId, unfuseId, convertIndexToDict, DensePolygon } from './utils-mask
  * `<pxn-segmentation>` Basic segmentation editor.
  * Use `<pxn-segmentation>` in your document with its src image.
  * <body>
- *	 <pxn-segmentation></pxn-segmentation>
+ * 	 <pxn-segmentation></pxn-segmentation>
  * @customElement
  *
  */
@@ -101,10 +101,10 @@ export class Segmentation extends Canvas {
 	/**
 	 * change edition mode from outside and take it into account
 	 */
-	set editionMode(editionMode_: EditionMode) {
-		if (this._editionMode.value == editionMode_) this._editionMode.value = EditionMode.NEW_INSTANCE;//exception : clicking again on the same button returns to default mode
-		else this._editionMode.value = editionMode_;
-		if (this.modes[this.mode] instanceof CreateBrushController) this.modes[this.mode].reset();//... not really the best way just to call initRoi()...
+	set editionMode(editionMode: EditionMode) {
+		if (this._editionMode.value === editionMode) this._editionMode.value = EditionMode.NEW_INSTANCE;// exception : clicking again on the same button returns to default mode
+		else this._editionMode.value = editionMode;
+		if (this.modes[this.mode] instanceof CreateBrushController) this.modes[this.mode].reset();// ... not really the best way just to call initRoi()...
 	}
 
 	get targetClass() {
@@ -144,7 +144,7 @@ export class Segmentation extends Canvas {
 	 */
 	public setMask(buffer: string) {
 		try { (this.modes[this.mode] as any).deselect(); }
-		catch (err) { }
+		catch (err) { console.warn("deselect failed"); }
 		return this.gmask.setBase64(buffer);
 	}
 
@@ -158,7 +158,7 @@ export class Segmentation extends Canvas {
 		this.gmask.empty(this.renderer.imageWidth, this.renderer.imageHeight);
 		this.selectedId = [-1, -1, -1];
 		try { (this.modes[this.mode] as any).deselect(); }
-		catch (err) { }
+		catch (err) { console.warn("deselect failed"); }
 	}
 
 	/**
@@ -172,7 +172,7 @@ export class Segmentation extends Canvas {
 			this.gmask.initialize(this.mask);
 			this.selectedId = [-1, -1, -1];
 			try { (this.modes[this.mode] as any).deselect(); }
-			catch (err) { }
+			catch (err) { console.warn("deselect failed"); }
 		}
 		if (changedProperties.has('mode') && this.mode) {
 			const prevMode = changedProperties.get('mode');
@@ -203,7 +203,7 @@ export class Segmentation extends Canvas {
 		if (prevMode === newMode) {
 			return;
 		}
-		prevMode = prevMode == null ? 'edit' : prevMode;
+		prevMode = prevMode === null ? 'edit' : prevMode;
 		if (this.modes[prevMode]) {
 			// Restore default state
 			this.modes[prevMode].deactivate();
@@ -279,13 +279,13 @@ export class Segmentation extends Canvas {
 	 * @param event [keyBoardEvent] (not used here)
 	 */
 	protected onTabulation(event: KeyboardEvent) {
-		if (this.gmask.fusedIds.size == 0) return;//if no mask exists for now, nothing to do
-		event.preventDefault();//prevent tab to be used outside of Pixano
+		if (this.gmask.fusedIds.size === 0) return;// if no mask exists for now, nothing to do
+		event.preventDefault();// prevent tab to be used outside of Pixano
 		// search and select the next id
 		if (this.selectedId) {
-			let currentId = fuseId(this.selectedId);
+			const currentId = fuseId(this.selectedId);
 			let selectnext = false;
-			for (let id of this.gmask.fusedIds) {
+			for (const id of this.gmask.fusedIds) {
 				if (selectnext) {
 					this.selectedId = unfuseId(id);
 					selectnext = false;
@@ -294,14 +294,14 @@ export class Segmentation extends Canvas {
 					selectnext = true;
 				}
 			}
-			if (selectnext) {//if we get the end of the set, we take the first one
-				for (let id of this.gmask.fusedIds) {
+			if (selectnext) {// if we get the end of the set, we take the first one
+				for (const id of this.gmask.fusedIds) {
 					this.selectedId = unfuseId(id);
 					break;
 				}
 			}
-		} else {//if nothing was selected, take the first id
-			for (let id of this.gmask.fusedIds) {
+		} else {// if nothing was selected, take the first id
+			for (const id of this.gmask.fusedIds) {
 				this.selectedId = unfuseId(id);
 				break;
 			}
@@ -322,11 +322,11 @@ export class Segmentation extends Canvas {
 	}
 
 	/**
-		 * Remove all blobs of selected id with number of pixels below 'blobMinSize'
-		 * TODO: multiple ids in a single loop
-		 * @param targetId the id of the blobs to be found
-		 * @param blobMinSize
-		 */
+	 * Remove all blobs of selected id with number of pixels below 'blobMinSize'
+	 * TODO: multiple ids in a single loop
+	 * @param targetId the id of the blobs to be found
+	 * @param blobMinSize
+	 */
 	protected filterId(targetId: [number, number, number], blobMinSize: number) {
 		const blobs = this.gmask.getBlobs(targetId)
 		for (const [, blob] of blobs) {
@@ -355,10 +355,10 @@ export class Segmentation extends Canvas {
 	}
 
 	/**
-		 * Change the controler linked to the mode:
-		 * @param mode string, the mode whome controler has to be changed
-		 * @param controller the new controler
-		 */
+	 * Change the controler linked to the mode:
+	 * @param mode string, the mode whome controler has to be changed
+	 * @param controller the new controler
+	 */
 	public setController(mode: string, controller: Controller) {
 		if (mode === this.mode && this.modes[mode]) {
 			// remove active base controller
@@ -399,7 +399,7 @@ export class Segmentation extends Canvas {
 				this.dispatchEvent(new Event('update'));
 			})
 			try { (this.modes[this.mode] as any).deselect(); }
-			catch (err) { }
+			catch (err) { console.warn("deselect failed"); }
 		}
 	}
 }

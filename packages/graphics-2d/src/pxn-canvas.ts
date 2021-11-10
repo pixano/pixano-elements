@@ -6,7 +6,7 @@
  * @license CECILL-C
  */
 
-import { html, customElement, property } from 'lit-element';
+import { html, property } from 'lit-element';
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { GenericDisplay } from '@pixano/core/lib/generic-display';
 import { Renderer } from './renderer';
@@ -17,8 +17,7 @@ import { fullscreen } from '@pixano/core/lib/style';
 /**
  * Parent class that displays image
  */
-@customElement('pxn-canvas' as any)
-export class Canvas extends GenericDisplay {
+export abstract class Canvas extends GenericDisplay {
 
 	// input image path
 	@property({ type: String })
@@ -127,18 +126,12 @@ export class Canvas extends GenericDisplay {
 	 * Handle copy keyboard event
 	 * Return the string you want to copy
 	 */
-	protected onCopy(): string | void {
-		// Implement your own onCopy method.
-		console.log("onCopy: should be astract:");
-	}
+	protected abstract onCopy(): string | void;
 	/**
 	 * Handle tabulation event
 	 * @param event [keyBoardEvent]
 	 */
-	protected onTabulation(event: KeyboardEvent) {
-		// Implement your own onTabulation method.
-		console.log("onTabulation: should be astract:", event);
-	}
+	protected abstract onTabulation(event: KeyboardEvent): void;
 
 	/**
 	 * Handle paste of copied string.
@@ -231,7 +224,7 @@ export class Canvas extends GenericDisplay {
 	 * @param changedProperty
 	 */
 	protected updated(changedProperties: any) {
-		if (changedProperties.has('image') && this.image != null) {
+		if (changedProperties.has('image') && this.image !== null) {
 			console.warn("WARNING! Obsolete property. Property 'image' has been deprecated, please use the new 'input' instead!");
 			this.input = this.image;
 		}

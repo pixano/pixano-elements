@@ -14,7 +14,7 @@ import { SmartCreateController } from './controller-smart-mask';
  * `<pxn-smart-segmentation>` Advanced segmentation editor with smart segmentation capability.
  * Use `<pxn-smart-segmentation>` in your document with its src image.
  * <body>
- *	 <pxn-smart-segmentation></pxn-smart-segmentation>
+ * <pxn-smart-segmentation></pxn-smart-segmentation>
  * @customElement
  *
  */
@@ -27,7 +27,7 @@ export class SmartSegmentation extends Segmentation {
 	constructor() {
 		super();
 		this.maskVisuMode = MaskVisuMode.INSTANCE;
-		//add smart segmentation creation controller
+		// add smart segmentation creation controller
 		this.modes['smart-create'] = new SmartCreateController({ ...this } as any);
 	}
 

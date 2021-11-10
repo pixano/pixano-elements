@@ -18,7 +18,7 @@ export class SmartRectangle extends Rectangle {
 	scale = 1;
 
 	@property({ type: String })
-	modelPath = 'lite_mobilenet_v2'; //'lapnet_model/model.json'; //'lite_mobilenet_v2';
+	modelPath = 'lite_mobilenet_v2'; // 'lapnet_model/model.json'; //'lite_mobilenet_v2';
 
 	constructor() {
 		super();

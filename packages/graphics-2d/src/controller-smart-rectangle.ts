@@ -134,9 +134,9 @@ export class SmartRectangleCreateController extends ShapeCreateController {
 	}
 
 	protected onSmartKeydown(evt: KeyboardEvent) {
-		if (evt.key === "z") { //"+") {
+		if (evt.key === "z") { // "+") {
 			this.roiUp();
-		} else if (evt.key === "a") { //"-") {
+		} else if (evt.key === "a") { // "-") {
 			this.boundingBoxCreator.scaleRoiUp();
 			this.roiDown();
 		}

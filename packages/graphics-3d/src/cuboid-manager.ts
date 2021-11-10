@@ -15,7 +15,7 @@ import { EditModeController } from './edit-controller';
 import { CreateModeController } from './create-controller';
 import { GroundSegmentation } from './ground-segmentation';
 
-// edit mode can either be active (target != null) or inactive (target == null)
+// edit mode can either be active (target !== null) or inactive (target === null)
 export type InteractiveMode = "edit" | "create" | "none";
 
 /** Edit mode manager - Handles mode switching and monitors neceassary events */
@@ -176,7 +176,7 @@ export class ModeManager {
 	}
 
 	/** Switch to another mode -
-	 *	@param mode 'edit', 'create' or 'none'
+	 *  @param mode 'edit', 'create' or 'none'
 	 */
 	set mode(mode: InteractiveMode) {
 		// Restore default state

@@ -19,7 +19,7 @@ export class Tracker {
 		template_size: 127,
 		search_size: 255,
 		total_stride: 8,
-		score_size: Math.floor((255 - 127) / 8) + 1 + 8, //	Int((search_size - template_size)/(total_stride)) + 1 + 8	# for ++
+		score_size: Math.floor((255 - 127) / 8) + 1 + 8, // Int((search_size - template_size)/(total_stride)) + 1 + 8	# for ++
 		context_amount: 0.5,
 		ratio: 0.93, // ratio: 0.94,
 		// small_sz: 255,
@@ -183,15 +183,15 @@ export function update_tracks(
 		{ 'template': templateTensor, 'search': searchTensor },
 		['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']
 	) as tf.Tensor2D[]);
-	//predX1 = Identity_1:0
-	//predY1 = Identity_3:0
-	//predX2 = Identity_2:0
-	//predY2 = Identity_4:0
-	//scores2D = Identity:0
+	// predX1 = Identity_1:0
+	// predY1 = Identity_3:0
+	// predX2 = Identity_2:0
+	// predY2 = Identity_4:0
+	// scores2D = Identity:0
 	templateTensor.dispose(); searchTensor.dispose();
 
 	// size penalty
-	const sC = tf.tidy(() => change(sz(predX2.sub(predX1), predY2.sub(predY1)).div(sz_wh(scaledTargetSz)))); // scale penalty
+	const sC = tf.tidy(() => change(toSize(predX2.sub(predX1), predY2.sub(predY1)).div(sz_wh(scaledTargetSz)))); // scale penalty
 
 	const a = tf.tidy(() => tf.ones([predX1.shape[0], predX1.shape[1]]).mul(scaledTargetSz[0] / scaledTargetSz[1]));
 	const b = tf.tidy(() => ((predX2.sub(predX1)).div((predY2.sub(predY1)))));
@@ -384,7 +384,7 @@ export function change(r: tf.Tensor2D) {
 	return tf.maximum(r, rInv);
 }
 
-export function sz(w: tf.Tensor2D, h: tf.Tensor2D) {
+export function toSize(w: tf.Tensor2D, h: tf.Tensor2D) {
 	const pad = tf.tidy(() => { return w.add(h).mul(0.5); });
 	const sz2 = tf.tidy(() => { return (w.add(pad)).mul(h.add(pad)); });
 	pad.dispose();

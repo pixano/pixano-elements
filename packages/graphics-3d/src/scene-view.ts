@@ -122,7 +122,7 @@ export class SceneView {
 	 * @param x screen x
 	 * @param y screen y
 	 * @returns closest intersected object and the intersection point if any,
-	 *		otherwise [null, null]
+	 * 			otherwise [null, null]
 	 */
 	public raycast(x: number, y: number, ...objects: THREE.Object3D[]): [THREE.Object3D, THREE.Intersection] | [null, null] {
 		const canvasBounds = this.renderer.domElement.getBoundingClientRect();

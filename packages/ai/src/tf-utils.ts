@@ -34,7 +34,7 @@ export const isModelCached = (url: string) => {
 
 export const logModelLoad = (p: number) => {
 	p = Math.round(p * 100);
-	if (p % 10 == 0) {
+	if (p % 10 === 0) {
 		console.info(`Model loading...${p}%`)
 	}
 }

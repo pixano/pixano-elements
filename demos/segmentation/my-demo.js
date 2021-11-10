@@ -56,14 +56,14 @@ class MyDemo extends LitElement {
 		if (readMaskFromFile){
 			const inputMask = new Image();
 			inputMask.onload = () => {
-				var canvas = document.createElement("canvas");
+				const canvas = document.createElement("canvas");
 				canvas.width = inputMask.width;
 				canvas.height = inputMask.height;
 
 				// Copy the image contents to the canvas
-				var ctx = canvas.getContext("2d");
+				const ctx = canvas.getContext("2d");
 				ctx.drawImage(inputMask, 0, 0);
-				var pixels = ctx.getImageData(0,0, inputMask.width, inputMask.height);
+				const pixels = ctx.getImageData(0,0, inputMask.width, inputMask.height);
 				for (let i = 0; i < inputMask.width * inputMask.height * 4; i += 4){
 					//pixels.data[i] = 0;
 					//pixels.data[i + 1] = 0;

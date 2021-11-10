@@ -59,7 +59,7 @@ export class MaskController extends Controller {
 		if (this._selectedId.value) {// && !arraysMatch(this._selectedId.value, [0,0,0]
 			this.densePolygons = getPolygons(this.gmask, this._selectedId.value);
 			updateDisplayedSelection(this.contours, this.densePolygons);
-			//this.select(this._selectedId.value);
+			// this.select(this._selectedId.value);
 		} else {
 			this.densePolygons = [];
 			this.contours.clear();
@@ -74,9 +74,9 @@ export class MaskController extends Controller {
 	}
 
 	/**
-		 * On keyboard press (down)
-		 * @param evt KeyboardEvent
-		 */
+	 * On keyboard press (down)
+	 * @param evt KeyboardEvent
+	 */
 	onKeyDown(evt: KeyboardEvent) {
 		if (evt.key === 'Escape') {
 			this.deselect();
@@ -177,18 +177,18 @@ export class LockController extends SelectController {
 			}
 		} else if (this.lockType === "class") {
 			const cls = id[2];
-			const currentLockedClasses = [...this.gmask.lockedInstances].map((id) => unfuseId(id)[2]);
+			const currentLockedClasses = [...this.gmask.lockedInstances].map((uid) => unfuseId(uid)[2]);
 			if (currentLockedClasses.includes(cls)) {
 				// remove all instances of class from the locked instances
 				this.gmask.fusedIds.forEach((fId) => {
-					if (unfuseId(fId)[2] == cls) {
+					if (unfuseId(fId)[2] === cls) {
 						this.gmask.lockedInstances.delete(fId);
 					}
 				});
 			} else {
 				// add all instances of class to locked instances
 				this.gmask.fusedIds.forEach((fId) => {
-					if (unfuseId(fId)[2] == cls) {
+					if (unfuseId(fId)[2] === cls) {
 						this.gmask.lockedInstances.add(fId);
 					}
 				});
@@ -270,22 +270,22 @@ export class CreateBrushController extends MaskController {
 	 * the brush pixels.
 	 */
 	initRoi() {
-		if (this.roiRadius == -1) {//first call : we compute the optimal roiRadius regarding image size
+		if (this.roiRadius === -1) {// first call : we compute the optimal roiRadius regarding image size
 			this.roiRadius = Math.trunc(Math.min(this.renderer.imageHeight, this.renderer.imageWidth) / 144);
 		}
 		this.roi.cacheAsBitmap = false;
 		this.roi.clear();
-		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getNextTargetValue());
-			let hex = rgbToHex(...color);
+		if (this._editionMode.value === EditionMode.NEW_INSTANCE) {
+			const color = this.gmask.pixelToColor(...this.getNextTargetValue());
+			const hex = rgbToHex(...color);
 			this.roi.beginFill(parseInt(hex, 16));
-		} else if (this._editionMode.value == EditionMode.ADD_TO_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getTargetValue());
-			let hex = rgbToHex(...color);
+		} else if (this._editionMode.value === EditionMode.ADD_TO_INSTANCE) {
+			const color = this.gmask.pixelToColor(...this.getTargetValue());
+			const hex = rgbToHex(...color);
 			this.roi.beginFill(parseInt(hex, 16));
-		} else if (this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE) {
-			let color = this.gmask.pixelToColor(...this.getTargetValue());
-			let hex = rgbToHex(...color);
+		} else if (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) {
+			const color = this.gmask.pixelToColor(...this.getTargetValue());
+			const hex = rgbToHex(...color);
 			this.roi.lineStyle(1, parseInt(hex, 16), 1, 0.5, true);
 		}
 		this.roi.drawCircle(0, 0, this.roiRadius);
@@ -314,7 +314,7 @@ export class CreateBrushController extends MaskController {
 	 * depending on the edition mode (new, add, remove).
 	 */
 	getTargetValue(): [number, number, number] {
-		if (this._selectedId.value) if (this._selectedId.value.toString() != [-1, -1, -1].toString()) return this._selectedId.value;
+		if (this._selectedId.value) if (this._selectedId.value.toString() !== [-1, -1, -1].toString()) return this._selectedId.value;
 		return [0, 0, 0];
 	}
 
@@ -333,9 +333,9 @@ export class CreateBrushController extends MaskController {
 	 * @param evt PIXIInteractionEvent
 	 */
 	onPointerDownBrush(evt: PIXIInteractionEvent) {
-		if (evt.data.button == 1) return;//middle button : nothing to do
+		if (evt.data.button === 1) return;// middle button : nothing to do
 
-		if (this._editionMode.value === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue(); //goto next value if new_instance mode is selected
+		if (this._editionMode.value === EditionMode.NEW_INSTANCE) this._selectedId.value = this.getNextTargetValue(); // goto next value if new_instance mode is selected
 
 		this.isActive = true;
 		this.roi.x = this.renderer.mouse.x;
@@ -361,8 +361,8 @@ export class CreateBrushController extends MaskController {
 				this.getTargetValue(), fillType
 			);
 			// filling space between successive mousepoints to enable easy surface painting
-			//... assuming roiMatrix is a circle
-			//... filling by a strait line even if the user describes a curve
+			// ... assuming roiMatrix is a circle
+			// ... filling by a strait line even if the user describes a curve
 			const alpha = Math.atan2((newPos.y - this.roi.y), (newPos.x - this.roi.x));
 			const dy = Math.trunc(-Math.cos(alpha) * this.roiRadius);
 			const dx = Math.trunc(Math.sin(alpha) * this.roiRadius);
@@ -394,10 +394,10 @@ export class CreateBrushController extends MaskController {
 	 */
 	onKeyDown(evt: KeyboardEvent) {
 		super.onKeyDown(evt);
-		if (evt.code == "NumpadAdd" || evt.key == "+") {
+		if (evt.code === "NumpadAdd" || evt.key === "+") {
 			this.roiRadius += 1;
 			this.initRoi();
-		} else if (evt.code == "NumpadSubtract" || evt.key == "-") {
+		} else if (evt.code === "NumpadSubtract" || evt.key === "-") {
 			this.roiRadius = Math.max(this.roiRadius - 1, 1);
 			this.initRoi();
 		} else if (evt.shiftKey) {
@@ -411,9 +411,9 @@ export class CreateBrushController extends MaskController {
 		}
 	}
 	/**
-		 * On keyboard release (up)
-		 * @param evt KeyboardEvent
-		 */
+	 * On keyboard release (up)
+	 * @param evt KeyboardEvent
+	 */
 	protected onKeyUp() {
 		// shift or ctrl released = return to default = create
 		this._editionMode.value = EditionMode.NEW_INSTANCE;
@@ -547,8 +547,8 @@ export class CreatePolygonController extends MaskController {
 					const fillType = (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
 					const newValue: [number, number, number] = this.getTargetValue();
 					this.gmask.fusedIds.add(fuseId(newValue));
-					let extrema = undefined;
-					if (fillType != 'remove') {
+					let extrema;
+					if (fillType !== 'remove') {
 						extrema = getPolygonExtrema(vertices);
 						extrema = extremaUnion(extrema, getDensePolysExtrema(this.densePolygons));
 					}
@@ -581,13 +581,13 @@ export class CreatePolygonController extends MaskController {
 	 * depending on the edition mode (new, add, remove).
 	 */
 	getTargetValue(): [number, number, number] {
-		if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
+		if (this._editionMode.value === EditionMode.NEW_INSTANCE) {
 			const cls = this.gmask.clsMap.get(this._targetClass.value);
 			const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
 			const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
 			this._selectedId.value = value;
 			return value;
-		} else if ((this._editionMode.value == EditionMode.ADD_TO_INSTANCE || this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE)
+		} else if ((this._editionMode.value === EditionMode.ADD_TO_INSTANCE || this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE)
 			&& this._selectedId.value) {
 			return this._selectedId.value;
 		}

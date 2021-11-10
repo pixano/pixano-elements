@@ -144,7 +144,7 @@ export class PlaybackControl extends LitElement {
 
 	/**
 	 * Set from inside, notify change
-	 * @param value 
+	 * @param value
 	 */
 	public set(value: number) {
 		this.current = value;
@@ -159,7 +159,7 @@ export class PlaybackControl extends LitElement {
 		if (changedProps.has('current')) {
 			try {
 				this.slider?.layout();
-			} catch { }
+			} catch { console.warn("failed"); }
 		}
 	}
 

@@ -86,7 +86,7 @@ export class GraphicMask extends PIXIContainer {
 
 	/**
 	 * Set the panoptic segmentation mask from given base64 encoding
-	 * @param buffer 
+	 * @param buffer
 	 */
 	setBase64(buffer: string): Promise<void> {
 		if (typeof buffer !== 'string') {
@@ -128,8 +128,8 @@ export class GraphicMask extends PIXIContainer {
 
 	/**
 	 * Empty segmentation mask and initialize with given shapes
-	 * @param w 
-	 * @param h 
+	 * @param w
+	 * @param h
 	 */
 	public empty(w: number = 100, h: number = 100) {
 		this.canvas.width = w;
@@ -165,18 +165,18 @@ export class GraphicMask extends PIXIContainer {
 
 	/**
 	 * Get color corresponding to pixel value
-	 * @param id1 
-	 * @param id2 
+	 * @param id1
+	 * @param id2
 	 * @param cls
-	 * @returns [r,g,b] 
+	 * @returns [r,g,b]
 	 */
 	public pixelToColor(id1: number, id2: number, cls: number): [number, number, number] {
 		if (cls === 0) return [0, 0, 0];
 		const c = this.clsMap.get(cls);
 		if (!c) return [0, 0, 0];
-		if ((this.maskVisuMode === MaskVisuMode.SEMANTIC) || (c[3] == 0)) {//if this is a semantic category (c[3]==0) => one class = one color, no mather if we are in INSTANCE or SEMANTIC mode
+		if ((this.maskVisuMode === MaskVisuMode.SEMANTIC) || (c[3] === 0)) {// if this is a semantic category (c[3]==0) => one class = one color, no mather if we are in INSTANCE or SEMANTIC mode
 			return [c[0], c[1], c[2]];
-		} else if (this.maskVisuMode === MaskVisuMode.INSTANCE) {//if c[3]==1, this is an instance category => each instance should have its own color in INSTANCE mode
+		} else if (this.maskVisuMode === MaskVisuMode.INSTANCE) {// if c[3]==1, this is an instance category => each instance should have its own color in INSTANCE mode
 			const id = fuseId([id1, id2, cls]);
 			return distinctColors[id % distinctColors.length];
 		}
@@ -243,9 +243,9 @@ export class GraphicMask extends PIXIContainer {
 
 	/**
 	 * Get major instance and class in a given area
-	 * @param vertices 
-	 * @param extrema 
-	 * @param id 
+	 * @param vertices
+	 * @param extrema
+	 * @param id
 	 */
 	public getMajorId(vertices: Point[], extrema: number[], id: [number, number, number]) {
 		const [xMin, xMax, yMin, yMax] = extrema;
@@ -305,7 +305,7 @@ export class GraphicMask extends PIXIContainer {
 		newVal: [number, number, number], fillType: 'add' | 'remove' = 'add') {
 		const pixels = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
-		//respect image boundaries
+		// respect image boundaries
 		const width = box[2] - box[0];
 		const roi = [(box[0] > 0) ? box[0] : 0,
 		(box[1] > 0) ? box[1] : 0,
@@ -344,7 +344,7 @@ export class GraphicMask extends PIXIContainer {
 					const idx = (x + roi[0] + (y + roi[1]) * this.canvas.width);
 					const pixId = this.pixelId(idx);
 					if (mask[(y + decy) * width + (x + decx)] === 1 && !this.lockedInstances.has(fuseId(pixId))
-						&& fuseId(pixId) == fusedVal) {
+						&& fuseId(pixId) === fusedVal) {
 						this.orig!.data[4 * idx] = 0;
 						this.orig!.data[4 * idx + 1] = 0;
 						this.orig!.data[4 * idx + 2] = 0;
@@ -370,7 +370,7 @@ export class GraphicMask extends PIXIContainer {
 	public updateByPolygon(polygon: Point[], id: [number, number, number], fillType: 'add' | 'remove' = 'add') {
 		const pixels = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 		let [xMin, yMin, xMax, yMax] = getPolygonExtrema(polygon);
-		//respect image boundaries
+		// respect image boundaries
 		if (xMin < 0) xMin = 0;
 		if (yMin < 0) yMin = 0;
 		if (xMax > this.canvas.width) xMax = this.canvas.width - 1;
@@ -428,13 +428,13 @@ export class GraphicMask extends PIXIContainer {
 	 * @param id instance to delete
 	 */
 	public deleteInstance(id: [number, number, number]) {
-		this.replaceValue(id, [0, 0, 0]);//replace all corresponding mask's pixels
+		this.replaceValue(id, [0, 0, 0]);// replace all corresponding mask's pixels
 	}
 
 	/**
 	 * Get region blob contour for a given panoptic value
-	 * @param id 
-	 * @param extrema 
+	 * @param id
+	 * @param extrema
 	 */
 	public getBlobs(id: [number, number, number], extrema?: number[]): Map<number, RegBlob> {
 		const blobExtractor = new BlobExtractor(this.orig!, extrema);

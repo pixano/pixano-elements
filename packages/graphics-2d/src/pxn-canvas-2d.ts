@@ -236,7 +236,7 @@ export class Canvas2d extends Canvas {
 		this.modes[mode]?.deactivate(); // deactive already existing mode in cas active
 		this.modes[mode] = controller;
 		// if (mode === this.mode) {
-		//	 this.modes[mode].activate();
+		// 	 this.modes[mode].activate();
 		// }
 		return this;
 	}
@@ -251,7 +251,7 @@ export class Canvas2d extends Canvas {
 		if (prevMode === newMode) {
 			return;
 		}
-		prevMode = prevMode == null ? "edit" : prevMode;
+		prevMode = prevMode === null ? "edit" : prevMode;
 		if (this.modes[prevMode]) {
 			// Restore default state
 			this.modes[prevMode].deactivate();
@@ -298,7 +298,7 @@ export class Canvas2d extends Canvas {
 			this.renderer.enableOutsideDrawing = this.enableOutsideDrawing;
 		}
 		if (changedProperties.has('hideLabels')) {
-			if (this.hideLabels == true) {
+			if (this.hideLabels === true) {
 				this.targetShapes.clear();
 				this.notifySelection([]);
 			}

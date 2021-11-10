@@ -52,12 +52,12 @@ export class SmartTracking extends Tracking {
 	}
 
 	protected delay(ms: number) {
-		return new Promise(function (resolve) { return setTimeout(resolve, ms); });
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	};
 
 	async trackTillTheEnd() {
 		let stopTracking = false;
-		let initIdx = this.frameIdx;
+		const initIdx = this.frameIdx;
 		const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
 			if (evt.key === 'Escape') {
 				stopTracking = true;
@@ -66,7 +66,7 @@ export class SmartTracking extends Tracking {
 		window.addEventListener('keydown', stopTrackingListenerFct);
 		while (!stopTracking && !this.isLastFrame()) {
 			// update target template every 5 frames
-			const resetTemplate = (this.frameIdx-initIdx)%5 == 0;
+			const resetTemplate = (this.frameIdx-initIdx)%5 === 0;
 			await this.trackTillNextFrame(resetTemplate);
 		}
 		// back to edit mode after each new creation
@@ -78,12 +78,13 @@ export class SmartTracking extends Tracking {
 	protected async trackTillNextFrame(resetTemplate: boolean = true) {
 		/// process the selected shape
 		if (this.targetShapes.size>1) {
-			console.log("ABORT: we can only track one shape at a time")
+			console.warn("ABORT: we can only track one shape at a time")
 			return;
 		}
 
+		const target = this.targetShapes.values().next().value;
+
 		if (resetTemplate) {
-			const target = this.targetShapes.values().next().value;
 			/// get the shape to track
 			const v: number[] = target.geometry.vertices;
 			const xmin = Math.min(v[0], v[2]);
@@ -91,7 +92,7 @@ export class SmartTracking extends Tracking {
 			const ymin = Math.min(v[1], v[3]);
 			const ymax = Math.max(v[1], v[3]);
 			/// pre-processing
-			const im0 = this.renderer.image; //await resizeImage(this.renderer.image, 200);
+			const im0 = this.renderer.image; // await resizeImage(this.renderer.image, 200);
 			const x = Math.round(xmin*im0.width);
 			const y = Math.round(ymin*im0.height);
 			const w = Math.round(xmax*im0.width) - x;
@@ -100,13 +101,12 @@ export class SmartTracking extends Tracking {
 		}
 
 		/// processing
-		let im1 = await (this.loader as any).peekFrame(this.frameIdx+1);
+		const im1 = await (this.loader as any).peekFrame(this.frameIdx+1);
 		// im1 = await resizeImage(im1, 200);
-		var res = this.tracker.run(im1);
+		const res = this.tracker.run(im1);
 		await this.nextFrame()
 
 		/// get calculated shape and take it as the new shape
-		const target = this.targetShapes.values().next().value;
 		target.geometry.vertices = [
 			res[0]/im1.width,
 			res[1]/im1.height,
@@ -142,16 +142,16 @@ export class SmartTracking extends Tracking {
 // 	return new Promise((resolve) => {
 // 		const canvas = document.createElement("canvas");
 // 		const context = canvas.getContext("2d")!;
-	
+
 // 		const originalWidth = img.width;
 // 		const originalHeight = img.height;
-	
+
 // 		const canvasWidth = targetWidth;
 // 		const canvasHeight = originalHeight * targetWidth / originalWidth;
-	
+
 // 		canvas.width = canvasWidth;
 // 		canvas.height = canvasHeight;
-	
+
 // 		context.drawImage(
 // 			img, 0, 0, targetWidth, canvasHeight
 // 		);

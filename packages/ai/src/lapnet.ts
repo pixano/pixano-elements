@@ -34,11 +34,11 @@ export class PixelToBoundingBox {
 	}
 
 	/**
-	   * Predict object bounding box around point `p`.
-	   *
-	   * @param `p`: Click point location
-	   * @param `image`
-	   */
+	 * Predict object bounding box around point `p`.
+	 *
+	 * @param `p`: Click point location
+	 * @param `image`
+	 */
 	async predict(
 		p: Point,
 		image: HTMLImageElement | HTMLCanvasElement
@@ -48,11 +48,11 @@ export class PixelToBoundingBox {
 
 		const roi = this.getROI(p, image.width, image.height);
 		const crop = await cropImage(image, roi);
-		const new_size = 320;
-		const input = tf.tidy(() => tf.expandDims(tf.transpose(tf.browser.fromPixels(crop).resizeBilinear([new_size, new_size]).div(tf.scalar(255)), [2, 0, 1])));
-		console.time('Inference');
+		const newSize = 320;
+		const input = tf.tidy(() => tf.expandDims(tf.transpose(tf.browser.fromPixels(crop).resizeBilinear([newSize, newSize]).div(tf.scalar(255)), [2, 0, 1])));
+		// console.time('Inference');
 		const cropPredictions = await this.model!.executeAsync({ 'images:0': input }, ['Identity:0', 'Identity_1:0']) as [tf.Tensor4D, tf.Tensor4D];
-		console.timeEnd('Inference');
+		// console.timeEnd('Inference');
 		// convert into Detection object and map the bounding box
 		// coordinates into the original image frame
 		const boxes = cropPredictions[0].dataSync();
@@ -61,10 +61,10 @@ export class PixelToBoundingBox {
 			if (scores[i] > 0.4) {
 				predictions.push({
 					boundingBox: {
-						l: (boxes[i * 4] * crop.width / new_size) + roi.l,
-						t: (boxes[i * 4 + 1] * crop.height / new_size) + roi.t,
-						r: (boxes[i * 4 + 2] * crop.width / new_size) + roi.l,
-						b: (boxes[i * 4 + 3] * crop.height / new_size) + roi.t
+						l: (boxes[i * 4] * crop.width / newSize) + roi.l,
+						t: (boxes[i * 4 + 1] * crop.height / newSize) + roi.t,
+						r: (boxes[i * 4 + 2] * crop.width / newSize) + roi.l,
+						b: (boxes[i * 4 + 3] * crop.height / newSize) + roi.t
 					},
 					score: scores[i], category: '100'
 				})
@@ -109,9 +109,9 @@ export class PixelToBoundingBox {
 	}
 
 	/**
-	   * Set the scale of the ROI.
-	   * @param value
-	   */
+	 * Set the scale of the ROI.
+	 * @param value
+	 */
 	setScale(value: number) {
 		this.scale = value;
 	}
@@ -129,10 +129,10 @@ export class PixelToBoundingBox {
 	}
 
 	/**
-   * Dispose the tensors allocated by the model.
-   * You should call this when you are done with the model. For example
-   * when the element using this model will be removed from the DOM
-   */
+	 * Dispose the tensors allocated by the model.
+	 * You should call this when you are done with the model. For example
+	 * when the element using this model will be removed from the DOM
+	 */
 	dispose() {
 		if (this.model) {
 			this.model.dispose();
@@ -158,12 +158,12 @@ export function isInside(p: Point, rect: Rectangle) {
 }
 
 /**
-   * Crop an image.
-   *
-   * @param `image` the image to be cropped
-   * @param `roi` Rectangle. The ROI of the crop.
-   */
-//@ts-ignore
+ * Crop an image.
+ *
+ * @param `image` the image to be cropped
+ * @param `roi` Rectangle. The ROI of the crop.
+ */
+// @ts-ignore
 export function cropImage(
 	image: HTMLImageElement | HTMLCanvasElement,
 	roi: Rectangle

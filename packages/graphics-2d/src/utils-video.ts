@@ -163,7 +163,7 @@ export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
  * @param tracks tracks to be switched
  */
 export function switchTrack(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string, fIdx: number) {
-	var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
+	const [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 	const ks1 = [...Object.values(t1.keyShapes)];
 	const ks2 = [...Object.values(t2.keyShapes)];
 	t1.keyShapes = ks1.filter((k) => k.timestamp < fIdx)
@@ -187,7 +187,7 @@ export function switchTrack(tracks: { [key: string]: TrackData }, t1Id: string, 
  * of the merged track.
  */
 export function mergeTracks(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string) {
-	var [t1, t2] = [tracks[t1Id], tracks[t2Id]];
+	let [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 
 	// check overlapping
 	const keys = [
@@ -196,10 +196,10 @@ export function mergeTracks(tracks: { [key: string]: TrackData }, t1Id: string, 
 	];
 	const olderTrackIdx = keys[0][0] < keys[1][0] ? 0 : 1;
 	const keysIntersection = keys[0].filter(value => keys[1].includes(value));
-	const isDisjoint = keysIntersection.length == 0;
+	const isDisjoint = keysIntersection.length === 0;
 	[t1, t2] = olderTrackIdx ? [t2, t1] : [t1, t2];
 	// they do not overlap, concatenation of keyshapes.
-	var trackId = ""
+	let trackId = ""
 	if (isDisjoint) {
 		trackId = t1.id;
 		t1.keyShapes = { ...t1.keyShapes, ...t2.keyShapes };
@@ -239,7 +239,7 @@ export function convertShapes(tracks: { [key: string]: TrackData }, fIdx: number
  * @param t
  */
 export function splitTrack(tId: string, fIdx: number, tracks: { [key: string]: TrackData }): TrackData {
-	var t = tracks[tId];
+	const t = tracks[tId];
 	const newTrackId = getNewTrackId(tracks);
 
 	// create keyshape for current frame and previous frame
@@ -319,14 +319,14 @@ export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c
 	'#fc95fb', '#8f278e', '#a86da8', '#873587', '#ff0062', '#bf2e66', '#73002c'];
 
 function colorComponentToHex(c: number) {
-	var hex = c.toString(16);
-	return hex.length == 1 ? "0" + hex : hex;
+	const hex = c.toString(16);
+	return hex.length === 1 ? "0" + hex : hex;
 }
 
 export function invertColor(rgb: string) {
 	rgb = rgb.substring(1);
-	var r = 255 - parseInt(rgb.substring(0, 2), 16)
-	var g = 255 - parseInt(rgb.substring(2, 4), 16)
-	var b = 255 - parseInt(rgb.substring(4, 6), 16)
+	const r = 255 - parseInt(rgb.substring(0, 2), 16)
+	const g = 255 - parseInt(rgb.substring(2, 4), 16)
+	const b = 255 - parseInt(rgb.substring(4, 6), 16)
 	return "#" + colorComponentToHex(r) + colorComponentToHex(g) + colorComponentToHex(b)
 }
