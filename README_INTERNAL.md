@@ -73,13 +73,21 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 	cd .. ; git clone git@github.com:pixano/pixano.github.io.git ; cd -
 
 ## Publication
+### 0) prepare gitlab version
+	VERSION=0.6.0
+	git fetch
+	git checkout master
+	git pull origin master
+	# update the publication version
+	node changeversion.js $VERSION
+	git add package.json */*/package.json
+	git commit -m "release $VERSION"
 ### 1) Prepate the publication
 1. On github : Update your fork
 	- on your fork github (on github.com), click on "Fetch upstream", then "Fetch and merge"
 2. Locally:
 
 		# make sure the repositories are up-to-date
-		git fetch
 		git fetch upstream
 		git checkout github
 		
@@ -93,7 +101,7 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 		git cherry-pick cfbb3866..74e276acb
 		# [or] merge all commits without commit which lets you inspect (and modify) the result before committing
 		# ensure that you `git rm --cached` every internal file/section
-		git merge --no-commit master
+		git merge --no-commit master --allow-unrelated-histories
 
 During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
@@ -127,7 +135,7 @@ During the merge / before commiting, **do not include / delete files and interna
 
 ### 3) Publish
 #### 1. push
-	VERSION=0.5.16
+	VERSION=0.6.0
 	# update the publication version
 	node changeversion.js $VERSION
 	git add package.json */*/package.json
