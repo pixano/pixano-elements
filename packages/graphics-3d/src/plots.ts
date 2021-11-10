@@ -12,10 +12,10 @@ import { GroundPlot } from './ground-plot';
 import { GroundRectangle } from './ground-rectangle';
 
 export {
-    GroundDisc,
-    GroundCross,
-    GroundPlot,
-    GroundRectangle,
-    CuboidPlot,
-    PointCloudPlot
+	GroundDisc,
+	GroundCross,
+	GroundPlot,
+	GroundRectangle,
+	CuboidPlot,
+	PointCloudPlot
 }

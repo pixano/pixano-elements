@@ -8,7 +8,7 @@
 import onChange from 'on-change';
 import { searchSorted } from './utils';
 
-export type Observer = (op: string, ...args:any[]) => any;
+export type Observer = (op: string, ...args: any[]) => any;
 
 // Class properties -----------------------------------------------------------
 
@@ -20,75 +20,75 @@ const observersOrder = new WeakMap<object, number[]>();
  * property changes with the property name and updated value as arguments.
  */
 export function observable<T extends object>(obj: T): T {
-    if (observers.has(obj)) {
-        return obj;
-    }
-    const wrapped = onChange(obj, function (path: string, value: any) {
-        // @ts-ignore
-        for (const cb of [...observers.get(this)!]) {
-            cb(path, value);
-        }
-    });
-    observers.set(wrapped, []);
-    observersOrder.set(wrapped, []);
-    return wrapped;
+	if (observers.has(obj)) {
+		return obj;
+	}
+	const wrapped = onChange(obj, function (path: string, value: any) {
+		// @ts-ignore
+		for (const cb of [...observers.get(this)!]) {
+			cb(path, value);
+		}
+	});
+	observers.set(wrapped, []);
+	observersOrder.set(wrapped, []);
+	return wrapped;
 }
 
 // Set ------------------------------------------------------------------------
 
 /**
  * Observable subclass of Set. - observers will be called:
- *  - when an element is added with arguments 'add' and the element
- *  - when an element is deleted with arguments 'delete' and the element
- *  - when the set is cleared with argument 'clear'
+ *	- when an element is added with arguments 'add' and the element
+ *	- when an element is deleted with arguments 'delete' and the element
+ *	- when the set is cleared with argument 'clear'
  */
 export class ObservableSet<T> extends Set<T> {
-    constructor(...args:any[]) {  // TODO: call add to initialize items
-        super(...args);
+	constructor(...args: any[]) {	// TODO: call add to initialize items
+		super(...args);
 
-        observers.set(this, []);
-        observersOrder.set(this, []);
-    }
+		observers.set(this, []);
+		observersOrder.set(this, []);
+	}
 
-    add(value: T) {
-        super.add(value);
-        for (const cb of [...observers.get(this)!]) {
-            cb('add', value);
-        }
-        return this;
-    }
+	add(value: T) {
+		super.add(value);
+		for (const cb of [...observers.get(this)!]) {
+			cb('add', value);
+		}
+		return this;
+	}
 
-    delete(value: T) {
-        const success = super.delete(value);
-        for (const cb of [...observers.get(this)!]) {
-            cb('delete', value);
-        }
-        return success;
-    }
+	delete(value: T) {
+		const success = super.delete(value);
+		for (const cb of [...observers.get(this)!]) {
+			cb('delete', value);
+		}
+		return success;
+	}
 
-    clear() {
-        if (this.size) {
-            super.clear();
-            for (const cb of [...observers.get(this)!]) {
-                cb('clear');
-            }
-        }
-    }
+	clear() {
+		if (this.size) {
+			super.clear();
+			for (const cb of [...observers.get(this)!]) {
+				cb('clear');
+			}
+		}
+	}
 
-    /**
-     * Utility method to bypass multiple
-     * add call on object initialize
-     * @param values
-     */
-    set(values: T[]) {
-        super.clear();
-        values.forEach((v) => {
-            super.add(v);
-        });
-        for (const cb of [...observers.get(this)!]) {
-            cb('set', values);
-        }
-    }
+	/**
+	 * Utility method to bypass multiple
+	 * add call on object initialize
+	 * @param values
+	 */
+	set(values: T[]) {
+		super.clear();
+		values.forEach((v) => {
+			super.add(v);
+		});
+		for (const cb of [...observers.get(this)!]) {
+			cb('set', values);
+		}
+	}
 }
 
 
@@ -96,50 +96,50 @@ export class ObservableSet<T> extends Set<T> {
 
 /**
  * Observable subclass of Map. - observers will be called:
- *  - when an element is set with arguments 'set' and the element
- *  - when an element is deleted with arguments 'delete' and the element
- *  - when the set is cleared with argument 'clear'
+ *	- when an element is set with arguments 'set' and the element
+ *	- when an element is deleted with arguments 'delete' and the element
+ *	- when the set is cleared with argument 'clear'
  */
-export class ObservableMap<K,T> extends Map<K,T> {
-    constructor(...args:any[]) {  // TODO: call add to initialize items
-        super(...args);
-        observers.set(this, []);
-        observersOrder.set(this, []);
-    }
+export class ObservableMap<K, T> extends Map<K, T> {
+	constructor(...args: any[]) {	// TODO: call add to initialize items
+		super(...args);
+		observers.set(this, []);
+		observersOrder.set(this, []);
+	}
 
-    set(key: K, value: T) {
-        super.set(key, value);
-        for (const cb of [...observers.get(this)!]) {
-            cb('set', value);
-        }
-        return this;
-    }
+	set(key: K, value: T) {
+		super.set(key, value);
+		for (const cb of [...observers.get(this)!]) {
+			cb('set', value);
+		}
+		return this;
+	}
 
-    delete(key: K) {
-        const success = super.delete(key);
-        for (const cb of [...observers.get(this)!]) {
-            cb('delete', key);
-        }
-        return success;
-    }
+	delete(key: K) {
+		const success = super.delete(key);
+		for (const cb of [...observers.get(this)!]) {
+			cb('delete', key);
+		}
+		return success;
+	}
 
-    clear() {
-        const success = super.clear();
-        for (const cb of [...observers.get(this)!]) {
-          cb('clear');
-        }
-        return success;
-    }
+	clear() {
+		const success = super.clear();
+		for (const cb of [...observers.get(this)!]) {
+			cb('clear');
+		}
+		return success;
+	}
 
-    init(items: [K,T][]) {
-        super.clear();
-        for (const item of items) {
-            super.set(item[0], item[1]);
-        }
-        for (const cb of [...observers.get(this)!]) {
-            cb('init');
-        }
-    }
+	init(items: [K, T][]) {
+		super.clear();
+		for (const item of items) {
+			super.set(item[0], item[1]);
+		}
+		for (const cb of [...observers.get(this)!]) {
+			cb('init');
+		}
+	}
 }
 
 
@@ -153,19 +153,19 @@ export class ObservableMap<K,T> extends Map<K,T> {
  * refcount or prevent garbage collection. Observers will be automatically deleted
  * along the observed.
  */
-export function observe(target: object, observer: Observer, order=10): Observer {
-  const _observers = observers.get(target);
-  const _observersOrder = observersOrder.get(target);
-  if (!_observers || !_observersOrder) {
-      throw new Error("object is not observable. "
-        + "If you meant to observe its properties, use `observable` first.");
-  }
+export function observe(target: object, observer: Observer, order = 10): Observer {
+	const _observers = observers.get(target);
+	const _observersOrder = observersOrder.get(target);
+	if (!_observers || !_observersOrder) {
+		throw new Error("object is not observable. "
+			+ "If you meant to observe its properties, use `observable` first.");
+	}
 
-  const i = searchSorted(_observersOrder, order);
-  _observers.splice(i, 0, observer);
-  _observersOrder.splice(i, 0, order);
+	const i = searchSorted(_observersOrder, order);
+	_observers.splice(i, 0, observer);
+	_observersOrder.splice(i, 0, order);
 
-  return observer;
+	return observer;
 }
 
 /**
@@ -174,14 +174,14 @@ export function observe(target: object, observer: Observer, order=10): Observer 
  * @param observer
  */
 export function unobserve(target: object, observer: Observer) {
-  const _observers = observers.get(target);
-  const _observersOrder = observersOrder.get(target);
+	const _observers = observers.get(target);
+	const _observersOrder = observersOrder.get(target);
 
-  if (_observers && _observersOrder) {
-    const i = _observers.indexOf(observer);
-    if (i >= 0) {
-        _observers.splice(i, 1);
-        _observersOrder.splice(i, 1);
-    }
-  }
+	if (_observers && _observersOrder) {
+		const i = _observers.indexOf(observer);
+		if (i >= 0) {
+			_observers.splice(i, 1);
+			_observersOrder.splice(i, 1);
+		}
+	}
 }

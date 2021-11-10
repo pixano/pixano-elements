@@ -8,8 +8,8 @@ import { PixelToBoundingBox } from './pixel-to-bounding-box';
 import { Detection, Point, Rectangle } from './structures';
 
 export {
-    Detection,
-    PixelToBoundingBox,
-    Point,
-    Rectangle
+	Detection,
+	PixelToBoundingBox,
+	Point,
+	Rectangle
 }
