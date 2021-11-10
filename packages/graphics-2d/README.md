@@ -350,13 +350,22 @@ interface ModeDetail {
 | ------------ | ---------------- | 
 | `m`          | `Darken   image` |
 | `p`          | `Brighten image` |
+| `Ctrl+C`     | `Copy in clipboard currently selected shapes/instance` |
+| `Ctrl+V`     | `Create new shapes/instance (with new ids) from the clipboard content` |
+| `Ctrl+Space` | `Toggle labels (hide / show)` |
+| `Tab`        | `Loop throught the scene shapes/instances` |
 
 #### pxn-canvas-2d
 
 | Key          | Description      |
 | ------------ | ---------------- | 
-| `Tab`        | `Loop throught the scene shapes` |
 | `Escape`     | `Unselect shapes` |
 | `Delete`     | `Delete selected shapes` |
-| `Ctrl+C`     | `Copy in clipboard currently selected shapes` |
-| `Ctrl+V`     | `Create new shapes (with new ids) from the clipboard content` |
+
+
+#### segmentation / controller-mask
+
+| Key          | Description      |
+| ------------ | ---------------- | 
+| `Escape`     | `Unselect instance` |
+| `Delete`     | `Delete selected instance` |
