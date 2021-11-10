@@ -123,13 +123,22 @@ export class Canvas extends GenericDisplay {
     }
   }
 
-  /**
-   * Handle copy keyboard event
-   * Return the string you want to copy
-   */
-  protected onCopy(): string | void {
-    // Implement your own onCopy method.
-  }
+	/**
+	 * Handle copy keyboard event
+	 * Return the string you want to copy
+	 */
+	protected onCopy(): string | void {
+		// Implement your own onCopy method.
+		console.log("onCopy: should be astract:");
+	}
+	/**
+	 * Handle tabulation event
+	 * @param event [keyBoardEvent]
+	 */
+	protected onTabulation(event: KeyboardEvent) {
+		// Implement your own onTabulation method.
+		console.log("onTabulation: should be astract:",event);
+	}
 
   /**
    * Handle paste of copied string.
@@ -166,6 +175,14 @@ export class Canvas extends GenericDisplay {
       }
       case 'p': {
         this.renderer.brightness += 0.1;
+        break;
+      }
+      case ' ': {
+        if (event.ctrlKey) this.toggleLabels();
+        break;
+      }
+      case 'Tab': {
+        this.onTabulation.bind(this)(event);
         break;
       }
     }

@@ -17,7 +17,7 @@ export class SmartCreateController extends ShapeCreateController {
 
     public renderer: Renderer;
 
-    public targetClass: { value: number };
+    public _targetClass: { value: number };
 
     public gmask: GraphicMask;
 
@@ -29,18 +29,20 @@ export class SmartCreateController extends ShapeCreateController {
         value: [number, number, number] | null
     };
     protected contours = new PIXIGraphics();
-    protected densePolygons: DensePolygon[] = new Array();
+    public densePolygons: DensePolygon[] = new Array();
 	public _editionMode: { value: EditionMode };
 
     constructor(props: Partial<SmartCreateController> = {}) {
       super(props);
       this.renderer = props.renderer || new Renderer();
-      this.targetClass = props.targetClass || { value: 1};
+	  this.densePolygons = props.densePolygons || new Array();
+      this._targetClass = props._targetClass || { value: 0 };
       this.gmask = props.gmask || new GraphicMask();
       this.segmentationCreator = new BoxSegmentation(this.model);
 	  this._selectedId = props._selectedId || { value: null };
 	  this._editionMode = props._editionMode || { value: EditionMode.NEW_INSTANCE };
 	  this.renderer.stage.addChild(this.contours);
+	  this.onKeyDown = this.onKeyDown.bind(this);
     }
 
     async load(modelPath?: string) {
@@ -63,12 +65,33 @@ export class SmartCreateController extends ShapeCreateController {
             this.densePolygons = [];
             this.contours.clear();
         }
+        window.addEventListener('keydown', this.onKeyDown, false);
     }
 
     deactivate() {
 		super.deactivate();
         this.contours.clear();
         this.contours.visible = false;
+        window.removeEventListener('keydown', this.onKeyDown, false);
+    }
+
+	/**
+     * On keyboard press (down)
+     * @param evt KeyboardEvent
+     */
+    onKeyDown(evt: KeyboardEvent) {
+        if (evt.key === 'Escape') {
+            this.deselect();
+        }
+    }
+
+    deselect() {
+        if (this._selectedId.value) {
+            this.densePolygons = [];
+            updateDisplayedSelection(this.contours, this.densePolygons);
+            this._selectedId.value = null;
+            this.dispatchEvent(new CustomEvent('selection', {detail: null}));
+        }
     }
 
     onRootDown(evt: PIXIInteractionEvent) {
@@ -93,10 +116,6 @@ export class SmartCreateController extends ShapeCreateController {
       this.tmpShape.scaleX = this.renderer.imageWidth;
       this.tmpShape.scaleY = this.renderer.imageHeight;
       this.tmpShape.draw();
-    }
-
-    emitUpdate() {
-      this.dispatchEvent(new Event('update'));
     }
 
     onRootMove(evt: PIXIInteractionEvent) {
@@ -133,10 +152,10 @@ export class SmartCreateController extends ShapeCreateController {
 			const fillType = (this._editionMode.value === EditionMode.REMOVE_FROM_INSTANCE) ? 'remove' : 'add';
 			const newValue: [number, number, number] = this.getTargetValue();
             this.gmask.updateByMaskInRoi(res, [xmin, ymin, xmax, ymax], newValue, fillType);
-			this.densePolygons = getPolygons(this.gmask, this._selectedId.value!);
+			this.densePolygons = getPolygons(this.gmask, newValue);
             updateDisplayedSelection(this.contours, this.densePolygons);
             this.gmask.fusedIds.add(fuseId(newValue));
-            this.emitUpdate();
+            this.dispatchEvent(new CustomEvent('update', { detail: newValue }));
           });
       }
     }
@@ -147,9 +166,9 @@ export class SmartCreateController extends ShapeCreateController {
      */
 	 getTargetValue(): [number, number, number] {
         if (this._editionMode.value == EditionMode.NEW_INSTANCE) {
-            const cls = this.gmask.clsMap.get(this.targetClass.value);
+            const cls = this.gmask.clsMap.get(this._targetClass.value);
             const newId = cls && cls[3] ? this.gmask.getNextId() : [0, 0] as [number, number];
-            const value = [newId[0], newId[1], this.targetClass.value] as [number, number, number];
+            const value = [newId[0], newId[1], this._targetClass.value] as [number, number, number];
             this._selectedId.value = value;
             return value;
         } else if ((this._editionMode.value == EditionMode.ADD_TO_INSTANCE || this._editionMode.value == EditionMode.REMOVE_FROM_INSTANCE)

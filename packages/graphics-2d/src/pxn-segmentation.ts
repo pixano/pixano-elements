@@ -15,7 +15,7 @@ import { CreateBrushController,
 import { GraphicMask } from './graphics';
 import { MaskVisuMode } from './graphic-mask';
 import { Canvas } from './pxn-canvas';
-import { unfuseId, convertIndexToDict } from './utils-mask';
+import { fuseId, unfuseId, convertIndexToDict, DensePolygon } from './utils-mask';
 
 /**
  * `<pxn-segmentation>` Basic segmentation editor.
@@ -36,6 +36,10 @@ export class Segmentation extends Canvas {
 
   @property({type: String})
   public maskVisuMode : MaskVisuMode = MaskVisuMode.SEMANTIC;
+
+  // coordinates of contour polygons
+  @property({type: Array})
+  public densePolygons: DensePolygon[] = new Array();
 
   public opacity: number = 0.60;
 
@@ -197,7 +201,7 @@ export class Segmentation extends Canvas {
     if (prevMode === newMode) {
       return;
     }
-    prevMode = prevMode == null ? "edit": prevMode;
+    prevMode = prevMode == null ? 'edit': prevMode;
     if (this.modes[prevMode]) {
         // Restore default state
         this.modes[prevMode].deactivate();
@@ -215,7 +219,7 @@ export class Segmentation extends Canvas {
     if (this.selectedId) {
       this.gmask.replaceValue(this.selectedId, newId);
       this.selectedId = newId;
-  }
+    }
   }
 
   /**
@@ -247,21 +251,63 @@ export class Segmentation extends Canvas {
 
   }
 
-  /**
-   * Toggle mask opacity from 0 to 1.
-   */
-  public toggleMask() {
-    if (this.renderer.labelLayer.alpha === this.opacity) {
-      this.renderer.labelLayer.alpha = 0;
-      this.renderer.backgroundSprite.visible = true;
-    } else if (this.renderer.labelLayer.alpha === 0) {
-      this.renderer.labelLayer.alpha = 1;
-      this.renderer.backgroundSprite.visible = false;
-    } else {
-      this.renderer.backgroundSprite.visible = true;
-      this.renderer.labelLayer.alpha = this.opacity;
-    }
-  }
+	/**
+	 * Toggle labels (hide / show) : enriched for segmentation
+	 */
+	public toggleLabels() {
+		this.toggleMask();
+	}
+	/**
+	 * Toggle mask opacity from 0 to 1.
+	 */
+	public toggleMask() {
+		if (this.renderer.labelLayer.alpha === this.opacity) {
+			this.renderer.labelLayer.alpha = 0;
+			this.renderer.backgroundSprite.visible = true;
+		} else if (this.renderer.labelLayer.alpha === 0) {
+			this.renderer.labelLayer.alpha = 1;
+			this.renderer.backgroundSprite.visible = false;
+		} else {
+			this.renderer.backgroundSprite.visible = true;
+			this.renderer.labelLayer.alpha = this.opacity;
+		}
+	}
+	/**
+	 * Handle tabulation event
+	 * @param event [keyBoardEvent] (not used here)
+	 */
+	protected onTabulation(event: KeyboardEvent) {
+		if (this.gmask.fusedIds.size==0) return;//if no mask exists for now, nothing to do
+		event.preventDefault();//prevent tab to be used outside of Pixano
+		// search and select the next id
+		if (this.selectedId) {
+			let currentId = fuseId(this.selectedId);
+			let selectnext=false;
+			for (let id of this.gmask.fusedIds) {
+				if (selectnext) {
+					this.selectedId = unfuseId(id);
+					selectnext=false;
+					break;
+				} else if(id===currentId) {
+					selectnext=true;
+				}
+			}
+			if (selectnext) {//if we get the end of the set, we take the first one
+				for (let id of this.gmask.fusedIds) {
+					this.selectedId = unfuseId(id);
+					break;
+				}
+			}
+		} else {//if nothing was selected, take the first id
+			for (let id of this.gmask.fusedIds) {
+				this.selectedId = unfuseId(id);
+				break;
+			}
+		}
+		// use the selection controller and select this id
+		this.setMode(this.mode,'edit');
+		(this.modes[this.mode] as any).select(this.selectedId);
+	}
 
   /**
    * Remove little blobs
