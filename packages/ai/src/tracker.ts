@@ -49,7 +49,8 @@ export class Tracker {
 	async loadModel(modelPath: string): Promise<any> {
 		this.model = await loadGraphModel(modelPath);
 		if (this.model) {
-			// run idle the model once
+			// run idle the model once : goal = make the future runs faster
+			console.info("First idle run...");
 			const templateTensor = tf.zeros([1, 3, this.p.template_size, this.p.template_size]);
 			const searchTensor = tf.zeros([1, 3, this.p.search_size, this.p.search_size]);
 			tf.tidy(() => this.model!.execute(
@@ -57,6 +58,7 @@ export class Tracker {
 				['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
 			templateTensor.dispose();
 			searchTensor.dispose();
+			console.info("First idle run done.");
 		}
 	}
 
