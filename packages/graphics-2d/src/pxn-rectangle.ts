@@ -14,11 +14,11 @@ import { RectangleCreateController } from './controller-rectangle';
  */
 @customElement('pxn-rectangle' as any)
 export class Rectangle extends Canvas2d {
-    constructor() {
-        super();
-        this.setController('create', new RectangleCreateController({...this}));
-        this.addEventListener('creating-rectangle', () => {
-            this.showTooltip('Drag and release to end rectangle.')
-        });
-    }
+	constructor() {
+		super();
+		this.setController('create', new RectangleCreateController({ ...this }));
+		this.addEventListener('creating-rectangle', () => {
+			this.showTooltip('Drag and release to end rectangle.')
+		});
+	}
 }

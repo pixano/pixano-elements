@@ -1,28 +1,28 @@
 {
-  "name": "@pixano/ai",
-  "version": "0.5.17",
-  "description": "AI tools for annotations",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "license": "CECILL-C",
-  "main": "lib/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:pixano/pixano-elements.git",
-    "directory": "packages/ai"
-  },
-  "devDependencies": {
-    "typescript": "3.8.3"
-  },
-  "dependencies": {
-    "@pixano/core": "0.5.17",
-    "@tensorflow-models/coco-ssd": "2.2.2",
-    "@tensorflow/tfjs": "3.3.0",
-    "@tensorflow/tfjs-converter": "3.3.0",
-    "@tensorflow/tfjs-core": "3.3.0"
-  },
-  "scripts": {
-    "build": "tsc --build",
-    "watch": "tsc --watch",
-    "clean": "tsc --build --clean"
-  }
+	"name": "@pixano/ai",
+	"version": "0.6.0",
+	"description": "AI tools for annotations",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"license": "CECILL-C",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:pixano/pixano-elements.git",
+		"directory": "packages/ai"
+	},
+	"devDependencies": {
+		"typescript": "3.8.3"
+	},
+	"dependencies": {
+		"@pixano/core": "0.6.0",
+		"@tensorflow-models/coco-ssd": "2.2.2",
+		"@tensorflow/tfjs": "3.3.0",
+		"@tensorflow/tfjs-converter": "3.3.0",
+		"@tensorflow/tfjs-core": "3.3.0"
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"watch": "tsc --watch",
+		"clean": "tsc --build --clean"
+	}
 }

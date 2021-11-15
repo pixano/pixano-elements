@@ -13,12 +13,12 @@ app.use(cors({origin: 'http://localhost:5000'}));
 app.use(express.json());
 
 app.post('/stuff', (req, res) => {
-    console.log("got request", req.body)
-    const inputPolygon = req.body.polygon;
-    // TODO: stuff
-    // ...
-    const outputPolygon = {...inputPolygon, color: 'green'};
-    res.json({polygon: outputPolygon});
+		console.log("got request", req.body)
+		const inputPolygon = req.body.polygon;
+		// TODO: stuff
+		// ...
+		const outputPolygon = {...inputPolygon, color: 'green'};
+		res.json({polygon: outputPolygon});
 });
 app.listen(4000);
 console.log('Running external server at port', 4000);

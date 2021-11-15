@@ -1,27 +1,27 @@
 {
-  "name": "demo-cuboid",
-  "version": "0.5.17",
-  "private": true,
-  "description": "Cuboid demo",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "license": "CECILL-C",
-  "main": "demo-cuboid.js",
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
-  },
-  "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "watch": "webpack --config webpack.config.js --watch"
-  },
-  "devDependencies": {
-    "source-map-loader": "^0.2.4",
-    "webpack": "4.44.2",
-    "webpack-cli": "3.3.12"
-  },
-  "dependencies": {
-    "@pixano/graphics-3d": "0.5.17",
-    "@pixano/core": "0.5.17",
-    "lit-element": "2.4.0"
-  }
+	"name": "demo-cuboid",
+	"version": "0.6.0",
+	"private": true,
+	"description": "Cuboid demo",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"license": "CECILL-C",
+	"main": "demo-cuboid.js",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+	},
+	"scripts": {
+		"build": "webpack --config webpack.config.js",
+		"watch": "webpack --config webpack.config.js --watch"
+	},
+	"devDependencies": {
+		"source-map-loader": "^0.2.4",
+		"webpack": "4.44.2",
+		"webpack-cli": "3.3.12"
+	},
+	"dependencies": {
+		"@pixano/graphics-3d": "0.6.0",
+		"@pixano/core": "0.6.0",
+		"lit-element": "2.4.0"
+	}
 }

@@ -1,18 +1,18 @@
 {
-  "packages": [
-    "packages/core",
-    "packages/ai",
-    "packages/graphics-2d",
-    "packages/graphics-3d",
-    "demos/*"
-  ],
-  "command": {
-    "bootstrap": {
-      "hoist": true,
-      "npmClientArgs": [
-        "--no-package-lock"
-      ]
-    }
-  },
-  "version": "independent"
+	"packages": [
+		"packages/core",
+		"packages/ai",
+		"packages/graphics-2d",
+		"packages/graphics-3d",
+		"demos/*"
+	],
+	"command": {
+		"bootstrap": {
+			"hoist": true,
+			"npmClientArgs": [
+				"--no-package-lock"
+			]
+		}
+	},
+	"version": "independent"
 }

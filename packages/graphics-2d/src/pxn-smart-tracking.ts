@@ -9,6 +9,11 @@ import { customElement, html, property} from 'lit-element';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
 import { track } from '@pixano/core/lib/style';
+import { ShapeData } from './types';
+import {
+	getShape,
+	setKeyShape
+} from './utils-video';
 import '@material/mwc-switch';
 
 
@@ -52,12 +57,11 @@ export class SmartTracking extends Tracking {
 	}
 
 	protected delay(ms: number) {
-		return new Promise(function (resolve) { return setTimeout(resolve, ms); });
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	};
 
 	async trackTillTheEnd() {
 		let stopTracking = false;
-		let initIdx = this.frameIdx;
 		const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
 			if (evt.key === 'Escape') {
 				stopTracking = true;
@@ -66,8 +70,7 @@ export class SmartTracking extends Tracking {
 		window.addEventListener('keydown', stopTrackingListenerFct);
 		while (!stopTracking && !this.isLastFrame()) {
 			// update target template every 5 frames
-			const resetTemplate = (this.frameIdx-initIdx)%5 == 0;
-			await this.trackTillNextFrame(resetTemplate);
+			await this.trackTillNextFrame();
 		}
 		// back to edit mode after each new creation
 		this.mode = 'edit';
@@ -75,44 +78,45 @@ export class SmartTracking extends Tracking {
 		window.removeEventListener('keydown', stopTrackingListenerFct);
 	}
 
-	protected async trackTillNextFrame(resetTemplate: boolean = true) {
+	protected async trackTillNextFrame() {
 		/// process the selected shape
 		if (this.targetShapes.size>1) {
-			console.log("ABORT: we can only track one shape at a time")
+			console.warn("ABORT: we can only track one shape at a time")
 			return;
 		}
 
-		if (resetTemplate) {
-			const target = this.targetShapes.values().next().value;
-			/// get the shape to track
-			const v: number[] = target.geometry.vertices;
-			const xmin = Math.min(v[0], v[2]);
-			const xmax = Math.max(v[0], v[2]);
-			const ymin = Math.min(v[1], v[3]);
-			const ymax = Math.max(v[1], v[3]);
-			/// pre-processing
-			const im0 = this.renderer.image; //await resizeImage(this.renderer.image, 200);
-			const x = Math.round(xmin*im0.width);
-			const y = Math.round(ymin*im0.height);
-			const w = Math.round(xmax*im0.width) - x;
-			const h = Math.round(ymax*im0.height) - y;
-			this.tracker.initBox(im0, x, y, w, h);
-		}
+		const target0 = this.targetShapes.values().next().value as ShapeData;
+		/// get the shape to track
+		const v: number[] = target0.geometry.vertices;
+		const xmin = Math.min(v[0], v[2]);
+		const xmax = Math.max(v[0], v[2]);
+		const ymin = Math.min(v[1], v[3]);
+		const ymax = Math.max(v[1], v[3]);
+		/// pre-processing
+		const im0 = this.renderer.image; // await resizeImage(this.renderer.image, 200);
+		const x = Math.round(xmin*im0.width);
+		const y = Math.round(ymin*im0.height);
+		const w = Math.round(xmax*im0.width) - x;
+		const h = Math.round(ymax*im0.height) - y;
+		this.tracker.initBox(im0, x, y, w, h);
 
 		/// processing
-		let im1 = await (this.loader as any).peekFrame(this.frameIdx+1);
+		const im1 = await (this.loader as any).peekFrame(this.frameIdx+1);
 		// im1 = await resizeImage(im1, 200);
-		var res = this.tracker.run(im1);
+		const res = this.tracker.run(im1);
 		await this.nextFrame()
 
 		/// get calculated shape and take it as the new shape
-		const target = this.targetShapes.values().next().value;
-		target.geometry.vertices = [
+		const target1 = this.targetShapes.values().next().value as ShapeData;
+		target1.geometry.vertices = [
 			res[0]/im1.width,
 			res[1]/im1.height,
 			(res[0]+res[2])/im1.width,
 			(res[1]+res[3])/im1.height
 		];
+		let newShape = JSON.parse(JSON.stringify(getShape(this.tracks[target1.id], this.timestamp).keyshape!))
+		newShape.geometry.vertices = [...target1.geometry.vertices];
+		setKeyShape(this.tracks[target1.id], this.timestamp, newShape);
 		this.dispatchEvent(new Event('update'));
 		await this.delay(10);
 	}
@@ -142,16 +146,16 @@ export class SmartTracking extends Tracking {
 // 	return new Promise((resolve) => {
 // 		const canvas = document.createElement("canvas");
 // 		const context = canvas.getContext("2d")!;
-	
+
 // 		const originalWidth = img.width;
 // 		const originalHeight = img.height;
-	
+
 // 		const canvasWidth = targetWidth;
 // 		const canvasHeight = originalHeight * targetWidth / originalWidth;
-	
+
 // 		canvas.width = canvasWidth;
 // 		canvas.height = canvasHeight;
-	
+
 // 		context.drawImage(
 // 			img, 0, 0, targetWidth, canvasHeight
 // 		);
