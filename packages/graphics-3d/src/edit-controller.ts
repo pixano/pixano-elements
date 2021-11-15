@@ -19,78 +19,78 @@ import { CuboidPlot } from './plots';
  * @fires Event#stop when the user stops editing the target
  */
 export class EditModeController extends BasicEventTarget {
-    private viewer: SceneView;
-    private objControls: TransformControls;
-    private updatePending = false;
+	private viewer: SceneView;
+	private objControls: TransformControls;
+	private updatePending = false;
 
-    constructor(
-            viewer: SceneView,
-            annotation: Cuboid, plot: CuboidPlot) {
-        super();
-        this.viewer = viewer;
-        this.objControls = new TransformControls(viewer.camera, viewer.domElement);
-        this.objControls.space = 'local';
-        this.objControls.attach(plot);
-        this.viewer.scene.add(this.objControls);
+	constructor(
+		viewer: SceneView,
+		annotation: Cuboid, plot: CuboidPlot) {
+		super();
+		this.viewer = viewer;
+		this.objControls = new TransformControls(viewer.camera, viewer.domElement);
+		this.objControls.space = 'local';
+		this.objControls.attach(plot);
+		this.viewer.scene.add(this.objControls);
 
-        this.objControls.addEventListener( 'change', () => this.viewer.render() );
+		this.objControls.addEventListener('change', () => this.viewer.render());
 
-        // Events binding
-        this.objControls.addEventListener('mouseUp', () => {
-            if (this.updatePending) {
-                const obj = this.objControls.object!;
-                if (this.objControls.mode === 'translate') {
-                    annotation.position = obj.position.toArray() as [number, number, number];
-                } else if (this.objControls.mode === 'rotate') {
-                    annotation.heading = obj.rotation.z;
-                } else if (this.objControls.mode === 'scale') {
-                    annotation.position = obj.position.toArray() as [number, number, number];
-                    annotation.size = obj.scale.toArray() as [number, number, number];
-                }
-                this.updatePending = false;
-            }
+		// Events binding
+		this.objControls.addEventListener('mouseUp', () => {
+			if (this.updatePending) {
+				const obj = this.objControls.object!;
+				if (this.objControls.mode === 'translate') {
+					annotation.position = obj.position.toArray() as [number, number, number];
+				} else if (this.objControls.mode === 'rotate') {
+					annotation.heading = obj.rotation.z;
+				} else if (this.objControls.mode === 'scale') {
+					annotation.position = obj.position.toArray() as [number, number, number];
+					annotation.size = obj.scale.toArray() as [number, number, number];
+				}
+				this.updatePending = false;
+			}
 
-            this.dispatchEvent(new Event("stop"));
-        });
+			this.dispatchEvent(new Event("stop"));
+		});
 
-        this.objControls.addEventListener('mouseDown', () => {
-            this.dispatchEvent(new Event('start'));
-        })
+		this.objControls.addEventListener('mouseDown', () => {
+			this.dispatchEvent(new Event('start'));
+		})
 
-        this.objControls.addEventListener('objectChange', () => {
-            const obj = this.objControls.object!;
-            if (this.objControls.mode === 'translate') {
-                annotation.position = obj.position.toArray() as [number, number, number];
-            } else if (this.objControls.mode === 'rotate') {
-                annotation.heading = obj.rotation.z;
-            } else if (this.objControls.mode === 'scale') {
-                annotation.position = obj.position.toArray() as [number, number, number];
-                annotation.size = obj.scale.toArray() as [number, number, number];
-            }
+		this.objControls.addEventListener('objectChange', () => {
+			const obj = this.objControls.object!;
+			if (this.objControls.mode === 'translate') {
+				annotation.position = obj.position.toArray() as [number, number, number];
+			} else if (this.objControls.mode === 'rotate') {
+				annotation.heading = obj.rotation.z;
+			} else if (this.objControls.mode === 'scale') {
+				annotation.position = obj.position.toArray() as [number, number, number];
+				annotation.size = obj.scale.toArray() as [number, number, number];
+			}
 
-            this.updatePending = true;
-            this.viewer.render();
-            this.dispatchEvent(new Event('change'));
-        });
-    }
+			this.updatePending = true;
+			this.viewer.render();
+			this.dispatchEvent(new Event('change'));
+		});
+	}
 
-    /**
-     * Toggle edition mode in the following order:
-     * scale > rotate > translate
-     */
-    toggleMode() {
-        if ( this.objControls.mode === "translate" ) {
-            this.objControls.setMode('scale');
-        } else if ( this.objControls.mode === "rotate" ) {
-            this.objControls.setMode('translate');
-        } else if ( this.objControls.mode === "scale" ) {
-            this.objControls.setMode('rotate');
-        }
-    }
+	/**
+	 * Toggle edition mode in the following order:
+	 * scale > rotate > translate
+	 */
+	toggleMode() {
+		if (this.objControls.mode === "translate") {
+			this.objControls.setMode('scale');
+		} else if (this.objControls.mode === "rotate") {
+			this.objControls.setMode('translate');
+		} else if (this.objControls.mode === "scale") {
+			this.objControls.setMode('rotate');
+		}
+	}
 
-    destroy() {
-        this.viewer.scene.remove(this.objControls);
-        this.objControls.detach();
-        this.objControls.dispose();
-    }
+	destroy() {
+		this.viewer.scene.remove(this.objControls);
+		this.objControls.detach();
+		this.objControls.dispose();
+	}
 }

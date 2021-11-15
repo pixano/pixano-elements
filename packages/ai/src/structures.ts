@@ -5,19 +5,19 @@
  */
 
 export interface Point {
-    x: number,
-    y: number
+	x: number,
+	y: number
 }
 
 export interface Rectangle {
-    l: number;
-    t: number;
-    r: number;
-    b: number;
+	l: number;
+	t: number;
+	r: number;
+	b: number;
 }
 
 export interface Detection {
-    boundingBox: Rectangle;
-    score: number;
-    category: string;
+	boundingBox: Rectangle;
+	score: number;
+	category: string;
 }

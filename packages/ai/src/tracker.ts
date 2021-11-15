@@ -19,7 +19,7 @@ export class Tracker {
 		template_size: 127,
 		search_size: 255,
 		total_stride: 8,
-		score_size: Math.floor((255 - 127) / 8) + 1 + 8, //	Int((search_size - template_size)/(total_stride)) + 1 + 8  # for ++
+		score_size: Math.floor((255 - 127) / 8) + 1 + 8, // Int((search_size - template_size)/(total_stride)) + 1 + 8	# for ++
 		context_amount: 0.5,
 		ratio: 0.93, // ratio: 0.94,
 		// small_sz: 255,
@@ -47,16 +47,18 @@ export class Tracker {
 	}
 
 	async loadModel(modelPath: string): Promise<any> {
-        this.model = await loadGraphModel(modelPath);
+		this.model = await loadGraphModel(modelPath);
 		if (this.model) {
-			// run idle the model once
+			// run idle the model once : goal = make the future runs faster
+			console.info("First idle run...");
 			const templateTensor = tf.zeros([1, 3, this.p.template_size, this.p.template_size]);
 			const searchTensor = tf.zeros([1, 3, this.p.search_size, this.p.search_size]);
 			tf.tidy(() => this.model!.execute(
-				{ 'template': templateTensor, 'search': searchTensor},
+				{ 'template': templateTensor, 'search': searchTensor },
 				['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']) as tf.Tensor2D[]);
 			templateTensor.dispose();
 			searchTensor.dispose();
+			console.info("First idle run done.");
 		}
 	}
 
@@ -88,12 +90,12 @@ export class Tracker {
 		// pytorch model trained with BGR images.
 		const frameInit = tf.tidy(() => tf.browser.fromPixels(im).reverse(-1));
 		this.avgChans = tf.tidy(() => frameInit.mean([0, 1]));
-		
+
 		this.template = tf.tidy(() => get_subwindow_tracking(frameInit, this.targetPos, this.p.template_size, sZ, this.avgChans!));
 		frameInit.dispose();
 
 		this.scaleZ = this.p.template_size / sZ;
-		const dSearch = (this.p.search_size - this.p.template_size) / 2;  // slightly different from rpn++
+		const dSearch = (this.p.search_size - this.p.template_size) / 2;	// slightly different from rpn++
 		const pad = dSearch / this.scaleZ;
 		this.sX = python2round(sZ + 2 * pad);
 		// sX = 1000;
@@ -182,20 +184,20 @@ export function update_tracks(
 	const [scores2D, predX1, predX2, predY1, predY2] = tf.tidy(() => model.execute(
 		{ 'template': templateTensor, 'search': searchTensor },
 		['Identity:0', 'Identity_1:0', 'Identity_2:0', 'Identity_3:0', 'Identity_4:0']
-		) as tf.Tensor2D[]);
-	//predX1 = Identity_1:0
-	//predY1 = Identity_3:0
-	//predX2 = Identity_2:0
-	//predY2 = Identity_4:0
-	//scores2D = Identity:0
+	) as tf.Tensor2D[]);
+	// predX1 = Identity_1:0
+	// predY1 = Identity_3:0
+	// predX2 = Identity_2:0
+	// predY2 = Identity_4:0
+	// scores2D = Identity:0
 	templateTensor.dispose(); searchTensor.dispose();
 
 	// size penalty
-	const sC = tf.tidy(() => change(sz(predX2.sub(predX1), predY2.sub(predY1)).div(sz_wh(scaledTargetSz)))); // scale penalty
+	const sC = tf.tidy(() => change(toSize(predX2.sub(predX1), predY2.sub(predY1)).div(sz_wh(scaledTargetSz)))); // scale penalty
 
 	const a = tf.tidy(() => tf.ones([predX1.shape[0], predX1.shape[1]]).mul(scaledTargetSz[0] / scaledTargetSz[1]));
 	const b = tf.tidy(() => ((predX2.sub(predX1)).div((predY2.sub(predY1)))));
-	const rC = tf.tidy(() => change(a.div(b)));  // ratio penalty
+	const rC = tf.tidy(() => change(a.div(b)));	// ratio penalty
 
 	const penalty = tf.tidy(() => tf.exp((((rC.mul(sC)).sub(1)).mul(p.penalty_k)).mul(-1)));
 	sC.dispose(); a.dispose(); b.dispose(); rC.dispose();
@@ -384,7 +386,7 @@ export function change(r: tf.Tensor2D) {
 	return tf.maximum(r, rInv);
 }
 
-export function sz(w: tf.Tensor2D, h: tf.Tensor2D) {
+export function toSize(w: tf.Tensor2D, h: tf.Tensor2D) {
 	const pad = tf.tidy(() => { return w.add(h).mul(0.5); });
 	const sz2 = tf.tidy(() => { return (w.add(pad)).mul(h.add(pad)); });
 	pad.dispose();
