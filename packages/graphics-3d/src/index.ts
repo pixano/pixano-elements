@@ -10,7 +10,7 @@ import { CuboidEditor } from './pxn-cuboid';
 export { Cuboid, CuboidEditor };
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'pxn-cuboid-editor': CuboidEditor;
-  }
+	interface HTMLElementTagNameMap {
+		'pxn-cuboid-editor': CuboidEditor;
+	}
 }

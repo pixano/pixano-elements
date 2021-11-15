@@ -1,32 +1,32 @@
 {
-  "name": "demo-smart-rectangle",
-  "version": "0.6.0",
-  "private": true,
-  "description": "Demo for rectangle",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "homepage": "",
-  "license": "CECILL-C",
-  "main": "my-demo.js",
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
-  },
-  "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "watch": "webpack --config webpack.config.js --watch"
-  },
-  "devDependencies": {
-    "source-map-loader": "^0.2.4",
-    "webpack": "4.44.2",
-    "webpack-cli": "3.3.12"
-  },
-  "dependencies": {
-    "@material/mwc-button": "0.19.1",
-    "@material/mwc-dialog": "0.19.1",
-    "@material/mwc-linear-progress": "0.19.1",
-    "@material/mwc-textfield": "0.19.1",
-    "@pixano/graphics-2d": "0.6.0",
-    "@pixano/core": "0.6.0",
-    "lit-element": "2.4.0"
-  }
+	"name": "demo-smart-rectangle",
+	"version": "0.6.0",
+	"private": true,
+	"description": "Demo for rectangle",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"homepage": "",
+	"license": "CECILL-C",
+	"main": "my-demo.js",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+	},
+	"scripts": {
+		"build": "webpack --config webpack.config.js",
+		"watch": "webpack --config webpack.config.js --watch"
+	},
+	"devDependencies": {
+		"source-map-loader": "^0.2.4",
+		"webpack": "4.44.2",
+		"webpack-cli": "3.3.12"
+	},
+	"dependencies": {
+		"@material/mwc-button": "0.19.1",
+		"@material/mwc-dialog": "0.19.1",
+		"@material/mwc-linear-progress": "0.19.1",
+		"@material/mwc-textfield": "0.19.1",
+		"@pixano/graphics-2d": "0.6.0",
+		"@pixano/core": "0.6.0",
+		"lit-element": "2.4.0"
+	}
 }

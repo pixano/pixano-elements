@@ -1,28 +1,28 @@
 {
-  "name": "@pixano/graphics-3d",
-  "version": "0.6.0",
-  "description": "Pixano graphics-3d module",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "homepage": "",
-  "license": "CECILL-C",
-  "main": "lib/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:pixano/pixano-elements.git",
-    "directory": "packages/graphics-3d"
-  },
-  "devDependencies": {
-    "typescript": "3.8.3"
-  },
-  "dependencies": {
-    "@pixano/core": "0.6.0",
-    "lit-element": "2.4.0",
-    "three": "0.115.0"
-  },
-  "scripts": {
-    "build": "tsc --build",
-    "build:umd": "webpack --config webpack.config.js",
-    "watch": "tsc --watch",
-    "clean": "tsc --build --clean"
-  }
+	"name": "@pixano/graphics-3d",
+	"version": "0.6.0",
+	"description": "Pixano graphics-3d module",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"homepage": "",
+	"license": "CECILL-C",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:pixano/pixano-elements.git",
+		"directory": "packages/graphics-3d"
+	},
+	"devDependencies": {
+		"typescript": "3.8.3"
+	},
+	"dependencies": {
+		"@pixano/core": "0.6.0",
+		"lit-element": "2.4.0",
+		"three": "0.115.0"
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"build:umd": "webpack --config webpack.config.js",
+		"watch": "tsc --watch",
+		"clean": "tsc --build --clean"
+	}
 }

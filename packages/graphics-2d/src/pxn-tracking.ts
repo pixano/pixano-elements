@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, property} from 'lit-element';
+import { css, customElement, html, property } from 'lit-element';
 import '@material/mwc-icon-button';
 import '@material/mwc-icon-button-toggle';
 import '@material/mwc-button';
@@ -18,7 +18,8 @@ import '@material/mwc-formfield';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
-import { getShape,
+import {
+	getShape,
 	convertShapes,
 	setKeyShape,
 	isKeyShape,
@@ -32,7 +33,8 @@ import { getShape,
 	mergeTracks,
 	getClosestFrames,
 	invertColor,
-	getNumKeyShapes} from './utils-video';
+	getNumKeyShapes
+} from './utils-video';
 import { ShapesEditController } from './controller';
 // import { ClickController } from "./controller-tracking";
 import { style2d } from './style';
@@ -41,8 +43,8 @@ import { style2d } from './style';
 @customElement('pxn-tracking' as any)
 export class Tracking extends Rectangle {
 
-	@property({type: Object})
-	public tracks: {[key: string]: TrackData} = {};
+	@property({ type: Object })
+	public tracks: { [key: string]: TrackData } = {};
 
 	displayMode: 'show_all' | 'show_selected' = 'show_all';
 
@@ -50,10 +52,12 @@ export class Tracking extends Rectangle {
 	public selectedTrackIds: Set<string> = new Set();
 
 	categories: any[] = [
-		{ name: 'person', color: "#eca0a0", properties: [
-			{name: 'posture', type: 'dropdown', enum: ['straight', 'inclined', 'squat', 'sit'], persistent: false, default: 'straight'},
-			{name: 'occlusion', type: 'dropdown', enum: [0, 0.25, 0.50, 0.75], persistent: false, default: 0}
-		]},
+		{
+			name: 'person', color: "#eca0a0", properties: [
+				{ name: 'posture', type: 'dropdown', enum: ['straight', 'inclined', 'squat', 'sit'], persistent: false, default: 'straight' },
+				{ name: 'occlusion', type: 'dropdown', enum: [0, 0.25, 0.50, 0.75], persistent: false, default: 0 }
+			]
+		},
 		{ name: 'car', color: "green", properties: [] }
 	];
 
@@ -124,8 +128,8 @@ export class Tracking extends Rectangle {
 				const currentTrackId = this.selectedTrackIds.values().next().value;
 				this.addNewKeyShapes([
 					{
-					...JSON.parse(JSON.stringify((e as any).detail)),
-					id: currentTrackId
+						...JSON.parse(JSON.stringify((e as any).detail)),
+						id: currentTrackId
 					}
 				]);
 			} else {
@@ -153,7 +157,7 @@ export class Tracking extends Rectangle {
 			// unselect track if shape is unselected
 			if (!this.targetShapes.size) {
 				this.selectedTrackIds.clear();
-				this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
+				this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds }));
 			}
 		});
 		this.addEventListener('delete', (evt: any) => {
@@ -179,9 +183,9 @@ export class Tracking extends Rectangle {
 					this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
 				}
 			} else if (evt.key === 'n') {
-				this.mode = 'create';//new track => create mode
+				this.mode = 'create';// new track => create mode
 			} else if (evt.key === 'Escape') {
-				this.mode = 'edit';//back to edit mode
+				this.mode = 'edit';// back to edit mode
 			}
 
 			this.isShiftKeyPressed = evt.shiftKey;
@@ -195,7 +199,7 @@ export class Tracking extends Rectangle {
 	 * Extend shape controller onObjectDown to handle track selection
 	 */
 	protected handleTrackSelection() {
-		const editController = (this.modes['edit'] as ShapesEditController);
+		const editController = (this.modes.edit as ShapesEditController);
 		editController.doObjectSelection = (shape: ShapeData, isShiftKey: boolean = false) => {
 			const firstClick = ShapesEditController.prototype.doObjectSelection.call(editController, shape, isShiftKey);
 			this.selectTrack(shape.id, isShiftKey);
@@ -208,21 +212,21 @@ export class Tracking extends Rectangle {
 			if (this.selectedTrackIds.size) {
 				this.selectedTrackIds.clear();
 				this.targetShapes.clear();
-				this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
+				this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds }));
 			}
 		}
 	}
 
-	protected selectTrack(trackId : string, isShiftKey : boolean) {
+	protected selectTrack(trackId: string, isShiftKey: boolean) {
 		if (isShiftKey) {
 			if (!this.selectedTrackIds.has(trackId)) {
 				this.selectedTrackIds.add(trackId);
-				this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds }));
+				this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds }));
 			}
 		} else if (!this.selectedTrackIds.has(trackId)) {
 			this.selectedTrackIds.clear();
 			this.selectedTrackIds.add(trackId);
-			this.dispatchEvent(new CustomEvent('selection-track', { detail : this.selectedTrackIds}));
+			this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds }));
 		}
 	}
 
@@ -241,7 +245,7 @@ export class Tracking extends Rectangle {
 	drawTracks() {
 		this.shapes = this.convertShapes(this.timestamp) as any;
 		// update selection to be displayed
-		const selectedIds = [...this.selectedTrackIds]; 
+		const selectedIds = [...this.selectedTrackIds];
 		this.selectedShapeIds = selectedIds;
 	}
 
@@ -251,7 +255,7 @@ export class Tracking extends Rectangle {
 	 */
 	convertShapes(timestamp: number): ShapeData[] {
 		const tracks = this.displayMode === 'show_all' ?
-				this.tracks : [...this.selectedTrackIds].reduce((map, id) => ({...map, [id]: this.tracks[id]}), {});
+			this.tracks : [...this.selectedTrackIds].reduce((map, id) => ({ ...map, [id]: this.tracks[id] }), {});
 		return convertShapes(tracks, timestamp);
 	}
 
@@ -268,7 +272,7 @@ export class Tracking extends Rectangle {
 		};
 		const newTrack = {
 			id: newTrackId,
-			keyShapes: {[this.timestamp] : keyShape},
+			keyShapes: { [this.timestamp]: keyShape },
 			category: cls,
 			labels: {}
 		};
@@ -278,7 +282,7 @@ export class Tracking extends Rectangle {
 		this.selectedShapeIds = [newTrack.id];
 		this.drawTracks();
 		this.requestUpdate();
-		this.mode = 'edit';//back to edit mode after each new creation
+		this.mode = 'edit';// back to edit mode after each new creation
 		this.dispatchEvent(new Event('create-track'));
 	}
 
@@ -337,7 +341,7 @@ export class Tracking extends Rectangle {
 		shapes.forEach((s) => {
 			const tId = [...this.selectedTrackIds].find((id) => id === s.id);
 			if (tId) {
-				setKeyShape(this.tracks[tId], this.timestamp, {...getShape(this.tracks[tId], this.timestamp).keyshape!, ...s});
+				setKeyShape(this.tracks[tId], this.timestamp, { ...getShape(this.tracks[tId], this.timestamp).keyshape!, ...s });
 			}
 		});
 		this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
@@ -350,13 +354,13 @@ export class Tracking extends Rectangle {
 	 */
 	removeOrAddKeyShape(t: TrackData) {
 		removeOrAddKeyShape(this.tracks[t.id], this.timestamp);
-		this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
+		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
 	}
 
 	getDefaultPermProps(categoryName: string) {
 		const category = this.categories.find((c) => c.name === categoryName);
 		if (category) {
-			const permProps: {[key: string]: any} = {};
+			const permProps: { [key: string]: any } = {};
 			category!.properties.forEach((p: any) => {
 				if (p.persistent)
 					permProps[p.name] = p.default
@@ -369,7 +373,7 @@ export class Tracking extends Rectangle {
 	getDefaultProperties(categoryName: string) {
 		const category = this.categories.find((c) => c.name === categoryName);
 
-		const permProps: {[key: string]: any} = {};
+		const permProps: { [key: string]: any } = {};
 		category!.properties.forEach((p: any) => {
 			if (!p.persistent)
 				permProps[p.name] = p.default;
@@ -385,10 +389,10 @@ export class Tracking extends Rectangle {
 		t.category = cls;
 		t.labels = this.getDefaultProperties(cls);
 		const defaultProp = this.getDefaultProperties(t.category);
-		for (const [ , ks ] of Object.entries(t.keyShapes)) {
-			ks.labels = {...defaultProp};
+		for (const [, ks] of Object.entries(t.keyShapes)) {
+			ks.labels = { ...defaultProp };
 		}
-		this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
+		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
 		this.requestUpdate();
 	}
 
@@ -400,8 +404,8 @@ export class Tracking extends Rectangle {
 		const shape = getShape(t, this.timestamp).keyshape;
 		if (shape && shape.labels[propName] !== propValue) {
 			shape.labels[propName] = propValue;
-			setKeyShape(this.tracks[t.id], this.timestamp, {...shape});
-			this.dispatchEvent(new CustomEvent('update-tracks', {detail: this.tracks}));
+			setKeyShape(this.tracks[t.id], this.timestamp, { ...shape });
+			this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
 			this.requestUpdate();
 		}
 	}
@@ -409,7 +413,7 @@ export class Tracking extends Rectangle {
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
 		delete this.tracks[tId];
-		this.dispatchEvent(new CustomEvent('delete-track', {detail: t}));
+		this.dispatchEvent(new CustomEvent('delete-track', { detail: t }));
 	}
 
 	/**
@@ -428,7 +432,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToNextKeyFrame(t: TrackData) {
-		const [,next] = getClosestFrames(t, this.timestamp);
+		const [, next] = getClosestFrames(t, this.timestamp);
 		if (isFinite(next)) {
 			this.playback!.set(next);
 		}
@@ -446,7 +450,7 @@ export class Tracking extends Rectangle {
 	 * Go to the last frame of a given track
 	 * @param t
 	 */
-	 goToLastFrame(t: TrackData) {
+	goToLastFrame(t: TrackData) {
 		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0]);
 	}
 
@@ -462,9 +466,9 @@ export class Tracking extends Rectangle {
 	/**
 	 * Merge error dialog
 	 */
-	mergeErrorDialog(t1Id : string, t2Id : string, keysIntersection : string[]) {
-		var mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
-		var message = this.shadowRoot!.getElementById("dialog-merge-error-message");
+	mergeErrorDialog(t1Id: string, t2Id: string, keysIntersection: string[]) {
+		const mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
+		const message = this.shadowRoot!.getElementById("dialog-merge-error-message");
 		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".</br>"
 			+ "Tracks intersect at frames: " + keysIntersection;
 		mergeErrorDialog!.open = true;
@@ -491,8 +495,7 @@ export class Tracking extends Rectangle {
 			const checked = shape.labels[prop.name];
 			return html`
 			<mwc-formfield label="${prop.name}">
-				<mwc-checkbox ?checked=${checked} @change=${
-					(evt: any) => { this.setProperty(t, prop.name, evt.path[0].checked) }
+				<mwc-checkbox ?checked=${checked} @change=${(evt: any) => { this.setProperty(t, prop.name, evt.path[0].checked) }
 				}></mwc-checkbox>
 			</mwc-formfield>`
 		}
@@ -515,16 +518,16 @@ export class Tracking extends Rectangle {
 			</p>
 			<div>
 				${[...this.selectedTrackIds].map((tId) => {
-					const t = this.tracks[tId];
-					const currentShape = getShape(t, this.timestamp).keyshape;
-					const color = trackColors[parseInt(tId) % trackColors.length];
-					let isHidden = true;
-					const disabled = currentShape == null;
-					if (currentShape) {
-						isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
-					}
-					const categoryProps = this.categories.find((c) => c.name === t.category).properties || [];
-					return html`
+			const t = this.tracks[tId];
+			const currentShape = getShape(t, this.timestamp).keyshape;
+			const color = trackColors[parseInt(tId) % trackColors.length];
+			let isHidden = true;
+			const disabled = currentShape === null;
+			if (currentShape) {
+				isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
+			}
+			const categoryProps = this.categories.find((c) => c.name === t.category).properties || [];
+			return html`
 					<div class="item">
 						<p style="flex-direction: column; color: gray;">T${t.id.toString()}<span class="dot" style="background: ${color}"></span></p>
 						<div style="display: flex; flex-direction: column; width: 100%; margin-right: 10px;">
@@ -546,7 +549,7 @@ export class Tracking extends Rectangle {
 						</div>
 					</div>
 					`;
-				})}
+		})}
 			</div>
 		</div>
 		`;
@@ -560,13 +563,13 @@ export class Tracking extends Rectangle {
 				<p>${Object.keys(this.tracks).length} tracks</p>
 				<div style="padding: 5px; text-align: center;">
 					${Object.keys(this.tracks).map((id) => {
-						const backgroundColor = trackColors[parseInt(id) % trackColors.length];
-						return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
+			const backgroundColor = trackColors[parseInt(id) % trackColors.length];
+			return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
 							@click=${() => {
-								this.selectTrack(id, this.isShiftKeyPressed);
-								this.goToFirstFrame(this.tracks[id]);
-							}}>${id}</div>`;
-					})}
+					this.selectTrack(id, this.isShiftKeyPressed);
+					this.goToFirstFrame(this.tracks[id]);
+				}}>${id}</div>`;
+		})}
 				</div>
 			</div>
 		</div>
@@ -577,7 +580,7 @@ export class Tracking extends Rectangle {
 		return html`
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
-						@click=${() => {this.selectedTrackIds.clear(); this.mode = 'create';}}></mwc-icon-button>
+						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
 		`;
 	}
 

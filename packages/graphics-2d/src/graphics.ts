@@ -14,13 +14,13 @@ import { DrawingCross } from './graphic-drawing-cross';
 import { Graphic, CONTROL_POINTS } from './graphic';
 
 export {
-  CONTROL_POINTS,
-  Brush,
-  DrawingCross,
-  GraphicMask,
-  GraphicGraph,
-  GraphicPolygon,
-  GraphicMultiPolygon,
-  GraphicRectangle,
-  Graphic
+	CONTROL_POINTS,
+	Brush,
+	DrawingCross,
+	GraphicMask,
+	GraphicGraph,
+	GraphicPolygon,
+	GraphicMultiPolygon,
+	GraphicRectangle,
+	Graphic
 }

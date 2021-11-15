@@ -5,5 +5,5 @@
  */
 
 export interface Destructible {
-  destroy(): void;
+	destroy(): void;
 }

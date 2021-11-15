@@ -1,26 +1,26 @@
 {
-  "name": "@pixano/core",
-  "version": "0.6.0",
-  "description": "Pixano core module",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "license": "CECILL-C",
-  "main": "lib/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:pixano/pixano-elements.git",
-    "directory": "packages/core"
-  },
-  "devDependencies": {
-    "typescript": "3.8.3"
-  },
-  "dependencies": {
-    "@material/mwc-slider": "0.19.1",
-    "lit-element": "2.4.0",
-    "on-change": "^2.0.1"
-  },
-  "scripts": {
-    "build": "tsc --build",
-    "watch": "tsc --watch",
-    "clean": "tsc --build --clean"
-  }
+	"name": "@pixano/core",
+	"version": "0.6.0",
+	"description": "Pixano core module",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"license": "CECILL-C",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:pixano/pixano-elements.git",
+		"directory": "packages/core"
+	},
+	"devDependencies": {
+		"typescript": "3.8.3"
+	},
+	"dependencies": {
+		"@material/mwc-slider": "0.19.1",
+		"lit-element": "2.4.0",
+		"on-change": "^2.0.1"
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"watch": "tsc --watch",
+		"clean": "tsc --build --clean"
+	}
 }

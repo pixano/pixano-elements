@@ -1,18 +1,18 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:recommended"
-    ],
-    "jsRules": {},
-    "rules": {
-        "no-console": [
-            true,
-            "debug",
-            "time",
-            "timeEnd",
-            "log"
-        ],
-        "no-bitwise": false
-    },
-    "rulesDirectory": []
+		"defaultSeverity": "error",
+		"extends": [
+				"tslint:recommended"
+		],
+		"jsRules": {},
+		"rules": {
+				"no-console": [
+						true,
+						"debug",
+						"time",
+						"timeEnd",
+						"log"
+				],
+				"no-bitwise": false
+		},
+		"rulesDirectory": []
 }
