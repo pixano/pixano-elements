@@ -77,11 +77,11 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#bogue] tab : implémnetation du shift+tab comme pour les canvas2d
 
 ## npx serve demos/smart-segmentation/
-- [ ] [#interface] un message durant le chargement serait sympa
-- [ ] [#bogue] label pas pris en compte pour la création (à vérifier)
+- [x] [#interface] un message durant le chargement serait sympa
+- [x] [#bogue] label pas pris en compte pour la création (à vérifier)
 
 ## npx serve demos/rectangle/
-- [ ] [#interface] avoir une touche pour créer une nouvelle instance OU enchainer les instances ici ?
+- [ ] [#interface] avoir une touche pour créer une nouvelle instance (n) OU enchainer les instances ici ? => uniformisation des comportements entre les modules et possibilité de personnaliser
 - [ ] [#feature] possibilité des rectangles avec rotation
 
 ## npx serve demos/smart-rectangle/
@@ -94,7 +94,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#bogue] impossible de supprimer une track entre deux keyframes (il réinterpole systématiquement) => nécessaire par exemple quand la cible passe derrière un poteau
 	- => casser la track en créant une keyframe à la frame n-1
 	- => possibilité de continuer la track en sélectionnant son numéro en mode create (et non via "new")
-- [ ] [#bogue] interpolation à changer
+- [ ] [#bogue] dupplication des boites jusqau'au bout au lieu d'attendre d'avoir une deuxième key pour interpoler
 - [ ] [#bogue] tracking à l'envers
 - [ ] [#feature] on veut que le zoom reste le même d'une image à l'autre, contrairement au fonctionnemnt hors tracking
 
@@ -103,7 +103,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
 
 ## npx serve demos/graph/
-
+- [ ] le bouton "edit" ne sert à rien
 
 ## Questions ?
 	- [ ] [#other] Replace {...this} by this in controllers ?

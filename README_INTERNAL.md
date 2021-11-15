@@ -92,16 +92,9 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 		git checkout github
 		
 		# integrate our modifications to the github branch
-		# a few usage examples with cherry-pick :
-		# import of the commit number d5e075f2 :
-		git cherry-pick d5e075f2
-		# [or] import of all commits from b4cb0b18 to d5e075f2 both included:
-		git cherry-pick b4cb0b18^..d5e075f2
-		# [or] import of all commits from cfbb3866 (not included) to 74e276acb:
-		git cherry-pick cfbb3866..74e276acb
-		# [or] merge all commits without commit which lets you inspect (and modify) the result before committing
+		# merge all commits without commit which lets you inspect (and modify) the result before committing
 		# ensure that you `git rm --cached` every internal file/section
-		git merge --no-commit master --allow-unrelated-histories
+		git merge --no-commit master
 
 During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
@@ -129,6 +122,7 @@ During the merge / before commiting, **do not include / delete files and interna
 	npx serve demos/rectangle/
 	npx serve demos/smart-rectangle/
 	npx serve demos/tracking/
+	npx serve demos/smart-tracking/
 #### finalisation/code clean
 - code review
 - clean code: `npm run tslint`
@@ -136,10 +130,6 @@ During the merge / before commiting, **do not include / delete files and interna
 ### 3) Publish
 #### 1. push
 	VERSION=0.6.0
-	# update the publication version
-	node changeversion.js $VERSION
-	git add package.json */*/package.json
-	git commit -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
 	# push modifications on the fork
 	git push upstream github:master --follow-tags
@@ -147,8 +137,6 @@ During the merge / before commiting, **do not include / delete files and interna
 	# tag report on master
 	git checkout master
 	#OR git checkout f5f56daf if the reference commit is not the last one
-	node changeversion.js $VERSION
-	git add package.json */*/package.json
 	git tag -m "vi$VERSION" "vi$VERSION"
 	git push origin master --follow-tags
 #### 2. pull-request
@@ -195,8 +183,9 @@ Transform the tag in github release (makes the last tag more visible and detaile
 
 #### 5. publication of the documentation
 	npm run docs
-	rm -r ../pixano.github.io/docs ; cp -r docs ../pixano.github.io/docs
 	cd ../pixano.github.io/
+	git pull origin master
+	rm -r docs ; cp -r ../pixano-elements/docs docs
 	git commit -a -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
 	git push --follow-tags
