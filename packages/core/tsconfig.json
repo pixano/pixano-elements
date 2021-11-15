@@ -1,11 +1,11 @@
 {
-  "extends": "../../tsconfig.common.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "lib",
-    "esModuleInterop": true
-  },
-  "include": [
-    "src/*.ts"
-  ]
+	"extends": "../../tsconfig.common.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "lib",
+		"esModuleInterop": true
+	},
+	"include": [
+		"src/*.ts"
+	]
 }

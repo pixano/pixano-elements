@@ -1,44 +1,44 @@
 {
-  "name": "@pixano/graphics-2d",
-  "version": "0.6.0",
-  "description": "Pixano graphics 2d module",
-  "author": "Pixano Authors <pixano@cea.fr>",
-  "homepage": "",
-  "license": "CECILL-C",
-  "main": "lib/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:pixano/pixano-elements.git",
-    "directory": "packages/graphics-2d"
-  },
-  "devDependencies": {
-    "awesome-typescript-loader": "5.2.1",
-    "terser-webpack-plugin": "4.2.2",
-    "typescript": "3.8.3",
-    "webpack": "4.44.2",
-    "webpack-cli": "3.3.12"
-  },
-  "dependencies": {
-    "@material/mwc-ripple": "0.19.1",
-    "@material/mwc-button": "0.19.1",
-    "@material/mwc-dialog": "0.19.1",
-    "@material/mwc-formfield": "0.19.1",
-    "@material/mwc-checkbox": "0.19.1",
-    "@material/mwc-icon-button": "0.19.1",
-    "@material/mwc-icon-button-toggle": "0.19.1",
-    "@material/mwc-list": "0.19.1",
-    "@material/mwc-select": "0.19.1",
-    "@material/mwc-switch": "0.19.1",
-    "@pixano/ai": "0.6.0",
-    "@pixano/core": "0.6.0",
-    "lit-element": "2.4.0",
-    "on-change": "^2.0.1",
-    "pixi.js": "5.3.3"
-  },
-  "scripts": {
-    "build": "tsc --build",
-    "watch": "tsc --watch",
-    "clean": "tsc --build --clean",
-    "build:umd": "webpack --config webpack.config.js"
-  }
+	"name": "@pixano/graphics-2d",
+	"version": "0.6.0",
+	"description": "Pixano graphics 2d module",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"homepage": "",
+	"license": "CECILL-C",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:pixano/pixano-elements.git",
+		"directory": "packages/graphics-2d"
+	},
+	"devDependencies": {
+		"awesome-typescript-loader": "5.2.1",
+		"terser-webpack-plugin": "4.2.2",
+		"typescript": "3.8.3",
+		"webpack": "4.44.2",
+		"webpack-cli": "3.3.12"
+	},
+	"dependencies": {
+		"@material/mwc-ripple": "0.19.1",
+		"@material/mwc-button": "0.19.1",
+		"@material/mwc-dialog": "0.19.1",
+		"@material/mwc-formfield": "0.19.1",
+		"@material/mwc-checkbox": "0.19.1",
+		"@material/mwc-icon-button": "0.19.1",
+		"@material/mwc-icon-button-toggle": "0.19.1",
+		"@material/mwc-list": "0.19.1",
+		"@material/mwc-select": "0.19.1",
+		"@material/mwc-switch": "0.19.1",
+		"@pixano/ai": "0.6.0",
+		"@pixano/core": "0.6.0",
+		"lit-element": "2.4.0",
+		"on-change": "^2.0.1",
+		"pixi.js": "5.3.3"
+	},
+	"scripts": {
+		"build": "tsc --build",
+		"watch": "tsc --watch",
+		"clean": "tsc --build --clean",
+		"build:umd": "webpack --config webpack.config.js"
+	}
 }

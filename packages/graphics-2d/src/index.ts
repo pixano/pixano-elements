@@ -17,14 +17,14 @@ import { SmartSegmentation } from './pxn-smart-segmentation';
 export { Graph, Polygon, Rectangle, Segmentation, SmartRectangle, Tracking, SmartTracking, SmartSegmentation };
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'pxn-polygon': Polygon;
-    'pxn-rectangle': Rectangle;
-    'pxn-segmentation': Segmentation;
-    'pxn-smart-segmentation': SmartSegmentation;
-    'pxn-graph': Graph;
-    'pxn-smart-rectangle': SmartRectangle;
-    'pxn-tracking': Tracking;
-    'pxn-smart-tracking': SmartTracking;
-  }
+	interface HTMLElementTagNameMap {
+		'pxn-polygon': Polygon;
+		'pxn-rectangle': Rectangle;
+		'pxn-segmentation': Segmentation;
+		'pxn-smart-segmentation': SmartSegmentation;
+		'pxn-graph': Graph;
+		'pxn-smart-rectangle': SmartRectangle;
+		'pxn-tracking': Tracking;
+		'pxn-smart-tracking': SmartTracking;
+	}
 }
