@@ -13,7 +13,9 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 ## général
 - [ ] [#doc] nettoyer le dépôt github comme on l'a fait pour le gitlab
 - [ ] [#feature] nouveau module de classification
-- [ ] [#doc] tabulations/espaces uniformisée dans tous les fichiers
+- [x] [#doc] tabulations/espaces uniformisée dans tous les fichiers
+- [ ] [#feature] intégrer les labels et la gestion des annotations (locales) dans elements/core plutôt que dans app
+- [ ] [#feature] permettre une démo complète (comme https://pixano.github.io/demo/demo.html avec chargement d'image, labels et export) pour chaque élément + conserver des démos simples pour debug (reste à voir comment séparer sans dupliquer le code)
 - [ ] [#feature] créer une liste des objets étiquetés => pour l'app, séparation avec la sélection de la classe => s'inspirer des tiles du tracking : tout peut être uniformisé ici : liste des objets = liste des tracks, tile = modifs des attributs d'un objet/track
 - [ ] [#doc] afficher le numéro de version de piwano-element correspondant au dernier commit ou tag + possibilité de le récupérer facilement depuis app
 - [ ] [#interface] use the same key bindings everywere it is possible (and choose between implementing it in controller or in pxn-*)
@@ -76,6 +78,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#bogue] segmentation : get copy/paste to work
 - [ ] [#bogue] tab : les éléments supprimés restent dans la liste
 - [ ] [#bogue] tab : implémnetation du shift+tab comme pour les canvas2d
+- [ ] [#bogue] quand on supprime une instance, elle n'est pas supprimée du masque 
 
 ## npx serve demos/smart-segmentation/
 - [x] [#interface] un message durant le chargement serait sympa
@@ -100,8 +103,9 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#feature] on veut que le zoom reste le même d'une image à l'autre, contrairement au fonctionnemnt hors tracking
 
 ## npx serve demos/smart-tracking/
-- [ ] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
-- [ ] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
+- [ ] [#interface] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
+- [ ] [#interface] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
+- [ ] [#bogue] smart-tracking : on peut encore utiliser la touche t et lancer un apprentissage après l'avoir quitté => trouver le removeEventListener manquant
 
 ## npx serve demos/graph/
 - [ ] le bouton "edit" ne sert à rien
