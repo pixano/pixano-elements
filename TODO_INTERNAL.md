@@ -11,6 +11,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#doc] nettoyer le dépôt github comme on l'a fait pour le gitlab
 - [ ] [#feature] nouveau module de classification
 - [ ] [#doc] tabulations/espaces uniformisée dans tous les fichiers
 - [ ] [#feature] créer une liste des objets étiquetés => pour l'app, séparation avec la sélection de la classe => s'inspirer des tiles du tracking : tout peut être uniformisé ici : liste des objets = liste des tracks, tile = modifs des attributs d'un objet/track

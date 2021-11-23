@@ -98,7 +98,7 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 
 During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
-- do not include the present file [README_INTERNE.md](./README_INTERNE.md), nor the .gitlab-ci.yml
+- do not include the present file [README_INTERNAL.md](./README_INTERNAL.md), nor the .gitlab-ci.yml
 - do not include the folder [doc_interne](./doc_interne)
 - do not include the files with tag "proprietary"
 - do not include with code blocks surrounded by tag "proprietary"
@@ -129,7 +129,6 @@ During the merge / before commiting, **do not include / delete files and interna
 
 ### 3) Publish
 #### 1. push
-	VERSION=0.6.0
 	git tag -m "v$VERSION" "v$VERSION"
 	# push modifications on the fork
 	git push upstream github:master --follow-tags

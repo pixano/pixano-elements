@@ -202,23 +202,6 @@ export abstract class Canvas extends GenericDisplay {
 		setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
 	}
 
-	protected loadImageFromSrc(src: string): Promise<HTMLImageElement> {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.crossOrigin = "Anonymous";
-			if (src) {
-				img.onload = () => {
-					if (img !== null) {
-						resolve(img)
-					}
-				}
-				img.src = src;
-			} else {
-				resolve(img);
-			}
-		})
-	}
-
 	/**
 	 * Called on every property change
 	 * @param changedProperty

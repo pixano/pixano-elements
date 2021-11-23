@@ -120,10 +120,6 @@ export class PlaybackControl extends LitElement {
 		this.set(this.slider.value);
 	}
 
-	onSliderChange() {
-		this.set(this.slider.value);
-	}
-
 	firstUpdated() {
 		this.slider.addEventListener("keydown", (event: KeyboardEvent) => {
 			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -159,7 +155,7 @@ export class PlaybackControl extends LitElement {
 		if (changedProps.has('current')) {
 			try {
 				this.slider?.layout();
-			} catch { console.warn("failed"); }
+			} catch { console.warn("slider update failed"); }
 		}
 	}
 
@@ -179,7 +175,6 @@ export class PlaybackControl extends LitElement {
 					<p class="button" style="fill: ${this.current < this.max ? "black" : "#d0d0d0"}" @click=${this.setNext}>${triRight}</p>
 					<p class="frameidx">${this.current}/${this.max}</p>
 					<mwc-slider @input=${this.onSliderInput}
-											@change=${this.onSliderChange}
 											discrete
 											value=${this.current}
 											max="${this.max}"

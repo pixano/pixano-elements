@@ -22,7 +22,8 @@
 		"serve": "serve",
 		"start": "es-dev-server --preserve-symlinks --node-resolve --open ",
 		"tslint": "tslint -c tslint.json packages/**/src/*.ts",
-		"docs": "rm -rf docs && typedoc packages && grep -rl 'globals.html' docs/* | xargs -i@ sed -i 's/globals.html/index.html/g' @ && mv docs/globals.html docs/index.html"
+		"docs": "rm -rf docs && typedoc packages && grep -rl 'globals.html' docs/* | xargs -i@ sed -i 's/globals.html/index.html/g' @ && mv docs/globals.html docs/index.html",
+		"installLocalElements": "cd packages/ai && rm -rf node_modules/@pixano package-lock.json && npm i ../core && cd - && cd packages/graphics-2d && rm -rf node_modules/@pixano package-lock.json && npm i ../core && npm i ../ai && cd - && cd packages/graphics-3d && rm -rf node_modules/@pixano package-lock.json && npm i ../core"
 	},
 	"dependencies": {}
 }
