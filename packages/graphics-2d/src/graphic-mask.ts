@@ -329,7 +329,7 @@ export class GraphicMask extends PIXIContainer {
 						this.orig!.data[4 * idx] = id1;
 						this.orig!.data[4 * idx + 1] = id2;
 						this.orig!.data[4 * idx + 2] = cls;
-						this.orig!.data[4 * idx + 3] = 255;
+						this.orig!.data[4 * idx + 3] = alpha;
 						pixels.data[4 * idx] = color[0];
 						pixels.data[4 * idx + 1] = color[1];
 						pixels.data[4 * idx + 2] = color[2];
@@ -393,7 +393,7 @@ export class GraphicMask extends PIXIContainer {
 							this.orig!.data[4 * idx] = id1;
 							this.orig!.data[4 * idx + 1] = id2;
 							this.orig!.data[4 * idx + 2] = cls;
-							this.orig!.data[4 * idx + 3] = 255;
+							this.orig!.data[4 * idx + 3] = alpha;
 							pixels.data[4 * idx] = color[0];
 							pixels.data[4 * idx + 1] = color[1];
 							pixels.data[4 * idx + 2] = color[2];
@@ -412,7 +412,7 @@ export class GraphicMask extends PIXIContainer {
 					this.orig!.data[idx * 4] = rId1;
 					this.orig!.data[idx * 4 + 1] = rId2;
 					this.orig!.data[idx * 4 + 2] = rCls;
-					this.orig!.data[idx * 4 + 3] = 255;
+					this.orig!.data[idx * 4 + 3] = alpha;
 					pixels.data[idx * 4] = color[0];
 					pixels.data[idx * 4 + 1] = color[1];
 					pixels.data[idx * 4 + 2] = color[2];
@@ -460,7 +460,7 @@ export class GraphicMask extends PIXIContainer {
 				this.orig!.data[idx] = id1;
 				this.orig!.data[idx + 1] = id2;
 				this.orig!.data[idx + 2] = cls;
-				this.orig!.data[idx + 3] = 255;
+				this.orig!.data[idx + 3] = alpha;
 				pixels.data[idx] = color[0];
 				pixels.data[idx + 1] = color[1];
 				pixels.data[idx + 2] = color[2];

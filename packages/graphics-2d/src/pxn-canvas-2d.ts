@@ -274,8 +274,7 @@ export class Canvas2d extends Canvas {
 		event.preventDefault();
 		const shapes = [...this.shapes.values()];
 		const currIdx = shapes.findIndex((s) => this.targetShapes.has(s)) || 0;
-		const nextIdx = event.shiftKey ? (currIdx + 1 + shapes.length) % shapes.length
-			: (currIdx - 1 + shapes.length) % shapes.length;
+		const nextIdx = event.shiftKey ? (currIdx -1 +shapes.length) % shapes.length : (currIdx +1 +shapes.length) % shapes.length;
 		const nextShape = shapes[nextIdx];
 		if (nextShape) {
 			this.targetShapes.set([nextShape]);

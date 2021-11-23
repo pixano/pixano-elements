@@ -76,9 +76,9 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] [#interface] possibilité d'utiliser tab comme dans les autres plugins
 - [x] [#interface] connecter taggleLabels et toggleMask pour standardiser
 - [ ] [#bogue] segmentation : get copy/paste to work
-- [ ] [#bogue] tab : les éléments supprimés restent dans la liste
-- [ ] [#bogue] tab : implémnetation du shift+tab comme pour les canvas2d
-- [ ] [#bogue] quand on supprime une instance, elle n'est pas supprimée du masque 
+- [x] [#bogue] tab : les éléments supprimés restent dans la liste
+- [x] [#bogue] tab : implémnetation du shift+tab comme pour les canvas2d
+- [x] [#bogue] quand on supprime une instance, elle n'est pas supprimée du masque 
 
 ## npx serve demos/smart-segmentation/
 - [x] [#interface] un message durant le chargement serait sympa
