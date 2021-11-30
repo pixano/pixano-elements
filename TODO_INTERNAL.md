@@ -11,8 +11,9 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 
 # AFAIRE :
 ## général
+- [ ] [#interface] modifier raccourcis clavier ? : systématiquement accompagner de ctrl ? Avec m,p et h, çà se déclenche quand on rajoute des commentaires...
 - [ ] [#doc] nettoyer le dépôt github comme on l'a fait pour le gitlab
-- [ ] [#feature] nouveau module de classification
+- [x] [#feature] nouveau module de classification
 - [x] [#doc] tabulations/espaces uniformisée dans tous les fichiers
 - [ ] [#feature] intégrer les labels et la gestion des annotations (locales) dans elements/core plutôt que dans app
 - [ ] [#feature] permettre une démo complète (comme https://pixano.github.io/demo/demo.html avec chargement d'image, labels et export) pour chaque élément + conserver des démos simples pour debug (reste à voir comment séparer sans dupliquer le code)
