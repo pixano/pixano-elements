@@ -68,10 +68,10 @@ export abstract class Canvas extends GenericDisplay {
 	}
 
 	disconnectedCallback() {
-		super.disconnectedCallback();
 		// A classic event listener will not be automatically destroyed by lit-element,
 		// This will introduce memory leaks and weird bugs.
 		window.removeEventListener('keydown', this.keyHandlerBind);
+		super.disconnectedCallback();
 	}
 
 	get imageWidth() {

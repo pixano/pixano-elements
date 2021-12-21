@@ -171,28 +171,44 @@ export class Tracking extends Rectangle {
 			this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
 			this.drawTracks();
 		});
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "r") {
-				this.mergeTracks(this.selectedTrackIds);
-			} else if (evt.key === "f") {
-				if (this.selectedTrackIds.size === 1) {
-					this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
-				}
-			} else if (evt.key === "l") {
-				if (this.selectedTrackIds.size === 1) {
-					this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
-				}
-			} else if (evt.key === 'n') {
-				this.mode = 'create';// new track => create mode
-			} else if (evt.key === 'Escape') {
-				this.mode = 'edit';// back to edit mode
-			}
+	}
 
-			this.isShiftKeyPressed = evt.shiftKey;
-		});
-		window.addEventListener('keyup', (evt) => {
-			this.isShiftKeyPressed = evt.shiftKey;
-		});
+	protected keyDownHandler(evt: KeyboardEvent) {
+		if (evt.key === "r") {
+			this.mergeTracks(this.selectedTrackIds);
+		} else if (evt.key === "f") {
+			if (this.selectedTrackIds.size === 1) {
+				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+			}
+		} else if (evt.key === "l") {
+			if (this.selectedTrackIds.size === 1) {
+				this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+			}
+		} else if (evt.key === 'n') {
+			this.mode = 'create';// new track => create mode
+		} else if (evt.key === 'Escape') {
+			this.mode = 'edit';// back to edit mode
+		}
+
+		this.isShiftKeyPressed = evt.shiftKey;
+	}
+	protected keyUpHandler(evt: KeyboardEvent) {
+		this.isShiftKeyPressed = evt.shiftKey;
+	}
+	
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+		window.addEventListener('keyup', this.keyUpHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		window.removeEventListener('keyup', this.keyUpHandler);
+		super.disconnectedCallback();
 	}
 
 	/**

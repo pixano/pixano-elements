@@ -77,19 +77,29 @@ export class Canvas2d extends Canvas {
 			})
 		}
 		);
-
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "Alt") {
-				this.switchMode();
-			}
-
-			else if (evt.key === "h") {
-				this.hideLabels = !this.hideLabels;
-			}
-		});
-
 		this.observeShapeForDisplay();
 		this.modes[this.mode].activate();
+	}
+
+	protected keyHandler(evt: KeyboardEvent) {
+		if (evt.key === "Alt") {
+			this.switchMode();
+		} else if (evt.key === "h") {
+			this.hideLabels = !this.hideLabels;
+		}
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyHandler);
+		super.disconnectedCallback();
 	}
 
 	switchMode() {

@@ -81,10 +81,23 @@ export class Segmentation extends Canvas {
 
 		// Empty mask on image load
 		this.addEventListener('load', this.onImageChanged.bind(this));
+	}
 
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "Alt") { this.switchMode(); }
-		});
+	protected keyDownHandler(evt: KeyboardEvent) {
+		if (evt.key === "Alt") { this.switchMode(); }
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		super.disconnectedCallback();
 	}
 
 	get selectedId() {

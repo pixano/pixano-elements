@@ -110,24 +110,14 @@ export class PlaybackControl extends LitElement {
 	}
 
 	disconnectedCallback() {
-		super.disconnectedCallback();
 		// A classic global event listener is not be automatically destroyed by lit-element,
 		// Removing it to prevent memory leaks and weird bugs.
 		window.removeEventListener('keydown', this.onNavigationKey);
+		super.disconnectedCallback();
 	}
 
 	onSliderInput() {
 		this.set(this.slider.value);
-	}
-
-	firstUpdated() {
-		this.slider.addEventListener("keydown", (event: KeyboardEvent) => {
-			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-				event.preventDefault();
-				// stop bubbling
-				event.stopPropagation();
-			}
-		});
 	}
 
 	setNext() {
