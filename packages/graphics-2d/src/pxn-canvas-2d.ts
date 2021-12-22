@@ -81,7 +81,7 @@ export class Canvas2d extends Canvas {
 		this.modes[this.mode].activate();
 	}
 
-	protected keyHandler(evt: KeyboardEvent) {
+	protected keyDownHandler = (evt: KeyboardEvent) => {
 		if (evt.key === "Alt") {
 			this.switchMode();
 		} else if (evt.key === "h") {
@@ -92,13 +92,13 @@ export class Canvas2d extends Canvas {
 	connectedCallback() {
 		super.connectedCallback();
 		// set global window event listeners on connection
-		window.addEventListener('keydown', this.keyHandler);
+		window.addEventListener('keydown', this.keyDownHandler);
 	}
 
 	disconnectedCallback() {
 		// A classic event listener will not be automatically destroyed by lit-element,
 		// This will introduce memory leaks and weird bugs.
-		window.removeEventListener('keydown', this.keyHandler);
+		window.removeEventListener('keydown', this.keyDownHandler);
 		super.disconnectedCallback();
 	}
 

@@ -33,9 +33,7 @@ export class SmartTracking extends Tracking {
 		super();
 	}
 
-	protected keyDownHandler(evt: KeyboardEvent) {
-		if (evt.key === 't') { this.runTracking(); }
-	}
+	protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } }
 
 	connectedCallback() {
 		super.connectedCallback();

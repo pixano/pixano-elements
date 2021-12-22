@@ -173,7 +173,7 @@ export class Tracking extends Rectangle {
 		});
 	}
 
-	protected keyDownHandler(evt: KeyboardEvent) {
+	protected keyDownHandler = (evt: KeyboardEvent) => {
 		if (evt.key === "r") {
 			this.mergeTracks(this.selectedTrackIds);
 		} else if (evt.key === "f") {
@@ -189,13 +189,10 @@ export class Tracking extends Rectangle {
 		} else if (evt.key === 'Escape') {
 			this.mode = 'edit';// back to edit mode
 		}
+		this.isShiftKeyPressed = evt.shiftKey;
+	}
+	protected keyUpHandler = (evt: KeyboardEvent) => { this.isShiftKeyPressed = evt.shiftKey; }
 
-		this.isShiftKeyPressed = evt.shiftKey;
-	}
-	protected keyUpHandler(evt: KeyboardEvent) {
-		this.isShiftKeyPressed = evt.shiftKey;
-	}
-	
 	connectedCallback() {
 		super.connectedCallback();
 		// set global window event listeners on connection
@@ -387,7 +384,9 @@ export class Tracking extends Rectangle {
 	}
 
 	getDefaultProperties(categoryName: string) {
+		console.log("categoryName=",categoryName);
 		const category = this.categories.find((c) => c.name === categoryName);
+		console.log("category=",category);
 
 		const permProps: { [key: string]: any } = {};
 		category!.properties.forEach((p: any) => {

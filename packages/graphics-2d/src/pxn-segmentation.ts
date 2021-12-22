@@ -83,7 +83,7 @@ export class Segmentation extends Canvas {
 		this.addEventListener('load', this.onImageChanged.bind(this));
 	}
 
-	protected keyDownHandler(evt: KeyboardEvent) {
+	protected keyDownHandler = (evt: KeyboardEvent) => {
 		if (evt.key === "Alt") { this.switchMode(); }
 	}
 

@@ -27,7 +27,7 @@ export class Graph extends Canvas2d {
 			.setController('edit', new GraphsUpdateController({ ...this }));
 	}
 
-	protected keyUpHandler(evt: KeyboardEvent) {
+	protected keyUpHandler = (evt: KeyboardEvent) => {
 		switch (evt.key) {
 			case 'z': case 's':
 			case 'd': case 'q': {
@@ -41,7 +41,7 @@ export class Graph extends Canvas2d {
 			}
 		}
 	}
-	protected keyDownHandler(evt: KeyboardEvent) {
+	protected keyDownHandler = (evt: KeyboardEvent) => {
 		switch (evt.key) {
 			case 'z': case 's':
 			case 'd': case 'q': {

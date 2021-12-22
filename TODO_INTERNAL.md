@@ -106,7 +106,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 ## npx serve demos/smart-tracking/
 - [ ] [#interface] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
 - [ ] [#interface] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
-- [ ] [#bogue] smart-tracking : on peut encore utiliser la touche t et lancer un apprentissage après l'avoir quitté => trouver le removeEventListener manquant
+- [x-] [#bogue] smart-tracking : on peut encore utiliser la touche t et lancer un apprentissage après l'avoir quitté => trouver le removeEventListener manquant (bogue réglé à moitier : la fonction disconnectedCallback n'est appelée que quand on charge un autre element, les touches sont donc encore actives dans le dashboard, mais plus dans les autres plugins)
 
 ## npx serve demos/graph/
 - [ ] le bouton "edit" ne sert à rien
