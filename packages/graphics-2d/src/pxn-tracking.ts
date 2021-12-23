@@ -276,7 +276,7 @@ export class Tracking extends Rectangle {
 		const newTrackId = getNewTrackId(this.tracks);
 		const newShape = e.detail as ShapeData;
 		newShape.id = newTrackId;
-		newShape.color = trackColors[parseInt(newTrackId) % trackColors.length];
+		newShape.color = trackColors[parseInt(newTrackId,10) % trackColors.length];
 		const cls = this.categories[0].name;
 		const keyShape = {
 			geometry: newShape.geometry,
@@ -384,10 +384,7 @@ export class Tracking extends Rectangle {
 	}
 
 	getDefaultProperties(categoryName: string) {
-		console.log("categoryName=",categoryName);
 		const category = this.categories.find((c) => c.name === categoryName);
-		console.log("category=",category);
-
 		const permProps: { [key: string]: any } = {};
 		category!.properties.forEach((p: any) => {
 			if (!p.persistent)
@@ -458,7 +455,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToFirstFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes)[0]);
+		this.timestamp = parseInt(Object.keys(t.keyShapes)[0],10);
 	}
 
 	/**
@@ -466,7 +463,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToLastFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0]);
+		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0],10);
 	}
 
 	/**
@@ -535,7 +532,7 @@ export class Tracking extends Rectangle {
 				${[...this.selectedTrackIds].map((tId) => {
 			const t = this.tracks[tId];
 			const currentShape = getShape(t, this.timestamp).keyshape;
-			const color = trackColors[parseInt(tId) % trackColors.length];
+			const color = trackColors[parseInt(tId,10) % trackColors.length];
 			let isHidden = true;
 			const disabled = currentShape === null;
 			if (currentShape) {
@@ -578,7 +575,7 @@ export class Tracking extends Rectangle {
 				<p>${Object.keys(this.tracks).length} tracks</p>
 				<div style="padding: 5px; text-align: center;">
 					${Object.keys(this.tracks).map((id) => {
-			const backgroundColor = trackColors[parseInt(id) % trackColors.length];
+			const backgroundColor = trackColors[parseInt(id,10) % trackColors.length];
 			return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
 							@click=${() => {
 					this.selectTrack(id, this.isShiftKeyPressed);

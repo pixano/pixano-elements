@@ -87,21 +87,27 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 	- on your fork github (on github.com), click on "Fetch upstream", then "Fetch and merge"
 2. Locally:
 
+	2.1 Merge with master
+	
 		# make sure the repositories are up-to-date
 		git fetch upstream
 		git checkout github
+		git pull
 		
 		# integrate our modifications to the github branch
 		# merge all commits without commit which lets you inspect (and modify) the result before committing
 		# ensure that you `git rm --cached` every internal file/section
 		git merge --no-commit master
 
-During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
+	During the merge / before commiting, **do not include / delete files and internal/proprietary codes** :  
 
-- do not include the present file [README_INTERNAL.md](./README_INTERNAL.md), nor the .gitlab-ci.yml
-- do not include the folder [doc_interne](./doc_interne)
-- do not include the files with tag "proprietary"
-- do not include with code blocks surrounded by tag "proprietary"
+	- do not include the present file [README_INTERNAL.md](./README_INTERNAL.md) and [TODO_INTERNAL.md](./TODO_INTERNAL.md), nor the .gitlab-ci.yml
+	- do not include the files with tag "proprietary"
+	- do not include with code blocks surrounded by tag "proprietary"
+	
+	2.2 Commit blacked out merge
+		
+		git commit
 
 ### 2) Verify and validate code
 #### clean and recompile "from scratch"
@@ -126,6 +132,9 @@ During the merge / before commiting, **do not include / delete files and interna
 #### finalisation/code clean
 - code review
 - clean code: `npm run tslint`
+#### if needed: commit changes
+	git add changed_files_to_commit
+	git commit -m "bug fixes + tslint"
 
 ### 3) Publish
 #### 1. push
@@ -136,6 +145,11 @@ During the merge / before commiting, **do not include / delete files and interna
 	# tag report on master
 	git checkout master
 	#OR git checkout f5f56daf if the reference commit is not the last one
+	
+	# if some changes have to be reported back
+	git cherry-pick last_github_commit_hash
+	
+	# push to origin
 	git tag -m "vi$VERSION" "vi$VERSION"
 	git push origin master --follow-tags
 #### 2. pull-request

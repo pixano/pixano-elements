@@ -175,7 +175,7 @@ export function colorToRGBA(color: string) {
 	// you'd want to use.
 	// Examples:
 	// colorToRGBA('red')	# [255, 0, 0, 255]
-	// colorToRGBA('#f00') # [255, 0, 0, 255]
+	// colorToRGBA('#f00')	# [255, 0, 0, 255]
 	const cvs = document.createElement('canvas');
 	cvs.height = 1;
 	cvs.width = 1;
@@ -197,7 +197,7 @@ export function hexStringToNumber(color: string) {
 export function colorToHex(color: string) {
 	// Convert any CSS color to a hex representation
 	// Examples:
-	// colorToHex('red')						# '#ff0000'
+	// colorToHex('red')            # '#ff0000'
 	// colorToHex('rgb(255, 0, 0)') # '#ff0000'
 	const rgba = colorToRGBA(color);
 	const hex = [0, 1, 2].map((idx) => byteToHex(rgba[idx])).join('');

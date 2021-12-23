@@ -82,15 +82,19 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [x] [#bogue] quand on supprime une instance, elle n'est pas supprimée du masque 
 
 ## npx serve demos/smart-segmentation/
-- [x] [#interface] un message durant le chargement serait sympa
-- [x] [#bogue] label pas pris en compte pour la création (à vérifier)
+- [x] [#bogue] label pas pris en compte pour la création
+- [ ] [#interface] la gestion des union/subtract reste moyenne : pour supprimer les vitres il faut d'abord sélectionner le segment de la voiture, puis appuyer sur l'outil intelligent, puis sur subtract, et recommencer à chaque voiture. Il faudrait garder et l'outil et le mode subract quand on navigue avec tab
+- [ ] [#interface] afficher un message "Loading model..." pendant le chargement pour que l'utilisateur comprenne
+- [ ] [#interface] afficher une barre défilante pendant le chargement comme pour smart-rectangle
 
 ## npx serve demos/rectangle/
 - [ ] [#interface] avoir une touche pour créer une nouvelle instance (n) OU enchainer les instances ici ? => uniformisation des comportements entre les modules et possibilité de personnaliser
 - [ ] [#feature] possibilité des rectangles avec rotation
 
 ## npx serve demos/smart-rectangle/
-- [ ] [#interface] retrouver les boutons de rectangle pour pouvoir sélectionner / corriger / déplacer les instances ?
+- [ ] [#bogue] quand on sort de la fenêtre et qu'on revient (il faut jouer avec tab pour revenir) => ajouter les boutons ci-dessous
+- [ ] [#interface] retrouver les boutons de rectangle pour pouvoir sélectionner / corriger / déplacer les instances
+- [ ] [#interface] afficher un message "Loading model..." pendant le chargement pour que l'utilisateur comprenne
 
 ## npx serve demos/tracking/
 - [ ] [#feature] ne devrait pas hériter de rectangle : on ne veut pas le limiter aux rectangles
@@ -101,12 +105,15 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 	- => possibilité de continuer la track en sélectionnant son numéro en mode create (et non via "new")
 - [ ] [#bogue] dupplication des boites jusqau'au bout au lieu d'attendre d'avoir une deuxième key pour interpoler
 - [ ] [#bogue] tracking à l'envers
-- [ ] [#feature] on veut que le zoom reste le même d'une image à l'autre, contrairement au fonctionnemnt hors tracking
+- [x] [#feature] on veut que le zoom reste le même d'une image à l'autre, contrairement au fonctionnemnt hors tracking
+- [ ] [#interface] suppression d'une piste complète en sélectionnant la piste dans la liste et appuyant sur suppr
 
 ## npx serve demos/smart-tracking/
 - [ ] [#interface] afficher sur le curseur ce que l'on est en train de faire : numéro de la track en cours / new pour une création
-- [ ] [#interface] afficher un indicateur (par exemple curseur de chargement) pendant le chargement du modèle + idem pendant le tracking
 - [x-] [#bogue] smart-tracking : on peut encore utiliser la touche t et lancer un apprentissage après l'avoir quitté => trouver le removeEventListener manquant (bogue réglé à moitier : la fonction disconnectedCallback n'est appelée que quand on charge un autre element, les touches sont donc encore actives dans le dashboard, mais plus dans les autres plugins)
+- [ ] [#interface] afficher un message pendant le calcul du tracking ?
+- [ ] [#interface] afficher un message "Loading model..." pendant le chargement pour que l'utilisateur comprenne
+- [ ] [#interface] afficher une barre défilante pendant le chargement comme pour smart-rectangle
 
 ## npx serve demos/graph/
 - [ ] le bouton "edit" ne sert à rien
