@@ -302,7 +302,6 @@ export class Segmentation extends Canvas {
 			const idsArray = Array.from(this.gmask.fusedIds);
 			const currentId = fuseId(this.selectedId);
 			const currIdx = idsArray.findIndex((id) => id === currentId) || 0;
-			console.log("currIdx=",currIdx);
 			const nextIdx = event.shiftKey ? (currIdx -1 +idsArray.length) % idsArray.length : (currIdx +1 +idsArray.length) % idsArray.length;
 			const nextId = idsArray[nextIdx];
 			this.selectedId = unfuseId(nextId);

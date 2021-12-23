@@ -66,7 +66,7 @@ export function getClosestFrames(track: TrackData, timestamp: number): number[] 
 	let greater = Infinity;
 
 	for (const k of Object.keys(track.keyShapes)) {
-		const f = parseInt(k);
+		const f = parseInt(k,10);
 		if (f < timestamp && f > less) {
 			less = f;
 		}
@@ -226,7 +226,7 @@ export function convertShapes(tracks: { [key: string]: TrackData }, fIdx: number
 				shapes.push({
 					id: tid.toString(),
 					geometry: ks.geometry,
-					color: trackColors[parseInt(tid) % trackColors.length]
+					color: trackColors[parseInt(tid,10) % trackColors.length]
 				} as ShapeData);
 			}
 		});
@@ -306,7 +306,7 @@ export function switchVisibility(t: TrackData, tIdx: number) {
  * @param dict object
  */
 export function sortDictByKey(dict: { [key: string]: any }): { [key: string]: any } {
-	const sortedArr: [string, any][] = [...Object.entries(dict)].sort(([a], [b]) => parseInt(a) - parseInt(b));
+	const sortedArr: [string, any][] = [...Object.entries(dict)].sort(([a], [b]) => parseInt(a,10) - parseInt(b,10));
 	return sortedArr.reduce((o, val) => { o[val[0]] = val[1]; return o; }, {} as { [key: string]: any });
 }
 
