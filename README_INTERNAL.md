@@ -74,6 +74,7 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 
 ## Publication
 ### 0) prepare gitlab version
+	LAST_VERSION=0.6.0
 	VERSION=0.6.1
 	git fetch
 	git checkout master
@@ -137,27 +138,33 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 	git commit -m "bug fixes + tslint"
 
 ### 3) Publish
-#### 1. push
+#### 1. push to github fork
 	git tag -m "v$VERSION" "v$VERSION"
 	# push modifications on the fork
 	git push upstream github:master --follow-tags
 
-	# tag report on master
-	git checkout master
-	#OR git checkout f5f56daf if the reference commit is not the last one
-	
-	# if some changes have to be reported back
-	git cherry-pick last_github_commit_hash
-	
-	# push to origin
-	git tag -m "vi$VERSION" "vi$VERSION"
-	git push origin master --follow-tags
 #### 2. pull-request
 The rest is on [github](https://github.com) :
 
-- on the fork $MYACCOUNT : onglet "Pull requests" => "New pull request" => "Create pull request" => "Create pull request"
-- automatic verifications are made by github
-- on the pixano account : got to "Merge pull request" => "Confirm merge"
+- on the fork $MYACCOUNT : onglet "Pull requests" => "New pull request" => "Create pull request"
+- complete the merge request message with:
+	- Tip: To easily list the commits and descriptions: ```git log $LAST_VERSION..$VERSION --oneline```
+	- in Title: v$VERSION
+	- in Comment: write something like:
+```
+### ModuleName (eg. graphics-2d)
+* file: modifications...
+* file: modifications...
+* ...
+### global
+* ...
+
+Co-authored-by: Camille Dupont camille.dupont@cea.fr
+Co-authored-by: Brice Burger brice.burger@cea.fr
+Co-authored-by: ...
+```
+- click on "Create pull request" => automatic verifications are made by github
+- at the bottom of the page: click on "Merge pull request" => "Confirm merge"
 #### 3. release
 Transform the tag in github release (makes the last tag more visible and detailed) :
 <!--	DOES NOT WORK (yet)?) because tags are not exported in pull requests-->
@@ -169,21 +176,11 @@ Transform the tag in github release (makes the last tag more visible and detaile
 
 	- go to the page in [release](https://github.com/pixano/pixano-elements/releases)
 	- button "Draft a new release"
-	- "Tag version" vX.Y.Z
-	- in "Release title", put the version vX.Y.Z
-	- complete the comments :
-		- under the following form :
-```
-### nomModule (eg. graphics-2d)
-
-* description commit 1
-* description commit 2
-* ...
-```
-		- To easily list the commits and descriptions :
-			git log v0.5.15..v0.5.16 --oneline
+	- click on "Tag version" button: vX.Y.Z => "create new tag"
+	- in "Release title": vX.Y.Z
+	- complete the comments with the same comment then the pull request
 	- "Publish release"
-	
+
 #### 4. publication npm
 	# if not logged already
 	# contact pixano@cea.fr for more information
@@ -202,6 +199,21 @@ Transform the tag in github release (makes the last tag more visible and detaile
 	git commit -a -m "release $VERSION"
 	git tag -m "v$VERSION" "v$VERSION"
 	git push --follow-tags
+
+#### 6. report all to master
+	cd ../pixano-elements
+	# tag report on master
+	git checkout master
+	#OR git checkout f5f56daf if the reference commit is not the last one
+	
+	# if some changes have to be reported back
+	git cherry-pick last_github_commit_hash
+	
+	# push to origin
+	git tag -m "vi$VERSION" "vi$VERSION"
+	git push origin master --follow-tags
+
+### DONE !
 
 ---------------------
 
