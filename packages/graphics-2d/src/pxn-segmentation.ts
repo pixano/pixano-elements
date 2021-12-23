@@ -81,10 +81,23 @@ export class Segmentation extends Canvas {
 
 		// Empty mask on image load
 		this.addEventListener('load', this.onImageChanged.bind(this));
+	}
 
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "Alt") { this.switchMode(); }
-		});
+	protected keyDownHandler = (evt: KeyboardEvent) => {
+		if (evt.key === "Alt") { this.switchMode(); }
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		super.disconnectedCallback();
 	}
 
 	get selectedId() {
@@ -229,9 +242,10 @@ export class Segmentation extends Canvas {
 	 * @param newClass class index to replace the selected region with
 	 */
 	public fillSelectionWithClass(newClass: number) {
-		if (this._selectedId.value) {
-			const currClass = this._selectedId.value[2];
-			let newId: [number, number, number] = [this._selectedId.value[0], this._selectedId.value[1], newClass];
+		if (this.selectedId) {
+			const prevId = this.selectedId;
+			const currClass = this.selectedId[2];
+			let newId: [number, number, number] = [this.selectedId[0], this.selectedId[1], newClass];
 			if (this.clsMap.get(newClass)![3] && !this.clsMap.get(currClass)![3]) {
 				// new class is instance and was semantic before: new instance idx
 				const nextIdx = this.gmask.getNextId();
@@ -241,6 +255,8 @@ export class Segmentation extends Canvas {
 				newId = [0, 0, newId[2]];
 			}
 			this.fillSelection(newId);
+			this.gmask.fusedIds.delete(fuseId(prevId));
+			this.gmask.fusedIds.add(fuseId(newId))
 		}
 	}
 
@@ -283,23 +299,13 @@ export class Segmentation extends Canvas {
 		event.preventDefault();// prevent tab to be used outside of Pixano
 		// search and select the next id
 		if (this.selectedId) {
+			const idsArray = Array.from(this.gmask.fusedIds);
 			const currentId = fuseId(this.selectedId);
-			let selectnext = false;
-			for (const id of this.gmask.fusedIds) {
-				if (selectnext) {
-					this.selectedId = unfuseId(id);
-					selectnext = false;
-					break;
-				} else if (id === currentId) {
-					selectnext = true;
-				}
-			}
-			if (selectnext) {// if we get the end of the set, we take the first one
-				for (const id of this.gmask.fusedIds) {
-					this.selectedId = unfuseId(id);
-					break;
-				}
-			}
+			const currIdx = idsArray.findIndex((id) => id === currentId) || 0;
+			console.log("currIdx=",currIdx);
+			const nextIdx = event.shiftKey ? (currIdx -1 +idsArray.length) % idsArray.length : (currIdx +1 +idsArray.length) % idsArray.length;
+			const nextId = idsArray[nextIdx];
+			this.selectedId = unfuseId(nextId);
 		} else {// if nothing was selected, take the first id
 			for (const id of this.gmask.fusedIds) {
 				this.selectedId = unfuseId(id);
