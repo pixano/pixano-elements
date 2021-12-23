@@ -30,8 +30,6 @@ export abstract class Controller extends EventTarget {
 	public emit(type: string, detail: any) {
 		this.dispatchEvent(new CustomEvent(type, { detail }));
 	}
-	// to call in constructor
-	protected bindings() { }
 
 	constructor(props: Partial<EventTarget> = {}) {
 		super();

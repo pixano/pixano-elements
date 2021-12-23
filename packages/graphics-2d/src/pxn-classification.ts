@@ -48,7 +48,7 @@ export class Classification extends Canvas {
 		// }
 	}
 
-	protected onTabulation(): void { }// nothing to do
+	protected onTabulation(): void { /* nothing to do */ }
 
 	constructor() {
 		super();

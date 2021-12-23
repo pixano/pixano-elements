@@ -72,7 +72,7 @@ export class CuboidEditor extends GenericDisplay {
 	}
 
 	protected keyHandlerBind: (evt: any) => void = this.defaultOnKeyDown.bind(this);
-	
+
 	connectedCallback() {
 		super.connectedCallback();
 		// set global window event listeners on connection
