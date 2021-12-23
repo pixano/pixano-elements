@@ -92,7 +92,7 @@ export abstract class GenericDisplay extends LitElement {
 			const frames = this.timestampRule === 'index' ? source.map((path, timestamp) => ({ timestamp, path })) || [] :
 				source.map((path) => {
 					const match = path.match(regex);
-					const timestamp = match && match.length ? parseInt(match.pop()!) : 0;
+					const timestamp = match && match.length ? parseInt(match.pop()!,10) : 0;
 					return { path, timestamp }
 				});
 			loader.init(frames)
