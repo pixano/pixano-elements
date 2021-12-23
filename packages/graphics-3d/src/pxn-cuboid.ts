@@ -66,10 +66,24 @@ export class CuboidEditor extends GenericDisplay {
 			this.cuboidPlots, this.groundPlot, this.pclPlot,
 			this.groundSegmentation);
 		this.mode = this.modeManager.mode;
-		window.addEventListener("keydown", this.defaultOnKeyDown.bind(this));
 		this.addEventListener('load', (evt: any) => {
 			this.data = evt.detail;
 		});
+	}
+
+	protected keyHandlerBind: (evt: any) => void = this.defaultOnKeyDown.bind(this);
+	
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyHandlerBind);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyHandlerBind);
+		super.disconnectedCallback();
 	}
 
 	destroy() {

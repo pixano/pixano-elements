@@ -5,6 +5,7 @@
  * @license CECILL-C
  */
 
+ import { Classification } from './pxn-classification';
 import { Polygon } from './pxn-polygon';
 import { Rectangle } from './pxn-rectangle';
 import { Segmentation } from './pxn-segmentation';
@@ -18,6 +19,7 @@ export { Graph, Polygon, Rectangle, Segmentation, SmartRectangle, Tracking, Smar
 
 declare global {
 	interface HTMLElementTagNameMap {
+		'pxn-classification': Classification;
 		'pxn-polygon': Polygon;
 		'pxn-rectangle': Rectangle;
 		'pxn-segmentation': Segmentation;

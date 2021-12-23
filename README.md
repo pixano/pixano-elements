@@ -122,6 +122,11 @@ To run the demos locally, serve one of the demo folders:
 npx serve demos/rectangle
 ```
 
+If you are modifiing multiple elements, you should use a fully local install:
+```bash
+npm run installLocalElements
+```
+
 ### Getting started
 
 To create a new component, check our [tutorial](./documentation/how_to_create_a_new_component.md).

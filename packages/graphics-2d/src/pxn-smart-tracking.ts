@@ -31,12 +31,21 @@ export class SmartTracking extends Tracking {
 
 	constructor() {
 		super();
-		// events specific to smart-tracking
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === 't') {
-				this.runTracking();
-			}
-		});
+	}
+
+	protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } }
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		super.disconnectedCallback();
 	}
 
 	runTracking() {
