@@ -77,19 +77,29 @@ export class Canvas2d extends Canvas {
 			})
 		}
 		);
-
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "Alt") {
-				this.switchMode();
-			}
-
-			else if (evt.key === "h") {
-				this.hideLabels = !this.hideLabels;
-			}
-		});
-
 		this.observeShapeForDisplay();
 		this.modes[this.mode].activate();
+	}
+
+	protected keyDownHandler = (evt: KeyboardEvent) => {
+		if (evt.key === "Alt") {
+			this.switchMode();
+		} else if (evt.key === "h") {
+			this.hideLabels = !this.hideLabels;
+		}
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		super.disconnectedCallback();
 	}
 
 	switchMode() {
@@ -274,8 +284,7 @@ export class Canvas2d extends Canvas {
 		event.preventDefault();
 		const shapes = [...this.shapes.values()];
 		const currIdx = shapes.findIndex((s) => this.targetShapes.has(s)) || 0;
-		const nextIdx = event.shiftKey ? (currIdx + 1 + shapes.length) % shapes.length
-			: (currIdx - 1 + shapes.length) % shapes.length;
+		const nextIdx = event.shiftKey ? (currIdx -1 +shapes.length) % shapes.length : (currIdx +1 +shapes.length) % shapes.length;
 		const nextShape = shapes[nextIdx];
 		if (nextShape) {
 			this.targetShapes.set([nextShape]);

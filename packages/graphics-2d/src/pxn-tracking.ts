@@ -171,28 +171,41 @@ export class Tracking extends Rectangle {
 			this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
 			this.drawTracks();
 		});
-		window.addEventListener('keydown', (evt) => {
-			if (evt.key === "r") {
-				this.mergeTracks(this.selectedTrackIds);
-			} else if (evt.key === "f") {
-				if (this.selectedTrackIds.size === 1) {
-					this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
-				}
-			} else if (evt.key === "l") {
-				if (this.selectedTrackIds.size === 1) {
-					this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
-				}
-			} else if (evt.key === 'n') {
-				this.mode = 'create';// new track => create mode
-			} else if (evt.key === 'Escape') {
-				this.mode = 'edit';// back to edit mode
-			}
+	}
 
-			this.isShiftKeyPressed = evt.shiftKey;
-		});
-		window.addEventListener('keyup', (evt) => {
-			this.isShiftKeyPressed = evt.shiftKey;
-		});
+	protected keyDownHandler = (evt: KeyboardEvent) => {
+		if (evt.key === "r") {
+			this.mergeTracks(this.selectedTrackIds);
+		} else if (evt.key === "f") {
+			if (this.selectedTrackIds.size === 1) {
+				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+			}
+		} else if (evt.key === "l") {
+			if (this.selectedTrackIds.size === 1) {
+				this.goToLastFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
+			}
+		} else if (evt.key === 'n') {
+			this.mode = 'create';// new track => create mode
+		} else if (evt.key === 'Escape') {
+			this.mode = 'edit';// back to edit mode
+		}
+		this.isShiftKeyPressed = evt.shiftKey;
+	}
+	protected keyUpHandler = (evt: KeyboardEvent) => { this.isShiftKeyPressed = evt.shiftKey; }
+
+	connectedCallback() {
+		super.connectedCallback();
+		// set global window event listeners on connection
+		window.addEventListener('keydown', this.keyDownHandler);
+		window.addEventListener('keyup', this.keyUpHandler);
+	}
+
+	disconnectedCallback() {
+		// A classic event listener will not be automatically destroyed by lit-element,
+		// This will introduce memory leaks and weird bugs.
+		window.removeEventListener('keydown', this.keyDownHandler);
+		window.removeEventListener('keyup', this.keyUpHandler);
+		super.disconnectedCallback();
 	}
 
 	/**
@@ -263,7 +276,7 @@ export class Tracking extends Rectangle {
 		const newTrackId = getNewTrackId(this.tracks);
 		const newShape = e.detail as ShapeData;
 		newShape.id = newTrackId;
-		newShape.color = trackColors[parseInt(newTrackId) % trackColors.length];
+		newShape.color = trackColors[parseInt(newTrackId,10) % trackColors.length];
 		const cls = this.categories[0].name;
 		const keyShape = {
 			geometry: newShape.geometry,
@@ -372,7 +385,6 @@ export class Tracking extends Rectangle {
 
 	getDefaultProperties(categoryName: string) {
 		const category = this.categories.find((c) => c.name === categoryName);
-
 		const permProps: { [key: string]: any } = {};
 		category!.properties.forEach((p: any) => {
 			if (!p.persistent)
@@ -443,7 +455,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToFirstFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes)[0]);
+		this.timestamp = parseInt(Object.keys(t.keyShapes)[0],10);
 	}
 
 	/**
@@ -451,7 +463,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToLastFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0]);
+		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0],10);
 	}
 
 	/**
@@ -520,7 +532,7 @@ export class Tracking extends Rectangle {
 				${[...this.selectedTrackIds].map((tId) => {
 			const t = this.tracks[tId];
 			const currentShape = getShape(t, this.timestamp).keyshape;
-			const color = trackColors[parseInt(tId) % trackColors.length];
+			const color = trackColors[parseInt(tId,10) % trackColors.length];
 			let isHidden = true;
 			const disabled = currentShape === null;
 			if (currentShape) {
@@ -563,7 +575,7 @@ export class Tracking extends Rectangle {
 				<p>${Object.keys(this.tracks).length} tracks</p>
 				<div style="padding: 5px; text-align: center;">
 					${Object.keys(this.tracks).map((id) => {
-			const backgroundColor = trackColors[parseInt(id) % trackColors.length];
+			const backgroundColor = trackColors[parseInt(id,10) % trackColors.length];
 			return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
 							@click=${() => {
 					this.selectTrack(id, this.isShiftKeyPressed);

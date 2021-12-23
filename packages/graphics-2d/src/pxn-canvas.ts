@@ -68,10 +68,10 @@ export abstract class Canvas extends GenericDisplay {
 	}
 
 	disconnectedCallback() {
-		super.disconnectedCallback();
 		// A classic event listener will not be automatically destroyed by lit-element,
 		// This will introduce memory leaks and weird bugs.
 		window.removeEventListener('keydown', this.keyHandlerBind);
+		super.disconnectedCallback();
 	}
 
 	get imageWidth() {
@@ -200,23 +200,6 @@ export abstract class Canvas extends GenericDisplay {
 		x.className = "show";
 		x.innerHTML = text;
 		setTimeout(() => { x.className = x.className.replace("show", ""); }, 3000);
-	}
-
-	protected loadImageFromSrc(src: string): Promise<HTMLImageElement> {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.crossOrigin = "Anonymous";
-			if (src) {
-				img.onload = () => {
-					if (img !== null) {
-						resolve(img)
-					}
-				}
-				img.src = src;
-			} else {
-				resolve(img);
-			}
-		})
 	}
 
 	/**

@@ -110,28 +110,14 @@ export class PlaybackControl extends LitElement {
 	}
 
 	disconnectedCallback() {
-		super.disconnectedCallback();
 		// A classic global event listener is not be automatically destroyed by lit-element,
 		// Removing it to prevent memory leaks and weird bugs.
 		window.removeEventListener('keydown', this.onNavigationKey);
+		super.disconnectedCallback();
 	}
 
 	onSliderInput() {
 		this.set(this.slider.value);
-	}
-
-	onSliderChange() {
-		this.set(this.slider.value);
-	}
-
-	firstUpdated() {
-		this.slider.addEventListener("keydown", (event: KeyboardEvent) => {
-			if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-				event.preventDefault();
-				// stop bubbling
-				event.stopPropagation();
-			}
-		});
 	}
 
 	setNext() {
@@ -159,7 +145,7 @@ export class PlaybackControl extends LitElement {
 		if (changedProps.has('current')) {
 			try {
 				this.slider?.layout();
-			} catch { console.warn("failed"); }
+			} catch { console.warn("slider update failed"); }
 		}
 	}
 
@@ -179,7 +165,6 @@ export class PlaybackControl extends LitElement {
 					<p class="button" style="fill: ${this.current < this.max ? "black" : "#d0d0d0"}" @click=${this.setNext}>${triRight}</p>
 					<p class="frameidx">${this.current}/${this.max}</p>
 					<mwc-slider @input=${this.onSliderInput}
-											@change=${this.onSliderChange}
 											discrete
 											value=${this.current}
 											max="${this.max}"

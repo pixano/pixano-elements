@@ -138,6 +138,7 @@ export class SelectController extends MaskController {
 		if (evt.key === 'Delete') {
 			if (this._selectedId.value) {
 				this.gmask.deleteInstance(this._selectedId.value);
+				this.gmask.fusedIds.delete(fuseId(this._selectedId.value));
 				this.dispatchEvent(new CustomEvent('delete', { detail: this._selectedId.value }));
 			}
 			this.deselect();
