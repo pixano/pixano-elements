@@ -1,0 +1,28 @@
+{
+	"name": "serverless_demo",
+	"version": "0.6.1",
+	"private": true,
+	"description": "Serverless Demo",
+	"author": "Pixano Authors <pixano@cea.fr>",
+	"homepage": "https://pixano.cea.fr/",
+	"license": "CECILL-C",
+	"main": "serverless-demo.js",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+	},
+	"scripts": {
+		"build": "webpack --config webpack.config.js",
+		"watch": "webpack --config webpack.config.js --watch"
+	},
+	"devDependencies": {
+		"source-map-loader": "^0.2.4",
+		"webpack": "4.44.2",
+		"webpack-cli": "3.3.12"
+	},
+	"dependencies": {
+		"@pixano/core": "0.6.1",
+		"@pixano/graphics-2d": "0.6.1",
+		"@pixano/graphics-3d": "0.6.1"
+	}
+}
