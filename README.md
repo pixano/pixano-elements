@@ -125,6 +125,8 @@ npx serve demos/rectangle
 If you are modifiing multiple elements, you should use a fully local install:
 ```bash
 npm run installLocalElements
+npm run bootstrap
+npm run build
 ```
 
 ### Getting started
