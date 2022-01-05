@@ -5,23 +5,15 @@
 */
 
 import { html, LitElement, css} from 'lit-element';
-import '@material/mwc-icon-button';
-import '@material/mwc-icon-button-toggle';
-import '@material/mwc-button';
-import '@material/mwc-select';
-import '@material/mwc-list/mwc-list';
-import '@material/mwc-list/mwc-list-item';
-import '@material/mwc-dialog';
-import '@material/mwc-checkbox';
-import '@material/mwc-formfield';
 import '@pixano/graphics-2d';
-
 import { demoStyles,
 	fullscreen,
 	createPencil,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';
 
+var FileSaver = require('file-saver');
+// import { ImageSequenceLoader } from './data-loader';// ...TODO loader
 const colors = [
 	'blue', 'green', 'purple',
 	'yellow', 'pink', 'orange', 'tan'
@@ -42,6 +34,8 @@ export class ServerlessDemo extends LitElement {
 		this.image = 'image.jpg';
 		this.theme = 'black';
 		this.chosenPlugin = true;//false;
+		// this.labels = [];// ...TODO labels
+		// this.loader = new ImageSequenceLoader();// ...TODO loader
 	}
 
 	onCreate(evt) {
@@ -51,6 +45,38 @@ export class ServerlessDemo extends LitElement {
 		console.log("create", evt.detail.id)
 	}
 
+	onSave() {
+		const json_string = JSON.stringify(this.labels, null, 1);
+		const blob = new Blob([json_string],{type: "text/plain;charset=utf-8"})
+		FileSaver.saveAs(blob, "my_json.json")
+	}
+
+	onUpload(event) {
+		try {
+			const mediaInfo = Object.entries(event.target.files).map(([ts, f], idx) => {
+				const src = URL.createObjectURL(f);
+				return {timestamp: idx, url:[src]}
+			})
+			this.newData(mediaInfo);      
+		} catch(err) {}
+	}
+
+	newData(mediaInfo) {
+		// set first image and start loading video
+		this.element.image = mediaInfo[0].url[0];
+		// this.loader.init(mediaInfo || []).then((length) => {// ...TODO loader
+		// 	this.maxFrameIdx = Math.max(length - 1, 0);
+		// 	this.loader.abortLoading().then(() => {
+		// 		this.loader.load(0).then(() => {
+		// 			this._resetPlayback();
+		// 		});
+		// 	})
+		// });
+		// this.labels = [];// ...TODO labels
+		// this.element.shapes = [];
+		// this.selectedIds = [];
+	}
+
 	get element() {
 		return this.shadowRoot.querySelector('pxn-rectangle');
 	}
@@ -58,12 +84,15 @@ export class ServerlessDemo extends LitElement {
 	get headerContent() {
 		if (!this.chosenPlugin) return html`
 			<h1>Dashboard: choose your annotation plugin</h1>
-			<mwc-button theme="primary" class="dark" @click=${() => this.chosenPlugin = true}>Start Annotating</mwc-button>
+			<mwc-button theme="primary" class="dark" @click=${() => this.chosenPlugin = true}>START ANNOTATING</mwc-button>
 		`;
 		else return html`
 			<h1>Annotate</h1>
 			<mwc-icon-button icon="exit_to_app" @click=${() => this.chosenPlugin = false} title="Back to plugin choice"></mwc-icon-button>
-			<mwc-icon-button icon="file_download" @click=${() => this.element.input = "image.jpg"} title="Download your image"></mwc-icon-button>
+			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload your images">
+				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
+			</mwc-icon-button>
+			<mwc-icon-button icon="save" @click="${this.onSave}" title="Save to json file">
 		`;
 	}
 

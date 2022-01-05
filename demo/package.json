@@ -23,6 +23,7 @@
 	"dependencies": {
 		"@pixano/core": "0.6.1",
 		"@pixano/graphics-2d": "0.6.1",
-		"@pixano/graphics-3d": "0.6.1"
+		"@pixano/graphics-3d": "0.6.1",
+		"file-saver": "^2.0.5"
 	}
 }
