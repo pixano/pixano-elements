@@ -14,7 +14,7 @@ export { settings };
 /**
  * Inherit Canvas2d to handle graph shapes (keypoints).
  */
-@customElement('pxn-graph' as any)
+@customElement('pxn-keypoints' as any)
 export class Graph extends Canvas2d {
 
 	public settings: IGraphSettings = settings;

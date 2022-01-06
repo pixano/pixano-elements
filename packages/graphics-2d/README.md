@@ -91,7 +91,7 @@ Note: `pxn-canvas-2d` inherits from `pxn-canvas`.
 
 *InteractionMode depends on the element:
 ```ts
-// pxn-rectangle | pxn-polygon | pxn-graph
+// pxn-rectangle | pxn-polygon | pxn-keypoints
 type InteractiveMode =  'edit' | 'create' | 'none';
 
 // pxn-segmentation
@@ -226,9 +226,9 @@ Note: `pxn-smart-rectangle` inherits from `pxn-rectangle` so all properties in `
 | ---------------- | -------------- | -------- |------------
 | `scale`          | `number`       | `1`      | Scaling factor from the base ROI used by the detector (256) to crop the image from
 
-#### pxn-graph
+#### pxn-keypoints
 
-Note: `pxn-graph` inherits from `pxn-canvas-2d` so all properties in `pxn-canvas-2d` will be available on `pxn-graph`. Additional properties are available:
+Note: `pxn-keypoints` inherits from `pxn-canvas-2d` so all properties in `pxn-canvas-2d` will be available on `pxn-keypoints`. Additional properties are available:
 | Name                 | Type           | Default  | Description
 | -------------------- | -------------- | -------- |------------
 | `graphType`          | `GraphSettings`| `defaultSkeleton`      | Skeleton structure

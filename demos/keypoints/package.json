@@ -1,8 +1,8 @@
 {
-  "name": "demo-graph",
+  "name": "demo-keypoints",
   "version": "0.6.1",
   "private": true,
-  "description": "Demo for graph",
+  "description": "Demo for keypoints",
   "author": "Pixano Authors <pixano@cea.fr>",
   "homepage": "",
   "license": "CECILL-C",

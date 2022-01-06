@@ -9,7 +9,7 @@
 import { Polygon } from './pxn-polygon';
 import { Rectangle } from './pxn-rectangle';
 import { Segmentation } from './pxn-segmentation';
-import { Graph } from './pxn-graph';
+import { Graph } from './pxn-keypoints';
 import { SmartRectangle } from './pxn-smart-rectangle';
 import { Tracking } from './pxn-tracking';
 import { SmartTracking } from './pxn-smart-tracking';
@@ -24,7 +24,7 @@ declare global {
 		'pxn-rectangle': Rectangle;
 		'pxn-segmentation': Segmentation;
 		'pxn-smart-segmentation': SmartSegmentation;
-		'pxn-graph': Graph;
+		'pxn-keypoints': Graph;
 		'pxn-smart-rectangle': SmartRectangle;
 		'pxn-tracking': Tracking;
 		'pxn-smart-tracking': SmartTracking;

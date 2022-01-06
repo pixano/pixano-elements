@@ -123,7 +123,7 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 #### verify "by hand"
 	npx serve demos/cuboid/
 	npx serve demos/polygon/
-	npx serve demos/graph/
+	npx serve demos/keypoints/
 	npx serve demos/segmentation/
 	npx serve demos/smart-segmentation/
 	npx serve demos/rectangle/

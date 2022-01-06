@@ -19,23 +19,45 @@ const colors = [
 	'yellow', 'pink', 'orange', 'tan'
 ];
 
+/**
+ * List of all plugin names
+ */
+export const pluginsList = [// ...TODO move @pixano-app/frontend/src/plugins/index.js file here with labels
+	'classification',
+	'keypoints',
+	'rectangle',
+	'polygon',
+	'segmentation',
+	'cuboid',
+	'tracking',
+	'smart-rectangle',
+	'smart-segmentation',
+	'smart-tracking'
+];// ...TODO for sequences add app sequence-mixin ?
+
 export class ServerlessDemo extends LitElement {
 
 	static get properties() {
 		return {
-			chosenPlugin: { type: Boolean },
+			// generic properties
+			chosenPlugin: { type: String },
 			image: {type: String},
-			theme: { type: String }
+			theme: { type: String },
+			// specific properties
+			isOpenedPolygon: { type: Boolean }//for pxn-polygon
 		};
 	}
 
 	constructor() {
 		super();
+		// generic properties
 		this.image = 'image.jpg';
 		this.theme = 'black';
-		this.chosenPlugin = true;//false;
+		this.chosenPlugin = '';//empty = no plugin chosen
 		// this.labels = [];// ...TODO labels
 		// this.loader = new ImageSequenceLoader();// ...TODO loader
+		// specific properties
+		this.isOpenedPolygon = true;//for pxn-polygon
 	}
 
 	onCreate(evt) {
@@ -78,21 +100,20 @@ export class ServerlessDemo extends LitElement {
 	}
 
 	get element() {
-		return this.shadowRoot.querySelector('pxn-rectangle');
+		return this.shadowRoot.querySelector(this.chosenPlugin);
 	}
 
 	get headerContent() {
-		if (!this.chosenPlugin) return html`
+		if (this.chosenPlugin==='') return html`
 			<h1>Dashboard: choose your annotation plugin</h1>
-			<mwc-button theme="primary" class="dark" @click=${() => this.chosenPlugin = true}>START ANNOTATING</mwc-button>
 		`;
 		else return html`
 			<h1>Annotate</h1>
-			<mwc-icon-button icon="exit_to_app" @click=${() => this.chosenPlugin = false} title="Back to plugin choice"></mwc-icon-button>
+			<mwc-icon-button icon="exit_to_app" @click=${() => this.chosenPlugin = ''} title="Back to plugin choice"></mwc-icon-button>
 			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload your images">
 				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
 			</mwc-icon-button>
-			<mwc-icon-button icon="save" @click="${this.onSave}" title="Save to json file">
+			<mwc-icon-button icon="save" @click="${this.onSave}" title="Save to json file"></mwc-icon-button>
 		`;
 	}
 
@@ -107,16 +128,120 @@ export class ServerlessDemo extends LitElement {
 	}
 
 	get plugin() {
-		return html`
-			<div class="tools">${this.tools}</div>
-			<pxn-rectangle	image="${this.image}"
-						disablefullscreen
-						@create=${this.onCreate}
-						@update=${(e) => console.log('update ids', e.detail)}
-						@delete=${(e) => console.log('delete', e.detail)}
-						@selection=${(e) => console.log('selection', e.detail)}>
-			</pxn-rectangle>
-		`;
+		console.log("this.chosenPlugin=",this.chosenPlugin);
+		switch (this.chosenPlugin) {
+			case 'pxn-classification':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-classification image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-classification>`;
+			case 'pxn-keypoints':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-keypoints image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-keypoints>`;
+			case 'pxn-rectangle':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-rectangle image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-rectangle>`;
+			case 'pxn-polygon':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-polygon image="${this.image}"
+								disablefullscreen
+								?isOpenedPolygon="${this.isOpenedPolygon}"
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-polygon>`;
+			case 'pxn-segmentation':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-segmentation image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-segmentation>`;
+			case 'pxn-cuboid':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-cuboid image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-cuboid>`;
+			case 'pxn-tracking':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-tracking image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-tracking>`;
+			case 'pxn-smart-rectangle':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-smart-rectangle image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-smart-rectangle>`;
+			case 'pxn-smart-segmentation':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-smart-segmentation image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-smart-segmentation>`;
+			case 'pxn-smart-tracking':
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-smart-tracking image="${this.image}"
+								disablefullscreen
+								@create=${this.onCreate}
+								@update=${(e) => console.log('update ids', e.detail)}
+								@delete=${(e) => console.log('delete', e.detail)}
+								@selection=${(e) => console.log('selection', e.detail)}>
+					</pxn-smart-tracking>`;
+			case '':
+				return html`
+					<div class="dashboard">
+						<h1 style="margin: auto;">Select a plugin: </h1>
+						<mwc-select label='Plugin' @selected=${(e) => { this.chosenPlugin = 'pxn-'+pluginsList[e.detail.index]; console.log("plugin=",pluginsList[e.detail.index]); console.log("=>this.chosenPlugin=",this.chosenPlugin); }}>
+							${pluginsList.map((p) => html`<mwc-list-item value=${p} ?selected=${this.chosenPlugin === 'pxn-'+p}>${p}</mwc-list-item>`)}
+						</mwc-select>
+					</div>`;
+			default:
+				return html`THIS PLUGIN (${this.chosenPlugin}) IS NOT IMPLEMENTED`;
+		}
 	}
 
 	render() {
@@ -154,6 +279,7 @@ export class ServerlessDemo extends LitElement {
 			--theme-color: whitesmoke;
 			--font-color: black;
 			font-size: 15px;
+			font-weight: bold;
 			color: var(--font-color);
 			
 		}
@@ -191,16 +317,24 @@ export class ServerlessDemo extends LitElement {
 			align-items: center;
 			display: flex;
 		}
-		.section {
-			margin: 20px;
+		.dashboard {
 			font-size: small;
+			--mdc-theme-primary: var(--pixano-color);
+			flex: 1;
+			background: var(--mdc-theme-primary);
+			--mdc-select-hover-line-color: white;
+			color: white;
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
+		}
+		.dashboard > mwc-select {
+			display: flex;
+			margin-right: 20px;
+			align-items: center;
 		}
 		h1 {
 			font-size: 20px;
 			margin-left: 20px;
-			font-weight: 300;
 		}
 		h2 {
 			font-size: 20px;

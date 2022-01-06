@@ -49,7 +49,7 @@ class MyDemo extends LitElement {
 				<p class="icon" title="Fullscreen" style="position: absolute;" @click=${this.fullScreen}>${fullscreen}</p>
 				<div class="icons">
 					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
-					<p class="icon" title="Add graph" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				</div>
@@ -64,13 +64,13 @@ class MyDemo extends LitElement {
 	render() {
 		return html`
 				<main>
-					<pxn-graph	enableOutsideDrawing
+					<pxn-keypoints	enableOutsideDrawing
 											image=${this.image}
 											@create=${this.onCreate}
 											@update=${this.onUpdate}
 											@selection=${this.onSelection}
 											mode=${this.mode}>
-					</pxn-graph>
+					</pxn-keypoints>
 					${this.rightPanel}
 				</main>`;
 	}
@@ -99,7 +99,7 @@ class MyDemo extends LitElement {
 	}
 
 	get element() {
-		return this.shadowRoot.querySelector('pxn-graph');
+		return this.shadowRoot.querySelector('pxn-keypoints');
 	}
 }
 

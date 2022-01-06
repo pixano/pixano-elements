@@ -115,7 +115,7 @@ Chaque point est rangé dans la section qui le concerne, càd. la fonctionnalit�
 - [ ] [#interface] afficher un message "Loading model..." pendant le chargement pour que l'utilisateur comprenne
 - [ ] [#interface] afficher une barre défilante pendant le chargement comme pour smart-rectangle
 
-## npx serve demos/graph/
+## npx serve demos/keypoints/
 - [ ] le bouton "edit" ne sert à rien
 
 ## Questions ?
