@@ -11,3 +11,17 @@ npm install
 npm run build
 npx serve
 ```
+
+In case of errors when loading elements, rebuild the dependencies :// TODO : see if something easier is possible...
+```
+rm -rf node_modules/ package-lock.json
+npm i
+npm i
+npm run build
+cd ..
+npm run bootstrap ; npm i ; npm run bootstrap
+npm run build
+cd -
+npm run build
+npx serve
+```

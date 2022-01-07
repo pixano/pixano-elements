@@ -6,11 +6,22 @@
 
 import { html, LitElement, css} from 'lit-element';
 import '@pixano/graphics-2d';
+import '@pixano/graphics-3d';
 import { demoStyles,
 	fullscreen,
 	createPencil,
+	pointer,
+	polyline,
+	paintBrush,
+	magicSelect,
+	subtract,
+	union,lock,
+	swap,
+	increase,
+	decrease,
+	borderOuter,
 	zoomIn,
-	zoomOut } from '@pixano/core/lib/style';
+	zoomOut } from '@pixano/core/lib/style';// ...TODO : change local icons to mwc-icon-button
 
 var FileSaver = require('file-saver');
 // import { ImageSequenceLoader } from './data-loader';// ...TODO loader
@@ -28,7 +39,7 @@ export const pluginsList = [// ...TODO move @pixano-app/frontend/src/plugins/ind
 	'rectangle',
 	'polygon',
 	'segmentation',
-	'cuboid',
+	'cuboid-editor',
 	'tracking',
 	'smart-rectangle',
 	'smart-segmentation',
@@ -41,29 +52,32 @@ export class ServerlessDemo extends LitElement {
 		return {
 			// generic properties
 			chosenPlugin: { type: String },
-			image: {type: String},
+			input: {type: String},
 			theme: { type: String },
 			// specific properties
-			isOpenedPolygon: { type: Boolean }//for pxn-polygon
+			isOpenedPolygon: { type: Boolean },//for pxn-polygon
+			maskVisuMode: { type: String }//for pxn-segmentation
 		};
 	}
 
 	constructor() {
 		super();
 		// generic properties
-		this.image = 'image.jpg';
+		this.input = 'image.jpg';
+		this.mode = 'edit';
 		this.theme = 'black';
 		this.chosenPlugin = '';//empty = no plugin chosen
 		// this.labels = [];// ...TODO labels
 		// this.loader = new ImageSequenceLoader();// ...TODO loader
 		// specific properties
 		this.isOpenedPolygon = true;//for pxn-polygon
+		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 	}
 
 	onCreate(evt) {
 		const newObj = evt.detail;
 		newObj.color = colors[Math.floor(Math.random() * colors.length)];
-		this.element.mode = 'edit';
+		// this.element.mode = 'edit';
 		console.log("create", evt.detail.id)
 	}
 
@@ -85,6 +99,7 @@ export class ServerlessDemo extends LitElement {
 
 	newData(mediaInfo) {
 		// set first image and start loading video
+		this.input = mediaInfo[0].url[0];
 		this.element.image = mediaInfo[0].url[0];
 		// this.loader.init(mediaInfo || []).then((length) => {// ...TODO loader
 		// 	this.maxFrameIdx = Math.max(length - 1, 0);
@@ -119,117 +134,200 @@ export class ServerlessDemo extends LitElement {
 
 	get tools() {// ...TODO : tools should be included into each element, not here
 		// ...TODO : change local icons to mwc-icon-button
-		return html`
-			<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-			<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-			<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
-			<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
-		`;
+		switch (this.chosenPlugin) {
+			case 'pxn-keypoints':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			case 'pxn-rectangle':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			case 'pxn-polygon':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
+					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
+					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			case 'pxn-segmentation':
+				return html`
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<hr>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<hr>
+					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
+					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			case 'pxn-cuboid-editor':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
+				`;
+			case 'pxn-smart-rectangle':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="ROI increase (+)" @click=${() => this.element.roiUp()}>${increase}</p>
+					<p class="icon" title="ROI decrease (-)" @click=${() => this.element.roiDown()}>${decrease}</p>
+					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			case 'pxn-smart-segmentation':
+				return html`
+					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Smart instance" @click=${() => {
+						this.element.editionMode=EditionMode.NEW_INSTANCE;
+						this.element.mode = 'smart-create'}}>${borderOuter}</p>
+					<hr>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<hr>
+					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
+					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
+					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
+				`;
+			default:
+				return html``;
+		}
 	}
+	// ok1) comparer les appels aux démos pour chaque element => adapter les tools en fonction
+	// 2) uniformiser les tools / faire les 2 versions
+	// 3) labels
+	// 4) add sequences
+
+	// APP:
+	// @create=${this.onCreate}
+	// @update=${this.onUpdate}
+	// @delete=${this.onDelete}
+	// @selection=${this.onSelection}
+	// @mode=${this.onModeChange}
+	/// sauf tracking et smart-tracking :
+	// @create-track=${this.onUpdate}
+	// @selection-track=${(e) => console.log('selection track', e.detail)}
+	// @update-tracks=${this.onUpdate}
+	// @delete-track=${this.onUpdate}
+
 
 	get plugin() {
 		console.log("this.chosenPlugin=",this.chosenPlugin);
+		this.input = 'examples/image.jpg';// TODO temporary
 		switch (this.chosenPlugin) {
 			case 'pxn-classification':
 				return html`
-					<div class="tools">${this.tools}</div>
-					<pxn-classification image="${this.image}"
-								disablefullscreen
-								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
-								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+					<pxn-classification input=${this.input}
+								disablefullscreen>
 					</pxn-classification>`;
 			case 'pxn-keypoints':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-keypoints image="${this.image}"
-								disablefullscreen
+					<pxn-keypoints input=${this.input} mode=${this.mode}
 								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								enableOutsideDrawing
+								disablefullscreen>
 					</pxn-keypoints>`;
 			case 'pxn-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-rectangle image="${this.image}"
-								disablefullscreen
+					<pxn-rectangle input=${this.input} mode=${this.mode}
 								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								disablefullscreen>
 					</pxn-rectangle>`;
 			case 'pxn-polygon':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-polygon image="${this.image}"
-								disablefullscreen
+					<pxn-polygon input=${this.input} mode=${this.mode}
 								?isOpenedPolygon="${this.isOpenedPolygon}"
 								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								disablefullscreen>
 					</pxn-polygon>`;
 			case 'pxn-segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-segmentation image="${this.image}"
-								disablefullscreen
-								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+					<pxn-segmentation input=${this.input} mode=${this.mode} maskVisuMode=${this.maskVisuMode}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								disablefullscreen>
 					</pxn-segmentation>`;
-			case 'pxn-cuboid':
+			case 'pxn-cuboid-editor':
+				this.input = 'examples/sample_pcl.bin';
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-cuboid image="${this.image}"
-								disablefullscreen
-								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+					<pxn-cuboid-editor input=${this.input} mode=${this.mode}
+								@create=${(e) => { /*e.detail.color = colormap[Math.floor(Math.random() * colormap.length)];*/ }}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
-					</pxn-cuboid>`;
+								@selection=${(e) => { /*this.target = e.detail*/ }}
+								disablefullscreen>
+					</pxn-cuboid-editor>`;
 			case 'pxn-tracking':
+				this.input = 'examples/video/';// TODO : the input should be this path, not an array + TODO : / at the end needed, should not be mandatory
+				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
+				var tracks = {};
 				return html`
-					<div class="tools">${this.tools}</div>
-					<pxn-tracking image="${this.image}"
-								disablefullscreen
-								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
-								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+					<pxn-tracking .input=${images} mode=${this.mode} .tracks=${tracks}
+								@create-track=${(e) => console.log('create track', e.detail)}
+								@selection-track=${(e) => console.log('selection track', e.detail)}
+								@update-tracks=${(e) => console.log('update tracks', e.detail)}
+								@delete-track=${(e) => console.log('delete track', e.detail)}
+								disablefullscreen>
 					</pxn-tracking>`;
 			case 'pxn-smart-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-rectangle image="${this.image}"
-								disablefullscreen
+					<pxn-smart-rectangle input=${this.input} mode="smart-create" scale="1"
 								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								disablefullscreen>
 					</pxn-smart-rectangle>`;
 			case 'pxn-smart-segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-segmentation image="${this.image}"
-								disablefullscreen
+					<pxn-smart-segmentation input=${this.input} mode=${this.mode} maskVisuMode=${this.maskVisuMode}
 								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
+								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+								@selection=${(e) => console.log('selection', e.detail)}
+								disablefullscreen>
 					</pxn-smart-segmentation>`;
 			case 'pxn-smart-tracking':
+				this.input = 'examples/video/';// TODO : the input should be this path, not an array + TODO : / at the end needed, should not be mandatory
+				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
+				var tracks = {};
 				return html`
-					<div class="tools">${this.tools}</div>
-					<pxn-smart-tracking image="${this.image}"
-								disablefullscreen
-								@create=${this.onCreate}
-								@update=${(e) => console.log('update ids', e.detail)}
-								@delete=${(e) => console.log('delete', e.detail)}
-								@selection=${(e) => console.log('selection', e.detail)}>
+					<pxn-smart-tracking .input=${images} mode=${this.mode} .tracks=${tracks}
+								@create-track=${(e) => console.log('create track', e.detail)}
+								@selection-track=${(e) => console.log('selection track', e.detail)}
+								@update-tracks=${(e) => console.log('update tracks', e.detail)}
+								@delete-track=${(e) => console.log('delete track', e.detail)}
+								disablefullscreen>
 					</pxn-smart-tracking>`;
 			case '':
 				return html`
@@ -261,7 +359,8 @@ export class ServerlessDemo extends LitElement {
 
 	fullScreen() {
 		if (document.fullscreenEnabled) {
-			this.shadowRoot.querySelector('.main').requestFullscreen();
+			// this.shadowRoot.querySelector('.main').requestFullscreen();
+			this.shadowRoot.querySelector('.plugin').requestFullscreen();
 		}
 	}
 

@@ -17,8 +17,8 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@pixano/graphics-2d": "0.6.1",
-    "@pixano/core": "0.6.1",
+    "@pixano/graphics-2d": "file:../../packages/graphics-2d",
+    "@pixano/core": "file:../../packages/core",
     "lit-element": "2.4.0"
   }
 }
