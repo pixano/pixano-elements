@@ -22,6 +22,7 @@ import { demoStyles,
 	borderOuter,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// ...TODO : change local icons to mwc-icon-button
+import { ModeManager } from '@pixano/graphics-3d/lib/cuboid-manager';
 
 var FileSaver = require('file-saver');
 // import { ImageSequenceLoader } from './data-loader';// ...TODO loader
@@ -53,6 +54,7 @@ export class ServerlessDemo extends LitElement {
 			// generic properties
 			chosenPlugin: { type: String },
 			input: {type: String},
+			mode: {type: String},
 			theme: { type: String },
 			// specific properties
 			isOpenedPolygon: { type: Boolean },//for pxn-polygon
@@ -64,8 +66,8 @@ export class ServerlessDemo extends LitElement {
 		super();
 		// generic properties
 		this.input = 'image.jpg';
-		this.mode = 'edit';
 		this.theme = 'black';
+		this.mode = '';
 		this.chosenPlugin = '';//empty = no plugin chosen
 		// this.labels = [];// ...TODO labels
 		// this.loader = new ImageSequenceLoader();// ...TODO loader
@@ -74,10 +76,17 @@ export class ServerlessDemo extends LitElement {
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 	}
 
+	/**
+	 * Invoked after the element’s template has been created.
+	 */
+	firstUpdated() {
+		this.mode = 'edit';
+	}
+
 	onCreate(evt) {
 		const newObj = evt.detail;
 		newObj.color = colors[Math.floor(Math.random() * colors.length)];
-		// this.element.mode = 'edit';
+		// this.mode = 'edit';
 		console.log("create", evt.detail.id)
 	}
 
@@ -132,49 +141,48 @@ export class ServerlessDemo extends LitElement {
 		`;
 	}
 
-	get tools() {// ...TODO : tools should be included into each element, not here
-		// ...TODO : change local icons to mwc-icon-button
+	get tools_old() {// ...TODO : tools should be included into each element, not here
 		switch (this.chosenPlugin) {
 			case 'pxn-keypoints':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
-					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Edit" @click=${() => this.mode = 'edit'}>${pointer}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'pxn-rectangle':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Add rectangle" @click=${() => this.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'pxn-polygon':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
-					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
+					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.mode = 'create'}}>${createPencil}</p>
+					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.mode = 'create'}}>${polyline}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'pxn-segmentation':
 				return html`
-					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.mode = 'create-brush'}>${paintBrush}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'pxn-cuboid-editor':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="New instance" @click=${() => this.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
 				`;
 			case 'pxn-smart-rectangle':
@@ -188,17 +196,17 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-smart-segmentation':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.mode = 'create-brush'}>${paintBrush}</p>
 					<p class="icon" title="Smart instance" @click=${() => {
 						this.element.editionMode=EditionMode.NEW_INSTANCE;
-						this.element.mode = 'smart-create'}}>${borderOuter}</p>
+						this.mode = 'smart-create'}}>${borderOuter}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
@@ -206,8 +214,85 @@ export class ServerlessDemo extends LitElement {
 				return html``;
 		}
 	}
+	get genericTools() {
+		return html`
+			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.mode = 'edit'}"></mwc-icon-button>
+			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.mode = 'create'}"></mwc-icon-button>
+			<mwc-icon-button title="Hide/Show labels"	icon="tonality"				@click="${() => this.element.toggleLabels()}"></mwc-icon-button>
+		`;
+	}
+
+	get tools() {// ...TODO : tools should be included into each element, not here
+		switch (this.chosenPlugin) {
+			case 'pxn-keypoints':
+				return html`
+					${this.genericTools}
+					<mwc-icon-button title="Swap nodes (c)"		icon="swap_horiz"	@click="${() => this.swap()}"></mwc-icon-button>
+				`;
+			case 'pxn-rectangle':
+				return html`
+					${this.genericTools}
+				`;
+			case 'pxn-polygon':
+				return html`
+					${this.genericTools}
+					<mwc-icon-button title="Group polygons"		icon="call_merge"	@click="${() => this.element.merge()}"></mwc-icon-button>
+					<mwc-icon-button title="Split polygon"		icon="call_split"	@click="${() => this.element.split()}"></mwc-icon-button>
+					<mwc-icon-button title="Polyline/Polygon"	icon="timeline"
+					style="display: ${this.mode === 'create' ?  "block" : "none"}"
+					?selected=${this.element && this.element.isOpenedPolygon === true}
+					@click="${() => {
+							this.element.isOpenedPolygon = !this.element.isOpenedPolygon;
+							this.requestUpdate();}}"></mwc-icon-button>
+				`;
+			case 'pxn-segmentation':
+				return html`
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}		@click="${() => this.setEditionMode(EditionMode.ADD_TO_INSTANCE)}">${union}</mwc-icon-button>
+					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.setEditionMode(EditionMode.REMOVE_FROM_INSTANCE)}">${subtract}</mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
+					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
+					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
+						@click="${() => this.maskVisuMode = this.maskVisuMode === 'INSTANCE' ? 'SEMANTIC': 'INSTANCE'}"></mwc-icon-button>
+				`;
+			case 'pxn-cuboid-editor':
+				return html`
+					${this.genericTools}
+					<mwc-icon-button icon="3d_rotation" @click=${() => { this.element.rotate()/*if (this.element.rotate()) this.collect();*/ }}></mwc-icon-button>
+					<mwc-icon-button icon="swap_horiz" @click=${() => { this.element.swap()/*if (this.element.swap()) this.collect();*/ } }}></mwc-icon-button>
+					<mwc-icon-button @click="${() => this.element.toggleView()}">${camera}</mwc-icon-button>
+				`;
+			case 'pxn-smart-rectangle':
+				return html`
+					${this.genericTools}
+					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.mode = 'smart-create'}"></mwc-icon-button>
+					<mwc-icon-button title="ROI increase (+)"	@click=${() => this.element.roiUp()}>${increase}</mwc-icon-button>
+					<mwc-icon-button title="ROI decrease (-)"	@click=${() => this.element.roiDown()}>${decrease}</mwc-icon-button>
+				`;
+			case 'pxn-smart-segmentation':
+				return html`
+					${this.genericTools}
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}		@click="${() => this.setEditionMode(EditionMode.ADD_TO_INSTANCE)}">${union}</mwc-icon-button>
+					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.setEditionMode(EditionMode.REMOVE_FROM_INSTANCE)}">${subtract}</mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
+					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
+					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
+						@click="${() => this.maskVisuMode = this.maskVisuMode === 'INSTANCE' ? 'SEMANTIC': 'INSTANCE'}"></mwc-icon-button>
+					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.mode = 'smart-create'}"></mwc-icon-button>
+				`;
+			default:
+				return html``;
+		}
+	}
 	// ok1) comparer les appels aux démos pour chaque element => adapter les tools en fonction
-	// 2) uniformiser les tools / faire les 2 versions
+	// ok2) uniformiser les tools / faire les 2 versions
 	// 3) labels
 	// 4) add sequences
 
@@ -230,13 +315,13 @@ export class ServerlessDemo extends LitElement {
 		switch (this.chosenPlugin) {
 			case 'pxn-classification':
 				return html`
-					<pxn-classification input=${this.input}
+					<pxn-classification mode=${this.mode} input=${this.input}
 								disablefullscreen>
 					</pxn-classification>`;
 			case 'pxn-keypoints':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-keypoints input=${this.input} mode=${this.mode}
+					<pxn-keypoints mode=${this.mode} input=${this.input}
 								@create=${this.onCreate}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
@@ -247,7 +332,7 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-rectangle input=${this.input} mode=${this.mode}
+					<pxn-rectangle mode=${this.mode} input=${this.input}
 								@create=${this.onCreate}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
@@ -257,7 +342,7 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-polygon':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-polygon input=${this.input} mode=${this.mode}
+					<pxn-polygon mode=${this.mode} input=${this.input}
 								?isOpenedPolygon="${this.isOpenedPolygon}"
 								@create=${this.onCreate}
 								@update=${(e) => console.log('update', e.detail)}
@@ -268,7 +353,7 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-segmentation input=${this.input} mode=${this.mode} maskVisuMode=${this.maskVisuMode}
+					<pxn-segmentation mode=${this.mode} input=${this.input} maskVisuMode=${this.maskVisuMode}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
 								@selection=${(e) => console.log('selection', e.detail)}
@@ -278,7 +363,7 @@ export class ServerlessDemo extends LitElement {
 				this.input = 'examples/sample_pcl.bin';
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-cuboid-editor input=${this.input} mode=${this.mode}
+					<pxn-cuboid-editor mode=${this.mode} input=${this.input}
 								@create=${(e) => { /*e.detail.color = colormap[Math.floor(Math.random() * colormap.length)];*/ }}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
@@ -290,7 +375,7 @@ export class ServerlessDemo extends LitElement {
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
 				var tracks = {};
 				return html`
-					<pxn-tracking .input=${images} mode=${this.mode} .tracks=${tracks}
+					<pxn-tracking mode=${this.mode} .input=${images} .tracks=${tracks}
 								@create-track=${(e) => console.log('create track', e.detail)}
 								@selection-track=${(e) => console.log('selection track', e.detail)}
 								@update-tracks=${(e) => console.log('update tracks', e.detail)}
@@ -300,7 +385,7 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-smart-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-rectangle input=${this.input} mode="smart-create" scale="1"
+					<pxn-smart-rectangle mode=${this.mode} input=${this.input} mode="smart-create" scale="1"
 								@create=${this.onCreate}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
@@ -310,7 +395,7 @@ export class ServerlessDemo extends LitElement {
 			case 'pxn-smart-segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-segmentation input=${this.input} mode=${this.mode} maskVisuMode=${this.maskVisuMode}
+					<pxn-smart-segmentation mode=${this.mode} input=${this.input} maskVisuMode=${this.maskVisuMode}
 								@create=${this.onCreate}
 								@update=${(e) => console.log('update', e.detail)}
 								@delete=${(e) => console.log('delete', e.detail)}
@@ -322,7 +407,7 @@ export class ServerlessDemo extends LitElement {
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
 				var tracks = {};
 				return html`
-					<pxn-smart-tracking .input=${images} mode=${this.mode} .tracks=${tracks}
+					<pxn-smart-tracking mode=${this.mode} .input=${images} .tracks=${tracks}
 								@create-track=${(e) => console.log('create track', e.detail)}
 								@selection-track=${(e) => console.log('selection track', e.detail)}
 								@update-tracks=${(e) => console.log('update tracks', e.detail)}
@@ -487,6 +572,7 @@ export class ServerlessDemo extends LitElement {
 		.tools {/* tools displayed on a vertical bar */
 			width: var(--leftPanelWidth);
 			background-color: var(--theme-color);
+			color: white;
 			height: 100%;
 			display: flex;
 			flex-direction: column;
