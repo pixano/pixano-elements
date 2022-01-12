@@ -13,7 +13,7 @@ import { ShapeData, KeyShapeData, TrackData } from './types'
  * @return a random key
  */
 export function generateKey() {
-	return Math.random().toString(36).substring(7)
+	return Math.random().toString(36)
 }
 
 /**

@@ -210,7 +210,7 @@ class SmartPolygonCreateController extends ShapeCreateController {
     }).then((res) => res.json())
       .then((pts: number[]) => {
         this.shapes.add(observable({
-          id: Math.random().toString(36).substring(7),
+          id: Math.random().toString(36),
           geometry: { type: "polygon", vertices: pts }
         }));
       });
