@@ -9,6 +9,7 @@ import { LitElement, html, css } from 'lit-element';
 import '@material/mwc-dialog';
 import '@material/mwc-checkbox';
 import '@material/mwc-formfield';
+import '@material/mwc-textfield';
 import '@material/mwc-select';
 import '@material/mwc-list/mwc-list-item';
 
@@ -276,6 +277,10 @@ export class AttributePicker extends LitElement {
         this.value = {category: this.schema.default, options };
       }
     }
+
+	get getSchema() {
+		return this.schema;
+	}
 
     reloadSchema(schema) {
         this.schema = schema;

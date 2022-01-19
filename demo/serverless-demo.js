@@ -3,6 +3,7 @@
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
 */
+// TODO: add sequences
 // TODO: for sequences add app sequence-mixin ?
 // TODO: use redux to store history of attributes ? Usefull for ctrl-z.
 
@@ -28,6 +29,7 @@ import { demoStyles,
 import './attribute-picker';
 import { pluginsList, defaultLabelValues } from './index';
 import { commonJson, colorToRGBA } from './utils';
+import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 // import { ImageSequenceLoader } from './data-loader';// TODO: loader
 
@@ -104,6 +106,7 @@ export class ServerlessDemo extends LitElement {
 		// 	category: categories,
 		// 	default: 'person'
 		// }
+		// // this.attributePicker.reloadSchema(this.label_schema);
 		// /************** tmp  */
 	}
 
@@ -113,6 +116,7 @@ export class ServerlessDemo extends LitElement {
 	 */
 	initAnnotations() {
 		this.setAnnotations([]);
+		this.selectedIds = [];
 		this.tracks = {};//for pxn-tracking
 	}
 	/**
@@ -149,8 +153,6 @@ export class ServerlessDemo extends LitElement {
 			});
 			// load new data
 			this.element.image = mediaInfo[0].url[0];
-			// reinitialize annotations
-			this.initAnnotations();
 		} catch(err) {}
 	}
 
@@ -161,12 +163,13 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
+		// reinitialize annotations
+		this.initAnnotations();
+		// initialize attributePicker to default
 		if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking') return;// no attribute picker used for tracking
-		// this.attributePicker.reloadSchema(this.label_schema);
 		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
-		this.attributePicker.setAttributes(this.attributePicker.defaultValue);// initialize to default
-		// exception for classification: behave as if something is always selected
-		if (this.chosenPlugin==='classification') this.selectedIds.push("not used");
+		this.attributePicker.setAttributes(this.attributePicker.defaultValue);
+		if (this.chosenPlugin==='classification') this.selectedIds.push("not used");// exception for classification: behave as if something is always selected
 		if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
 			const schema = defaultLabelValues(this.chosenPlugin);
 			this.element.clsMap = new Map(
@@ -294,7 +297,6 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onSelection(evt) {
 		console.log("onSelection");
-		let shapes;
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
@@ -304,6 +306,7 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 			case 'polygon':
 				this.selectedIds = evt.detail;
+				console.log("this.selectedIds=",this.selectedIds);
 				if (this.selectedIds && this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
@@ -410,6 +413,7 @@ export class ServerlessDemo extends LitElement {
 		const value =  this.attributePicker.value;
 		switch (this.chosenPlugin) {
 			case 'classification':
+				console.log("clasif setannot attchange");
 				this.setAnnotations([value]);
 				return;
 			case 'keypoints':
@@ -481,12 +485,30 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
+	/**
+	 * Implement property panel content
+	 */
+	 swapAttributeEditor() {
+		if (this.attributeEditor.style.display==="none") {
+			this.attributeEditor.style.display="block";
+			this.attributePicker.style.display="none";
+			this.attributeEditor.json = this.attributePicker.getSchema;
+		} else {
+			this.attributeEditor.style.display="none";
+			this.attributePicker.style.display="block";
+			this.attributePicker.reloadSchema(this.attributeEditor.json);
+		}
+	}
+
 	/******************* selector getters *******************/
 	get element() {
 		return this.shadowRoot.querySelector("pxn-"+this.chosenPlugin);
 	}
 	get attributePicker() {
 		return this.shadowRoot.querySelector('attribute-picker');
+	}
+	get attributeEditor() {
+		return this.shadowRoot.querySelector('fleshy-jsoneditor');
 	}
 
 	/******************* TOOLS to be displayed *******************/
@@ -644,37 +666,20 @@ export class ServerlessDemo extends LitElement {
 				return html``;
 		}
 	}
-	// ok1) comparer les appels aux démos pour chaque element => adapter les tools en fonction
-	// ok2) uniformiser les tools / faire les 2 versions
-	// ok3) labels
-	// 4) add sequences
-
-	// APP:
-	// @create=${this.onCreate}
-	// @update=${this.onUpdate}
-	// @delete=${this.onDelete}
-	// @selection=${this.onSelection}
-	// @mode=${this.onModeChange}
-	/// sauf tracking et smart-tracking :
-	// @create-track=${this.onUpdate}
-	// @selection-track=${(e) => console.log('selection track', e.detail)}
-	// @update-tracks=${this.onUpdate}
-	// @delete-track=${this.onUpdate}
 
 	/******************* RENDERING: main and panels to be displayed, especially plugin dependent panel  *******************/
 
 	/**
-	 * Implement property panel content, details always visible
+	 * Implement property panel content
 	 */
 	get propertyPanel() {
-		return html`<attribute-picker ?showDetail=${this.selectedIds.length === 0} @update=${this.onAttributeChanged}></attribute-picker>`;
+		return html`
+			<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
+			<attribute-picker ?showDetail=${this.selectedIds.length === 0} @update=${this.onAttributeChanged}></attribute-picker>`;
 	}
 
 	get plugin() {
-		console.log("this.chosenPlugin=",this.chosenPlugin);
 		console.log("this.mode=",this.mode);
-		// reinitialize annotations
-		this.initAnnotations();
 		this.input = 'examples/image.jpg';// TODO: temporary
 		switch (this.chosenPlugin) {
 			case 'classification':
@@ -779,6 +784,7 @@ export class ServerlessDemo extends LitElement {
 			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload your images">
 				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
 			</mwc-icon-button>
+			<mwc-icon-button icon="edit_note" @click=${this.swapAttributeEditor} title="Edit attributes"></mwc-icon-button>
 			<mwc-icon-button icon="save" @click="${this.onSave}" title="Save to json file"></mwc-icon-button>
 		`;
 	}

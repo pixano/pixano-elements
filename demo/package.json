@@ -24,6 +24,7 @@
 		"@pixano/core": "file:../packages/core",
 		"@pixano/graphics-2d": "file:../packages/graphics-2d",
 		"@pixano/graphics-3d": "file:../packages/graphics-3d",
-		"file-saver": "^2.0.5"
+		"file-saver": "^2.0.5",
+		"fleshy-jsoneditor": "^1.3.0"
 	}
 }
