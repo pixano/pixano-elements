@@ -339,7 +339,7 @@ export class AttributePicker extends LitElement {
             </mwc-select>
             `
         } else if (prop.type === 'checkbox') {
-			const checked = JSON.parse(JSON.parse(JSON.stringify(this.value.options[prop.name]).toLowerCase()));// if the initial value was a string like "false" or "False", we want it to be interpreted as a boolean
+			const checked = JSON.parse(JSON.stringify(this.value.options[prop.name]).toLowerCase());// if the initial value was a string like "false" or "False", we want it to be interpreted as a boolean
             return html`
             <mwc-formfield label="${prop.name}">
               <mwc-checkbox ?checked=${checked} @change=${

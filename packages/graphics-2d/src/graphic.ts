@@ -11,7 +11,8 @@ import {
 } from 'pixi.js';
 import { observe, unobserve } from '@pixano/core';
 import { ShapeData } from './types';
-import { colorToHex } from './utils';
+import { colorToHex } from '@pixano/core/src/utils';
+
 
 export const CONTROL_POINTS = [
 	{ cursor: "ns-resize", x: 0.5, y: 0 }, // n
