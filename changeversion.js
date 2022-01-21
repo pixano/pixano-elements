@@ -17,8 +17,8 @@ function updatePackage(filename) {
 		fs.writeFileSync(filename, output);
 }
 
-// update version in demos
-glob( 'demos/*/package.json', ( err, files ) => {
+// update version in demo
+glob( 'demo/package.json', ( err, files ) => {
 		if (files) {
 				files.forEach(updatePackage);
 		}

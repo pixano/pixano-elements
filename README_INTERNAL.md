@@ -121,15 +121,8 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 	npm run bootstrap
 	npm run build
 #### verify "by hand"
-	npx serve demos/cuboid/
-	npx serve demos/polygon/
-	npx serve demos/keypoints/
-	npx serve demos/segmentation/
-	npx serve demos/smart-segmentation/
-	npx serve demos/rectangle/
-	npx serve demos/smart-rectangle/
-	npx serve demos/tracking/
-	npx serve demos/smart-tracking/
+	npx serve demo
+	## verify all plugins
 #### finalisation/code clean
 - code review
 - clean code: `npm run tslint`

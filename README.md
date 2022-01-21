@@ -69,8 +69,9 @@ npm --version
 
 ```
 git clone https://github.com/pixano/pixano-elements.git
-cd pixano-elements/demos/rectangle
+cd pixano-elements/demo
 npm i
+npm run build
 npx serve
 ```
 
@@ -116,10 +117,10 @@ npm run bootstrap
 npm run build
 ```
 
-To run the demos locally, serve one of the demo folders:
+To run the demo locally:
 
 ```bash
-npx serve demos/rectangle
+npx serve demo
 ```
 
 If you are modifiing multiple elements, you should use a fully local install:

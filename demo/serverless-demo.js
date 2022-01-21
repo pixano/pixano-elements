@@ -72,42 +72,6 @@ export class ServerlessDemo extends LitElement {
 		this.isOpenedPolygon = true;//for pxn-polygon
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 		this.tracks = {};//for pxn-tracking
-
-
-		// /************** tmp  */
-		// const classList = ['person', 'bicycle', 'car', 'motorcycle',  'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 
-		// 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 
-		// 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 
-		// 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 
-		// 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 
-		// 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 
-		// 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'];
-		
-		// const colors = ['red', 'blue', 'green', 'cyan', 'magenta', 'darkred', 'orange',
-		// '#ff8091', '#0066ff', '#a7b300', '#b25965', '#80b3ff', '#d2d96c', 
-		// '#66333a', '#0074d9', '#ffee00', '#8c0025', '#004b8c', '#8c8300', 
-		// '#d93662', '#2d74b3', '#66611a', '#8c234d', '#6ca6d9', '#d9ad00', 
-		// '#ff80b3', '#004466', '#ffaa00', '#660036', '#23698c', '#8c6923', 
-		// '#d9368d', '#008fb3', '#d9b56c', '#b35989', '#40d9ff', '#665533', 
-		// '#663355', '#1a5766', '#8c4b00', '#b3008f', '#00eeff', '#d98d36', 
-		// '#660052', '#23858c', '#66421a', '#ff00ee', '#59b3ad', '#ff6600', 
-		// '#ff80f6', '#40ffd9', '#ff8c40', '#83008c', '#2db398', '#ffb380', 
-		// '#88468c', '#00ffaa', '#b27d59', '#b836d9', '#238c5b', '#664733', 
-		// '#553366', '#00ff66', '#d96236', '#8800ff', '#6cd998', '#8c3f23', 
-		// '#a66cd9', '#336647', '#d9896c', '#381a66', '#2db32d', '#ff9180', 
-		// '#0e0066', '#2e661a', '#663a33', '#4f468c', '#66ff00', '#ff0000', 
-		// '#0000b3'];
-		
-		// const categories = classList.map((c, idx) => {
-		// 	return {name: c, color: colors[idx]};
-		// });
-		
-		// this.label_schema = {
-		// 	category: categories,
-		// 	default: 'person'
-		// }
-		// // this.attributePicker.reloadSchema(this.label_schema);
-		// /************** tmp  */
 	}
 
 	/**
