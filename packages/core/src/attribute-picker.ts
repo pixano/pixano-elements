@@ -147,8 +147,8 @@ export class AttributePicker extends LitElement {
 	}
 
 	getDefaultAttributesForCategory(schema: any, categoryName: string) {
-		let category = schema.category.find((c: any) => c.name === categoryName);
-		if (!category && schema.category.length) {
+		let category = schema.category?.find((c: any) => c.name === categoryName);
+		if (!category && schema.category?.length) {
 			category = schema.category[0];
 		}
 		if (category && category.properties) {
@@ -362,7 +362,7 @@ export class AttributePicker extends LitElement {
 		return html`
 			<div id="updateEditor" style="width: 100%;" ?hidden=${this.showDetail}>
 				<h3><label>Selected label</label></h3>
-				${this.schema.category.map((category, idx) => {
+				${this.schema.category?.map((category, idx) => {
 					return html`
 						<div class="category ${category.name === this.value.category ? 'selected' : ''}" id=${category.name} @click=${() => this.setCategory(category.name)}>
 							<span class="step" .style="background: ${this._colorFor(category.name)}">${idx}</span><p>${category.name}</p>
@@ -376,7 +376,7 @@ export class AttributePicker extends LitElement {
 		return html`
 			<div ?hidden=${!this.showDetail}>
 				<h3><label>Label for creation</label></h3>
-				${this.schema.category.map((category, idx) => {
+				${this.schema.category?.map((category, idx) => {
 					return html`
 						<div class="category ${category.name === this.value.category ? 'selected' : ''}" id=${category.name} @click=${() => this.setCategory(category.name)}>
 							<span class="step" .style="background: ${this._colorFor(category.name)}">${idx}</span><p>${category.name}</p>
