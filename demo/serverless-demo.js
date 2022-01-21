@@ -12,6 +12,7 @@ import { html, LitElement, css} from 'lit-element';
 import '@pixano/graphics-2d';
 import '@pixano/graphics-3d';
 import { commonJson, colorToRGBA } from '@pixano/core/lib/utils';
+import '@pixano/core/lib/attribute-picker';
 import { demoStyles,
 	fullscreen,
 	createPencil,
@@ -27,8 +28,7 @@ import { demoStyles,
 	borderOuter,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
-import './attribute-picker';
-import { pluginsList, defaultLabelValues } from './index';
+import { pluginsList, defaultLabelValues } from './plugins_index';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 // import { ImageSequenceLoader } from './data-loader';// TODO: loader
