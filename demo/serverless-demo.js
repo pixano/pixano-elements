@@ -51,7 +51,6 @@ export class ServerlessDemo extends LitElement {
 			input: {type: String},
 			mode: {type: String},
 			theme: { type: String },
-			selectedIds: { type: Array },
 			// specific properties
 			isOpenedPolygon: { type: Boolean },//for pxn-polygon
 			maskVisuMode: { type: String }//for pxn-segmentation

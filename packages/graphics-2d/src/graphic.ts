@@ -11,7 +11,7 @@ import {
 } from 'pixi.js';
 import { observe, unobserve } from '@pixano/core';
 import { ShapeData } from './types';
-import { colorToHex } from '@pixano/core/src/utils';
+import { colorToHex } from '@pixano/core/lib/utils';
 
 
 export const CONTROL_POINTS = [
