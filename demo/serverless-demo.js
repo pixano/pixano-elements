@@ -62,7 +62,7 @@ export class ServerlessDemo extends LitElement {
 		this.defaultMode = 'edit';
 		this.chosenPlugin = '';//empty = no plugin chosen
 		this.annotations = [];
-		this.selectedIds = [];
+		this.selectedIds = [];// don't asign directly : always use this.setSelectedIds(...)
 		// specific properties
 		this.isOpenedPolygon = true;//for pxn-polygon
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
@@ -83,7 +83,7 @@ export class ServerlessDemo extends LitElement {
 	 */
 	initAnnotations() {
 		this.setAnnotations([]);
-		this.selectedIds = [];
+		this.setSelectedIds([]);
 		this.tracks = {};//for pxn-tracking
 	}
 	/**
@@ -96,7 +96,9 @@ export class ServerlessDemo extends LitElement {
 		this.annotations = newAnnotations;
 	}
 
-	updatePropertyDetail() {
+	setSelectedIds(newIds) {
+		if (!newIds) newIds=[];
+		this.selectedIds = newIds;
 		this.attributePicker.showDetail = this.selectedIds.length;
 	}
 
@@ -135,9 +137,8 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
-		this.selectedIds = [];
-		this.updatePropertyDetail();
 		if (this.element.isSequence) {//each time we go from one image to another or at sequence initialization
+			this.setSelectedIds([]);
 			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
@@ -149,6 +150,7 @@ export class ServerlessDemo extends LitElement {
 			this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
 			// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
 			switch (this.chosenPlugin) {
+				case 'rectangle':
 				case 'sequence-rectangle':
 					this.element.shapes = this.annotations;
 					this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
@@ -167,15 +169,15 @@ export class ServerlessDemo extends LitElement {
 		console.log("attributePicker ok");
 		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
 		this.attributePicker.setAttributes(this.attributePicker.defaultValue);
-		if (this.chosenPlugin==='classification') this.selectedIds.push("not used");// exception for classification: behave as if something is always selected
+		if (this.chosenPlugin==='classification') this.setSelectedIds(["not used"]);// exception for classification: behave as if something is always selected
 		if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
 			const schema = defaultLabelValues(this.chosenPlugin);
-			// this.element.clsMap = new Map(
-			// 	schema.category.map((c) => {
-			// 		const color = colorToRGBA(c.color);
-			// 		return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
-			// 	})
-			// );
+			this.element.clsMap = new Map(
+				schema.category.map((c) => {
+					const color = colorToRGBA(c.color);
+					return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
+				})
+			);
 			if (!schema.default) schema.default = schema.category[0].name;
 			this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
 		}
@@ -189,7 +191,7 @@ export class ServerlessDemo extends LitElement {
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
-				return;
+				break;
 			case 'keypoints':
 			case 'rectangle':
 			case 'sequence-rectangle':
@@ -207,7 +209,7 @@ export class ServerlessDemo extends LitElement {
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 				this.setAnnotations(shapes);
-				return;
+				break;
 			case 'smart-rectangle':
 				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
 				// add attributes to object without deep copy
@@ -224,13 +226,13 @@ export class ServerlessDemo extends LitElement {
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 				this.setAnnotations(shapes);
-				return;
+				break;
 			case 'segmentation':
 			case 'smart-segmentation':
 			case 'tracking':
 			case 'smart-tracking':
 				/* nothing to do: create=update */
-				return;
+				break;
 			default:
 				console.error("onCreate: plugin ${this.chosenPlugin} unknown");
 		}
@@ -238,11 +240,12 @@ export class ServerlessDemo extends LitElement {
 	
 	onDelete(evt) {
 		console.log("onDelete");
+		this.setSelectedIds([]);
 		let shapes;
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
-				return;
+				break;
 			case 'keypoints':
 			case 'rectangle':
 			case 'sequence-rectangle':
@@ -252,7 +255,7 @@ export class ServerlessDemo extends LitElement {
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 				this.setAnnotations(shapes);
-				return;
+				break;
 			case 'segmentation':
 			case 'smart-segmentation':
 				const ids = evt.detail;
@@ -265,11 +268,11 @@ export class ServerlessDemo extends LitElement {
 				frame = frame.filter((l) => l.id !== JSON.stringify(ids))
 				// 3) store the new annotation structure
 				this.setAnnotations(frame);
-				return;
+				break;
 			case 'tracking':
 			case 'smart-tracking':
 				/* nothing to do: delete=update */
-				return;
+				break;
 			default:
 				console.error("onDelete: plugin ${this.chosenPlugin} unknown");
 		}
@@ -284,45 +287,43 @@ export class ServerlessDemo extends LitElement {
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
-				return;
+				break;
 			case 'keypoints':
 			case 'rectangle':
 			case 'sequence-rectangle':
 			case 'smart-rectangle':
 			case 'polygon':
-				this.selectedIds = evt.detail;
-				console.log("this.selectedIds=",this.selectedIds);
-				this.updatePropertyDetail();
+				this.setSelectedIds(evt.detail);
 				if (this.selectedIds && this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
 				}
-				return;
+				break;
 			case 'segmentation':
 			case 'smart-segmentation':
-				this.selectedIds = evt.detail;
+				this.setSelectedIds(evt.detail);
 				if (this.selectedIds) {//only one id at a time for segmentation
 					const annot = this.annotations.filter((a) => JSON.stringify(this.selectedIds)===(a.id));// search the corresponding id 
 					const common = commonJson(annot);
 					this.attributePicker.setAttributes(common);
 				} else {
 					// if null, nothing is selected
-					this.selectedIds = [];
+					this.setSelectedIds([]);
 				}
-				return;
+				break;
 			case 'cuboid-editor':
-				this.selectedIds = evt.detail.map((p) => p.id);
+				this.setSelectedIds(evt.detail.map((p) => p.id));
 				if (this.selectedIds && this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
 				}
-				return;
+				break;
 			case 'tracking':
 			case 'smart-tracking':
 				/* nothing to do */
-				return;
+				break;
 			default:
 				console.error(`onSelection: plugin ${this.chosenPlugin} unknown`);
 		}
@@ -345,7 +346,7 @@ export class ServerlessDemo extends LitElement {
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 				this.setAnnotations(shapes);
-				return;
+				break;
 			case 'segmentation':
 			case 'smart-segmentation':
 				const updatedIds = evt.detail;
@@ -376,8 +377,8 @@ export class ServerlessDemo extends LitElement {
 				// 3) store the new annotation structure
 				this.setAnnotations(frame);
 				// selectedId has also changed, update it
-				this.selectedIds = updatedIds;
-				return;
+				this.setSelectedIds(updatedIds);
+				break;
 			case 'tracking':
 			case 'smart-tracking':
 				// console.log("evt=",evt);
@@ -385,7 +386,7 @@ export class ServerlessDemo extends LitElement {
 				// this.tracks = evt.detail;
 				// console.log("this.tracks2=",this.tracks);
 				this.setAnnotations(this.tracks);
-				return;
+				break;
 			default:
 				console.error("onUpdate: plugin ${this.chosenPlugin} unknown");
 		}
@@ -402,7 +403,7 @@ export class ServerlessDemo extends LitElement {
 			case 'classification':
 				console.log("clasif setannot attchange");
 				this.setAnnotations([value]);
-				return;
+				break;
 			case 'keypoints':
 			case 'rectangle':
 			case 'sequence-rectangle':
@@ -422,14 +423,14 @@ export class ServerlessDemo extends LitElement {
 					else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 					this.setAnnotations(shapes);
 				});
-				return;
+				break;
 			case 'segmentation':
 			case 'smart-segmentation':
 				if (!this.selectedIds.length) {//nothing is selected
 					// only set the category acordingly to the selected attribute
 					const category =  this.attributePicker.selectedCategory;
 					this.element.targetClass = category.idx;
-					return;
+					break;
 				}
 				let frame = this.annotations;
 				// 1) update the mask (always id 0)
@@ -448,10 +449,10 @@ export class ServerlessDemo extends LitElement {
 				// category has changed => selectedId has also changed, update it
 				const updatedIds = this.element.selectedId;
 				label.id = JSON.stringify(updatedIds);
-				this.selectedIds = updatedIds;
+				this.setSelectedIds(updatedIds);
 				// 3) store the new annotation structure
 				this.setAnnotations(frame);
-				return;
+				break;
 			case 'cuboid-editor':
 				this.selectedIds.forEach((id) => {
 					const shape = [...this.element.editableCuboids].find((s) => s.id === id);
@@ -463,11 +464,11 @@ export class ServerlessDemo extends LitElement {
 					const shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 					this.setAnnotations(shapes);
 				});
-				return;
+				break;
 			case 'tracking':
 			case 'smart-tracking':
 				this.setAnnotations(this.tracks)
-				return;
+				break;
 			default:
 				console.error("onAttributeChanged: plugin ${this.chosenPlugin} unknown");
 		}
@@ -695,7 +696,7 @@ export class ServerlessDemo extends LitElement {
 			case 'rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-rectangle input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-rectangle .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-rectangle>
@@ -785,7 +786,7 @@ export class ServerlessDemo extends LitElement {
 		`;
 		else return html`
 			<h1>Annotate</h1>
-			<mwc-icon-button icon="exit_to_app" @click=${() => this.chosenPlugin = ''} title="Back to plugin choice"></mwc-icon-button>
+			<mwc-icon-button icon="exit_to_app" @click=${() => { this.chosenPlugin = ''; this.setAnnotations([]); }} title="Back to plugin choice"></mwc-icon-button>
 			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload your images">
 				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
 			</mwc-icon-button>
