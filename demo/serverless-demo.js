@@ -31,7 +31,6 @@ import { demoStyles,
 import { pluginsList, defaultLabelValues } from './plugins_index';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
-// import { ImageSequenceLoader } from './data-loader';// TODO: loader
 
 // temporary, should be style.ts
 export const camera = html`<svg slot="icon" width="24" height="24" viewBox="0 0 24 24"><g><path d="M 8.46875 3.816406 C 7.988281 3.988281 7.871094 4.128906 7.199219 5.34375 C 6.351562 6.871094 6.652344 6.71875 4.359375 6.75 C 2.179688 6.777344 2.003906 6.832031 1.632812 7.585938 L 1.523438 7.804688 L 1.523438 19.195312 L 1.636719 19.425781 C 1.777344 19.710938 2.042969 19.976562 2.335938 20.117188 L 2.554688 20.226562 L 21.445312 20.226562 L 21.664062 20.117188 C 21.945312 19.980469 22.230469 19.695312 22.367188 19.414062 L 22.476562 19.195312 L 22.476562 7.804688 L 22.367188 7.585938 C 21.996094 6.828125 21.828125 6.777344 19.640625 6.75 C 17.417969 6.722656 17.601562 6.785156 17.074219 5.835938 C 15.800781 3.523438 16.351562 3.75 11.988281 3.753906 C 9.300781 3.753906 8.613281 3.765625 8.46875 3.816406 M 13.148438 7.636719 C 14.902344 8.027344 16.933594 9.773438 16.6875 10.683594 C 16.496094 11.402344 15.738281 11.390625 15.226562 10.65625 C 13.804688 8.636719 10.949219 8.402344 9.308594 10.175781 C 8.988281 10.523438 8.972656 10.503906 9.703125 10.640625 C 10.46875 10.78125 10.652344 10.917969 10.492188 11.21875 C 10.414062 11.371094 7.699219 13.261719 7.5625 13.265625 C 7.375 13.265625 7.234375 13.066406 6.539062 11.789062 C 6.15625 11.09375 5.828125 10.5 5.804688 10.46875 C 5.71875 10.363281 5.78125 10.117188 5.917969 10.015625 L 6.050781 9.917969 L 6.769531 10.058594 L 7.488281 10.203125 L 7.734375 9.828125 C 8.871094 8.109375 11.140625 7.191406 13.148438 7.636719 M 16.628906 12.316406 C 16.703125 12.390625 18.050781 14.796875 18.1875 15.097656 C 18.257812 15.253906 18.144531 15.5 17.984375 15.542969 C 17.925781 15.554688 17.558594 15.507812 17.171875 15.433594 L 16.472656 15.300781 L 16.261719 15.625 C 14.523438 18.347656 10.625 18.761719 8.253906 16.476562 C 7.21875 15.480469 7 14.742188 7.628906 14.378906 C 8 14.160156 8.375 14.296875 8.6875 14.765625 C 10.105469 16.878906 13.296875 17.113281 14.78125 15.210938 C 14.953125 14.988281 14.945312 14.984375 14.25 14.855469 C 13.125 14.648438 13.132812 14.441406 14.296875 13.636719 C 14.644531 13.398438 15.242188 12.984375 15.625 12.71875 C 16.34375 12.222656 16.480469 12.167969 16.628906 12.316406 "/></g></svg>`
@@ -48,8 +47,6 @@ export class ServerlessDemo extends LitElement {
 		return {
 			// generic properties
 			chosenPlugin: { type: String },
-			input: {type: String},
-			mode: {type: String},
 			theme: { type: String },
 			// specific properties
 			isOpenedPolygon: { type: Boolean },//for pxn-polygon
@@ -62,15 +59,22 @@ export class ServerlessDemo extends LitElement {
 		// generic properties
 		this.input = 'image.jpg';
 		this.theme = 'black';
-		this.mode = 'edit';
+		this.defaultMode = 'edit';
 		this.chosenPlugin = '';//empty = no plugin chosen
 		this.annotations = [];
 		this.selectedIds = [];
-		// this.loader = new ImageSequenceLoader();// TODO: loader
 		// specific properties
 		this.isOpenedPolygon = true;//for pxn-polygon
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 		this.tracks = {};//for pxn-tracking
+		this.sequence_annotations = [];
+
+
+		// @property({ type: Object })
+		// public tracks: { [key: string]: TrackData } = {};
+		// en fait track = [TrackData]
+
+		// track.keyShapes[numframe] = shape;
 	}
 
 	/**
@@ -90,6 +94,10 @@ export class ServerlessDemo extends LitElement {
 		console.log("prev nnotation=",this.annotations);
 		console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
+	}
+
+	updatePropertyDetail() {
+		this.attributePicker.showDetail = this.selectedIds.length;
 	}
 
 	/******************* BUTTONS handlers *******************/
@@ -115,32 +123,59 @@ export class ServerlessDemo extends LitElement {
 				return {timestamp: idx, url:[src]}
 			});
 			// load new data
-			this.element.image = mediaInfo[0].url[0];
+			this.element.image = mediaInfo[0].url[0];// TODO : should be input ? What about cuboids and sequences
 		} catch(err) {}
 	}
 
 	/******************* EVENTS handlers *******************/
 
 	/**
-	 * Called when input data is loaded: i.e. when a new plugin has been loaded or when the input has changed (via an upload)
+	 * Called after each loaded data: i.e. when a new plugin has been loaded or when the input has changed (via an upload).
+	 * For a sequence: will be called after each atomic data (i.e. image for a video, etc) is loaded.
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
-		// reinitialize annotations
-		this.initAnnotations();
+		this.selectedIds = [];
+		this.updatePropertyDetail();
+		if (this.element.isSequence) {//each time we go from one image to another or at sequence initialization
+			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
+				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
+					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
+				}
+			}
+			// 1) get previous frame annotations into sequence annotations
+			this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
+			// 2) set new frame annotations to the corresponding annotations in sequence annotations
+			this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
+			// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
+			switch (this.chosenPlugin) {
+				case 'sequence-rectangle':
+					this.element.shapes = this.annotations;
+					this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
+					break;
+				default:
+					console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
+			}
+			// this.selectedIds = evt.detail;// TODO : vérif pour garder la même track ?
+			// console.log("this.selectedIds=",this.selectedIds);
+		} else {
+			// reinitialize annotations
+			this.initAnnotations();
+		}
 		// initialize attributePicker to default
 		if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking') return;// no attribute picker used for tracking
+		console.log("attributePicker ok");
 		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
 		this.attributePicker.setAttributes(this.attributePicker.defaultValue);
 		if (this.chosenPlugin==='classification') this.selectedIds.push("not used");// exception for classification: behave as if something is always selected
 		if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
 			const schema = defaultLabelValues(this.chosenPlugin);
-			this.element.clsMap = new Map(
-				schema.category.map((c) => {
-					const color = colorToRGBA(c.color);
-					return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
-				})
-			);
+			// this.element.clsMap = new Map(
+			// 	schema.category.map((c) => {
+			// 		const color = colorToRGBA(c.color);
+			// 		return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
+			// 	})
+			// );
 			if (!schema.default) schema.default = schema.category[0].name;
 			this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
 		}
@@ -157,6 +192,7 @@ export class ServerlessDemo extends LitElement {
 				return;
 			case 'keypoints':
 			case 'rectangle':
+			case 'sequence-rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
 				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
@@ -166,7 +202,7 @@ export class ServerlessDemo extends LitElement {
 				});
 				newObject.color = this.attributePicker._colorFor(newObject.category);
 				// add timestamp to object
-				if (this.isSequence) newObject.timestamp = this.targetFrameIdx;
+				if (this.element.isSequence) newObject.timestamp = this.targetFrameIdx;
 				// set new shapes
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
@@ -183,7 +219,7 @@ export class ServerlessDemo extends LitElement {
 				});
 				newObject.color = this.attributePicker._colorFor(newObject.category);
 				// add timestamp to object
-				if (this.isSequence) newObject.timestamp = this.frameIdx;
+				if (this.element.isSequence) newObject.timestamp = this.frameIdx;
 				// set new shapes
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
@@ -209,6 +245,7 @@ export class ServerlessDemo extends LitElement {
 				return;
 			case 'keypoints':
 			case 'rectangle':
+			case 'sequence-rectangle':
 			case 'smart-rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
@@ -238,22 +275,6 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
-	// newData(mediaInfo) {
-	// 	// set first image and start loading video
-	// 	this.element.image = mediaInfo[0].url[0];
-	// 	// this.loader.init(mediaInfo || []).then((length) => {// TODO: loader
-	// 	// 	this.maxFrameIdx = Math.max(length - 1, 0);
-	// 	// 	this.loader.abortLoading().then(() => {
-	// 	// 		this.loader.load(0).then(() => {
-	// 	// 			this._resetPlayback();
-	// 	// 		});
-	// 	// 	})
-	// 	// });
-	// 	this.annotations = [];
-	// 	// this.element.shapes = [];
-	// 	// this.selectedIds = [];
-	// }
-
 	/**
 	 * Invoked on instance selection in the canvas.
 	 * @param {CustomEvent} evt 
@@ -266,10 +287,12 @@ export class ServerlessDemo extends LitElement {
 				return;
 			case 'keypoints':
 			case 'rectangle':
+			case 'sequence-rectangle':
 			case 'smart-rectangle':
 			case 'polygon':
 				this.selectedIds = evt.detail;
 				console.log("this.selectedIds=",this.selectedIds);
+				this.updatePropertyDetail();
 				if (this.selectedIds && this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
@@ -301,7 +324,7 @@ export class ServerlessDemo extends LitElement {
 				/* nothing to do */
 				return;
 			default:
-				console.error("onSelection: plugin ${this.chosenPlugin} unknown");
+				console.error(`onSelection: plugin ${this.chosenPlugin} unknown`);
 		}
 	}
 	/**
@@ -315,6 +338,7 @@ export class ServerlessDemo extends LitElement {
 			case 'classification':
 			case 'keypoints':
 			case 'rectangle':
+			case 'sequence-rectangle':
 			case 'smart-rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
@@ -381,6 +405,7 @@ export class ServerlessDemo extends LitElement {
 				return;
 			case 'keypoints':
 			case 'rectangle':
+			case 'sequence-rectangle':
 			case 'smart-rectangle':
 			case 'polygon':
 				this.selectedIds.forEach((id) => {
@@ -451,7 +476,7 @@ export class ServerlessDemo extends LitElement {
 	/**
 	 * Implement property panel content
 	 */
-	 swapAttributeEditor() {
+	swapAttributeEditor() {
 		if (this.attributeEditor.style.display==="none") {
 			this.attributeEditor.style.display="block";
 			this.attributePicker.style.display="none";
@@ -474,6 +499,11 @@ export class ServerlessDemo extends LitElement {
 		return this.shadowRoot.querySelector('fleshy-jsoneditor');
 	}
 
+	get mode() {
+		if (this.element) return this.element.mode;
+		else return this.defaultMode;
+	}
+
 	/******************* TOOLS to be displayed *******************/
 
 	get tools_old() {// TODO: tools should be included into each element, not here
@@ -481,43 +511,44 @@ export class ServerlessDemo extends LitElement {
 			case 'keypoints':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Edit" @click=${() => this.mode = 'edit'}>${pointer}</p>
-					<p class="icon" title="Add keypoints" @click=${() => this.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'rectangle':
+			case 'sequence-rectangle':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add rectangle" @click=${() => this.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'polygon':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.mode = 'create'}}>${createPencil}</p>
-					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.mode = 'create'}}>${polyline}</p>
+					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
+					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'segmentation':
 				return html`
-					<p class="icon" title="Polygon tool" @click=${() => this.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'cuboid-editor':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="New instance" @click=${() => this.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
 				`;
 			case 'smart-rectangle':
@@ -531,17 +562,17 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-segmentation':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Polygon tool" @click=${() => this.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
 					<p class="icon" title="Smart instance" @click=${() => {
 						this.element.editionMode=EditionMode.NEW_INSTANCE;
-						this.mode = 'smart-create'}}>${borderOuter}</p>
+						this.element.mode = 'smart-create'}}>${borderOuter}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
@@ -551,12 +582,11 @@ export class ServerlessDemo extends LitElement {
 	}
 	get genericTools() {
 		return html`
-			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.mode = 'edit'}"></mwc-icon-button>
-			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.mode = 'create'}"></mwc-icon-button>
+			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
 			<mwc-icon-button title="Hide/Show labels"	icon="tonality"				@click="${() => this.element.toggleLabels()}"></mwc-icon-button>
 		`;
 	}
-
 
 	getEditionMode() { if (this.element) return this.element.editionMode; else return EditionMode.NEW_INSTANCE; }//needed for selected because buttons are created before element
 
@@ -568,6 +598,7 @@ export class ServerlessDemo extends LitElement {
 					<mwc-icon-button title="Swap nodes (c)"		icon="swap_horiz"	@click="${() => this.swap()}"></mwc-icon-button>
 				`;
 			case 'rectangle':
+			case 'sequence-rectangle':
 				return html`
 					${this.genericTools}
 				`;
@@ -585,12 +616,12 @@ export class ServerlessDemo extends LitElement {
 				`;
 			case 'segmentation':
 				return html`
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.mode = 'edit'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.mode = 'create'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
@@ -606,24 +637,24 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 				return html`
 					${this.genericTools}
-					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.mode = 'smart-create'}"></mwc-icon-button>
+					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
 					<mwc-icon-button title="ROI increase (+)"	@click=${() => this.element.roiUp()}>${increase}</mwc-icon-button>
 					<mwc-icon-button title="ROI decrease (-)"	@click=${() => this.element.roiDown()}>${decrease}</mwc-icon-button>
 				`;
 			case 'smart-segmentation':
 				return html`
 					${this.genericTools}
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.mode = 'edit'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.mode = 'create'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
 						@click="${() => this.maskVisuMode = this.maskVisuMode === 'INSTANCE' ? 'SEMANTIC': 'INSTANCE'}"></mwc-icon-button>
-					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.mode = 'smart-create'}"></mwc-icon-button>
+					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
 				`;
 			default:
 				return html``;
@@ -636,9 +667,10 @@ export class ServerlessDemo extends LitElement {
 	 * Implement property panel content
 	 */
 	get propertyPanel() {
+		console.log("propertyPanel");
 		return html`
 			<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
-			<attribute-picker ?showDetail=${this.selectedIds.length === 0} @update=${this.onAttributeChanged}></attribute-picker>`;
+			<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>`;
 	}
 
 	get plugin() {
@@ -647,14 +679,14 @@ export class ServerlessDemo extends LitElement {
 		switch (this.chosenPlugin) {
 			case 'classification':
 				return html`
-					<pxn-classification mode=${this.mode} input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate}
+					<pxn-classification input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate}
 								disablefullscreen>
 					</pxn-classification>
 					<div class="properties-panel">${this.propertyPanel}</div>`;
 			case 'keypoints':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-keypoints mode=${this.mode} input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-keypoints input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								enableOutsideDrawing
 								disablefullscreen>
@@ -663,15 +695,25 @@ export class ServerlessDemo extends LitElement {
 			case 'rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-rectangle mode=${this.mode} input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-rectangle input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-rectangle>
 					<div class="properties-panel">${this.propertyPanel}</div>`;
+			case 'sequence-rectangle':
+				this.input = Array(10).fill(0).map((_, idx) => 'examples/video/' + `${idx+1}`.padStart(2, '0') + '.png');
+				console.log("this.input=",this.input);
+				return html`
+					<div class="tools">${this.tools}</div>
+					<pxn-sequence-rectangle .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+								@delete=${this.onDelete}
+								disablefullscreen>
+					</pxn-sequence-rectangle>
+					<div class="properties-panel">${this.propertyPanel}</div>`;
 			case 'polygon':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-polygon mode=${this.mode} input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-polygon input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								?isOpenedPolygon="${this.isOpenedPolygon}"
 								@delete=${this.onDelete}
 								disablefullscreen>
@@ -680,7 +722,7 @@ export class ServerlessDemo extends LitElement {
 			case 'segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-segmentation mode=${this.mode} input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
+					<pxn-segmentation input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-segmentation>
@@ -689,7 +731,7 @@ export class ServerlessDemo extends LitElement {
 				this.input = 'examples/sample_pcl.bin';
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-cuboid-editor mode=${this.mode} input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-cuboid-editor input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-cuboid-editor>
@@ -698,13 +740,13 @@ export class ServerlessDemo extends LitElement {
 				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
 				return html`
-					<pxn-tracking mode=${this.mode} .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
+					<pxn-tracking .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
 								disablefullscreen>
 					</pxn-tracking>`;
 			case 'smart-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-rectangle mode=${this.mode} input=${this.input} mode="smart-create" scale="1" @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
+					<pxn-smart-rectangle input=${this.input} mode="smart-create" scale="1" @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-smart-rectangle>
@@ -712,7 +754,7 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-segmentation':
 				return html`
 					<div class="tools">${this.tools}</div>
-					<pxn-smart-segmentation mode=${this.mode} input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
+					<pxn-smart-segmentation input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
 								@delete=${this.onDelete}
 								disablefullscreen>
 					</pxn-smart-segmentation>
@@ -721,7 +763,7 @@ export class ServerlessDemo extends LitElement {
 				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
 				return html`
-					<pxn-smart-tracking mode=${this.mode} .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput}  @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
+					<pxn-smart-tracking .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput}  @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
 								disablefullscreen>
 					</pxn-smart-tracking>`;
 			case '':
@@ -764,7 +806,7 @@ export class ServerlessDemo extends LitElement {
 					</div>
 				</div>
 				<div class="plugin">${this.plugin}</div>
-			</div>`;
+			</div>`;//tool and propertypanel should be declared here
 	}
 
 	fullScreen() {

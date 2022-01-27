@@ -36,6 +36,8 @@ npx serve
 	"annotations" = [ annotation1, annotation2, etc ];
 	"annotation" = {
 		"id": "unique id inside this input",
+		"timestamp": value,
+		"tracknum": value,
 		"category": "classname",
 		"geometry": { geometry definition is tool dependent },
 		"labels": {
@@ -45,7 +47,7 @@ npx serve
 		}
 	};
 
-	Geometry definition for:
+	"geometry" definition for: (interfaces are defined in Geometry in graphics-2d/src/types.ts and in Cuboid in graphics-3d/src/types.ts)
 	- classification: {}
 	- keypoints: { type: "graph", vertices: [ pts ], edges: [], visibles: [ booleans ] }
 	- rectangle/smart-rectangle: { type: "rectangle", vertices: [ pts ] }
@@ -53,7 +55,20 @@ npx serve
 	- segmentation/smart-segmentation: {}
 		Exception for segmentation/smart-segmentation: the first annotation is: { "id": 0, "mask": "..." }
 	- cuboid-editor: { "position": [ values ], size": [ values ], "heading": value }
-	- tracking/smart-tracking: TO BE DETERMINED
+	- tracking/smart-tracking: TO BE DETERMINED -> linked to sequences, does class tracking disapear ? or become a subclass of sequence ?
+		=> 3 représentations possibles : basée sur les pistes ou basée sur les images ou basée annotation
+			=> pistes : fait pour le tracking => actuel; avantage : labels communs et labels distincts faciles
+			=> images : fait pour pouvoir servir à n'importe quoi; avantage : générique avec les pxns => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
+				avantage : plus simple dans le code et plus lisible dans le fichier
+				désavantage : pas tout à fait générique puisque çà fait une différence entre vidéo et image
+				+> "sequence_annotations" : {
+					"timestamp" : value,
+					"annotations" : [ annotation1, annotation2, etc ]
+			=> annotation : fait pour pouvoir servir à n'importe quoi; avantage : complètement générique => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
+
+	"timestamp" is only present for sequences, it indicates the frame number for a sequence of images and the real timestamp (format/unit TO BE DETERMINED) for videos.
+		=> pas si représentation images
+	"tracknum" is optionnal and only present for sequences, it indicates the track number when the annotation is part of a track. Each tracknum is unique inside a sequence.
 
 ### Current annotation/export formats in pixano-app:
 	For all plugins except tracking : "annotations" = [ annotation1, annotation2, etc ];
@@ -101,7 +116,7 @@ npx serve
 		"options": { options }
 	},
 
-	- For cuboids :
+	- For cuboids:
 	"annotation": {
 		"position": [ values ],
 		"size": [ values ],
@@ -110,6 +125,14 @@ npx serve
 		"category": "name of the class",
 		"options": { options }
 	}
+	
+	- For segmentation:
+		Exception for segmentation/smart-segmentation: the first annotation is: { "id": 0, "mask": "..." }
+	"annotation": {
+		"category": "class1",
+		"options": { options },
+		"id": "[1,0,1]"
+	}
 
 	In all cases, { options } are in the form of:
 	"options": {
@@ -117,6 +140,10 @@ npx serve
 		"optionalParameter2": value,
 		"etc": "..."
 	}
+
+	- For sequences: same annotation them base class + for each "annotation":
+		"timestamp": value
+	Where timestamp is the frame number (and could be the real timestamp for videos).
 	
 	For tracking:
  	"annotations": { "0": { annotation1 }, "1": { annotation2 }, "2": { annotation3 }, etc };
