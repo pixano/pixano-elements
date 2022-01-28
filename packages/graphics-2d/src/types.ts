@@ -30,19 +30,12 @@ export interface ShapeData {
 	color?: string;
 	// category string
 	category?: string;
+	// createdBy string
+	createdBy?: "manual"|"auto";
+	// labels
+	labels?: { [key: string]: any };
 }
 
-
-export interface KeyShapeData {
-	geometry: Geometry;
-	// Is next instances of track visible
-	// Undefined means not hidden
-	isNextHidden?: boolean;
-	// Temporary track (specific to a frame) properties (eg posture)
-	labels: { [key: string]: any };
-	// Image index
-	timestamp: number;
-}
 
 export interface TrackData {
 	id: string;
@@ -54,8 +47,8 @@ export interface TrackData {
 	// e.g: const a = {2300: "Some value"};
 	// > test[2300] === test["2300"] # true
 	// > Object.keys(test) # ["2300"]
-	keyShapes: { [key: number]: KeyShapeData };
+	shapes: { [key: number]: ShapeData };
 	category: string;
 	// permanent properties
-	labels: { [key: string]: any };
+	labels: { [key: string]: any }; // ?
 }

@@ -16,54 +16,45 @@ class MyDemo extends LitElement {
 		super();
 		const vid = "video/";
 		this.images = Array(10).fill(0).map((_, idx) => vid + `${idx+1}`.padStart(2, '0') + '.png');
-		this.tracks = {};
-		//	 '0': {
-		//		 id: '0',
-		//		 keyShapes: {
-		//			 '0': {
-		//				 geometry: {
-		//					 type: 'rectangle',
-		//					 vertices: [
-		//						 0.2887383355034722,
-		//						 0.4225015710901331,
-		//						 0.34930555555555554,
-		//						 0.6296296296296297
-		//					 ]
-		//				 },
-		//				 timestamp: 0,
-		//				 labels: {
-		//					 occlusion: 0,
-		//					 truncation: 0,
-		//					 posture: 'straight'
-		//				 },
-		//				 id: '0',
-		//				 color: '#ff1100'
-		//			 },
-		//			 '11': {
-		//				 geometry: {
-		//					 type: 'rectangle',
-		//					 vertices: [
-		//						 0.29791666666666666,
-		//						 0.4527777777777778,
-		//						 0.3576388888888889,
-		//						 0.6296296296296297
-		//					 ]
-		//				 },
-		//				 timestamp: 11,
-		//				 labels: {
-		//					 occlusion: 0,
-		//					 truncation: 0,
-		//					 posture: 'inclined'
-		//				 },
-		//				 id: '0',
-		//				 color: '#ff1100',
-		//				 isNextHidden: true
-		//			 }
-		//		 },
-		//		 category: 'person',
-		//		 labels: {}
-		//	 }
-		// };
+		this.tracks = {
+			 '0': {
+				 id: '0',
+				 shapes: {
+					 '0': {
+						 geometry: {
+							 type: 'rectangle',
+							 vertices: [
+								 0.2887383355034722,
+								 0.4225015710901331,
+								 0.34930555555555554,
+								 0.6296296296296297
+							 ]
+						 },
+						 timestamp: 0,
+						 
+						 id: '0',
+						 createdBy: 'manual',
+					 },
+					 '1': {
+						 geometry: {
+							 type: 'rectangle',
+							 vertices: [
+								 0.29791666666666666,
+								 0.4527777777777778,
+								 0.3576388888888889,
+								 0.6296296296296297
+							 ]
+						 },
+						 timestamp: 1,
+						 
+						 id: '0',
+						 createdBy: 'manual',
+					 }
+				 },
+				 category: 'person',
+				 labels: {}
+			 }
+		};
 	}
 
 	static get properties() {

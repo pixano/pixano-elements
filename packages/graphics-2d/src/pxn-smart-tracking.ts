@@ -12,7 +12,7 @@ import { track } from '@pixano/core/lib/style';
 import { ShapeData } from './types';
 import {
 	getShape,
-	setKeyShape
+	// setKeyShape
 } from './utils-video';
 import '@material/mwc-switch';
 
@@ -123,9 +123,9 @@ export class SmartTracking extends Tracking {
 			(res[0]+res[2])/im1.width,
 			(res[1]+res[3])/im1.height
 		];
-		const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[target1.id], this.timestamp).keyshape!))
+		const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[target1.id], this.timestamp)!))
 		newShape.geometry.vertices = [...target1.geometry.vertices];
-		setKeyShape(this.tracks[target1.id], this.timestamp, newShape);
+		// setKeyShape(this.tracks[target1.id], this.timestamp, newShape);
 		this.dispatchEvent(new Event('update'));
 		await this.delay(10);
 	}

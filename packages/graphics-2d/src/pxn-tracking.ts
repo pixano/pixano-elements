@@ -21,19 +21,19 @@ import { ShapeData, TrackData } from './types';
 import {
 	getShape,
 	convertShapes,
-	setKeyShape,
-	isKeyShape,
-	deleteShape,
-	removeOrAddKeyShape,
-	switchVisibility,
-	switchTrack,
+	// setKeyShape,
+	// isKeyShape,
+	// deleteShape,
+	// removeOrAddKeyShape,
+	// switchVisibility,
+	// switchTrack,
 	trackColors,
-	splitTrack,
+	// splitTrack,
 	getNewTrackId,
-	mergeTracks,
-	getClosestFrames,
+	// mergeTracks,
+	// getClosestFrames,
 	invertColor,
-	getNumKeyShapes
+	// getNumKeyShapes
 } from './utils-video';
 import { ShapesEditController } from './controller';
 // import { ClickController } from "./controller-tracking";
@@ -120,23 +120,23 @@ export class Tracking extends Rectangle {
 		this.addEventListener('timestamp', () => {
 			this.drawTracks();
 		});
-		this.addEventListener('create', (e) => {
-			// if there is a selected track, add keyshape
-			// else create a new track
-			if (this.selectedTrackIds.size) {
-				// add keyshape
-				const currentTrackId = this.selectedTrackIds.values().next().value;
-				this.addNewKeyShapes([
-					{
-						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: currentTrackId
-					}
-				]);
-			} else {
-				// new track
-				this.newTrack(e);
-			}
-		});
+		// this.addEventListener('create', (e) => {
+		// 	// if there is a selected track, add keyshape
+		// 	// else create a new track
+		// 	if (this.selectedTrackIds.size) {
+		// 		// add keyshape
+		// 		const currentTrackId = this.selectedTrackIds.values().next().value;
+		// 		this.addNewKeyShapes([
+		// 			{
+		// 				...JSON.parse(JSON.stringify((e as any).detail)),
+		// 				id: currentTrackId
+		// 			}
+		// 		]);
+		// 	} else {
+		// 		// new track
+		// 		this.newTrack(e);
+		// 	}
+		// });
 		this.addEventListener('update-tracks', () => {
 			this.drawTracks();
 			this.requestUpdate();
@@ -149,10 +149,10 @@ export class Tracking extends Rectangle {
 			this.drawTracks();
 			this.requestUpdate();
 		});
-		this.addEventListener('update', () => {
-			// when updating instance, create or edit keyshape
-			this.addNewKeyShapes([...this.targetShapes]);
-		});
+		// this.addEventListener('update', () => {
+		// 	// when updating instance, create or edit keyshape
+		// 	this.addNewKeyShapes([...this.targetShapes]);
+		// });
 		this.addEventListener('selection', () => {
 			// unselect track if shape is unselected
 			if (!this.targetShapes.size) {
@@ -160,23 +160,24 @@ export class Tracking extends Rectangle {
 				this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds }));
 			}
 		});
-		this.addEventListener('delete', (evt: any) => {
-			const ids = evt.detail;
-			ids.forEach((id: string) => {
-				if (isKeyShape(this.tracks[id], this.timestamp)) {
-					deleteShape(this.tracks[id], this.timestamp);
-					if (!getNumKeyShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
-				}
-			});
-			this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
-			this.drawTracks();
-		});
+		// this.addEventListener('delete', (evt: any) => {
+		// 	const ids = evt.detail;
+		// 	ids.forEach((id: string) => {
+		// 		if (isKeyShape(this.tracks[id], this.timestamp)) {
+		// 			deleteShape(this.tracks[id], this.timestamp);
+		// 			if (!getNumKeyShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
+		// 		}
+		// 	});
+		// 	this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
+		// 	this.drawTracks();
+		// });
 	}
 
 	protected keyDownHandler = (evt: KeyboardEvent) => {
-		if (evt.key === "r") {
-			this.mergeTracks(this.selectedTrackIds);
-		} else if (evt.key === "f") {
+		// if (evt.key === "r") {
+		// 	this.mergeTracks(this.selectedTrackIds);
+		// } else 
+		if (evt.key === "f") {
 			if (this.selectedTrackIds.size === 1) {
 				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
 			}
@@ -278,14 +279,15 @@ export class Tracking extends Rectangle {
 		newShape.id = newTrackId;
 		newShape.color = trackColors[parseInt(newTrackId,10) % trackColors.length];
 		const cls = this.categories[0].name;
-		const keyShape = {
+		const shape = {
+			id: newTrackId,
 			geometry: newShape.geometry,
 			timestamp: this.timestamp,
 			labels: this.getDefaultProperties(cls)
 		};
 		const newTrack = {
 			id: newTrackId,
-			keyShapes: { [this.timestamp]: keyShape },
+			shapes: { [this.timestamp]: shape },
 			category: cls,
 			labels: {}
 		};
@@ -299,76 +301,76 @@ export class Tracking extends Rectangle {
 		this.dispatchEvent(new Event('create-track'));
 	}
 
-	/**
-	 * Split track into two tracks
-	 * @param t
-	 */
-	splitTrack(tId: string) {
-		const newTrack = splitTrack(tId, this.timestamp, this.tracks);
-		this.selectedTrackIds.clear();
-		this.selectedTrackIds.add(newTrack.id);
-		this.dispatchEvent(new Event('update-tracks'));
-	}
+	// /**
+	//  * Split track into two tracks
+	//  * @param t
+	//  */
+	// splitTrack(tId: string) {
+	// 	const newTrack = splitTrack(tId, this.timestamp, this.tracks);
+	// 	this.selectedTrackIds.clear();
+	// 	this.selectedTrackIds.add(newTrack.id);
+	// 	this.dispatchEvent(new Event('update-tracks'));
+	// }
 
-	/**
-	 * Merge two tracks.
-	 * If they do not overlap, do concatenation of keyshapes else display an error message.
-	 * @param tracks tracks to be merged
-	 */
-	mergeTracks(tracks: Set<string>) {
-		if (tracks.size !== 2) {
-			return;
-		}
-		const [t1Id, t2Id] = [...tracks];
-		const mergeResult = mergeTracks(this.tracks, t1Id, t2Id);
-		if (mergeResult.trackId !== "") {
-			this.selectedTrackIds.clear();
-			this.selectedTrackIds.add(mergeResult.trackId);
-			this.dispatchEvent(new Event('update-tracks'));
-		} else {
-			this.mergeErrorDialog(t1Id, t2Id, mergeResult.keysIntersection);
-		}
-	}
+	// /**
+	//  * Merge two tracks.
+	//  * If they do not overlap, do concatenation of keyshapes else display an error message.
+	//  * @param tracks tracks to be merged
+	//  */
+	// mergeTracks(tracks: Set<string>) {
+	// 	if (tracks.size !== 2) {
+	// 		return;
+	// 	}
+	// 	const [t1Id, t2Id] = [...tracks];
+	// 	const mergeResult = mergeTracks(this.tracks, t1Id, t2Id);
+	// 	if (mergeResult.trackId !== "") {
+	// 		this.selectedTrackIds.clear();
+	// 		this.selectedTrackIds.add(mergeResult.trackId);
+	// 		this.dispatchEvent(new Event('update-tracks'));
+	// 	} else {
+	// 		this.mergeErrorDialog(t1Id, t2Id, mergeResult.keysIntersection);
+	// 	}
+	// }
 
-	/**
-	 * Switch two tracks at given timestamp.
-	 * @param trackIds tracks to be switched
-	 */
-	switchTrack(trackIds: Set<string>) {
-		if (trackIds.size === 2) {
-			const [t1Id, t2Id] = [...trackIds]
-			switchTrack(this.tracks, t1Id, t2Id, this.timestamp);
-			this.dispatchEvent(new Event('update-tracks'));
-		}
-	}
+	// /**
+	//  * Switch two tracks at given timestamp.
+	//  * @param trackIds tracks to be switched
+	//  */
+	// switchTrack(trackIds: Set<string>) {
+	// 	if (trackIds.size === 2) {
+	// 		const [t1Id, t2Id] = [...trackIds]
+	// 		switchTrack(this.tracks, t1Id, t2Id, this.timestamp);
+	// 		this.dispatchEvent(new Event('update-tracks'));
+	// 	}
+	// }
 
-	/**
-	 * Enable or disable interpolation for the current frame
-	 */
-	switchVisibility(t: TrackData) {
-		switchVisibility(this.tracks[t.id], this.timestamp);
-		this.dispatchEvent(new Event('update-tracks'));
-	}
+	// /**
+	//  * Enable or disable interpolation for the current frame
+	//  */
+	// switchVisibility(t: TrackData) {
+	// 	switchVisibility(this.tracks[t.id], this.timestamp);
+	// 	this.dispatchEvent(new Event('update-tracks'));
+	// }
 
-	addNewKeyShapes(shapes: ShapeData[]) {
-		shapes.forEach((s) => {
-			const tId = [...this.selectedTrackIds].find((id) => id === s.id);
-			if (tId) {
-				setKeyShape(this.tracks[tId], this.timestamp, { ...getShape(this.tracks[tId], this.timestamp).keyshape!, ...s });
-			}
-		});
-		this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
-		this.requestUpdate();
-	}
+	// addNewKeyShapes(shapes: ShapeData[]) {
+	// 	shapes.forEach((s) => {
+	// 		const tId = [...this.selectedTrackIds].find((id) => id === s.id);
+	// 		if (tId) {
+	// 			setKeyShape(this.tracks[tId], this.timestamp, { ...getShape(this.tracks[tId], this.timestamp).keyshape!, ...s });
+	// 		}
+	// 	});
+	// 	this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
+	// 	this.requestUpdate();
+	// }
 
-	/**
-	 * Remove keyshape from track
-	 * @param t
-	 */
-	removeOrAddKeyShape(t: TrackData) {
-		removeOrAddKeyShape(this.tracks[t.id], this.timestamp);
-		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
-	}
+	// /**
+	//  * Remove keyshape from track
+	//  * @param t
+	//  */
+	// removeOrAddKeyShape(t: TrackData) {
+	// 	removeOrAddKeyShape(this.tracks[t.id], this.timestamp);
+	// 	this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
+	// }
 
 	getDefaultPermProps(categoryName: string) {
 		const category = this.categories.find((c) => c.name === categoryName);
@@ -394,33 +396,33 @@ export class Tracking extends Rectangle {
 	}
 
 	/**
-	 * Set class (category) of the selected track
-	 * @param cls new class
-	 */
-	setClass(t: TrackData, cls: string) {
-		t.category = cls;
-		t.labels = this.getDefaultProperties(cls);
-		const defaultProp = this.getDefaultProperties(t.category);
-		for (const [, ks] of Object.entries(t.keyShapes)) {
-			ks.labels = { ...defaultProp };
-		}
-		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
-		this.requestUpdate();
-	}
+	//  * Set class (category) of the selected track
+	//  * @param cls new class
+	//  */
+	// setClass(t: TrackData, cls: string) {
+	// 	t.category = cls;
+	// 	t.labels = this.getDefaultProperties(cls);
+	// 	const defaultProp = this.getDefaultProperties(t.category);
+	// 	for (const [, ks] of Object.entries(t.keyShapes)) {
+	// 		ks.labels = { ...defaultProp };
+	// 	}
+	// 	this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
+	// 	this.requestUpdate();
+	// }
 
-	/**
-	 * Set property of the selected track
-	 * @param cls new class
-	 */
-	setProperty(t: TrackData, propName: string, propValue: any) {
-		const shape = getShape(t, this.timestamp).keyshape;
-		if (shape && shape.labels[propName] !== propValue) {
-			shape.labels[propName] = propValue;
-			setKeyShape(this.tracks[t.id], this.timestamp, { ...shape });
-			this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
-			this.requestUpdate();
-		}
-	}
+	// /**
+	//  * Set property of the selected track
+	//  * @param cls new class
+	//  */
+	// setProperty(t: TrackData, propName: string, propValue: any) {
+	// 	const shape = getShape(t, this.timestamp).keyshape;
+	// 	if (shape && shape.labels[propName] !== propValue) {
+	// 		shape.labels[propName] = propValue;
+	// 		setKeyShape(this.tracks[t.id], this.timestamp, { ...shape });
+	// 		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
+	// 		this.requestUpdate();
+	// 	}
+	// }
 
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
@@ -428,34 +430,34 @@ export class Tracking extends Rectangle {
 		this.dispatchEvent(new CustomEvent('delete-track', { detail: t }));
 	}
 
-	/**
-	 * Go to previous keyframe for a given track
-	 * @param t
-	 */
-	goToPreviousKeyFrame(t: TrackData) {
-		const [prev,] = getClosestFrames(t, this.timestamp);
-		if (prev >= 0) {
-			this.playback!.set(prev);
-		}
-	}
+	// /**
+	//  * Go to previous keyframe for a given track
+	//  * @param t
+	//  */
+	// goToPreviousKeyFrame(t: TrackData) {
+	// 	const [prev,] = getClosestFrames(t, this.timestamp);
+	// 	if (prev >= 0) {
+	// 		this.playback!.set(prev);
+	// 	}
+	// }
 
-	/**
-	 * Go to next keyframe for a given track
-	 * @param t
-	 */
-	goToNextKeyFrame(t: TrackData) {
-		const [, next] = getClosestFrames(t, this.timestamp);
-		if (isFinite(next)) {
-			this.playback!.set(next);
-		}
-	}
+	// /**
+	//  * Go to next keyframe for a given track
+	//  * @param t
+	//  */
+	// goToNextKeyFrame(t: TrackData) {
+	// 	const [, next] = getClosestFrames(t, this.timestamp);
+	// 	if (isFinite(next)) {
+	// 		this.playback!.set(next);
+	// 	}
+	// }
 
 	/**
 	 * Go to the first frame of a given track
 	 * @param t
 	 */
 	goToFirstFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes)[0],10);
+		this.timestamp = parseInt(Object.keys(t.shapes)[0],10);
 	}
 
 	/**
@@ -463,7 +465,7 @@ export class Tracking extends Rectangle {
 	 * @param t
 	 */
 	goToLastFrame(t: TrackData) {
-		this.timestamp = parseInt(Object.keys(t.keyShapes).slice(-1)[0],10);
+		this.timestamp = parseInt(Object.keys(t.shapes).slice(-1)[0],10);
 	}
 
 	/**
@@ -494,21 +496,20 @@ export class Tracking extends Rectangle {
 	}
 
 	htmlProperty(prop: any, t: TrackData) {
-		const shape = getShape(t, this.timestamp).keyshape;
+		const shape = getShape(t, this.timestamp);
 		if (shape && prop.type === 'dropdown') {
-			const value = shape.labels[prop.name];
+			const value = shape.labels![prop.name];
 			return html`
-			<mwc-select id="${t.id}-${prop.name}" label="${prop.name}" @action=${(evt: any) => this.setProperty(t, prop.name, prop.enum[evt.detail.index])}>
+			<mwc-select id="${t.id}-${prop.name}" label="${prop.name}" >
 			${prop.enum.map((v: any) => {
 				return html`<mwc-list-item value="${v}" ?selected="${v === value}">${v}</mwc-list-item>`
 			})}
 			</mwc-select>`
 		} else if (shape && prop.type === 'checkbox') {
-			const checked = shape.labels[prop.name];
+			const checked = shape.labels![prop.name];
 			return html`
 			<mwc-formfield label="${prop.name}">
-				<mwc-checkbox ?checked=${checked} @change=${(evt: any) => { this.setProperty(t, prop.name, evt.path[0].checked) }
-				}></mwc-checkbox>
+				<mwc-checkbox ?checked=${checked} ></mwc-checkbox>
 			</mwc-formfield>`
 		}
 		return html``;
@@ -524,38 +525,38 @@ export class Tracking extends Rectangle {
 			<p style="display: inline-flex; width: -webkit-fill-available; height: 20px;">
 				<span>Selected tracks</span>
 				<span style="display: inline-flex; align-items: center;">${this.selectedTrackIds.size === 2 ? html`
-					<mwc-icon-button title="Switch track" @click=${() => this.switchTrack(this.selectedTrackIds)} icon="shuffle"></mwc-icon-button>
-					<mwc-icon-button title="Merge track" @click=${() => this.mergeTracks(this.selectedTrackIds)}>${mergeTracksIcon}</mwc-icon-button>` : ``}
+					<mwc-icon-button title="Switch track" icon="shuffle"></mwc-icon-button>
+					<mwc-icon-button title="Merge track">${mergeTracksIcon}</mwc-icon-button>` : ``}
 				</span>
 			</p>
 			<div>
 				${[...this.selectedTrackIds].map((tId) => {
 			const t = this.tracks[tId];
-			const currentShape = getShape(t, this.timestamp).keyshape;
+			const currentShape = getShape(t, this.timestamp);
 			const color = trackColors[parseInt(tId,10) % trackColors.length];
 			let isHidden = true;
 			const disabled = currentShape === null;
-			if (currentShape) {
-				isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
-			}
+			// if (currentShape) {
+			// 	isHidden = currentShape.isNextHidden === true && !isKeyShape(t, this.timestamp);
+			// }
 			const categoryProps = this.categories.find((c) => c.name === t.category).properties || [];
 			return html`
 					<div class="item">
 						<p style="flex-direction: column; color: gray;">T${t.id.toString()}<span class="dot" style="background: ${color}"></span></p>
 						<div style="display: flex; flex-direction: column; width: 100%; margin-right: 10px;">
-							<mwc-select id="labels" outlined @action=${(evt: any) => this.setClass(t, this.categories[evt.detail.index].name)}>
+							<mwc-select id="labels" outlined>
 								${this.categories.map((c) => html`<mwc-list-item value="${c.name}" ?selected="${c.name === t.category}">${c.name}</mwc-list-item>`)}
 							</mwc-select>
 							${currentShape ? categoryProps.map((prop: any) => this.htmlProperty(prop, t)) : html``}
 							<div style="width: 100%;">
-								<mwc-icon-button title="Go to previous keyframe" @click=${() => this.goToPreviousKeyFrame(t)} icon="keyboard_arrow_left"></mwc-icon-button>
-								<mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
+								<mwc-icon-button title="Go to previous keyframe"  icon="keyboard_arrow_left"></mwc-icon-button>
+								<mwc-icon-button title="Go to next keyframe"  icon="keyboard_arrow_right"></mwc-icon-button>
 								<mwc-icon-button title="Go to first frame (f)" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
 								<mwc-icon-button title="Go to last frame (l)" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
 								</br>
-								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
-								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled} @click=${() => this.switchVisibility(t)} onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
-								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
+								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ></mwc-icon-button-toggle>
+								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
+								<mwc-icon-button title="Split track" ?disabled=${disabled}>${cutTrack}</mwc-icon-button>
 								<mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
 							</div>
 						</div>
