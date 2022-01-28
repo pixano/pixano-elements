@@ -21,11 +21,6 @@ export const pluginsList = [// TODO: add sequences ?
 	'smart-rectangle',
 	'smart-segmentation',
 	'smart-tracking',
-	'sequence-rectangle',
-	// 'sequence-cuboid',
-	// 'sequence-polygon',
-	// 'sequence-keypoints',
-	// 'sequence-segmentation'
 ];
 
 /**
@@ -87,7 +82,6 @@ export const defaultLabelValues = (pluginName) => {
 				default: 'classification'
 			};
 
-		case 'sequence-rectangle':
 		case 'smart-rectangle':
 		case 'rectangle':
 		case 'cuboid-editor':

@@ -57,14 +57,15 @@ npx serve
 	- cuboid-editor: { "position": [ values ], size": [ values ], "heading": value }
 	- tracking/smart-tracking: TO BE DETERMINED -> linked to sequences, does class tracking disapear ? or become a subclass of sequence ?
 		=> 3 représentations possibles : basée sur les pistes ou basée sur les images ou basée annotation
-			=> pistes : fait pour le tracking => actuel; avantage : labels communs et labels distincts faciles
-			=> images : fait pour pouvoir servir à n'importe quoi; avantage : générique avec les pxns => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
+			=> pistes (track based) : fait pour le tracking => actuel; avantage : labels communs et labels distincts faciles
+			=> images (frame based) : fait pour pouvoir servir à n'importe quoi; avantage : générique avec les pxns => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
 				avantage : plus simple dans le code et plus lisible dans le fichier
 				désavantage : pas tout à fait générique puisque çà fait une différence entre vidéo et image
 				+> "sequence_annotations" : {
 					"timestamp" : value,
 					"annotations" : [ annotation1, annotation2, etc ]
-			=> annotation : fait pour pouvoir servir à n'importe quoi; avantage : complètement générique => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
+			=> annotation (annotation based) : fait pour pouvoir servir à n'importe quoi; avantage : complètement générique => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
+			===> frame based by default, can be converted easily through our scripts
 
 	"timestamp" is only present for sequences, it indicates the frame number for a sequence of images and the real timestamp (format/unit TO BE DETERMINED) for videos.
 		=> pas si représentation images

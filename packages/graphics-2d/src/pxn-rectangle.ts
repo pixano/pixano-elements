@@ -22,15 +22,4 @@ export class Rectangle extends Canvas2d {
 		});
 	}
 }
-
-/**
- * A sequence of pxn-rectangle
- */
-@customElement('pxn-sequence-rectangle' as any)
-export class SeqRectangle extends Rectangle {
-	constructor() {
-		super();
-		console.log("OUAIIIIIIII");
-	}
-}
  
