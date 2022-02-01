@@ -6,6 +6,7 @@
 
 import { html, internalProperty, LitElement, property, TemplateResult } from 'lit-element';
 import './playback-control';
+import './sequence-timeline';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
 
@@ -232,6 +233,7 @@ export abstract class GenericDisplay extends LitElement {
 					${this.display()}
 					<slot name="slider" id="slot">
 						<div style="display: ${this.isSequence ? 'block' : 'none'};">
+							<pxn-sequence-timeline style="display: ${this.isSequence ? 'flex' : 'none'}; height: 50px; width: 100%"></pxn-sequence-timeline>
 							<playback-control @update=${this.onSliderChange}
 																		style="display: ${this.isSequence ? 'flex' : 'none'};"
 																		max=${this.maxFrameIdx}></playback-control>

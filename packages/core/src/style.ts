@@ -121,11 +121,10 @@ export const genericStyles = css`
 		flex-direction: column;
 	}
 	[name="slider"] > div {
-		height: 50px;
-		flex: 0 0 50px;
 		display: flex;
 	}
 	playback-control {
+		height: 50px;
 		background: #f9f9f9;
 		color: var(--font-color);
 	}
