@@ -16,65 +16,102 @@ export function generateKey() {
 	return Math.random().toString(36).substring(7)
 }
 
-// /**
-//  * Get key shape at a given frame index
-//  * @param track the track
-//  * @param fIdx the frame index
-//  * @return the key shape if exist, undefined otherwise
-//  */
-// export function getKeyShape(track: TrackData, fIdx: number): KeyShapeData | undefined {
+/**
+ * Get key shape at a given frame index
+ * @param track the track
+ * @param fIdx the frame index
+ * @return the key shape if exist, undefined otherwise
+ */
+export function getKeyShape(track: TrackData, fIdx: number): ShapeData | undefined {
+	const shape = getShape(track, fIdx);
+	if (shape){
+		return shape.createdBy=='manual' ? shape : undefined;
+	}
+	// if (track.shapes[fIdx] !== undefined){
+	// 	if(track.shapes[fIdx].createdBy=="manual")
+	// 		return track.shapes[fIdx]
+	// }
+	return undefined;
+	// return track && track.shapes[fIdx].createdBy=="manual" ? track.shapes[fIdx] : undefined;
+}
+
+/**
+ * Set key shape at a given frame index
+ * @param track the track
+ * @param fIdx the frame index
+ * @param shape the shape to add
+ * @param key if the shape is a key shape (by default true)
+ */
+ export function setShape(track: TrackData, fIdx: number, shape: ShapeData, key: boolean=true) {
+	track.shapes[fIdx] = shape;
+	if(key){
+		track.shapes[fIdx].createdBy = "manual";
+	}
+	else{
+		track.shapes[fIdx].createdBy = "auto";
+	}
+}
+
+/**
+ * Get length of a track
+ * @param track the track
+ * @return the number of shapes for this track
+ */
+export function getNumShapes(track: TrackData): number {
+	return Object.keys(track.shapes).length;
+}
+
+/**
+ * Check if track has a key shape at given frame index
+ * @param track the track
+ * @param fIdx the frame index
+ * @return True if the track ahs a key shpe at this frame
+ */
+export function isKeyShape(track: TrackData, fIdx: number): boolean {
+	if (track.shapes.hasOwnProperty(fIdx)){
+		return track.shapes[fIdx].createdBy=="manual";
+	} 
+	return false;	
+}
+
+/**
+ * Get closest key frames ids (max and min bounds) for a specific frame index
+ * @param track the track where the search happens
+ * @param timestamp the frame timestamp
+ * @param key if the shape is a key shape (by default true)
+ * @return Previous (-1 if does not exist) and next (infinity) frame index
+ */
+export function getClosestFrames(track: TrackData, timestamp: number, key: boolean = true): number[] {
+	let less = -1;
+	let greater = Infinity;
+	var iskey = true;
+
+	for (const k of Object.keys(track.shapes)) {
+		const f = parseInt(k,10);
+		if (key){
+			var iskey = track.shapes[f].createdBy=='manual';
+		}		
+		if (f < timestamp && f > less && iskey) {
+			less = f;
+		}
+		else if (f > timestamp && f < greater && iskey) {
+			greater = f;
+		}
+	}
+	return [less, greater]
+}
+
+/**
+ * Get shape at a given frame index
+ * @param track the track
+ * @param timestamp the frame index
+ * @return the shape if exist, undefined otherwise
+ */
+export function getShape(track: TrackData, timestamp: number): ShapeData | null {
+	return track ? track.shapes[timestamp]: null;
+}
+// export function getShape(track: TrackData, timestamp: number): ShapeData | undefined {
 // 	return track ? track.keyShapes[fIdx] : undefined;
-// }
-
-// /**
-//  * Get key shape at a given frame index
-//  * @param track the track
-//  * @param fIdx the frame index
-//  * @param shape the shape	to add
-//  */
-// export function setKeyShape(track: TrackData, fIdx: number, shape: KeyShapeData) {
-// 	track.keyShapes[fIdx] = shape;
-// }
-
-// /**
-//  * Get length of a track
-//  * @param track the track
-//  * @return the number of key shapes for this track
-//  */
-// export function getNumKeyShapes(track: TrackData): number {
-// 	return Object.keys(track.keyShapes).length;
-// }
-
-// /**
-//  * Check if track has a key shape at given frame index
-//  * @param track the track
-//  * @param fIdx the frame index
-//  * @return True if the track ahs a key shpe at this frame
-//  */
-// export function isKeyShape(track: TrackData, fIdx: number): boolean {
-// 	return track.keyShapes.hasOwnProperty(fIdx);
-// }
-
-// /**
-//  * Get closest key frames ids (max and min bounds) for a specific frame index
-//  * @param track the track where the search happens
-//  * @param timestamp the frame timestamp
-//  * @return Previous (-1 if does not exist) and next (infinity) frame index
-//  */
-// export function getClosestFrames(track: TrackData, timestamp: number): number[] {
-// 	let less = -1;
-// 	let greater = Infinity;
-
-// 	for (const k of Object.keys(track.keyShapes)) {
-// 		const f = parseInt(k,10);
-// 		if (f < timestamp && f > less) {
-// 			less = f;
-// 		}
-// 		else if (f > timestamp && f < greater) {
-// 			greater = f;
-// 		}
-// 	}
-// 	return [less, greater]
 // }
 
 /**
@@ -82,48 +119,92 @@ export function generateKey() {
  * @param track the track processed
  * @param fId the frame timestamp where interpolation takes place
  */
-export function getShape(track: TrackData, timestamp: number): ShapeData | null {
-	return track.shapes[timestamp];
+ export function interpolate(track: TrackData, timestamp: number): {shape : ShapeData | undefined, isLast?: boolean} {
+	 // Search for bounds
+	const [id1, id2] = getClosestFrames(track, timestamp);
+	const s1 = getShape(track, id1);
+
+	// No previous frame, asking for shape before previous track trame
+	if (!s1) {
+		return { shape: undefined };
+	}
+
+	// Make a deep copy of previous shape
+	const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
+	// newKS.timestamp = timestamp;
+
+	// No next frame, asking for shape after last track frame return last one
+	const s2 = getShape(track, id2);
+	if (!s2) {
+		return { shape: newKS, isLast: timestamp > id1 };
+		// return { shape: newKS, isLast: timestamp > s1.timestamp! };
+	}
+
+	// Interpolation case
+	const w = (timestamp - id1) / (id2 - id1)
+	const len_newKS = newKS.geometry.vertices.length;
+	for (let i = 0; i < len_newKS; i++) {
+		newKS.geometry.vertices[i] = (1 - w) * s1.geometry.vertices[i] +
+			w * s2.geometry.vertices[i]
+	}
+	return { shape: newKS };
+
 }
 
 /**
- * Get shape at a given frame index
- * @param track the track
- * @param fIdx the frame index
- * @return true if delete is successfull
+ * Cpoy shape from closest key frames bounding boxes
+ * @param track the track processed
+ * @param fId the frame timestamp where interpolation takes place
  */
-// export function deleteShape(track: TrackData, fIdx: number) {
-// 	const ks = getKeyShape(track, fIdx);
-// 	if (ks) {
-// 		// If shape to remove is a key one, remove it
-// 		delete track.keyShapes[fIdx];
-// 		return true;
-// 	} else {
-// 		// Otherwise get previous frame shape and set visibility to false
-// 		const prevKS = getShape(track, fIdx - 1).keyshape;
-// 		if (prevKS) {
-// 			prevKS.isNextHidden = true;
-// 			setKeyShape(track, fIdx - 1, prevKS);
-// 			return true;
-// 		}
-// 	}
-// 	return false;
-// }
+ export function copyShape(track: TrackData, timestamp: number): ShapeData | null {
+	if (timestamp < 0)
+		return null;
+	
+	// Search for bounds
+   const [id1,] = getClosestFrames(track, timestamp);
+   const s1 = getShape(track, id1);
+   // No previous frame, asking for shape before previous track trame
+   if (!s1) {
+	   return null;
+   }
+   // Make a deep copy of previous shape
+   const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
+   // newKS.timestamp = timestamp;
+   return newKS;
+   // return { shape: newKS, isLast: timestamp > s1.timestamp! };
+}
 
-// /**
-//  * Remove keyshape from track
-//  * @param t
-//  */
-// export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
-// 	if (isKeyShape(t, fIdx)) {
-// 		deleteShape(t, fIdx);
-// 	} else {
-// 		const { keyshape } = getShape(t, fIdx);
-// 		if (keyshape) {
-// 			t.keyShapes[fIdx] = keyshape;
-// 		}
-// 	}
-// }
+export function deleteShape(track: TrackData, fIdx: number) {
+	const ks = getShape(track, fIdx);
+	if (ks) {
+		// If shape to remove is a key one, remove it
+		delete track.shapes[fIdx];
+		return true;
+	} else {
+		// Otherwise get previous frame shape 
+		const prevKS = getShape(track, fIdx - 1);
+		if (prevKS) {
+			setShape(track, fIdx - 1, prevKS);
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Remove keyshape from track
+ * @param t
+ */
+export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
+	if (isKeyShape(t, fIdx)) {
+		deleteShape(t, fIdx);
+	} else {
+		const shape = getShape(t, fIdx);
+		if (shape) {
+			t.shapes[fIdx] = shape;
+		}
+	}
+}
 
 // /**
 //  * Switch two tracks at given timestamp.
@@ -131,14 +212,20 @@ export function getShape(track: TrackData, timestamp: number): ShapeData | null 
 //  */
 // export function switchTrack(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string, fIdx: number) {
 // 	const [t1, t2] = [tracks[t1Id], tracks[t2Id]];
-// 	const ks1 = [...Object.values(t1.keyShapes)];
-// 	const ks2 = [...Object.values(t2.keyShapes)];
-// 	t1.keyShapes = ks1.filter((k) => k.timestamp < fIdx)
-// 		.concat(ks2.filter((k) => k.timestamp >= fIdx))
-// 		.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {});
-// 	t2.keyShapes = ks2.filter((k) => k.timestamp < fIdx)
-// 		.concat(ks1.filter((k) => k.timestamp >= fIdx))
-// 		.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {});
+// 	const ks1 = [...Object.values(t1.shapes)];
+// 	const ks2 = [...Object.values(t2.shapes)];
+// 	t1.shapes = ks1.filter((k) => k.timestamp! < fIdx)
+// 		.concat(ks2.filter((k) => k.timestamp! >= fIdx))
+// 		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+// 	t2.shapes = ks2.filter((k) => k.timestamp! < fIdx)
+// 		.concat(ks1.filter((k) => k.timestamp! >= fIdx))
+// 		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+// 	// t1.shapes = ks1.filter((k) => k.timestamp! < fIdx)
+// 	// 	.concat(ks2.filter((k) => k.timestamp! >= fIdx))
+// 	// 	.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+// 	// t2.shapes = ks2.filter((k) => k.timestamp! < fIdx)
+// 	// 	.concat(ks1.filter((k) => k.timestamp! >= fIdx))
+// 	// 	.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
 // }
 
 // /**
@@ -210,18 +297,18 @@ export function convertShapes(tracks: { [key: string]: TrackData }, fIdx: number
 // 	// create keyshape for current frame and previous frame
 // 	// if not already exists
 // 	[fIdx, fIdx - 1].forEach((idx) => {
-// 		const s = getShape(t, idx).keyshape;
+// 		const s = getShape(t, idx);
 // 		if (!s) {
 // 			// split is asked outside track boundaries
 // 			return;
 // 		}
-// 		t.keyShapes[idx] = s;
+// 		t.shapes[idx] = s;
 // 	});
 // 	// create new track from future boxes
-// 	const ks = [...Object.values(t.keyShapes)];
+// 	const ks = [...Object.values(t.shapes)];
 // 	const newTrack = {
 // 		id: newTrackId,
-// 		keyShapes: ks.filter((k) => k.timestamp >= fIdx)
+// 		shapes: ks.filter((k) => k.timestamp >= fIdx)
 // 			.map((k) => ({ ...k, id: newTrackId }))
 // 			.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {}),
 // 		category: t.category,
@@ -229,9 +316,9 @@ export function convertShapes(tracks: { [key: string]: TrackData }, fIdx: number
 // 	};
 // 	tracks[newTrackId] = newTrack;
 // 	// remove future boxes from current track
-// 	t.keyShapes = ks.filter((k) => k.timestamp < fIdx)
+// 	t.shapes = ks.filter((k) => k.timestamp < fIdx)
 // 		.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {});
-// 	t.keyShapes[fIdx - 1].isNextHidden = true;
+// 	// t.shapes[fIdx - 1].isNextHidden = true;
 // 	return newTrack;
 // }
 
