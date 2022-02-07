@@ -24,7 +24,7 @@ import {
 	copyShape,
 	// setKeyShape,
 	setShape,
-	// interpolate,
+	interpolate,
 	isKeyShape,
 	deleteShape,
 	removeOrAddKeyShape,
@@ -65,6 +65,11 @@ export class Tracking extends Rectangle {
 	];
 
 	protected isShiftKeyPressed: boolean = false;
+
+	// Getter of the 1st selected track ID
+	protected get selectedTrackId(){
+		return this.selectedTrackIds.values().next().value;
+	}
 
 	static get styles() {
 		return [
@@ -451,8 +456,36 @@ export class Tracking extends Rectangle {
 		}
 	}
 
-	runInterpolation(){
+	async runInterpolation(forwardMode=true){
+		const target0Id = this.selectedTrackId;
+		// Always start from key shape ? --> bouton grisé autrement
+		if (forwardMode){
+			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
+			while(this.timestamp < id2 - 1){
+				const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
+				setShape(this.tracks[target0Id], this.timestamp + 1, shape['shape']!, false);
+				this.dispatchEvent(new Event('update-tracks'));
+				await this.nextFrame();	// display
+				await this.delay(10);
+			}
+			await this.nextFrame();
+		}else{
+			const [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
+			while(this.timestamp > id1 + 1){
+				const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
+				setShape(this.tracks[target0Id], this.timestamp - 1, shape['shape']!, false);
+				this.dispatchEvent(new Event('update-tracks'));
+				await this.prevFrame();
+				await this.delay(10);
+			}
+			await this.prevFrame();
+		}
+				
 	}
+
+	protected delay(ms: number) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	};
 
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
@@ -620,14 +653,28 @@ export class Tracking extends Rectangle {
 	}
 
 	get leftPanel() {
+		var disabled1 = true;
+		var disabled2 = true;
+		if (this.selectedTrackIds.size){
+			const target0Id = this.selectedTrackId;
+			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
+			const [id1, ] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
+			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));
+			disabled1 = !(id2!= Infinity && isKeyShape(this.tracks[target0Id], this.timestamp));
+		}
+		
 		return html`
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
 						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
 		<div>
 			<p>Interpolation
-			<mwc-icon-button-toggle title="Forward interpolation" onIcon="arrow_right_alt" offIcon="arrow_right_alt"
-						@click=${() => this.runInterpolation()}></mwc-icon-button-toggle>
+			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+						?disabled=${disabled2}
+						@click=${() => this.runInterpolation(false)}></mwc-icon-button-toggle>
+			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
+						?disabled=${disabled1} 
+						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle>
 		</div>
 		`;
 	}
@@ -672,4 +719,7 @@ export class Tracking extends Rectangle {
 now we need to clic on a specific button (starting from a keyframe to another keyframe)
 difference between key shape and manual shape
 when do we save not key data? for now only during visualization
+- 2 interpolation buttons
+- 2 extrapolation buttons
+- visualize different shape/color for "manual shapes"
 */
