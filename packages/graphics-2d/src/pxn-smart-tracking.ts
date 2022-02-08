@@ -8,11 +8,10 @@
 import { customElement, html, property} from 'lit-element';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
-import { track } from '@pixano/core/lib/style';
 import { ShapeData } from './types';
 import {
 	getShape,
-	// setKeyShape
+	setShape
 } from './utils-video';
 import '@material/mwc-switch';
 
@@ -22,9 +21,6 @@ export class SmartTracking extends Tracking {
 
 	// smart tracker
 	private tracker = new Tracker();
-
-	@property({type: Boolean})
-	public isTrackTillTheEndChecked: boolean = true;
 
 	@property({type: String})
 	public model: string = 'https://raw.githubusercontent.com/pixano/pixano.github.io/master/models/track_model/model.json';
@@ -48,9 +44,15 @@ export class SmartTracking extends Tracking {
 		super.disconnectedCallback();
 	}
 
-	runTracking() {
-		if (this.isTrackTillTheEndChecked) this.trackTillTheEnd();
-		else this.trackTillNextFrame();
+	runTracking(forwardMode:boolean=true) {
+		if (this.isTrackTillTheEndChecked){
+			this.trackTillTheEnd(forwardMode);
+		}
+
+		else {
+			if (forwardMode) this.trackTillNextFrame();
+			else this.trackTillPrevFrame();
+		}
 	}
 
 	updated(changedProperties: any) {
@@ -69,7 +71,7 @@ export class SmartTracking extends Tracking {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	};
 
-	async trackTillTheEnd() {
+	async trackTillTheEnd(forwardMode:boolean=true) {
 		let stopTracking = false;
 		const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
 			if (evt.key === 'Escape') {
@@ -77,14 +79,66 @@ export class SmartTracking extends Tracking {
 			}
 		}
 		window.addEventListener('keydown', stopTrackingListenerFct);
-		while (!stopTracking && !this.isLastFrame()) {
+		if (forwardMode){
+			while (!stopTracking && !this.isLastFrame()) {
 			// update target template every 5 frames
 			await this.trackTillNextFrame();
+			}
+		}else{
+			while (!stopTracking && this.timestamp>0) {
+				// update target template every 5 frames
+				await this.trackTillPrevFrame();
+				}
 		}
+		
 		// back to edit mode after each new creation
 		this.mode = 'edit';
 
 		window.removeEventListener('keydown', stopTrackingListenerFct);
+	}
+
+	protected async trackTillPrevFrame() {
+		/// process the selected shape
+		if (this.targetShapes.size>1) {
+			console.warn("ABORT: we can only track one shape at a time")
+			return;
+		}
+
+		const currentTrackId = this.selectedTrackIds.values().next().value;
+		// const target0 = this.targetShapes.values().next().value as ShapeData;
+		const target0 = getShape(this.tracks[currentTrackId], this.timestamp)!;
+		/// get the shape to track
+		const v: number[] = target0.geometry.vertices;
+		const xmin = Math.min(v[0], v[2]);
+		const xmax = Math.max(v[0], v[2]);
+		const ymin = Math.min(v[1], v[3]);
+		const ymax = Math.max(v[1], v[3]);
+		/// pre-processing
+		const im0 = this.renderer.image; // await resizeImage(this.renderer.image, 200);
+		const x = Math.round(xmin*im0.width);
+		const y = Math.round(ymin*im0.height);
+		const w = Math.round(xmax*im0.width) - x;
+		const h = Math.round(ymax*im0.height) - y;
+		this.tracker.initBox(im0, x, y, w, h);
+
+		/// processing
+		const im1 = await (this.loader as any).peekFrame(this.frameIdx-1);
+		// im1 = await resizeImage(im1, 200);
+		const res = this.tracker.run(im1);
+		await this.prevFrame()
+
+		/// get calculated shape and take it as the new shape
+		const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[currentTrackId], this.timestamp + 1)!))
+		newShape.geometry.vertices = [
+			res[0]/im1.width,
+			res[1]/im1.height,
+			(res[0]+res[2])/im1.width,
+			(res[1]+res[3])/im1.height
+		];
+		setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
+		this.dispatchEvent(new Event('update-tracks'));
+		await this.delay(10);
+
 	}
 
 	protected async trackTillNextFrame() {
@@ -93,8 +147,9 @@ export class SmartTracking extends Tracking {
 			console.warn("ABORT: we can only track one shape at a time")
 			return;
 		}
-
-		const target0 = this.targetShapes.values().next().value as ShapeData;
+		const currentTrackId = this.selectedTrackIds.values().next().value;
+		// const target0 = this.targetShapes.values().next().value as ShapeData;
+		const target0 = getShape(this.tracks[currentTrackId], this.timestamp)!;
 		/// get the shape to track
 		const v: number[] = target0.geometry.vertices;
 		const xmin = Math.min(v[0], v[2]);
@@ -125,25 +180,22 @@ export class SmartTracking extends Tracking {
 		];
 		const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[target1.id], this.timestamp)!))
 		newShape.geometry.vertices = [...target1.geometry.vertices];
-		// setKeyShape(this.tracks[target1.id], this.timestamp, newShape);
-		this.dispatchEvent(new Event('update'));
+		setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
+		this.dispatchEvent(new Event('update-tracks'));
 		await this.delay(10);
 	}
 
 	// overide leftPanel to add tracking properties
 	get leftPanel() {
-		const checked = this.isTrackTillTheEndChecked;
 		return html`
 		<div>
 			${super.leftPanel}
-			<mwc-icon-button title="Auto track (t)"
-							@click=${() => this.runTracking()}>${track}</mwc-icon-button>
 			<div class="card">
-				<p>Continuous tracking
-				<mwc-switch ?checked=${checked}
-								title="track ones / track till the end (escape to stop tracking)"
-								@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
-								></mwc-switch></p>
+				<p>Forward/backward tracking
+				<mwc-icon-button-toggle title="Backward tracking" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+								@click=${() => this.runTracking(false)}></mwc-icon-button-toggle>
+				<mwc-icon-button-toggle title="Forward tracking" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
+								@click=${() => this.runTracking(true)}></mwc-icon-button-toggle></p>
 			</div>
 		</div>
 		`;
