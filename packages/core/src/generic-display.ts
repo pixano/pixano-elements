@@ -27,10 +27,12 @@ export abstract class GenericDisplay extends LitElement {
 	@internalProperty()
 	private _targetFrameIdx: number | null = null;
 
+	private _lastTargetFrameIdx: number | null = null;
+
 	// either use list item index as timestamp
 	// or look for timestamp value in filename
 	@property({ type: String })
-	public timestampRule: 'index' | 'filename' = 'index';
+	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
 
 	protected authorizedType: 'image' | 'pcl' | 'all' = 'all';
 
@@ -138,7 +140,8 @@ export abstract class GenericDisplay extends LitElement {
 		}
 		const maxFrameIdx = this.maxFrameIdx as number;
 		const loader = this.loader as SequenceLoader;
-		if (frameIndex >= 0 && frameIndex <= maxFrameIdx) {
+		if (frameIndex >= 0 && frameIndex <= maxFrameIdx && this._targetFrameIdx !== frameIndex) {//don't notify if nothing changes
+			this._lastTargetFrameIdx = this._targetFrameIdx;//keep the last state
 			this._targetFrameIdx = frameIndex;
 			this.playback!.current = frameIndex;
 			if (this.pendingLoad) {
@@ -151,6 +154,13 @@ export abstract class GenericDisplay extends LitElement {
 				this.notifyTimestampChanged();
 			});
 		}
+	}
+
+	/**
+	 * Get last frame index
+	 */
+	get lastFrameIdx(): number {
+		return this._lastTargetFrameIdx || 0;
 	}
 
 	public nextFrame(): Promise<void> {

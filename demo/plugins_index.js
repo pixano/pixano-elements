@@ -21,33 +21,7 @@ export const pluginsList = [// TODO: add sequences ?
 	'smart-rectangle',
 	'smart-segmentation',
 	'smart-tracking',
-	// 'sequence-rectangle',
-	// 'sequence-cuboid',
-	// 'sequence-polygon',
-	// 'sequence-keypoints',
-	// 'sequence-segmentation'
 ];
-
-
-/**
- * Return data input type for each plugin
- * @param {String} pluginName 
- */
-export const getDataType = (pluginName) => {// TODO : usefullness ?
-
-	switch (pluginName) {
-		case 'sequence-keypoints':
-		case 'sequence-rectangle':
-		case 'sequence-polygon':
-		case 'tracking':
-		case 'smart-tracking':
-		case 'sequence-segmentation': return 'sequence_image';
-		case 'sequence-cuboid': return 'sequence_pcl';
-		case 'cuboid-editor': return 'pcl';
-		default:
-		case 'rectangle': return 'image'; // PluginRectangle.dataType;
-	}
-}
 
 /**
  * Default label schema values for each plugin.
@@ -108,7 +82,6 @@ export const defaultLabelValues = (pluginName) => {
 				default: 'classification'
 			};
 
-		case 'sequence-rectangle':
 		case 'smart-rectangle':
 		case 'rectangle':
 		case 'cuboid-editor':
