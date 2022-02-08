@@ -120,8 +120,23 @@ export function getShape(track: TrackData, timestamp: number): ShapeData | null 
  * @param fId the frame timestamp where interpolation takes place
  */
  export function interpolate(track: TrackData, timestamp: number): {shape : ShapeData | undefined, isLast?: boolean} {
-	 // Search for bounds
-	const [id1, id2] = getClosestFrames(track, timestamp);
+	// Search for bounds
+   const [id1, id2] = getClosestFrames(track, timestamp);
+
+   if(id1 == -1){
+	   const [, id0] = getClosestFrames(track, timestamp, false);
+	   const s0 = getShape(track, id0);
+	   const newKS0 = JSON.parse(JSON.stringify(s0)) as ShapeData;
+	   return { shape: newKS0};
+
+   }
+   if( id2 == Infinity){
+	const [id0,] = getClosestFrames(track, timestamp, false);
+	const s0 = getShape(track, id0);
+	const newKS0 = JSON.parse(JSON.stringify(s0)) as ShapeData;
+	return { shape: newKS0};
+   }
+
 	const s1 = getShape(track, id1);
 
 	// No previous frame, asking for shape before previous track trame
@@ -161,17 +176,23 @@ export function getShape(track: TrackData, timestamp: number): ShapeData | null 
 		return null;
 	
 	// Search for bounds
-   const [id1,] = getClosestFrames(track, timestamp);
+   const [id1, id2] = getClosestFrames(track, timestamp, false);
    const s1 = getShape(track, id1);
+   const s2 = getShape(track, id2);
    // No previous frame, asking for shape before previous track trame
-   if (!s1) {
-	   return null;
+   if (s1) {
+	   // Make a deep copy of previous shape
+		const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
+		// newKS.timestamp = timestamp;
+		return newKS;
    }
-   // Make a deep copy of previous shape
-   const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
-   // newKS.timestamp = timestamp;
-   return newKS;
-   // return { shape: newKS, isLast: timestamp > s1.timestamp! };
+   else if (s2){
+	   // Make a deep copy of next shape
+		const newKS = JSON.parse(JSON.stringify(s2)) as ShapeData;
+		// newKS.timestamp = timestamp;
+		return newKS;
+   }
+   else return null;
 }
 
 export function deleteShape(track: TrackData, fIdx: number) {
@@ -201,7 +222,7 @@ export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
 	} else {
 		const shape = getShape(t, fIdx);
 		if (shape) {
-			t.shapes[fIdx] = shape;
+			setShape(t, fIdx, shape)			
 		}
 	}
 }

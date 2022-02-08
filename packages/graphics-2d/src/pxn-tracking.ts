@@ -46,6 +46,9 @@ import { style2d } from './style';
 @customElement('pxn-tracking' as any)
 export class Tracking extends Rectangle {
 
+	@property({type: Boolean})
+	public isTrackTillTheEndChecked: boolean = true;
+
 	@property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
 
@@ -460,20 +463,26 @@ export class Tracking extends Rectangle {
 		const target0Id = this.selectedTrackId;
 		// Always start from key shape ? --> bouton grisé autrement
 		if (forwardMode){
-			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
+			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
+			if (this.isTrackTillTheEndChecked) id2 = this.maxFrameIdx! + 1;
 			while(this.timestamp < id2 - 1){
-				const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
-				setShape(this.tracks[target0Id], this.timestamp + 1, shape['shape']!, false);
+				if(!isKeyShape(this.tracks[target0Id], this.timestamp + 1)){
+					const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
+					setShape(this.tracks[target0Id], this.timestamp + 1, shape['shape']!, false);
+				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
 				await this.delay(10);
 			}
 			await this.nextFrame();
 		}else{
-			const [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
+			var [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
+			if (this.isTrackTillTheEndChecked) id1 = - 1;
 			while(this.timestamp > id1 + 1){
-				const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
-				setShape(this.tracks[target0Id], this.timestamp - 1, shape['shape']!, false);
+				if(!isKeyShape(this.tracks[target0Id], this.timestamp - 1)){
+					const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
+					setShape(this.tracks[target0Id], this.timestamp - 1, shape['shape']!, false);
+				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
 				await this.delay(10);
@@ -653,6 +662,7 @@ export class Tracking extends Rectangle {
 	}
 
 	get leftPanel() {
+		const checked = this.isTrackTillTheEndChecked;
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
@@ -662,19 +672,27 @@ export class Tracking extends Rectangle {
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));
 			disabled1 = !(id2!= Infinity && isKeyShape(this.tracks[target0Id], this.timestamp));
 		}
+		if (checked) disabled1=disabled2=false;
 		
 		return html`
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
 						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div>
+		<div class="card">
+			<p>Continuous tracking
+			<mwc-switch ?checked=${checked}
+							title="track ones / track till the end (escape to stop tracking)"
+							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
+							></mwc-switch></p>
+		</div>
+		<div class="card">
 			<p>Interpolation
-			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+			<mwc-icon-button-toggle title="Backward interpolation" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
 						?disabled=${disabled2}
 						@click=${() => this.runInterpolation(false)}></mwc-icon-button-toggle>
 			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
 						?disabled=${disabled1} 
-						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle>
+						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle></p>
 		</div>
 		`;
 	}
@@ -722,4 +740,5 @@ when do we save not key data? for now only during visualization
 - 2 interpolation buttons
 - 2 extrapolation buttons
 - visualize different shape/color for "manual shapes"
+- add continuous tracking/interpolation mode
 */
