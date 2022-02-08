@@ -131,7 +131,22 @@ Run the demo locally:
 npx serve demo
 ```
 
-This demo takes your local modifications into account.
+This demo takes your local modifications into account, thanks to a bootstrap step.
+
+After some modifications, test them by rebuilding:
+```bash
+npm run build
+npx serve demo
+```
+
+If you modified the dependencies, you better clean the project before rebuilding:
+
+```bash
+npm run clearall
+npm run deps
+npm run build
+npx serve demo
+```
 
 ### Getting started
 
