@@ -19,16 +19,6 @@
     "webpack-cli": "3.3.12"
   },
   "dependencies": {
-    "@material/mwc-button": "0.19.1",
-    "@material/mwc-checkbox": "0.19.1",
-    "@material/mwc-dialog": "0.19.1",
-    "@material/mwc-formfield": "0.19.1",
-    "@material/mwc-icon-button": "0.19.1",
-    "@material/mwc-icon-button-toggle": "0.19.1",
-    "@material/mwc-list": "0.19.1",
-    "@material/mwc-ripple": "0.19.1",
-    "@material/mwc-select": "0.19.1",
-    "@material/mwc-switch": "0.19.1",
     "@pixano/ai": "0.6.1",
     "@pixano/core": "0.6.1",
     "lit-element": "2.4.0",
