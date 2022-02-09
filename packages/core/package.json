@@ -14,7 +14,20 @@
     "typescript": "3.8.3"
   },
   "dependencies": {
+    "@material/mwc-button": "0.19.1",
+    "@material/mwc-checkbox": "0.19.1",
+    "@material/mwc-dialog": "0.19.1",
+    "@material/mwc-formfield": "0.19.1",
+    "@material/mwc-icon-button": "0.19.1",
+    "@material/mwc-icon-button-toggle": "0.19.1",
+    "@material/mwc-line-ripple": "0.19.1",
+    "@material/mwc-list": "0.19.1",
+    "@material/mwc-notched-outline": "0.19.1",
+    "@material/mwc-ripple": "0.19.1",
+    "@material/mwc-select": "0.19.1",
     "@material/mwc-slider": "0.19.1",
+    "@material/mwc-switch": "0.19.1",
+    "@material/mwc-textfield": "0.19.1",
     "echarts": "^5.3.0",
     "lit-element": "2.4.0",
     "on-change": "^2.0.1"

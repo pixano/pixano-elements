@@ -6,15 +6,6 @@
  */
 
 import { css, customElement, html, property } from 'lit-element';
-import '@material/mwc-icon-button';
-import '@material/mwc-icon-button-toggle';
-import '@material/mwc-button';
-import '@material/mwc-select';
-import '@material/mwc-list/mwc-list';
-import '@material/mwc-list/mwc-list-item';
-import '@material/mwc-dialog';
-import '@material/mwc-checkbox';
-import '@material/mwc-formfield';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';

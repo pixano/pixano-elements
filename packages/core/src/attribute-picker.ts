@@ -6,6 +6,7 @@
 */
 
 import { customElement, property, LitElement, html, css } from 'lit-element';
+import '@material/mwc-icon-button';
 import '@material/mwc-dialog';
 import '@material/mwc-checkbox';
 import '@material/mwc-formfield';

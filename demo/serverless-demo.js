@@ -97,7 +97,7 @@ export class ServerlessDemo extends LitElement {
 	setSelectedIds(newIds) {
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
-		this.attributePicker.showDetail = this.selectedIds.length;
+		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;//null when tracking
 	}
 
 	/******************* BUTTONS handlers *******************/

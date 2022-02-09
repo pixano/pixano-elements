@@ -12,25 +12,46 @@ Pixano Elements - Library of web components dedicated to data annotation tasks. 
 
 [Playcode demo](https://playcode.io/709884/) ([smart-segmentation](https://playcode.io/723293/), [cuboid](https://playcode.io/709984/), [rectangle](https://playcode.io/709884/), [smart-rectangle](https://playcode.io/738813/))
 
-[Website demos](https://pixano.cea.fr/3d-bounding-box/)
+[Website demos](https://pixano.github.io/demo/demo)
 
 [Features video](https://www.youtube.com/watch?v=z5T2HhnugJo)
 
 Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.
 
 ## Table of content
+  * [Components overview](#components-overview)
   * [Requirements](#requirements)
       - [Node installation on Windows](#node-installation-on-windows)
       - [Node installation on Ubuntu](#node-installation-on-ubuntu)
       - [Other Operating Systems](#other-operating-systems)
-  * [Run demo](#run-demo)
-    + [Components overview](#components-overview)
+  * [Build and run the overall demo](#build-and-run-the-overall-demo)
   * [Documentation](#documentation)
   * [Contributing](#contributing)
     + [Getting started](#getting-started)
     + [Pull request](#pull-request)
   * [Change log](#change-log)
   * [License](#license)
+
+## Components overview
+
+The Pixano Elements are divided into `packages`. Each package can be installed independantly from [NPM](https://www.npmjs.com/) using the following command:
+
+```
+npm install @pixano/graphics-2d
+```
+
+Each package can contain multiple web components which are regrouped by affinity.
+
+
+| Component | Status | Demo |
+| ----------| -------| -----|
+| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/bounding-box/) |
+| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/polygon/) |
+| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/pixelwise/) |
+| [`<pxn-keypoints>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/keypoint/) |
+| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-annotation/) |
+| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [demo](http://pixano.cea.fr/3d-bounding-box/) |
+
 
 ## Requirements
 
@@ -62,39 +83,27 @@ node --version
 # v8.11.3
 
 npm --version
-# 6.1.0
+# 6.10.0
 ```
+#### note about npm version
+If you need to install a specific version of npm, you can use the following command line:
+```bash
+npm install -g npm@6.10.0
+```
+> If you encounter "EACCES: permission denied" error message, please follow [this guide](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
 
-## Run demo
 
+## Build and run the overall demo
+An online serverless demo is available on our dedicated [website](https://pixano.github.io/demo/demo).
+
+If you want to build the latests version, it's easy:
 ```
 git clone https://github.com/pixano/pixano-elements.git
-cd pixano-elements/demo
-npm i
+cd pixano-elements
+npm run deps
 npm run build
-npx serve
+npx serve demo
 ```
-
-
-### Components overview
-
-The Pixano Elements are divided into `packages`. Each package can be installed independantly from [NPM](https://www.npmjs.com/) using the following command:
-
-```
-npm install @pixano/graphics-2d
-```
-
-Each package can contain multiple web components which are regrouped by affinity.
-
-
-| Component | Status | Demo |
-| ----------| -------| -----|
-| [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/bounding-box/) |
-| [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/polygon/) |
-| [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/pixelwise/) |
-| [`<pxn-keypoints>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/keypoint/) |
-| [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-annotation/) |
-| [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [demo](http://pixano.cea.fr/3d-bounding-box/) |
 
 ## Documentation
 
@@ -112,22 +121,31 @@ Clone and setup the repo:
 ```bash
 git clone https://github.com/pixano/pixano-elements.git
 cd pixano-elements
-npm i
-npm run bootstrap
+npm run deps
 npm run build
 ```
 
-To run the demo locally:
+Run the demo locally:
 
 ```bash
 npx serve demo
 ```
 
-If you are modifiing multiple elements, you should use a fully local install:
+This demo takes your local modifications into account, thanks to a bootstrap step.
+
+After some modifications, test them by rebuilding:
 ```bash
-npm run installLocalElements
-npm run bootstrap
 npm run build
+npx serve demo
+```
+
+If you modified the dependencies, you better clean the project before rebuilding:
+
+```bash
+npm run clearall
+npm run deps
+npm run build
+npx serve demo
 ```
 
 ### Getting started

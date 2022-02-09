@@ -14,8 +14,6 @@ import {
 	getShape,
 	setKeyShape
 } from './utils-video';
-import '@material/mwc-switch';
-
 
 @customElement('pxn-smart-tracking' as any)
 export class SmartTracking extends Tracking {
