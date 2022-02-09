@@ -678,19 +678,19 @@
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
 						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card">
-			<p>Continuous tracking
+		<div class="card" title="track until next keyframe or till the end (escape to stop tracking)">
+			<p>Infinite tracking
 			<mwc-switch ?checked=${checked}
-							title="track ones / track till the end (escape to stop tracking)"
+							
 							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
 							></mwc-switch></p>
 		</div>
 		<div class="card">
-			<p>Interpolation
-			<mwc-icon-button-toggle title="Backward interpolation" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+			<p> Linear propagation
+			<mwc-icon-button-toggle title="Backward" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
 						?disabled=${disabled2}
 						@click=${() => this.runInterpolation(false)}></mwc-icon-button-toggle>
-			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
+			<mwc-icon-button-toggle title="Forward" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
 						?disabled=${disabled1} 
 						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle></p>
 		</div>

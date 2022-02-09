@@ -129,7 +129,7 @@ export class Tracking extends Rectangle {
 		this.handleTrackSelection();
 
 		this.addEventListener('timestamp', () => {
-			console.log("Track", this.tracks);
+			// console.log("Track", this.tracks);
 			this.drawTracks();
 		});
 		this.addEventListener('create', (e) => {
