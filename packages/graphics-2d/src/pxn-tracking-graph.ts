@@ -137,11 +137,10 @@
 			// else create a new track
 			if (this.selectedTrackIds.size) {
 				// add keyshape
-				const currentTrackId = this.selectedTrackIds.values().next().value;
 				this.addNewKeyShapes([
 					{
 						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: currentTrackId
+						id: this.selectedTrackId
 					}
 				]);
 			} else {
@@ -149,8 +148,8 @@
 				this.newTrack(e);
 			}
 		});
+		// The tracks have been updated
 		this.addEventListener('update-tracks', () => {
-			this.drawTracks();
 			this.requestUpdate();
 		});
 		this.addEventListener('selection-track', () => {
@@ -161,8 +160,8 @@
 			this.drawTracks();
 			this.requestUpdate();
 		});
+		// when updating instance, create or edit keyshape
 		this.addEventListener('update', () => {
-			// when updating instance, create or edit keyshape
 			this.addNewKeyShapes([...this.targetShapes]);
 		});
 		this.addEventListener('selection', () => {
@@ -389,13 +388,11 @@
 
 	addNewKeyShapes(shapes: ShapeData[]) {
 		shapes.forEach((s) => {
-			const tId = [...this.selectedTrackIds].find((id) => id === s.id);
-			if (tId) {
-				setShape(this.tracks[tId], this.timestamp, { ...getShape(this.tracks[tId], this.timestamp), ...s });
+			if (this.tracks[s.id]) {
+				setShape(this.tracks[s.id], this.timestamp, { ...getShape(this.tracks[s.id], this.timestamp), ...s }, true);
 			}
 		});
-		this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
-		this.requestUpdate();
+		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
 	}
 
 	/**
