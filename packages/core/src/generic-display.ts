@@ -51,6 +51,12 @@ export abstract class GenericDisplay extends LitElement {
 	get playback() {
 		return this.shadowRoot?.querySelector('playback-control');
 	}
+	/**
+	 * Returns the timeline element.
+	 */
+	get timeLine() {
+		return this.shadowRoot?.querySelector('pxn-sequence-timeline');
+	}
 
 	public static get styles() {
 		return [genericStyles];

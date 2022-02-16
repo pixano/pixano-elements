@@ -3,6 +3,7 @@
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
 */
+// TODO : fuse selectedShapeIds (canvas2d) and selectedIds (here)
 // TODO: use redux to store history of attributes ? Usefull for ctrl-z.
 
 
@@ -65,7 +66,10 @@ export class ServerlessDemo extends LitElement {
 		this.isOpenedPolygon = true;//for pxn-polygon
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 		this.tracks = {};//for pxn-tracking
-		this.sequence_annotations = [];
+		//when in an image sequence or a video:
+		this.sequence_annotations = [];//overall annotations: each image of the sequence has its own annotations array
+		this.sequence_currentTrackNum = -1;//current tracknum
+		this.sequence_nbTracks = 0;
 
 
 		// @property({ type: Object })
@@ -74,6 +78,8 @@ export class ServerlessDemo extends LitElement {
 
 		// track.keyShapes[numframe] = shape;
 	}
+
+	/******************* Utility functions *******************/
 
 	/**
 	 * Initialize / reinitialize annotations
@@ -91,14 +97,25 @@ export class ServerlessDemo extends LitElement {
 	setAnnotations(newAnnotations) {
 		console.log("prev nnotation=",this.annotations);
 		console.log("newAnnotation=",newAnnotations);
+		if (this.element.isSequence) console.log("prev seq=",this.sequence_annotations[this.element.frameIdx].annotations);
 		this.annotations = newAnnotations;
+		if (this.element.isSequence) this.sequence_annotations[this.element.frameIdx].annotations = newAnnotations;
+		if (this.element.isSequence) console.log("seq=",this.sequence_annotations[this.element.frameIdx].annotations);
+		if (this.element.isSequence) this.element.timeLine.sequenceAnnotations2timelineData = this.sequence_annotations;//update timeline
 	}
 
 	setSelectedIds(newIds) {
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
 		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;//null when tracking
+		// // if (this.selectedIds!==1) this.sequence_currentTrackNum = -1;//if multiple objects are selected, we don't have a tracknum to manage
+		// if (this.selectedIds===1) this.sequence_currentTrackNum = this.element.tracknum;
+		// else this.sequence_currentTrackNum = -1;//if multiple objects are selected, we don't have a tracknum to manage
 	}
+
+	// updateSequenceAnnotations() {
+		
+	// }
 
 	/******************* BUTTONS handlers *******************/
 
@@ -143,13 +160,26 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
-		if (this.element.isSequence) {//each time we go from one image to another or at sequence initialization
+		if (this.element.isSequence) {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
 			this.setSelectedIds([]);
-			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
+			//first time on this video => initialize annotations
+			if (!this.sequence_annotations.length) {
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
 			}
+
+
+			// // 0) manage selected ids and trackNum and update timeline
+			// if (this.selectedIds.length===1) {// continue on the same tracklet
+			// 	console.log("same tracklet=",this.sequence_currentTrackNum);
+			// } else {// if multiple objects are selected, we don't have a tracknum to manage
+			// 	this.setSelectedIds([]);
+			// 	this.sequence_currentTrackNum = -1;
+			// }
+			// this.element.timeLine.sequenceAnnotations2timelineData = this.sequence_annotations;//update timeline
+
+
 			// 1) get previous frame annotations into sequence annotations
 			this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
 			// 2) set new frame annotations to the corresponding annotations in sequence annotations
@@ -208,6 +238,7 @@ export class ServerlessDemo extends LitElement {
 		const newObject = evt.detail;
 		// this.mode = 'edit';
 		console.log("onCreate", evt.detail.id);
+		console.log("this.selectedIds au moment du create=",this.selectedIds);
 		let shapes;
 		switch (this.chosenPlugin) {
 			case 'classification':
@@ -217,6 +248,7 @@ export class ServerlessDemo extends LitElement {
 			case 'rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
+				console.log("newObject=",newObject);
 				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
 				// add attributes to object without deep copy
 				Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
@@ -224,7 +256,20 @@ export class ServerlessDemo extends LitElement {
 				});
 				newObject.color = this.attributePicker._colorFor(newObject.category);
 				// add timestamp to object
-				if (this.element.isSequence) newObject.timestamp = this.targetFrameIdx;
+				if (this.element.isSequence) {
+					newObject.timestamp = this.element.frameIdx;
+					if (this.annotations.find(annotation => annotation.tracknum===this.sequence_currentTrackNum)) {// => this is a new track
+						this.sequence_currentTrackNum = this.sequence_nbTracks;
+						this.sequence_nbTracks++;
+					}
+					// si une track avec ce numéro existe déjà dans cette frame OU aucune track sélectionnée
+					else if ((this.selectedIds.length) ||//if a previous object was selected OR
+						(this.sequence_currentTrackNum === -1)) {//if no track is selected => this is a new track
+						this.sequence_currentTrackNum = this.sequence_nbTracks;
+						this.sequence_nbTracks++;
+					}//else the continue on the same tracklet (i.e. a track was selected and we went to a new image)
+					newObject.tracknum = this.sequence_currentTrackNum;
+				}
 				// set new shapes
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
@@ -241,7 +286,17 @@ export class ServerlessDemo extends LitElement {
 				});
 				newObject.color = this.attributePicker._colorFor(newObject.category);
 				// add timestamp to object
-				if (this.element.isSequence) newObject.timestamp = this.frameIdx;
+				if (this.element.isSequence) {
+					newObject.timestamp = this.element.frameIdx;
+					if ((this.selectedIds.length) ||//if a previous object was selected OR
+						(this.annotations.find(annotation => annotation.tracknum===this.sequence_currentTrackNum)) ||//if a track whith the same track number already exists inthis frame OR
+						(this.sequence_currentTrackNum === -1))//if no track is selected
+						{// => this is a new track
+							this.sequence_currentTrackNum = this.sequence_nbTracks;
+							this.sequence_nbTracks++;
+					}//else the continue on the same tracklet (i.e. a track was selected and we went to a new image)
+					newObject.tracknum = this.sequence_currentTrackNum;
+				}
 				// set new shapes
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
@@ -303,6 +358,7 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onSelection(evt) {
 		console.log("onSelection");
+		console.log("this.selectedIds au moment du select=",this.selectedIds);
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
@@ -312,27 +368,37 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 			case 'polygon':
 				this.setSelectedIds(evt.detail);
-				if (this.selectedIds && this.selectedIds.length) {
+				console.log("evt.detail select=",evt.detail);
+				if (this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
-				}
+
+					if (this.element.isSequence) {
+						console.log("this.sequence_currentTrackNum avant =",this.sequence_currentTrackNum);
+						console.log("this.selectedIds après select=",this.selectedIds);
+						if (this.selectedIds.length===1) {
+							console.log("shape id à chercher=",this.selectedIds[0]);
+							const shape = [...this.element.shapes].find(shape => shape.id===this.selectedIds[0]);//get shape by id
+							this.sequence_currentTrackNum = shape.tracknum;//TODO: this.element.selectedShapes[0]
+						} else this.sequence_currentTrackNum = -1;//if multiple objects are selected, deselect track
+						console.log("this.sequence_currentTrackNum =",this.sequence_currentTrackNum);
+					}
+
+				} else if (this.element.isSequence) this.sequence_currentTrackNum = -1;//if nothing is selected, deselect track
 				break;
 			case 'segmentation':
 			case 'smart-segmentation':
 				this.setSelectedIds(evt.detail);
-				if (this.selectedIds) {//only one id at a time for segmentation
+				if (this.selectedIds.length) {//only one id at a time for segmentation
 					const annot = this.annotations.filter((a) => JSON.stringify(this.selectedIds)===(a.id));// search the corresponding id 
 					const common = commonJson(annot);
 					this.attributePicker.setAttributes(common);
-				} else {
-					// if null, nothing is selected
-					this.setSelectedIds([]);
 				}
 				break;
 			case 'cuboid-editor':
 				this.setSelectedIds(evt.detail.map((p) => p.id));
-				if (this.selectedIds && this.selectedIds.length) {
+				if (this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);

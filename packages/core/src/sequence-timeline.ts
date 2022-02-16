@@ -11,7 +11,7 @@
  * Tip to ease development: use an example like https://echarts.apache.org/examples/en/editor.html?c=line-draggable&lang=ts and edit it. When finished, adapt to this typescript class.
  */
 // TODO: share real data
-// TODO: synchronize width with playback-control
+// TODO: synchronize width with playback-control OR replace the slider by a modified dataZoom
 // TODO: adapt datazoom or delete it
 // TODO: add a button to expend : only display the current track by default, change height and display 10 or more when clicking on this button
 
@@ -72,6 +72,7 @@ export class SequenceTimeline extends LitElement {
 	/**
 	 * Data to be displayed
 	 */
+	// @property({ type: String })
 	private colordata = 'red';
 	private data = [
 		[5, 0, frameAuthor.MANUAL],
@@ -89,6 +90,37 @@ export class SequenceTimeline extends LitElement {
 		[16, 1, frameAuthor.MANUAL]
 	];
 	private dataConcat = [this.data, this.data2];
+
+
+	/**
+	 * Compute data to be displayed by the timeline from the fulle sequence_annotations
+	 */
+	set sequenceAnnotations2timelineData(sequence_annotations: []) {
+		//TODO : classe pour couleur, tracknum pour ligne
+		var newData:any[][] = [];
+		var newData2:any[][] = [];
+		console.log("sequence_annotations=",sequence_annotations);
+		sequence_annotations.forEach((frame:any) => {//for each frame annotations
+			console.log("frame=",frame);
+			console.log("annotations=",frame.annotations);
+			var numFrame = frame.timestamp;//inutile de passer par timestamp si je fait un for classique
+			for (var i=0; i<frame.annotations.length ; i++) {
+				console.log("i=",i);
+				var category = frame.annotations[i].category;//string !!! => convert OR use strings ?
+				console.log("category=",category);
+				console.log("tracknum=",frame.annotations[i].tracknum);
+				if (frame.annotations[i].tracknum===0) newData.push([numFrame, category, frameAuthor.MANUAL]);
+				else newData2.push([numFrame, category, frameAuthor.MANUAL]);
+				//TODO: vérif : if two objects with same numFrame, error, shoucld not happen
+				// if (category==='class1') newData.push([numFrame, category, frameAuthor.MANUAL]);
+				// else newData2.push([numFrame, category, frameAuthor.MANUAL]);
+			}
+		});
+		console.log("newData=",newData);
+		console.log("newData2=",newData2);
+		var newDataConcat = [newData, newData2];
+		console.log("newDataConcat=",newDataConcat);
+	}
 
 	/**
 	 * Main definition of the timeline using echarts
@@ -274,8 +306,10 @@ export class SequenceTimeline extends LitElement {
 
 	render() {
 		console.log("pxn-sequence-timeline render");
-		return html`<div id="container-pxn-sequence-timeline" style="height: 100%; width: 100%"></div>
-		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>`;
+		return html`
+			<div id="container-pxn-sequence-timeline" style="height: 100%; width: 100%"></div>
+			<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>
+			`;
 	}
 
 }
