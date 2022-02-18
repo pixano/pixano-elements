@@ -235,17 +235,20 @@ export abstract class GenericDisplay extends LitElement {
 	 */
 	render() {
 		return html`
-				<div id="container">
-					${this.display()}
-					<slot name="slider" id="slot">
-						<div style="display: ${this.isSequence ? 'block' : 'none'};">
-							<pxn-sequence-timeline style="display: ${this.isSequence ? 'flex' : 'none'}; height: 50px; width: 100%"></pxn-sequence-timeline>
-							<playback-control @update=${this.onSliderChange}
-																		style="display: ${this.isSequence ? 'flex' : 'none'};"
-																		max=${this.maxFrameIdx}></playback-control>
-						</div>
-					</slot>
-				</div>
-				`;
+			<div id="container">
+				${this.display()}
+				<slot name="slider" id="slot">
+					${this.sequenceControl}
+				</slot>
+			</div>
+			`;
+	}
+
+	get sequenceControl() {
+		if (this.isSequence) return html`
+				<pxn-sequence-timeline></pxn-sequence-timeline>
+				<playback-control @update=${this.onSliderChange} max=${this.maxFrameIdx}></playback-control>
+			`;
+		else return html``;
 	}
 }

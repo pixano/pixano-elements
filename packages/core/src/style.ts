@@ -123,9 +123,11 @@ export const genericStyles = css`
 	[name="slider"] > div {
 		display: flex;
 	}
+	pxn-sequence-timeline {
+		height: 100px;
+	}
 	playback-control {
 		height: 50px;
-		background: #f9f9f9;
 		color: var(--font-color);
 	}
 `;
