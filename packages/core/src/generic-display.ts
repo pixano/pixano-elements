@@ -207,6 +207,18 @@ export abstract class GenericDisplay extends LitElement {
 		this.frameIdx = evt.detail;
 	}
 
+	onTimelineClick(evt: CustomEvent) {
+		console.log("onTimelineClick appelé !!!!!");
+		console.log("evt=",evt);
+		// 1) go to selected frame
+		this.frameIdx = evt.detail.frame;
+		// 2) select the corresponding shape
+		console.log("select id ",[evt.detail.id]);
+		console.log("we have to implement a generic slect function in generic-display and call it from here");//TODO
+		// this.notifySelection([evt.detail.id]);
+		// this.dispatchEvent(new CustomEvent('selection', { detail:  [evt.detail.id] }));//TODO : does not realy select + wait for frame change = use promise
+	}
+
 	get isSequence() {
 		return this.loader instanceof SequenceLoader;
 	}
@@ -246,7 +258,7 @@ export abstract class GenericDisplay extends LitElement {
 
 	get sequenceControl() {
 		if (this.isSequence) return html`
-				<pxn-sequence-timeline></pxn-sequence-timeline>
+				<pxn-sequence-timeline @clickOnData=${this.onTimelineClick} ></pxn-sequence-timeline>
 				<playback-control @update=${this.onSliderChange} max=${this.maxFrameIdx}></playback-control>
 			`;
 		else return html``;

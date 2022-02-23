@@ -95,27 +95,20 @@ export class ServerlessDemo extends LitElement {
 	 * @param {Object} newAnnotations
 	 */
 	setAnnotations(newAnnotations) {
-		console.log("prev nnotation=",this.annotations);
-		console.log("newAnnotation=",newAnnotations);
-		if (this.element.isSequence) console.log("prev seq=",this.sequence_annotations[this.element.frameIdx].annotations);
+		// console.log("prev nnotation=",this.annotations);
+		// console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
-		if (this.element.isSequence) this.sequence_annotations[this.element.frameIdx].annotations = newAnnotations;
-		if (this.element.isSequence) console.log("seq=",this.sequence_annotations[this.element.frameIdx].annotations);
-		if (this.element.isSequence) this.element.timeLine.sequenceAnnotations2timelineData = this.sequence_annotations;//update timeline
+		if (this.element.isSequence) {
+			this.sequence_annotations[this.element.frameIdx].annotations = newAnnotations;
+			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
+		}
 	}
 
 	setSelectedIds(newIds) {
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
 		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;//null when tracking
-		// // if (this.selectedIds!==1) this.sequence_currentTrackNum = -1;//if multiple objects are selected, we don't have a tracknum to manage
-		// if (this.selectedIds===1) this.sequence_currentTrackNum = this.element.tracknum;
-		// else this.sequence_currentTrackNum = -1;//if multiple objects are selected, we don't have a tracknum to manage
 	}
-
-	// updateSequenceAnnotations() {
-		
-	// }
 
 	/******************* BUTTONS handlers *******************/
 
@@ -168,18 +161,6 @@ export class ServerlessDemo extends LitElement {
 					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
 			}
-
-
-			// // 0) manage selected ids and trackNum and update timeline
-			// if (this.selectedIds.length===1) {// continue on the same tracklet
-			// 	console.log("same tracklet=",this.sequence_currentTrackNum);
-			// } else {// if multiple objects are selected, we don't have a tracknum to manage
-			// 	this.setSelectedIds([]);
-			// 	this.sequence_currentTrackNum = -1;
-			// }
-			// this.element.timeLine.sequenceAnnotations2timelineData = this.sequence_annotations;//update timeline
-
-
 			// 1) get previous frame annotations into sequence annotations
 			this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
 			// 2) set new frame annotations to the corresponding annotations in sequence annotations
@@ -248,42 +229,21 @@ export class ServerlessDemo extends LitElement {
 			case 'rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
-				console.log("newObject=",newObject);
-				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
-				// add attributes to object without deep copy
-				Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
-					newObject[key] = JSON.parse(JSON.stringify(value));
-				});
-				newObject.color = this.attributePicker._colorFor(newObject.category);
-				// add timestamp to object
-				if (this.element.isSequence) {
-					newObject.timestamp = this.element.frameIdx;
-					if (this.annotations.find(annotation => annotation.tracknum===this.sequence_currentTrackNum)) {// => this is a new track
-						this.sequence_currentTrackNum = this.sequence_nbTracks;
-						this.sequence_nbTracks++;
-					}
-					// si une track avec ce numéro existe déjà dans cette frame OU aucune track sélectionnée
-					else if ((this.selectedIds.length) ||//if a previous object was selected OR
-						(this.sequence_currentTrackNum === -1)) {//if no track is selected => this is a new track
-						this.sequence_currentTrackNum = this.sequence_nbTracks;
-						this.sequence_nbTracks++;
-					}//else the continue on the same tracklet (i.e. a track was selected and we went to a new image)
-					newObject.tracknum = this.sequence_currentTrackNum;
-				}
-				// set new shapes
-				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
-				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
-				this.setAnnotations(shapes);
-				break;
 			case 'smart-rectangle':
 				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
 				// add attributes to object without deep copy
-				Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
-					// do not overwrite category if it was automatically found
-					if (key != 'category' || !newObject.category) {
+				if (this.chosenPlugin==='smart-rectangle') {
+					Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
+						// do not overwrite category if it was automatically found
+						if (key != 'category' || !newObject.category) {
+							newObject[key] = JSON.parse(JSON.stringify(value));
+						}
+					});
+				} else {
+					Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
 						newObject[key] = JSON.parse(JSON.stringify(value));
-					}
-				});
+					});
+				}
 				newObject.color = this.attributePicker._colorFor(newObject.category);
 				// add timestamp to object
 				if (this.element.isSequence) {
@@ -375,14 +335,14 @@ export class ServerlessDemo extends LitElement {
 					this.attributePicker.setAttributes(common);
 
 					if (this.element.isSequence) {
-						console.log("this.sequence_currentTrackNum avant =",this.sequence_currentTrackNum);
-						console.log("this.selectedIds après select=",this.selectedIds);
+						// console.log("this.sequence_currentTrackNum avant =",this.sequence_currentTrackNum);
+						// console.log("this.selectedIds après select=",this.selectedIds);
 						if (this.selectedIds.length===1) {
-							console.log("shape id à chercher=",this.selectedIds[0]);
+							// console.log("shape id à chercher=",this.selectedIds[0]);
 							const shape = [...this.element.shapes].find(shape => shape.id===this.selectedIds[0]);//get shape by id
 							this.sequence_currentTrackNum = shape.tracknum;//TODO: this.element.selectedShapes[0]
 						} else this.sequence_currentTrackNum = -1;//if multiple objects are selected, deselect track
-						console.log("this.sequence_currentTrackNum =",this.sequence_currentTrackNum);
+						// console.log("this.sequence_currentTrackNum =",this.sequence_currentTrackNum);
 					}
 
 				} else if (this.element.isSequence) this.sequence_currentTrackNum = -1;//if nothing is selected, deselect track

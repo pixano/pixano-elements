@@ -10,10 +10,10 @@
  * - doc for the API: https://echarts.apache.org/en/api.html
  * Tip to ease development: use an example like https://echarts.apache.org/examples/en/editor.html?c=line-draggable&lang=ts and edit it. When finished, adapt to this typescript class.
  */
-// TODO: share real data
 // TODO: synchronize width with playback-control OR replace the slider by a modified dataZoom
 // TODO: adapt datazoom or delete it
 // TODO: add a button to expend : only display the current track by default, change height and display 10 or more when clicking on this button
+// TODO: use this.myChart.resize when canvas size changes ?
 
 import { html, customElement, LitElement } from 'lit-element';
 // echarts minimal use
@@ -57,7 +57,14 @@ export enum frameAuthor {
 }
 
 /**
+ * SequenceTimeline
  * 
+ * Some explanation about data format: [numFrame, tracknum, frameAuthor]
+ * - numFrame: number, num of the frame this data bellongs to
+ * - tracknum: number, num of the track this data bellongs to
+ * - frameAuthor: frameAuthor, source/author of this data
+ * - color: color of the track
+ * - id: unique identifier of this annotation
  */
 @customElement('pxn-sequence-timeline' as any)
 export class SequenceTimeline extends LitElement {
@@ -66,60 +73,76 @@ export class SequenceTimeline extends LitElement {
 	private myChart: any;
 
 	// chart generic parameters
-	private maxNbTracks = 3;
+	private nbTracksToBeDisplayed = 3;
 	private symbolSize = 20;
 
 	/**
-	 * Data to be displayed
+	 * Compute data to be displayed by the timeline from the full sequence_annotations
+	 * 
+	 * update data to be displayed
+	 * @param {Object} sequence_annotations: annotations of whole sequence
+	 * @param {Object} colorForCategory: function to be called to get a color linked to a category
 	 */
-	// @property({ type: String })
-	private colordata = 'red';
-	private data = [
-		[5, 0, frameAuthor.MANUAL],
-		[10, 0, frameAuthor.MANUAL],
-		[11, 0, frameAuthor.INTERP],
-		[12, 0, frameAuthor.TRACKED],
-		[16, 0, frameAuthor.MANUAL]
-	];
-	private colordata2 = 'green';
-	private data2 = [
-		[2, 1, frameAuthor.MANUAL],
-		[5, 1, frameAuthor.MANUAL],
-		[10, 1, frameAuthor.MANUAL],
-		[15, 1, frameAuthor.INTERP],
-		[16, 1, frameAuthor.MANUAL]
-	];
-	private dataConcat = [this.data, this.data2];
+	sequenceAnnotations2timelineData(sequence_annotations: [], colorForCategory: Function) {
 
+		// 1) extract data to be displayed form annotations
+		var flatData: any[] = [];
+		var maxTrackNum = 0;
 
-	/**
-	 * Compute data to be displayed by the timeline from the fulle sequence_annotations
-	 */
-	set sequenceAnnotations2timelineData(sequence_annotations: []) {
-		//TODO : classe pour couleur, tracknum pour ligne
-		var newData:any[][] = [];
-		var newData2:any[][] = [];
-		console.log("sequence_annotations=",sequence_annotations);
-		sequence_annotations.forEach((frame:any) => {//for each frame annotations
-			console.log("frame=",frame);
-			console.log("annotations=",frame.annotations);
-			var numFrame = frame.timestamp;//inutile de passer par timestamp si je fait un for classique
-			for (var i=0; i<frame.annotations.length ; i++) {
-				console.log("i=",i);
-				var category = frame.annotations[i].category;//string !!! => convert OR use strings ?
-				console.log("category=",category);
-				console.log("tracknum=",frame.annotations[i].tracknum);
-				if (frame.annotations[i].tracknum===0) newData.push([numFrame, category, frameAuthor.MANUAL]);
-				else newData2.push([numFrame, category, frameAuthor.MANUAL]);
-				//TODO: vérif : if two objects with same numFrame, error, shoucld not happen
-				// if (category==='class1') newData.push([numFrame, category, frameAuthor.MANUAL]);
-				// else newData2.push([numFrame, category, frameAuthor.MANUAL]);
-			}
+		sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
+			// console.log("frame=",frame);
+			// console.log("annotations=",frame.annotations);
+			var numFrame = index;
+			frame.annotations.forEach((annotation:any) => {
+				flatData.push([numFrame, annotation.tracknum, frameAuthor.MANUAL, colorForCategory(annotation.category), annotation.id]);
+				if (annotation.tracknum>maxTrackNum) maxTrackNum = annotation.tracknum;
+			});
 		});
-		console.log("newData=",newData);
-		console.log("newData2=",newData2);
-		var newDataConcat = [newData, newData2];
-		console.log("newDataConcat=",newDataConcat);
+		// separate by track
+		var dataSeries: any[] = [];
+		for (var i=0; i<=maxTrackNum ; i++) {
+			const datai = flatData.filter(d => d[1]===i);
+			dataSeries.push(datai);
+		}
+		// console.log("flatData=",flatData);
+		// console.log("dataSeries=",dataSeries);
+		
+		var series: any[] = [];
+		dataSeries.forEach((data,index) => {
+			series.push({
+				id: index.toString(),
+				type: 'line',
+				smooth: true,
+				symbol: this.callback_symbol,
+				symbolSize: this.symbolSize,
+				data: data,
+				itemStyle: { color: data[0][3] },//'red';
+				lineStyle: { color: data[0][3] }
+			});
+		});
+		this.myChart.setOption({series: series});
+
+		// 2) Add shadow circles (which are not visible) to enable interaction
+		this.myChart.setOption({
+			graphic: flatData.map(d => {//for each data : create an invisible circle on wich we attach callback functions
+				return {
+					type: 'circle',
+					position: this.myChart.convertToPixel('grid', d), //convertToPixel can only be used in a 'graphic' context
+					shape: {
+						cx: 0,
+						cy: 0,
+						r: this.symbolSize / 2
+					},
+					invisible: true,
+					draggable: false,
+					onclick: () => this.onPointClick(d),
+					onmousemove: () => this.showTooltip(d),
+					onmouseout: () => this.hideTooltip(),
+					z: 100
+				};
+			})
+			.flat()
+		});
 	}
 
 	/**
@@ -144,8 +167,10 @@ export class SequenceTimeline extends LitElement {
 			}
 		},
 		grid: {
-			top: '8%',
-			bottom: '12%'
+			left: '5%',
+			right: '5%',
+			top: '5%',
+			bottom: '5%'
 		},
 		xAxis: {
 			show: true,
@@ -162,7 +187,7 @@ export class SequenceTimeline extends LitElement {
 			show: true,
 			name: 'track num',
 			min: 0,
-			max: this.maxNbTracks,
+			max: this.nbTracksToBeDisplayed-1,//start at 0
 			interval: 1,
 			type: 'value',
 			axisLine: { onZero: false, show: false }
@@ -180,28 +205,6 @@ export class SequenceTimeline extends LitElement {
 				labelPrecision: 0,
 				filterMode: 'none',
 				textStyle: { fontSize: 10, lineHeight: 150 }
-			}
-		],
-		series: [
-			{
-				id: 'a',
-				type: 'line',
-				smooth: true,
-				symbol: this.callback_symbol,
-				symbolSize: this.symbolSize,
-				data: this.data,
-				itemStyle: { color: this.colordata },
-				lineStyle: { color: this.colordata }
-			},
-			{
-				id: '2',
-				type: 'line',
-				smooth: true,
-				symbol: this.callback_symbol,
-				symbolSize: this.symbolSize,
-				data: this.data2,
-				itemStyle: { color: this.colordata2 },
-				lineStyle: { color: this.colordata2 }
 			}
 		]
 	};
@@ -221,7 +224,7 @@ export class SequenceTimeline extends LitElement {
 			case frameAuthor.TRACKED:
 				return 'emptyRect';
 			default:
-				console.error("unknown frameAuthor, should not happen");
+				console.error(`unknown frameAuthor ${value[2]}, should not happen`);
 				return 'none';
 		}
 	}
@@ -230,11 +233,12 @@ export class SequenceTimeline extends LitElement {
 	 * Called when the mouse comes over a symbol
 	 * => show a message linked to a given symbol
 	 */
-	showTooltip(dataIndexH: number, dataIndex: number) {
+	showTooltip(data: any[]) {
 		this.myChart.dispatchAction({
 			type: 'showTip',
-			seriesIndex: dataIndexH,
-			dataIndex: dataIndex
+			position: 'top',
+			dataIndex: data[0],
+			seriesIndex: data[1]
 		});
 	}
 
@@ -249,12 +253,12 @@ export class SequenceTimeline extends LitElement {
 	}
 
 	/**
-	 * Called when clic on a symbol
-	 * => TO BE DEFINED
+	 * Called when click on a symbol, i.e. on a precise annotation data point
+	 * => dispatches event clickOnData
 	 */
-	onPointClick(dataIndexH: number, dataIndex: number) {
-		this.hideTooltip();
-		console.log('clic : dataIndexH, dataIndex =', dataIndexH, dataIndex);
+	onPointClick(data: any[]) {
+		// console.log('clic : data =', data);
+		this.dispatchEvent(new CustomEvent('clickOnData', { detail: {frame: data[0], id: data[4]} }));
 	}
 	
 	/******** render functions ************/
@@ -268,44 +272,14 @@ export class SequenceTimeline extends LitElement {
 		console.log("chartDom.clientWidth=",chartDom.clientWidth);
 		console.log("chartDom.clientHeight=",chartDom.clientHeight);
 		this.myChart = echarts.init(chartDom);
+		this.myChart.hideLoading();//not usefull for us
 
 		if (this.option && typeof this.option === 'object') {
 			this.myChart.setOption(this.option);
 		}
-
-		// Add shadow circles (which is not visible) to enable interaction
-		this.myChart.setOption({
-			graphic: this.dataConcat.map((itemH, dataIndexH) => {//for each data : create an invisible circle on wich we attach callback functions
-				return itemH.map((item, dataIndex) => {
-					return {
-						type: 'circle',
-						position: this.myChart.convertToPixel('grid', item), //convertToPixel can only be used in a 'graphic' context
-						shape: {
-							cx: 0,
-							cy: 0,
-							r: this.symbolSize / 2
-						},
-						invisible: true,
-						draggable: false,
-						onclick: () => {
-							this.onPointClick(dataIndexH, dataIndex);
-						},
-						onmousemove: () => {
-							this.showTooltip(dataIndexH, dataIndex);
-						},
-						onmouseout: () => {
-							this.hideTooltip();
-						},
-						z: 100
-					};
-				});
-			})
-			.flat()
-		});
 	}
 
 	render() {
-		console.log("pxn-sequence-timeline render");
 		return html`
 			<div id="container-pxn-sequence-timeline" style="height: 100%; width: 100%"></div>
 			<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>
