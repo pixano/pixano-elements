@@ -236,6 +236,7 @@ class Tracker():
 
 		# Extract a box from key points & update self.state
 		pred_logit = pred_logit.reshape(-1).detach().cpu().numpy()
+		pred_logit *= self.vis  # TODO: if the key point has never been seen before, it should be invisible!
 		tempo_k = np.array(deepcopy(pred_joints))
 		tempo_k = tempo_k[pred_logit >= 0.5]
 		if len(tempo_k) > 0:
@@ -267,7 +268,9 @@ class Tracker():
 		tempo_k = tempo_k.reshape((-1, 2))
 		info['visibility'] = np.array(info['visibility'])
 		tempo_k = tempo_k[info['visibility'] >= 0.5]
-		self.vis = info['visibility']
+		tempo_vis = info['visibility']
+		a, b = np.array(tempo_vis, dtype=np.int), np.array(self.vis, dtype=np.int)
+		self.vis = np.bitwise_or(a, b)
 
 		if len(tempo_k) == 0:
 			return
