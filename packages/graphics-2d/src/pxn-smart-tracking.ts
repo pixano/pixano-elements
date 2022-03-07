@@ -142,6 +142,7 @@ export class SmartTracking extends Tracking {
 			(res[1]+res[3])/im1.height
 		];
 		setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
+		this.drawTracks();
 		this.dispatchEvent(new Event('update-tracks'));
 		await this.delay(10);
 	}

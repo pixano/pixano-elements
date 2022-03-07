@@ -123,47 +123,34 @@ export function getShape(track: TrackData, timestamp: number): ShapeData | null 
 	// Search for bounds
    const [id1, id2] = getClosestFrames(track, timestamp);
 
-   if(id1 == -1){
-	   const [, id0] = getClosestFrames(track, timestamp, false);
-	   const s0 = getShape(track, id0);
-	   const newKS0 = JSON.parse(JSON.stringify(s0)) as ShapeData;
-	   return { shape: newKS0};
-
-   }
-   if( id2 == Infinity){
-	const [id0,] = getClosestFrames(track, timestamp, false);
-	const s0 = getShape(track, id0);
-	const newKS0 = JSON.parse(JSON.stringify(s0)) as ShapeData;
-	return { shape: newKS0};
-   }
-
 	const s1 = getShape(track, id1);
+	const s2 = getShape(track, id2);
 
 	// No previous frame, asking for shape before previous track trame
-	if (!s1) {
+	if (!s1 && !s2) {
 		return { shape: undefined };
-	}
-
-	// Make a deep copy of previous shape
-	const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
-	// newKS.timestamp = timestamp;
-
-	// No next frame, asking for shape after last track frame return last one
-	const s2 = getShape(track, id2);
-	if (!s2) {
+	} else if(s1 && !s2){
+		// Make a deep copy of previous shape
+		const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
+		// newKS.timestamp = timestamp;
 		return { shape: newKS, isLast: timestamp > id1 };
-		// return { shape: newKS, isLast: timestamp > s1.timestamp! };
+	} else if(!s1 && s2){
+		// Make a deep copy of previous shape
+		const newKS = JSON.parse(JSON.stringify(s2)) as ShapeData;
+		// newKS.timestamp = timestamp;
+		return { shape: newKS, isLast: timestamp > id2 };
+	} else {
+		// Make a deep copy of previous shape
+		const newKS = JSON.parse(JSON.stringify(s1)) as ShapeData;
+		// Interpolation case
+		const w = (timestamp - id1) / (id2 - id1)
+		const len_newKS = newKS.geometry.vertices.length;
+		for (let i = 0; i < len_newKS; i++) {
+			newKS.geometry.vertices[i] = (1 - w) * s1!.geometry.vertices[i] +
+				w * s2!.geometry.vertices[i]
+		}
+		return { shape: newKS };
 	}
-
-	// Interpolation case
-	const w = (timestamp - id1) / (id2 - id1)
-	const len_newKS = newKS.geometry.vertices.length;
-	for (let i = 0; i < len_newKS; i++) {
-		newKS.geometry.vertices[i] = (1 - w) * s1.geometry.vertices[i] +
-			w * s2.geometry.vertices[i]
-	}
-	return { shape: newKS };
-
 }
 
 /**

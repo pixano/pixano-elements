@@ -21,7 +21,6 @@
  import {
 	getShape,
 	convertShapes,
-	copyShape,
 	// setKeyShape,
 	setShape,
 	interpolate,
@@ -47,7 +46,7 @@
  export class TrackingGraph extends Graph {
 
 	@property({type: Boolean})
-	public isTrackTillTheEndChecked: boolean = true;
+	public isTrackTillTheEndChecked: boolean = false;
  
     @property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
@@ -172,13 +171,11 @@
 			}
 		});
 		this.addEventListener('delete', (evt: any) => {
-			const ids = evt.detail;
-			ids.forEach((id: string) => {
-				if (isKeyShape(this.tracks[id], this.timestamp)) {
-					deleteShape(this.tracks[id], this.timestamp);
-					if (!getNumShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
-				}
-			});
+			const id = evt.detail;
+			// ids.forEach((id: string) => {
+			deleteShape(this.tracks[id], this.timestamp);
+			if (!getNumShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
+			// });
 			this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
 			this.drawTracks();
 		});
@@ -281,28 +278,7 @@
 	convertShapes(timestamp: number): ShapeData[] {
 		const tracks = this.displayMode === 'show_all' ?
 			this.tracks : [...this.selectedTrackIds].reduce((map, id) => ({ ...map, [id]: this.tracks[id] }), {});
-		this.copyShapes(tracks, this.timestamp);
 		return convertShapes(tracks, timestamp);
-	}
-
-	/**
-	 * Copy shapes from annotated shape to other frames where shape is not defined
-	 * @param tracks 
-	 * @param timestamp 
-	 */
-	copyShapes(tracks:{[key: string]: TrackData}, timestamp: number){
-		if(tracks !== undefined){
-			Object.keys(tracks).forEach((tid: string) => {
-				const t = tracks[tid];
-				const shape = getShape(t, timestamp);
-				if (!shape) {
-					const copied = copyShape(t, timestamp);
-					if (copied) {
-						setShape(t, timestamp, copied, false);
-					}
-				}
-			});
-		}
 	}
 
 	newTrack(e: any) {
@@ -458,34 +434,45 @@
 
 	async runInterpolation(forwardMode=true){
 		const target0Id = this.selectedTrackId;
-		// Always start from key shape ? --> bouton grisé autrement
+		let stopTracking = false;
+         const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
+             if (evt.key === 'x') {
+                 stopTracking = true;
+             }
+         }
+		 window.addEventListener('keydown', stopTrackingListenerFct);
 		if (forwardMode){
 			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
 			if (this.isTrackTillTheEndChecked) id2 = this.maxFrameIdx! + 1;
-			while(this.timestamp < id2 - 1){
+			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
+			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
+			while(this.timestamp < id2 - 1 && !stopTracking){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp + 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
 					setShape(this.tracks[target0Id], this.timestamp + 1, shape['shape']!, false);
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
-				await this.delay(10);
+				await this.delay(100);
 			}
 			await this.nextFrame();
 		}else{
 			var [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
 			if (this.isTrackTillTheEndChecked) id1 = - 1;
-			while(this.timestamp > id1 + 1){
+			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
+			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
+			while(this.timestamp > id1 + 1 && !stopTracking){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp - 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
 					setShape(this.tracks[target0Id], this.timestamp - 1, shape['shape']!, false);
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
-				await this.delay(10);
+				await this.delay(100);
 			}
 			await this.prevFrame();
 		}
+		window.removeEventListener('keydown', stopTrackingListenerFct);
 				
 	}
 
@@ -675,7 +662,7 @@
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
 						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card" title="track until next keyframe or till the end (escape to stop tracking)">
+		<div class="card" title="track until next keyframe or till the end ('x' to stop tracking)">
 			<p>Infinite tracking
 			<mwc-switch ?checked=${checked}
 							
@@ -684,12 +671,12 @@
 		</div>
 		<div class="card">
 			<p> Linear propagation
-			<mwc-icon-button-toggle title="Backward" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+			<mwc-icon-button title="Backward" icon="chevron_left"
 						?disabled=${disabled2}
-						@click=${() => this.runInterpolation(false)}></mwc-icon-button-toggle>
-			<mwc-icon-button-toggle title="Forward" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
+						@click=${() => this.runInterpolation(false)}></mwc-icon-button>
+			<mwc-icon-button title="Forward" icon="chevron_right"
 						?disabled=${disabled1} 
-						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle></p>
+						@click=${() => this.runInterpolation(true)}></mwc-icon-button></p>
 		</div>
 		`;
 	}

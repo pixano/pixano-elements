@@ -92,6 +92,9 @@
      
      @property({type: Boolean})
      public isModelInitialized: boolean = false;
+
+     @property({type: Boolean})
+     public isVisible: boolean = true;
  
      @property({type: String})
      public model: string = 'http://localhost:4000';
@@ -102,7 +105,9 @@
 
      }
  
-     protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } }
+     protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } else if (evt.key == 'Delete'){
+        this.dispatchEvent(new CustomEvent('delete', { detail: this.selectedTrackId}));
+    } }
  
      connectedCallback() {
          super.connectedCallback();
@@ -118,14 +123,15 @@
      }
 
      runTracking(forwardMode:boolean=true) {
-		if (this.isTrackTillTheEndChecked){
-			this.trackTillTheEnd(forwardMode);
-		}
+        this.trackTillTheEnd(forwardMode);
+		// if (this.isTrackTillTheEndChecked){
+		// 	this.trackTillTheEnd(forwardMode);
+		// }
 
-		else {
-			if (forwardMode) this.trackTillNextFrame();
-			else this.trackTillNextFrame(false);
-		}
+		// else {
+		// 	if (forwardMode) this.trackTillNextFrame();
+		// 	else this.trackTillNextFrame(false);
+		// }
 	}
  
      updated(changedProperties: any) {
@@ -147,16 +153,17 @@
 
      async trackTillTheEnd(forwardMode:boolean=true) {
         this.isModelInitialized = false; 
+        this.isVisible = true;
          let stopTracking = false;
          const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
-             if (evt.key === 'Escape') {
+             if (evt.key === 'x') {
                  stopTracking = true;
              }
          }
          window.addEventListener('keydown', stopTrackingListenerFct);
          if (forwardMode){
             this.frameCount = 0
-            while (!stopTracking && !this.isLastFrame()) {
+            while (!stopTracking && !this.isLastFrame() && this.isVisible) {
                 this.frameCount++;
                 // update target template every 5 frames
                 await this.trackTillNextFrame();
@@ -164,7 +171,7 @@
             this.frameCount = 0
         }else{
             this.frameCount = 0
-            while (!stopTracking && this.timestamp > 0) {
+            while (!stopTracking && this.timestamp > 0 && this.isVisible) {
                 this.frameCount++;
                 // update target template every 5 frames
                 await this.trackTillNextFrame(false);
@@ -184,7 +191,13 @@
              return;
          }
  
-         const currentTrackId = this.selectedTrackIds.values().next().value;
+        const currentTrackId = this.selectedTrackId;
+        if (currentTrackId==undefined){
+            console.warn("ABORT: select a track first")
+            this.isVisible = false;
+            return;
+        }
+        
 		// const target0 = this.targetShapes.values().next().value as ShapeData;
 		const target0 = getShape(this.tracks[currentTrackId], this.timestamp)!;
          /// get the shape to track
@@ -219,15 +232,29 @@
             /// processing
             var newTimestamp2 = this.timestamp - 1;
 		    if (!nextFrame) newTimestamp2 = this.timestamp + 1;
+
+            if(!this.isTrackTillTheEndChecked){
+                const currShape = getShape(this.tracks[currentTrackId], this.timestamp)!;
+                if (currShape !== undefined){
+                    if (currShape.createdBy == 'manual'){
+                        this.isVisible = false;
+                        return;
+                    }
+                }   
+            } 
+
             // should not move invisible points
             const predv: number[] = res[0];
             const predvis: boolean[] = res[1];
+            // Stop tracking if none of the joint are visible
+            if (!predvis.includes(true)) this.isVisible = false;
             // const newKps = predv.map((it, idx) => predvis[Math.round(idx/2)]? it: v[idx])
             // const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[currentTrackId], this.timestamp + 1))) ;
             const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[currentTrackId], newTimestamp2)!));    
             newShape.geometry.vertices = predv; //newKps; 
             newShape.geometry.visibles = predvis;
             setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
+            this.drawTracks();
 		    this.dispatchEvent(new Event('update-tracks'));
             await this.delay(100);
             
@@ -249,15 +276,29 @@
             /// processing
             var newTimestamp2 = this.timestamp - 1;
 		    if (!nextFrame) newTimestamp2 = this.timestamp + 1;
+
+            if(!this.isTrackTillTheEndChecked){
+                const currShape = getShape(this.tracks[currentTrackId], this.timestamp)!;
+                if (currShape !== undefined){
+                    if (currShape.createdBy == 'manual'){
+                        this.isVisible = false;
+                        return;
+                    }
+                }   
+            } 
+
             // should not move invisible points
             const predv: number[] = res[0];
             const predvis: boolean[] = res[1];
+            // Stop tracking if none of the joint are visible
+            if (!predvis.includes(true)) this.isVisible = false;
             // const newKps = predv.map((it, idx) => predvis[Math.round(idx/2)]? it: v[idx])
             const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[currentTrackId], newTimestamp2)!));   
             // const newShape = JSON.parse(JSON.stringify(getShape(this.tracks[currentTrackId], this.timestamp + 1))) ; 
             newShape.geometry.vertices = predv; //newKps; 
             newShape.geometry.visibles = predvis;
             setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
+            this.drawTracks();
 		    this.dispatchEvent(new Event('update-tracks'));
             // Update dynamic template each n frames (n is fixed by the tracker update)
             if (this.frameCount == this.tracker.updateInterval){
@@ -298,12 +339,12 @@
 		return html`
 		<div>
 			${super.leftPanel}
-			<div class="card">
+			<div class="card" title="track until next keyframe or till the end ('x' to stop tracking)">
 				<p> Visual tracking
-				<mwc-icon-button-toggle title="Backward" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
-								@click=${() => this.runTracking(false)}></mwc-icon-button-toggle>
-				<mwc-icon-button-toggle title="Forward" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
-								@click=${() => this.runTracking(true)}></mwc-icon-button-toggle></p>
+				<mwc-icon-button title="Backward" icon="chevron_left"
+								@click=${() => this.runTracking(false)}></mwc-icon-button>
+				<mwc-icon-button title="Forward" icon="chevron_right"
+								@click=${() => this.runTracking(true)}></mwc-icon-button></p>
 			</div>
 		</div>
 		`;
