@@ -214,61 +214,77 @@ export function removeOrAddKeyShape(t: TrackData, fIdx: number) {
 	}
 }
 
-// /**
-//  * Switch two tracks at given timestamp.
-//  * @param tracks tracks to be switched
-//  */
-// export function switchTrack(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string, fIdx: number) {
-// 	const [t1, t2] = [tracks[t1Id], tracks[t2Id]];
-// 	const ks1 = [...Object.values(t1.shapes)];
-// 	const ks2 = [...Object.values(t2.shapes)];
-// 	t1.shapes = ks1.filter((k) => k.timestamp! < fIdx)
-// 		.concat(ks2.filter((k) => k.timestamp! >= fIdx))
-// 		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
-// 	t2.shapes = ks2.filter((k) => k.timestamp! < fIdx)
-// 		.concat(ks1.filter((k) => k.timestamp! >= fIdx))
-// 		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
-// 	// t1.shapes = ks1.filter((k) => k.timestamp! < fIdx)
-// 	// 	.concat(ks2.filter((k) => k.timestamp! >= fIdx))
-// 	// 	.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
-// 	// t2.shapes = ks2.filter((k) => k.timestamp! < fIdx)
-// 	// 	.concat(ks1.filter((k) => k.timestamp! >= fIdx))
-// 	// 	.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
-// }
+/**
+ * Switch two tracks at given timestamp.
+ * @param tracks tracks to be switched
+ */
+export function switchTrack(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string, fIdx: number) {
+	const [t1, t2] = [tracks[t1Id], tracks[t2Id]];
+	const indexes1 = [...Object.keys(t1.shapes)].map(Number);
+	const indexes2 = [...Object.keys(t2.shapes)].map(Number);
+	// create keyshape for current frame and previous frame
+	// if not already exists
+	indexes1.forEach((idx) => {
+		const s1 = getShape(t1, idx);
+		if (!s1) {
+			// split is asked outside track boundaries
+			return;
+		}
+		s1.timestamp = idx;
+		t1.shapes[idx] = s1;
+	});
+	indexes2.forEach((idx) => {
+		const s2 = getShape(t2, idx);
+		if (!s2) {
+			// split is asked outside track boundaries
+			return;
+		}
+		s2.timestamp = idx;
+		t2.shapes[idx] = s2;
+	});
+	const ks1 = [...Object.values(t1.shapes)];
+	const ks2 = [...Object.values(t2.shapes)];
+	t1.shapes = ks1.filter((k) => k.timestamp! < fIdx)
+		.concat(ks2.filter((k) => k.timestamp! >= fIdx))
+		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+	t2.shapes = ks2.filter((k) => k.timestamp! < fIdx)
+		.concat(ks1.filter((k) => k.timestamp! >= fIdx))
+		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+}
 
-// /**
-//  * Merge two tracks.
-//  * Do the concatenation of keyshapes if the two tracks do not overlap.
-//  * @param tracks the set of tracks
-//  * @param t1Id the id of the first track
-//  * @param t2Id the id of the second track
-//  * @returns a object containing the id `trackId` of the merged track and the
-//  * list `keysIntersection` of the frames at which the tracks overlaps.
-//  * If the tracks do not overlap, `keysIntersection` is empty.
-//  * If the tracks overlap, an empty string is returned instead of the id
-//  * of the merged track.
-//  */
-// export function mergeTracks(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string) {
-// 	let [t1, t2] = [tracks[t1Id], tracks[t2Id]];
+/**
+ * Merge two tracks.
+ * Do the concatenation of keyshapes if the two tracks do not overlap.
+ * @param tracks the set of tracks
+ * @param t1Id the id of the first track
+ * @param t2Id the id of the second track
+ * @returns a object containing the id `trackId` of the merged track and the
+ * list `keysIntersection` of the frames at which the tracks overlaps.
+ * If the tracks do not overlap, `keysIntersection` is empty.
+ * If the tracks overlap, an empty string is returned instead of the id
+ * of the merged track.
+ */
+export function mergeTracks(tracks: { [key: string]: TrackData }, t1Id: string, t2Id: string) {
+	let [t1, t2] = [tracks[t1Id], tracks[t2Id]];
 
-// 	// check overlapping
-// 	const keys = [
-// 		[...Object.keys(sortDictByKey(t1.keyShapes))],
-// 		[...Object.keys(sortDictByKey(t2.keyShapes))]
-// 	];
-// 	const olderTrackIdx = keys[0][0] < keys[1][0] ? 0 : 1;
-// 	const keysIntersection = keys[0].filter(value => keys[1].includes(value));
-// 	const isDisjoint = keysIntersection.length === 0;
-// 	[t1, t2] = olderTrackIdx ? [t2, t1] : [t1, t2];
-// 	// they do not overlap, concatenation of keyshapes.
-// 	let trackId = ""
-// 	if (isDisjoint) {
-// 		trackId = t1.id;
-// 		t1.keyShapes = { ...t1.keyShapes, ...t2.keyShapes };
-// 		delete tracks[t2.id];
-// 	}
-// 	return { trackId, keysIntersection };
-// }
+	// check overlapping
+	const keys = [
+		[...Object.keys(sortDictByKey(t1.shapes))],
+		[...Object.keys(sortDictByKey(t2.shapes))]
+	];
+	const olderTrackIdx = keys[0][0] < keys[1][0] ? 0 : 1;
+	const keysIntersection = keys[0].filter(value => keys[1].includes(value));
+	const isDisjoint = keysIntersection.length === 0;
+	[t1, t2] = olderTrackIdx ? [t2, t1] : [t1, t2];
+	// they do not overlap, concatenation of keyshapes.
+	let trackId = ""
+	if (isDisjoint) {
+		trackId = t1.id;
+		t1.shapes = { ...t1.shapes, ...t2.shapes };
+		delete tracks[t2.id];
+	}
+	return { trackId, keysIntersection };
+}
 
 export function getNewTrackId(tracks: { [key: string]: TrackData }): string {
 	return Object.keys(tracks).length !== 0 ?
@@ -294,41 +310,43 @@ export function convertShapes(tracks: { [key: string]: TrackData }, fIdx: number
 	return shapes;
 }
 
-// /**
-//  * Split track into two tracks
-//  * @param t
-//  */
-// export function splitTrack(tId: string, fIdx: number, tracks: { [key: string]: TrackData }): TrackData {
-// 	const t = tracks[tId];
-// 	const newTrackId = getNewTrackId(tracks);
+/**
+ * Split track into two tracks
+ * @param t
+ */
+export function splitTrack(tId: string, fIdx: number, tracks: { [key: string]: TrackData }): TrackData {
+	const t = tracks[tId];
+	const newTrackId = getNewTrackId(tracks);
 
-// 	// create keyshape for current frame and previous frame
-// 	// if not already exists
-// 	[fIdx, fIdx - 1].forEach((idx) => {
-// 		const s = getShape(t, idx);
-// 		if (!s) {
-// 			// split is asked outside track boundaries
-// 			return;
-// 		}
-// 		t.shapes[idx] = s;
-// 	});
-// 	// create new track from future boxes
-// 	const ks = [...Object.values(t.shapes)];
-// 	const newTrack = {
-// 		id: newTrackId,
-// 		shapes: ks.filter((k) => k.timestamp >= fIdx)
-// 			.map((k) => ({ ...k, id: newTrackId }))
-// 			.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {}),
-// 		category: t.category,
-// 		labels: t.labels
-// 	};
-// 	tracks[newTrackId] = newTrack;
-// 	// remove future boxes from current track
-// 	t.shapes = ks.filter((k) => k.timestamp < fIdx)
-// 		.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {});
-// 	// t.shapes[fIdx - 1].isNextHidden = true;
-// 	return newTrack;
-// }
+	const indexes = [...Object.keys(t.shapes)].map(Number);
+	// create keyshape for current frame and previous frame
+	// if not already exists
+	indexes.forEach((idx) => {
+		const s = getShape(t, idx);
+		if (!s) {
+			// split is asked outside track boundaries
+			return;
+		}
+		s.timestamp = idx;
+		t.shapes[idx] = s;
+	});
+	// create new track from future boxes
+	const ks = [...Object.values(t.shapes)];
+	const newTrack = {
+		id: newTrackId,
+		shapes: ks.filter((k) => k.timestamp! >= fIdx)
+			.map((k) => ({ ...k, id: newTrackId }))
+			.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {}),
+		category: t.category,
+		labels: t.labels
+	};
+	tracks[newTrackId] = newTrack;
+	// remove future boxes from current track
+	t.shapes = ks.filter((k) => k.timestamp! < fIdx)
+		.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {});
+	// t.shapes[fIdx - 1].isNextHidden = true;
+	return newTrack;
+}
 
 // /**
 //  * Switch visibility of current shape.

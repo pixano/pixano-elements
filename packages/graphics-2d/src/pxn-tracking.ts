@@ -29,11 +29,11 @@ import {
 	deleteShape,
 	removeOrAddKeyShape,
 	// switchVisibility,
-	// switchTrack,
+	switchTrack,
 	trackColors,
-	// splitTrack,
+	splitTrack,
 	getNewTrackId,
-	// mergeTracks,
+	mergeTracks,
 	getClosestFrames,
 	invertColor,
 	getNumShapes
@@ -186,9 +186,9 @@ export class Tracking extends Rectangle {
 	}
 
 	protected keyDownHandler = (evt: KeyboardEvent) => {
-		// if (evt.key === "r") {
-		// 	this.mergeTracks(this.selectedTrackIds);
-		// } else 
+		if (evt.key === "r") {
+			this.mergeTracks(this.selectedTrackIds);
+		} else 
 		if (evt.key === "f") {
 			if (this.selectedTrackIds.size === 1) {
 				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
@@ -336,48 +336,48 @@ export class Tracking extends Rectangle {
 		this.dispatchEvent(new Event('create-track'));
 	}
 
-	// /**
-	//  * Split track into two tracks
-	//  * @param t
-	//  */
-	// splitTrack(tId: string) {
-	// 	const newTrack = splitTrack(tId, this.timestamp, this.tracks);
-	// 	this.selectedTrackIds.clear();
-	// 	this.selectedTrackIds.add(newTrack.id);
-	// 	this.dispatchEvent(new Event('update-tracks'));
-	// }
+	/**
+	 * Split track into two tracks
+	 * @param t
+	 */
+	splitTrack(tId: string) {
+		const newTrack = splitTrack(tId, this.timestamp, this.tracks);
+		this.selectedTrackIds.clear();
+		this.selectedTrackIds.add(newTrack.id);
+		this.dispatchEvent(new Event('update-tracks'));
+	}
 
-	// /**
-	//  * Merge two tracks.
-	//  * If they do not overlap, do concatenation of keyshapes else display an error message.
-	//  * @param tracks tracks to be merged
-	//  */
-	// mergeTracks(tracks: Set<string>) {
-	// 	if (tracks.size !== 2) {
-	// 		return;
-	// 	}
-	// 	const [t1Id, t2Id] = [...tracks];
-	// 	const mergeResult = mergeTracks(this.tracks, t1Id, t2Id);
-	// 	if (mergeResult.trackId !== "") {
-	// 		this.selectedTrackIds.clear();
-	// 		this.selectedTrackIds.add(mergeResult.trackId);
-	// 		this.dispatchEvent(new Event('update-tracks'));
-	// 	} else {
-	// 		this.mergeErrorDialog(t1Id, t2Id, mergeResult.keysIntersection);
-	// 	}
-	// }
+	/**
+	 * Merge two tracks.
+	 * If they do not overlap, do concatenation of keyshapes else display an error message.
+	 * @param tracks tracks to be merged
+	 */
+	mergeTracks(tracks: Set<string>) {
+		if (tracks.size !== 2) {
+			return;
+		}
+		const [t1Id, t2Id] = [...tracks];
+		const mergeResult = mergeTracks(this.tracks, t1Id, t2Id);
+		if (mergeResult.trackId !== "") {
+			this.selectedTrackIds.clear();
+			this.selectedTrackIds.add(mergeResult.trackId);
+			this.dispatchEvent(new Event('update-tracks'));
+		} else {
+			this.mergeErrorDialog(t1Id, t2Id, mergeResult.keysIntersection);
+		}
+	}
 
-	// /**
-	//  * Switch two tracks at given timestamp.
-	//  * @param trackIds tracks to be switched
-	//  */
-	// switchTrack(trackIds: Set<string>) {
-	// 	if (trackIds.size === 2) {
-	// 		const [t1Id, t2Id] = [...trackIds]
-	// 		switchTrack(this.tracks, t1Id, t2Id, this.timestamp);
-	// 		this.dispatchEvent(new Event('update-tracks'));
-	// 	}
-	// }
+	/**
+	 * Switch two tracks at given timestamp.
+	 * @param trackIds tracks to be switched
+	 */
+	switchTrack(trackIds: Set<string>) {
+		if (trackIds.size === 2) {
+			const [t1Id, t2Id] = [...trackIds]
+			switchTrack(this.tracks, t1Id, t2Id, this.timestamp);
+			this.dispatchEvent(new Event('update-tracks'));
+		}
+	}
 
 	// /**
 	//  * Enable or disable interpolation for the current frame
@@ -597,8 +597,8 @@ export class Tracking extends Rectangle {
 			<p style="display: inline-flex; width: -webkit-fill-available; height: 20px;">
 				<span>Selected tracks</span>
 				<span style="display: inline-flex; align-items: center;">${this.selectedTrackIds.size === 2 ? html`
-					<mwc-icon-button title="Switch track" icon="shuffle"></mwc-icon-button>
-					<mwc-icon-button title="Merge track">${mergeTracksIcon}</mwc-icon-button>` : ``}
+					<mwc-icon-button title="Switch track" @click=${() => this.switchTrack(this.selectedTrackIds)} icon="shuffle"></mwc-icon-button>
+					<mwc-icon-button title="Merge track" @click=${() => this.mergeTracks(this.selectedTrackIds)}>${mergeTracksIcon}</mwc-icon-button>` : ``}
 				</span>
 			</p>
 			<div>
@@ -627,8 +627,8 @@ export class Tracking extends Rectangle {
 								<mwc-icon-button title="Go to last frame (l)" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
 								</br>
 								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
-								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>								
-								<mwc-icon-button title="Split track" ?disabled=${disabled}>${cutTrack}</mwc-icon-button>
+								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
+								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
 								<mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
 							</div>
 						</div>

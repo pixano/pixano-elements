@@ -34,6 +34,7 @@ export interface ShapeData {
 	createdBy?: "manual"|"auto";
 	// labels
 	labels?: { [key: string]: any };
+	timestamp?: number;
 }
 
 
