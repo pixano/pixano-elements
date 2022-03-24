@@ -678,8 +678,8 @@ export class Tracking extends Rectangle {
 		<mwc-icon-button icon="edit"
 						title="New track (n)"
 						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card">
-			<p>Continuous tracking
+		<div class="card" title="track until next keyframe or till the end">
+		<p>Infinite tracking
 			<mwc-switch ?checked=${checked}
 							title="track ones / track till the end (escape to stop tracking)"
 							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
@@ -733,12 +733,3 @@ export class Tracking extends Rectangle {
 		`;
 	}
 }
-/*
-now we need to clic on a specific button (starting from a keyframe to another keyframe)
-difference between key shape and manual shape
-when do we save not key data? for now only during visualization
-- 2 interpolation buttons
-- 2 extrapolation buttons
-- visualize different shape/color for "manual shapes"
-- add continuous tracking/interpolation mode
-*/
