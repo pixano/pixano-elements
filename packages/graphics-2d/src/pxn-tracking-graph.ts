@@ -44,9 +44,6 @@
  
  @customElement('pxn-tracking-graph' as any)
  export class TrackingGraph extends Graph {
-
-	@property({type: Boolean})
-	public isTrackTillTheEndChecked: boolean = false;
  
     @property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
@@ -135,17 +132,30 @@
 			// if there is a selected track, add keyshape
 			// else create a new track
 			if (this.selectedTrackIds.size) {
-				// add keyshape
-				this.addNewKeyShapes([
-					{
-						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: this.selectedTrackId
-					}
-				]);
+				const target0Id = this.selectedTrackId;
+				const currentShape = getShape(this.tracks[target0Id], this.timestamp);
+				if (currentShape){
+					this.newTrack(e);
+					this.dispatchEvent(new Event('create-track'));
+				}
+				else{
+					// add keyshape
+					this.addNewKeyShapes([
+						{
+							...JSON.parse(JSON.stringify((e as any).detail)),
+							id: this.selectedTrackId
+						}
+					]);
+					
+					this.dispatchEvent(new Event('update-tracks'));
+				}
+				
 			} else {
 				// new track
 				this.newTrack(e);
+				this.dispatchEvent(new Event('create-track'));
 			}
+			this.mode = 'edit';// back to edit mode after each new creation			
 		});
 		// The tracks have been updated
 		this.addEventListener('update-tracks', () => {
@@ -307,8 +317,6 @@
 		this.selectedShapeIds = [newTrack.id];
 		this.drawTracks();
 		this.requestUpdate();
-		this.mode = 'edit';// back to edit mode after each new creation
-		this.dispatchEvent(new Event('create-track'));
 	}
 
 	/**
@@ -443,7 +451,6 @@
 		 window.addEventListener('keydown', stopTrackingListenerFct);
 		if (forwardMode){
 			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
-			if (this.isTrackTillTheEndChecked) id2 = this.maxFrameIdx! + 1;
 			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
 			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
 			while(this.timestamp < id2 - 1 && !stopTracking){
@@ -458,7 +465,6 @@
 			await this.nextFrame();
 		}else{
 			var [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
-			if (this.isTrackTillTheEndChecked) id1 = - 1;
 			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
 			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
 			while(this.timestamp > id1 + 1 && !stopTracking){
@@ -646,7 +652,6 @@
 	}
 
 	get leftPanel() {
-		const checked = this.isTrackTillTheEndChecked;
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
@@ -656,20 +661,12 @@
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));
 			disabled1 = !(id2!= Infinity && isKeyShape(this.tracks[target0Id], this.timestamp));
 		}
-		if (checked) disabled1=disabled2=false;
 		
 		return html`
 		<mwc-icon-button icon="edit"
-						title="New track (n)"
-						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card" title="track until next keyframe or till the end ('x' to stop tracking)">
-			<p>Infinite tracking
-			<mwc-switch ?checked=${checked}
-							
-							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
-							></mwc-switch></p>
-		</div>
-		<div class="card">
+						title="New track / Add to track (n)"
+						@click=${() => { this.mode = 'create'; }}></mwc-icon-button>
+		<div class="card" title="track until next keyframe or till the end ('x' to stop tracking)" style="flex-direction: column; width: 10%">
 			<p> Linear propagation
 			<mwc-icon-button title="Backward" icon="chevron_left"
 						?disabled=${disabled2}

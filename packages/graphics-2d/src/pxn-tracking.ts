@@ -21,7 +21,6 @@ import { ShapeData, TrackData } from './types';
 import {
 	getShape,
 	convertShapes,
-	copyShape,
 	// setKeyShape,
 	setShape,
 	interpolate,
@@ -45,9 +44,6 @@ import { style2d } from './style';
 
 @customElement('pxn-tracking' as any)
 export class Tracking extends Rectangle {
-
-	@property({type: Boolean})
-	public isTrackTillTheEndChecked: boolean = true;
 
 	@property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
@@ -136,18 +132,30 @@ export class Tracking extends Rectangle {
 			// if there is a selected track, add keyshape
 			// else create a new track
 			if (this.selectedTrackIds.size) {
-				// add keyshape
-				const currentTrackId = this.selectedTrackIds.values().next().value;
-				this.addNewKeyShapes([
-					{
-						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: currentTrackId
-					}
-				]);
+				const target0Id = this.selectedTrackId;
+				const currentShape = getShape(this.tracks[target0Id], this.timestamp);
+				if (currentShape){
+					this.newTrack(e);
+					this.dispatchEvent(new Event('create-track'));
+				}
+				else{
+					// add keyshape
+					this.addNewKeyShapes([
+						{
+							...JSON.parse(JSON.stringify((e as any).detail)),
+							id: this.selectedTrackId
+						}
+					]);
+					
+					this.dispatchEvent(new Event('update-tracks'));
+				}
+				
 			} else {
 				// new track
 				this.newTrack(e);
+				this.dispatchEvent(new Event('create-track'));
 			}
+			this.mode = 'edit';// back to edit mode after each new creation			
 		});
 		this.addEventListener('update-tracks', () => {
 			this.drawTracks();
@@ -282,28 +290,7 @@ export class Tracking extends Rectangle {
 	convertShapes(timestamp: number): ShapeData[] {
 		const tracks = this.displayMode === 'show_all' ?
 			this.tracks : [...this.selectedTrackIds].reduce((map, id) => ({ ...map, [id]: this.tracks[id] }), {});
-		this.copyShapes(tracks, this.timestamp);
 		return convertShapes(tracks, timestamp);
-	}
-
-	/**
-	 * Copy shapes from annotated shape to other frames where shape is not defined
-	 * @param tracks 
-	 * @param timestamp 
-	 */
-	copyShapes(tracks:{[key: string]: TrackData}, timestamp: number){
-		if(tracks !== undefined){
-			Object.keys(tracks).forEach((tid: string) => {
-				const t = tracks[tid];
-				const shape = getShape(t, timestamp);
-				if (!shape) {
-					const copied = copyShape(t, timestamp);
-					if (copied) {
-						setShape(t, timestamp, copied, false);
-					}
-				}
-			});
-		}
 	}
 
 	newTrack(e: any) {
@@ -332,8 +319,6 @@ export class Tracking extends Rectangle {
 		this.selectedShapeIds = [newTrack.id];
 		this.drawTracks();
 		this.requestUpdate();
-		this.mode = 'edit';// back to edit mode after each new creation
-		this.dispatchEvent(new Event('create-track'));
 	}
 
 	/**
@@ -464,7 +449,6 @@ export class Tracking extends Rectangle {
 		// Always start from key shape ? --> bouton grisé autrement
 		if (forwardMode){
 			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
-			if (this.isTrackTillTheEndChecked) id2 = this.maxFrameIdx! + 1;
 			while(this.timestamp < id2 - 1){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp + 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
@@ -477,7 +461,6 @@ export class Tracking extends Rectangle {
 			await this.nextFrame();
 		}else{
 			var [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
-			if (this.isTrackTillTheEndChecked) id1 = - 1;
 			while(this.timestamp > id1 + 1){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp - 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
@@ -662,7 +645,6 @@ export class Tracking extends Rectangle {
 	}
 
 	get leftPanel() {
-		const checked = this.isTrackTillTheEndChecked;
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
@@ -672,27 +654,19 @@ export class Tracking extends Rectangle {
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));
 			disabled1 = !(id2!= Infinity && isKeyShape(this.tracks[target0Id], this.timestamp));
 		}
-		if (checked) disabled1=disabled2=false;
 		
 		return html`
 		<mwc-icon-button icon="edit"
-						title="New track (n)"
-						@click=${() => { this.selectedTrackIds.clear(); this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card" title="track until next keyframe or till the end">
-		<p>Infinite tracking
-			<mwc-switch ?checked=${checked}
-							title="track ones / track till the end (escape to stop tracking)"
-							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
-							></mwc-switch></p>
-		</div>
-		<div class="card">
+						title="New track / Add to track (n)"
+						@click=${() => { this.mode = 'create'; }}></mwc-icon-button>
+		<div class="card" title="track until next keyframe or till the end" style="flex-direction: column; width: 10%">
 			<p>Interpolation
-			<mwc-icon-button-toggle title="Backward interpolation" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
+			<mwc-icon-button title="Backward interpolation" icon="chevron_left"
 						?disabled=${disabled2}
-						@click=${() => this.runInterpolation(false)}></mwc-icon-button-toggle>
-			<mwc-icon-button-toggle title="Forward interpolation" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
+						@click=${() => this.runInterpolation(false)}></mwc-icon-button>
+			<mwc-icon-button title="Forward interpolation" icon="chevron_right"
 						?disabled=${disabled1} 
-						@click=${() => this.runInterpolation(true)}></mwc-icon-button-toggle></p>
+						@click=${() => this.runInterpolation(true)}></mwc-icon-button></p>
 		</div>
 		`;
 	}

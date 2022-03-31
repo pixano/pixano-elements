@@ -18,6 +18,9 @@ import '@material/mwc-switch';
 @customElement('pxn-smart-tracking' as any)
 export class SmartTracking extends Tracking {
 
+	@property({type: Boolean})
+	public isTrackTillTheEndChecked: boolean = true;
+
 	// smart tracker
 	private tracker = new Tracker();
 
@@ -149,15 +152,23 @@ export class SmartTracking extends Tracking {
 
 	// overide leftPanel to add tracking properties
 	get leftPanel() {
+		const checked = this.isTrackTillTheEndChecked;
 		return html`
+		<mwc-icon-button icon="edit"
+						title="New track / Add to track (n)"
+						@click=${() => { this.mode = 'create'; }}></mwc-icon-button>
 		<div>
-			${super.leftPanel}
 			<div class="card">
-				<p>Forward/backward tracking
-				<mwc-icon-button-toggle title="Backward tracking" onIcon="keyboard_double_arrow_left" offIcon="keyboard_double_arrow_left"
-								@click=${() => this.runTracking(false)}></mwc-icon-button-toggle>
-				<mwc-icon-button-toggle title="Forward tracking" onIcon="keyboard_double_arrow_right" offIcon="keyboard_double_arrow_right"
-								@click=${() => this.runTracking(true)}></mwc-icon-button-toggle></p>
+			<p>Tracking till the end
+			<mwc-switch ?checked=${checked}
+							title="track ones / track till the end (escape to stop tracking)"
+							@change=${ () => { this.isTrackTillTheEndChecked = !this.isTrackTillTheEndChecked; } }
+							></mwc-switch></p>
+				<p>Forward / Backward tracking
+				<mwc-icon-button title="Backward tracking" icon="chevron_left"
+								@click=${() => this.runTracking(false)}></mwc-icon-button>
+				<mwc-icon-button title="Forward tracking" icon="chevron_right"
+								@click=${() => this.runTracking(true)}></mwc-icon-button></p>
 			</div>
 		</div>
 		`;
