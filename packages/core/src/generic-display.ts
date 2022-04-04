@@ -163,6 +163,28 @@ export abstract class GenericDisplay extends LitElement {
 		return this._lastTargetFrameIdx || 0;
 	}
 
+	public prevFrame(): Promise<void> {
+		return new Promise((resolve) => {
+			if (!this.isSequence) {
+				resolve();
+			}
+			const obs = () => {
+				this.removeEventListener('load', obs);
+				resolve();
+			}
+			this.addEventListener('load', obs);
+			if (this.playback) {
+				this.playback.setBefore();
+			} else {
+				const currIdx = this._targetFrameIdx as number;
+				if (currIdx > 0) {
+					this.frameIdx = currIdx - 1;
+				}
+			}
+		});
+	}
+
+
 	public nextFrame(): Promise<void> {
 		return new Promise((resolve) => {
 			if (!this.isSequence) {

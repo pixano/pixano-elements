@@ -1,0 +1,31 @@
+{
+    "name": "demo-tracking-graph",
+    "version": "0.6.1",
+    "private": true,
+    "description": "Demo for tracking",
+    "author": "Pixano Authors <pixano@cea.fr>",
+    "homepage": "",
+    "license": "CECILL-C",
+    "main": "my-demo.js",
+    "repository": {
+      "type": "git",
+      "url": "ssh://git@gitlab.lvic-apps.intra.cea.fr:10022/pixano/pixano-elements.git"
+    },
+    "scripts": {
+      "build": "rm -rf my-demo-bundle.js & webpack --config webpack.config.js",
+      "watch": "webpack --config webpack.config.js --watch"
+    },
+    "devDependencies": {
+      "@babel/preset-env": "7.12.1",
+      "babel-loader": "^8.0.6",
+      "source-map-loader": "^0.2.4",
+      "webpack": "4.44.2",
+      "webpack-cli": "3.3.12"
+    },
+    "dependencies": {
+      "@pixano/core": "0.6.1",
+      "@pixano/graphics-2d": "0.6.1",
+      "lit-element": "2.4.0"
+    }
+  }
+  
