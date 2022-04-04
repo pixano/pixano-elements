@@ -28,7 +28,7 @@ declare global {
 		'pxn-keypoints': Graph;
 		'pxn-smart-rectangle': SmartRectangle;
 		'pxn-tracking': Tracking;
-		'pxn-smart-tracking': SmartTracking;
 		'pxn-tracking-graph': TrackingGraph;
+		'pxn-smart-tracking': SmartTracking;
 	}
 }

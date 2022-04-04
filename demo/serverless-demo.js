@@ -89,15 +89,15 @@ export class ServerlessDemo extends LitElement {
 	 * @param {Object} newAnnotations
 	 */
 	setAnnotations(newAnnotations) {
-		console.log("prev nnotation=",this.annotations);
-		console.log("newAnnotation=",newAnnotations);
+		// console.log("prev nnotation=",this.annotations);
+		// console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
 	}
 
 	setSelectedIds(newIds) {
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
-		this.attributePicker.showDetail = this.selectedIds.length;
+		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;
 	}
 
 	/******************* BUTTONS handlers *******************/
@@ -173,6 +173,7 @@ export class ServerlessDemo extends LitElement {
 					if (maskAnnot) this.element.setMask(maskAnnot.mask);
 					else this.element.setEmpty()
 				case 'tracking':
+				case 'tracking-graph':
 				case 'smart-tracking':
 					/* nothing to do: create=update */
 					break;
@@ -186,7 +187,7 @@ export class ServerlessDemo extends LitElement {
 			this.initAnnotations();
 		}
 		// initialize attributePicker to default
-		if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking') return;// no attribute picker used for tracking
+		if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking' || this.chosenPlugin==='tracking-graph') return;// no attribute picker used for tracking
 		console.log("attributePicker ok");
 		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
 		this.attributePicker.setAttributes(this.attributePicker.defaultValue);
@@ -250,6 +251,7 @@ export class ServerlessDemo extends LitElement {
 			case 'segmentation':
 			case 'smart-segmentation':
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do: create=update */
 				break;
@@ -289,6 +291,7 @@ export class ServerlessDemo extends LitElement {
 				this.setAnnotations(frame);
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do: delete=update */
 				break;
@@ -339,6 +342,7 @@ export class ServerlessDemo extends LitElement {
 				}
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do */
 				break;
@@ -397,6 +401,7 @@ export class ServerlessDemo extends LitElement {
 				this.setSelectedIds(updatedIds);
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				// console.log("evt=",evt);
 				// console.log("this.tracks=",this.tracks);
@@ -482,6 +487,7 @@ export class ServerlessDemo extends LitElement {
 				});
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				this.setAnnotations(this.tracks)
 				break;
@@ -748,6 +754,13 @@ export class ServerlessDemo extends LitElement {
 					<pxn-tracking .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
 								disablefullscreen>
 					</pxn-tracking>`;
+			case 'tracking-graph':
+				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
+				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
+				return html`
+					<pxn-tracking-graph .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
+								disablefullscreen>
+					</pxn-tracking-graph>`;
 			case 'smart-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>

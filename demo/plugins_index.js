@@ -18,6 +18,7 @@ export const pluginsList = [// TODO: add sequences ?
 	'segmentation',
 	'cuboid-editor',
 	'tracking',
+	'tracking-graph',
 	'smart-rectangle',
 	'smart-segmentation',
 	'smart-tracking',
@@ -33,7 +34,6 @@ export const pluginsList = [// TODO: add sequences ?
  */
 export const defaultLabelValues = (pluginName) => {
 	switch (pluginName) {
-		case 'sequence-segmentation':
 		case 'smart-segmentation':
 		case 'segmentation':
 			return {
@@ -53,6 +53,7 @@ export const defaultLabelValues = (pluginName) => {
 
 		case 'smart-tracking':
 		case 'tracking':
+		case 'tracking-graph':
 			return {
 				category: [
 					{ name: 'class1', color: "blue", properties: [] },
@@ -105,7 +106,7 @@ export const defaultLabelValues = (pluginName) => {
 
 export const defaultSettings = (pluginName) => {
 	switch (pluginName) {
-		case 'sequence-keypoints':
+		case 'tracking-graph':
 		case 'keypoints': {
 			return {
 				radius: 3,

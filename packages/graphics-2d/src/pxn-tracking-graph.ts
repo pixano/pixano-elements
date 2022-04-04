@@ -5,20 +5,11 @@
  * @license CECILL-C
  */
 
- import { css, customElement, html, property } from 'lit-element';
- import '@material/mwc-icon-button';
- import '@material/mwc-icon-button-toggle';
- import '@material/mwc-button';
- import '@material/mwc-select';
- import '@material/mwc-list/mwc-list';
- import '@material/mwc-list/mwc-list-item';
- import '@material/mwc-dialog';
- import '@material/mwc-checkbox';
- import '@material/mwc-formfield';
- import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
- import { Graph } from './pxn-graph'
- import { ShapeData, TrackData } from './types';
- import {
+import { css, customElement, html, property } from 'lit-element';
+import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
+import { Graph } from './pxn-keypoints'
+import { ShapeData, TrackData } from './types';
+import {
 	getShape,
 	convertShapes,
 	// setKeyShape,
@@ -36,16 +27,16 @@
 	getClosestFrames,
 	invertColor,
 	getNumShapes
- } from './utils-video';
- import { ShapesEditController } from './controller';
- // import { ClickController } from "./controller-tracking";
- import { style2d } from './style';
- 
- 
- @customElement('pxn-tracking-graph' as any)
- export class TrackingGraph extends Graph {
- 
-    @property({ type: Object })
+} from './utils-video';
+import { ShapesEditController } from './controller';
+// import { ClickController } from "./controller-tracking";
+import { style2d } from './style';
+
+
+@customElement('pxn-tracking-graph' as any)
+export class TrackingGraph extends Graph {
+
+	@property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
 
 	displayMode: 'show_all' | 'show_selected' = 'show_all';
@@ -125,7 +116,7 @@
 		this.handleTrackSelection();
 
 		this.addEventListener('timestamp', () => {
-			console.log("Track", this.tracks);
+			// console.log("Track", this.tracks);
 			this.drawTracks();
 		});
 		this.addEventListener('create', (e) => {
@@ -140,13 +131,10 @@
 				}
 				else{
 					// add keyshape
-					this.addNewKeyShapes([
-						{
-							...JSON.parse(JSON.stringify((e as any).detail)),
-							id: this.selectedTrackId
-						}
-					]);
-					
+					this.addNewKeyShapes([{// add new keyshape to the current track
+						...JSON.parse(JSON.stringify((e as any).detail)),
+						id: this.selectedTrackId
+					}]);
 					this.dispatchEvent(new Event('update-tracks'));
 				}
 				
@@ -157,8 +145,8 @@
 			}
 			this.mode = 'edit';// back to edit mode after each new creation			
 		});
-		// The tracks have been updated
 		this.addEventListener('update-tracks', () => {
+			this.drawTracks();
 			this.requestUpdate();
 		});
 		this.addEventListener('selection-track', () => {
@@ -169,10 +157,10 @@
 			this.drawTracks();
 			this.requestUpdate();
 		});
-		// when updating instance, create or edit keyshape
-		this.addEventListener('update', () => {
-			this.addNewKeyShapes([...this.targetShapes]);
-		});
+		// this.addEventListener('update', () => {
+		// 	// when updating instance, create or edit keyshape
+		// 	this.addNewKeyShapes([...this.targetShapes]);
+		// });
 		this.addEventListener('selection', () => {
 			// unselect track if shape is unselected
 			if (!this.targetShapes.size) {
@@ -373,10 +361,11 @@
 	addNewKeyShapes(shapes: ShapeData[]) {
 		shapes.forEach((s) => {
 			if (this.tracks[s.id]) {
-				setShape(this.tracks[s.id], this.timestamp, { ...getShape(this.tracks[s.id], this.timestamp), ...s }, true);
+				setShape(this.tracks[s.id], this.timestamp, { ...getShape(this.tracks[s.id], this.timestamp), ...s, timestamp: this.timestamp, labels: this.getDefaultProperties(this.tracks[s.id].category) }, true);
 			}
 		});
 		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
+		this.requestUpdate();
 	}
 
 	/**
