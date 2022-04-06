@@ -108,6 +108,7 @@ npx serve demo
 ## Documentation
 
 📚 Check out the [TypeDoc](https://pixano.github.io/docs/docs) documentation. Each package's usage and API is also documented:
+
 - [graphics-2d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
 - [graphics-3d](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d)
 

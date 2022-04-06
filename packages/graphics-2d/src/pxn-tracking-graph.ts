@@ -137,13 +137,13 @@ export class TrackingGraph extends Graph {
 					}]);
 					this.dispatchEvent(new Event('update-tracks'));
 				}
-				
+
 			} else {
 				// new track
 				this.newTrack(e);
 				this.dispatchEvent(new Event('create-track'));
 			}
-			this.mode = 'edit';// back to edit mode after each new creation			
+			this.mode = 'edit';// back to edit mode after each new creation
 		});
 		this.addEventListener('update-tracks', () => {
 			this.drawTracks();
@@ -182,8 +182,7 @@ export class TrackingGraph extends Graph {
 	protected keyDownHandler = (evt: KeyboardEvent) => {
 		if (evt.key === "r") {
 			this.mergeTracks(this.selectedTrackIds);
-		} else 
-		if (evt.key === "f") {
+		} else if (evt.key === "f") {
 			if (this.selectedTrackIds.size === 1) {
 				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
 			}

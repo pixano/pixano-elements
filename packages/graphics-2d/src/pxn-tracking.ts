@@ -137,16 +137,14 @@ export class Tracking extends Rectangle {
 							id: this.selectedTrackId
 						}
 					]);
-					
 					this.dispatchEvent(new Event('update-tracks'));
 				}
-				
 			} else {
 				// new track
 				this.newTrack(e);
 				this.dispatchEvent(new Event('create-track'));
 			}
-			this.mode = 'edit';// back to edit mode after each new creation			
+			this.mode = 'edit';// back to edit mode after each new creation
 		});
 		this.addEventListener('update-tracks', () => {
 			this.drawTracks();
@@ -187,8 +185,7 @@ export class Tracking extends Rectangle {
 	protected keyDownHandler = (evt: KeyboardEvent) => {
 		if (evt.key === "r") {
 			this.mergeTracks(this.selectedTrackIds);
-		} else 
-		if (evt.key === "f") {
+		} else if (evt.key === "f") {
 			if (this.selectedTrackIds.size === 1) {
 				this.goToFirstFrame(this.tracks[Array.from(this.selectedTrackIds)[0]]);
 			}
@@ -367,7 +364,7 @@ export class Tracking extends Rectangle {
 		shapes.forEach((s) => {
 			const tId = [...this.selectedTrackIds].find((id) => id === s.id);
 			if (tId) {
-				setShape(this.tracks[tId], this.timestamp, { ...getShape(this.tracks[tId], this.timestamp), ...s });
+				setShape(this.tracks[s.id], this.timestamp, { ...getShape(this.tracks[s.id], this.timestamp), ...s, timestamp: this.timestamp, labels: this.getDefaultProperties(this.tracks[s.id].category) }, true);
 			}
 		});
 		this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));

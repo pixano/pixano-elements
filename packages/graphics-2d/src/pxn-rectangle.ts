@@ -22,4 +22,3 @@ export class Rectangle extends Canvas2d {
 		});
 	}
 }
- 
