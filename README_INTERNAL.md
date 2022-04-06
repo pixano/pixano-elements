@@ -74,14 +74,14 @@ master  ------- pull ------->  github  --- merge --->   master <--merge--> p2
 
 ## Publication
 ### 0) prepare gitlab version
-	LAST_VERSION=0.6.0
-	VERSION=0.6.1
+	LAST_VERSION=0.6.1
+	VERSION=0.7.0
 	git fetch
 	git checkout master
 	git pull origin master
 	# update the publication version
 	node changeversion.js $VERSION
-	git add README_INTERNAL.md package.json */*/package.json
+	git add README_INTERNAL.md package.json demo/package.json */*/package.json
 	git commit -m "release $VERSION"
 ### 1) Prepate the publication
 1. On github : Update your fork
