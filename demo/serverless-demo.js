@@ -207,7 +207,6 @@ export class ServerlessDemo extends LitElement {
 
 	onCreate(evt) {
 		const newObject = evt.detail;
-		// this.mode = 'edit';
 		console.log("onCreate", evt.detail.id);
 		let shapes;
 		switch (this.chosenPlugin) {
@@ -624,16 +623,16 @@ export class ServerlessDemo extends LitElement {
 					${this.genericTools}
 				`;
 			case 'polygon':
+				console.log("tools");
 				return html`
 					${this.genericTools}
 					<mwc-icon-button title="Group polygons"		icon="call_merge"	@click="${() => this.element.merge()}"></mwc-icon-button>
 					<mwc-icon-button title="Split polygon"		icon="call_split"	@click="${() => this.element.split()}"></mwc-icon-button>
 					<mwc-icon-button title="Polyline/Polygon"	icon="timeline"
-					style="display: ${this.mode === 'create' ?  "block" : "none"}"
-					?selected=${this.element && this.element.isOpenedPolygon === true}
-					@click="${() => {
-							this.element.isOpenedPolygon = !this.element.isOpenedPolygon;
-							this.requestUpdate();}}"></mwc-icon-button>
+						?selected=${this.element && this.element.isOpenedPolygon === true}
+						@click="${() => {
+								this.element.isOpenedPolygon = !this.element.isOpenedPolygon;
+								this.requestUpdate();}}"></mwc-icon-button>
 				`;
 			case 'segmentation':
 				return html`
@@ -664,7 +663,6 @@ export class ServerlessDemo extends LitElement {
 				`;
 			case 'smart-segmentation':
 				return html`
-					${this.genericTools}
 					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
 					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
 					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
@@ -695,7 +693,6 @@ export class ServerlessDemo extends LitElement {
 	}
 
 	get plugin() {
-		console.log("this.mode=",this.mode);
 		this.input = 'examples/image.jpg';// TODO: temporary
 		switch (this.chosenPlugin) {
 			case 'classification':

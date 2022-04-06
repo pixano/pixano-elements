@@ -25,7 +25,7 @@ export function generateKey() {
 export function getKeyShape(track: TrackData, fIdx: number): ShapeData | undefined {
 	const shape = getShape(track, fIdx);
 	if (shape){
-		return shape.createdBy=='manual' ? shape : undefined;
+		return shape.createdBy==='manual' ? shape : undefined;
 	}
 	// if (track.shapes[fIdx] !== undefined){
 	// 	if(track.shapes[fIdx].createdBy=="manual")
@@ -69,9 +69,9 @@ export function getNumShapes(track: TrackData): number {
  */
 export function isKeyShape(track: TrackData, fIdx: number): boolean {
 	if (track.shapes.hasOwnProperty(fIdx)){
-		return track.shapes[fIdx].createdBy=="manual";
-	} 
-	return false;	
+		return track.shapes[fIdx].createdBy==="manual";
+	}
+	return false;
 }
 
 /**
@@ -89,7 +89,7 @@ export function getClosestFrames(track: TrackData, timestamp: number, key: boole
 	for (const k of Object.keys(track.shapes)) {
 		const f = parseInt(k,10);
 		if (key){
-			var iskey = track.shapes[f].createdBy=='manual';
+			var iskey = track.shapes[f].createdBy==='manual';
 		}		
 		if (f < timestamp && f > less && iskey) {
 			less = f;

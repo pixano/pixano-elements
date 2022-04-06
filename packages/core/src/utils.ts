@@ -248,16 +248,16 @@ export function colorAnyToHexNumber(color: string): number {
 }
 
 export function commonJson(entities: any[]) {// TODO: simplify and sepcialise if needed
-    if (entities.length == 0) {
+    if (entities.length === 0) {
       return;
-    } else if (entities.length == 1) {
+    } else if (entities.length === 1) {
       return entities[0];
     }
     function getKeys(object: Object) {
       function iter(o: any, p: string[]) {
-          if (Array.isArray(o)) { 
+          if (Array.isArray(o)) {
             result.push(p.join('.'));
-            return; 
+            return;
           }
           if (o && typeof o === 'object') {
               var keys = Object.keys(o);
@@ -268,7 +268,7 @@ export function commonJson(entities: any[]) {// TODO: simplify and sepcialise if
           }
           result.push(p.join('.'));
       }
-      var result: string[] = [];
+      const result: string[] = [];
       iter(object, []);
       return result;
     }
@@ -278,7 +278,7 @@ export function commonJson(entities: any[]) {// TODO: simplify and sepcialise if
       const commonAttr = key.split('.').reduce((o, p) => (o && o.hasOwnProperty(p)) ? o[p] : null, commonEntity);
       for (const e of entities) {
         const entityAttr = key.split('.').reduce((o, p) => (o && o.hasOwnProperty(p)) ? o[p] : null, e);
-        if (!entityAttr || JSON.stringify(entityAttr) != JSON.stringify(commonAttr)) {
+        if (!entityAttr || JSON.stringify(entityAttr) !== JSON.stringify(commonAttr)) {
           // remove from commonEntity
           deleteObjProp(commonEntity, key);
           break;
@@ -291,7 +291,7 @@ export function commonJson(entities: any[]) {// TODO: simplify and sepcialise if
 function deleteObjProp(obj: any, path: string|string[]) {
   if (!obj || !path) return;
   if (typeof path === 'string') path = path.split('.');
-  for (var i = 0; i < path.length - 1; i++) {
+  for (let i = 0; i < path.length - 1; i++) {
     obj = obj[path[i]];
     if (typeof obj === 'undefined') return;
   }

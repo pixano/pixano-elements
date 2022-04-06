@@ -90,7 +90,7 @@ export class SmartTracking extends Tracking {
 				await this.trackTillNextFrame(false);
 				}
 		}
-		
+
 		// back to edit mode after each new creation
 		this.mode = 'edit';
 
@@ -121,7 +121,7 @@ export class SmartTracking extends Tracking {
 		this.tracker.initBox(im0, x, y, w, h);
 
 		/// processing
-		var imgIdx = this.frameIdx + 1;
+		let imgIdx = this.frameIdx + 1;
 		if (!nextFrame) imgIdx = this.frameIdx - 1;
 
 		const im1 = await (this.loader as any).peekFrame(imgIdx);
@@ -131,7 +131,7 @@ export class SmartTracking extends Tracking {
 		if (nextFrame) await this.nextFrame();
 		else await this.prevFrame();
 
-		var newTimestamp = this.timestamp - 1;
+		let newTimestamp = this.timestamp - 1;
 		if (!nextFrame) newTimestamp = this.timestamp + 1;
 
 		/// get calculated shape and take it as the new shape

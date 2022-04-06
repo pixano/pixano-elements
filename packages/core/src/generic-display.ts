@@ -140,8 +140,8 @@ export abstract class GenericDisplay extends LitElement {
 		}
 		const maxFrameIdx = this.maxFrameIdx as number;
 		const loader = this.loader as SequenceLoader;
-		if (frameIndex >= 0 && frameIndex <= maxFrameIdx && this._targetFrameIdx !== frameIndex) {//don't notify if nothing changes
-			this._lastTargetFrameIdx = this._targetFrameIdx;//keep the last state
+		if (frameIndex >= 0 && frameIndex <= maxFrameIdx && this._targetFrameIdx !== frameIndex) {// don't notify if nothing changes
+			this._lastTargetFrameIdx = this._targetFrameIdx;// keep the last state
 			this._targetFrameIdx = frameIndex;
 			this.playback!.current = frameIndex;
 			if (this.pendingLoad) {
