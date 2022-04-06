@@ -1,7 +1,7 @@
 {
   "name": "pixano-elements",
   "private": true,
-  "version": "0.6.1",
+  "version": "0.7.0",
   "devDependencies": {
     "es-dev-server": "^1.46.5",
     "glob": "7.1.6",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap --hoist --strict --force-local",
-    "clearall": "npm run clean && rimraf -rf node_modules",
+    "clearall": "npm run clean && rimraf -rf node_modules/ packages/*/node_modules/ demo/node_modules/ package-lock.json packages/*/package-lock.json demo/package-lock.json",
     "build": "lerna run build",
     "build:umd": "lerna run build:umd",
     "watch": "lerna run watch --parallel",
@@ -22,8 +22,10 @@
     "serve": "serve",
     "start": "es-dev-server --preserve-symlinks --node-resolve --open ",
     "tslint": "tslint -c tslint.json packages/**/src/*.ts",
-    "docs": "rm -rf docs && typedoc packages && grep -rl 'globals.html' docs/* | xargs -i@ sed -i 's/globals.html/index.html/g' @ && mv docs/globals.html docs/index.html",
-    "installLocalElements": "cd packages/ai && rm -rf node_modules/@pixano package-lock.json && npm i ../core && cd - && cd packages/graphics-2d && rm -rf node_modules/@pixano package-lock.json && npm i ../core && npm i ../ai && cd - && cd packages/graphics-3d && rm -rf node_modules/@pixano package-lock.json && npm i ../core"
+    "docs": "rimraf -rf docs && typedoc packages && grep -rl 'globals.html' docs/* | xargs -i@ sed -i 's/globals.html/index.html/g' @ && mv docs/globals.html docs/index.html",
+    "deps": "cd packages/core && npm i && cd ../ai && npm i && cd ../graphics-2d && npm i && cd ../graphics-3d && npm i && cd ../../demo && npm i && cd .. && npm run bootstrap",
+    "installLocalElements": "cd packages/ai && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd - && cd packages/graphics-2d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && npm i ../ai && cd - && cd packages/graphics-3d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd ../.. && npm run bootstrap",
+    "installLocalDemo": "cd demo && rimraf -rf node_modules/@pixano package-lock.json && npm i ../packages/core && npm i ../packages/graphics-2d && npm i ../packages/graphics-3d && cd .. && npm run bootstrap"
   },
   "dependencies": {}
 }

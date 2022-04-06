@@ -246,7 +246,7 @@ export class CuboidEditor extends GenericDisplay {
 			if (text) {
 				const cuboid = observable({
 					...JSON.parse(text),
-					id: Math.random().toString(36).substring(7)
+					id: Math.random().toString(36)
 				} as Cuboid)
 
 				// Add new object to the list of annotations
