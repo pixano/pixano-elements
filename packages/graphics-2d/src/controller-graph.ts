@@ -227,7 +227,7 @@ export class GraphCreateController extends ShapeCreateController {
 
 	public createGraph() {
 		const shape = this.tmpShape as GraphicGraph;
-		shape.data.id = Math.random().toString(36).substring(7);
+		shape.data.id = Math.random().toString(36);
 		this._shapes.add(shape.data);
 		this.renderer.stage.removeChild(shape);
 		shape.destroy();
