@@ -169,13 +169,13 @@ export function searchSorted<T>(arr: T[], value: T) {
 	return arr.length;
 }
 
-export function colorToRGBA(color: string) {
+export function colorToRGBA(color: string): Uint8ClampedArray {
 	// Returns the color as an array of [r, g, b, a] -- all range from 0 - 255
 	// color must be a valid canvas fillStyle. This will cover most anything
 	// you'd want to use.
 	// Examples:
-	// colorToRGBA('red')  # [255, 0, 0, 255]
-	// colorToRGBA('#f00') # [255, 0, 0, 255]
+	// colorToRGBA('red')	# [255, 0, 0, 255]
+	// colorToRGBA('#f00')	# [255, 0, 0, 255]
 	const cvs = document.createElement('canvas');
 	cvs.height = 1;
 	cvs.width = 1;
@@ -185,7 +185,8 @@ export function colorToRGBA(color: string) {
 	return ctx.getImageData(0, 0, 1, 1).data;
 }
 
-function byteToHex(num: number) {
+
+export function byteToHex(num: number) {
 	// Turns a number (0-255) into a 2-character hex number (00-ff)
 	return ('0' + num.toString(16)).slice(-2);
 }
@@ -245,6 +246,58 @@ export function colorAnyToHexNumber(color: string): number {
 	}
 	return 0X000000;
 }
+
+export function commonJson(entities: any[]) {// TODO: simplify and sepcialise if needed
+    if (entities.length == 0) {
+      return;
+    } else if (entities.length == 1) {
+      return entities[0];
+    }
+    function getKeys(object: Object) {
+      function iter(o: any, p: string[]) {
+          if (Array.isArray(o)) { 
+            result.push(p.join('.'));
+            return; 
+          }
+          if (o && typeof o === 'object') {
+              var keys = Object.keys(o);
+              if (keys.length) {
+                  keys.forEach((k) => { iter(o[k], p.concat(k)); });
+              }
+              return;
+          }
+          result.push(p.join('.'));
+      }
+      var result: string[] = [];
+      iter(object, []);
+      return result;
+    }
+    const commonEntity = JSON.parse(JSON.stringify(entities)).shift();
+    const keys = getKeys(commonEntity);
+    keys.forEach((key) => {
+      const commonAttr = key.split('.').reduce((o, p) => (o && o.hasOwnProperty(p)) ? o[p] : null, commonEntity);
+      for (const e of entities) {
+        const entityAttr = key.split('.').reduce((o, p) => (o && o.hasOwnProperty(p)) ? o[p] : null, e);
+        if (!entityAttr || JSON.stringify(entityAttr) != JSON.stringify(commonAttr)) {
+          // remove from commonEntity
+          deleteObjProp(commonEntity, key);
+          break;
+        }
+      }
+    });
+    return commonEntity;
+}
+
+function deleteObjProp(obj: any, path: string|string[]) {
+  if (!obj || !path) return;
+  if (typeof path === 'string') path = path.split('.');
+  for (var i = 0; i < path.length - 1; i++) {
+    obj = obj[path[i]];
+    if (typeof obj === 'undefined') return;
+  }
+  delete obj[path.pop()!];
+};
+
 
 export function copyClipboard(newClip: string) {
 	navigator.clipboard.writeText(newClip).then(() => {

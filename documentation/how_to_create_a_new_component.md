@@ -69,7 +69,17 @@ export class MyElement extends LitElement {
 }
 ```
 
-### 2. Create its demo
+### 2. Add it to the serverless-demo
+
+- In the file 'demo/plugins_index.js':
+  - add the component name to the 'pluginsList'
+  - add a default annotation schema for it in 'defaultLabelValues'
+- In the file 'demo/serverless-demo.js':
+  - add the component call in the 'plugin' function
+  - add the tools used in the component in the 'tools' function
+  - add the component in an adapted case (or create a new case if needed) in the handlers: 'onCreate', 'onDelete', 'onSelection', 'onUpdate', 'onAttributeChanged'
+
+### 3. Optionnal : create a isolated demo
 
 Create a simple demo application that imports and instanciates the component to check that it behaves as expected. Create a `my-element` folder in demos with the following files:
 ```bash
@@ -169,7 +179,7 @@ npm run bootstrap
 # Watch src file change
 npm run watch
 # In another terminal, serve the demo app:
-npx serve demos/my-element/
+npx serve demo
 ```
 
 ## Inherit from existing annotation element
@@ -210,7 +220,7 @@ class SmartPolygonCreateController extends ShapeCreateController {
     }).then((res) => res.json())
       .then((pts: number[]) => {
         this.shapes.add(observable({
-          id: Math.random().toString(36).substring(7),
+          id: Math.random().toString(36),
           geometry: { type: "polygon", vertices: pts }
         }));
       });
