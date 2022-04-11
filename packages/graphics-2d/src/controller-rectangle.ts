@@ -72,7 +72,7 @@ export class RectangleCreateController extends ShapeCreateController {
 		const xmax = Math.max(v[0], v[2]);
 		const ymin = Math.min(v[1], v[3]);
 		const ymax = Math.max(v[1], v[3]);
-		shape.data.id = Math.random().toString(36).substring(7);
+		shape.data.id = Math.random().toString(36);
 		shape.data.geometry.vertices = [xmin, ymin, xmax, ymax];
 		this.renderer.stage.removeChild(shape);
 		shape.destroy();

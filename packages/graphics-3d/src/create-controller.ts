@@ -176,7 +176,7 @@ export class CreateModeController extends BasicEventTarget {
 
 			const cuboid = observable({
 				...box,
-				id: Math.random().toString(36).substring(7)
+				id: Math.random().toString(36)
 			} as Cuboid);
 
 			// Cleanup creation mode

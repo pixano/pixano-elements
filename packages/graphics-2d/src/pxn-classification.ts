@@ -39,7 +39,7 @@ export class Classification extends Canvas {
 		// 	value.forEach((v) => {
 		// 		const shape = observable({
 		// 			...v,
-		// 			id: Math.random().toString(36).substring(7)
+		// 			id: Math.random().toString(36)
 		// 		} as ShapeData)
 		// 		// Add new object to the list of annotations
 		// 		this.shapes.add(shape);
