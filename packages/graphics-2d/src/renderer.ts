@@ -6,7 +6,8 @@
  */
 
 import * as PIXI from 'pixi.js';
-import { colorToHex, hexToRgb255 } from './utils';
+import { colorToHex } from '@pixano/core/lib/utils';
+import { hexToRgb255 } from './utils';
 
 // Pixi.js Warning: gl.getProgramInfoLog() Programs with more than
 // 16 samplers are disallowed on Mesa drivers to avoid crashing.

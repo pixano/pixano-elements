@@ -103,7 +103,7 @@ export class SmartRectangleCreateController extends ShapeCreateController {
 			});
 			if (!overlap) {
 				const shape = observable({
-					id: Math.random().toString(36).substring(7),
+					id: Math.random().toString(36),
 					geometry: { type: "rectangle", vertices: [l, t, r, b] },
 					category: detection.category
 				});

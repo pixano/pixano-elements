@@ -15,7 +15,7 @@ module.exports = {
 				'demo-segmentation',
 				'demo-smart-segmentation',
 				'demo-smart-rectangle',
-				'demo-graph',
+				'demo-keypoints',
 				'demo-tracking',
 				'demo-smart-tracking'
 		],

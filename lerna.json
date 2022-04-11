@@ -4,7 +4,7 @@
 		"packages/ai",
 		"packages/graphics-2d",
 		"packages/graphics-3d",
-		"demos/*"
+		"demo"
 	],
 	"command": {
 		"bootstrap": {

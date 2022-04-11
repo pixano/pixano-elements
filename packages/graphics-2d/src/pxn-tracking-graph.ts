@@ -7,7 +7,7 @@
 
 import { css, customElement, html, property } from 'lit-element';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
-import { Rectangle } from './pxn-rectangle'
+import { Graph } from './pxn-keypoints'
 import { ShapeData, TrackData } from './types';
 import {
 	getShape,
@@ -22,7 +22,6 @@ import {
 	switchTrack,
 	trackColors,
 	splitTrack,
-	renumberTrack,
 	getNewTrackId,
 	mergeTracks,
 	getClosestFrames,
@@ -34,8 +33,8 @@ import { ShapesEditController } from './controller';
 import { style2d } from './style';
 
 
-@customElement('pxn-tracking' as any)
-export class Tracking extends Rectangle {
+@customElement('pxn-tracking-graph' as any)
+export class TrackingGraph extends Graph {
 
 	@property({ type: Object })
 	public tracks: { [key: string]: TrackData } = {};
@@ -132,14 +131,13 @@ export class Tracking extends Rectangle {
 				}
 				else{
 					// add keyshape
-					this.addNewKeyShapes([
-						{
-							...JSON.parse(JSON.stringify((e as any).detail)),
-							id: this.selectedTrackId
-						}
-					]);
+					this.addNewKeyShapes([{// add new keyshape to the current track
+						...JSON.parse(JSON.stringify((e as any).detail)),
+						id: this.selectedTrackId
+					}]);
 					this.dispatchEvent(new Event('update-tracks'));
 				}
+
 			} else {
 				// new track
 				this.newTrack(e);
@@ -159,10 +157,10 @@ export class Tracking extends Rectangle {
 			this.drawTracks();
 			this.requestUpdate();
 		});
-		this.addEventListener('update', () => {
-			// when updating instance, create or edit keyshape
-			this.addNewKeyShapes([...this.targetShapes]);
-		});
+		// this.addEventListener('update', () => {
+		// 	// when updating instance, create or edit keyshape
+		// 	this.addNewKeyShapes([...this.targetShapes]);
+		// });
 		this.addEventListener('selection', () => {
 			// unselect track if shape is unselected
 			if (!this.targetShapes.size) {
@@ -171,13 +169,11 @@ export class Tracking extends Rectangle {
 			}
 		});
 		this.addEventListener('delete', (evt: any) => {
-			const ids = evt.detail;
-			ids.forEach((id: string) => {
-				if (isKeyShape(this.tracks[id], this.timestamp)) {
-					deleteShape(this.tracks[id], this.timestamp);
-					if (!getNumShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
-				}
-			});
+			const id = evt.detail;
+			// ids.forEach((id: string) => {
+			deleteShape(this.tracks[id], this.timestamp);
+			if (!getNumShapes(this.tracks[id])) this.deleteTrack(id);// if track is empty remove it
+			// });
 			this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
 			this.drawTracks();
 		});
@@ -322,18 +318,6 @@ export class Tracking extends Rectangle {
 	}
 
 	/**
-	 * Renumber a track
-	 * @param tIdPrevious previous track id
-	 * @param tIdNew new track id
-	 */
-	 renumberTrack(tIdPrevious: string, tIdNew: string) {
-		renumberTrack(tIdPrevious, tIdNew, this.tracks);
-		this.selectedTrackIds.delete(tIdPrevious)
-		this.selectedTrackIds.add(tIdNew);
-		this.dispatchEvent(new Event('update-tracks'));
-	}
-
-	/**
 	 * Merge two tracks.
 	 * If they do not overlap, do concatenation of keyshapes else display an error message.
 	 * @param tracks tracks to be merged
@@ -375,12 +359,11 @@ export class Tracking extends Rectangle {
 
 	addNewKeyShapes(shapes: ShapeData[]) {
 		shapes.forEach((s) => {
-			const tId = [...this.selectedTrackIds].find((id) => id === s.id);
-			if (tId) {
+			if (this.tracks[s.id]) {
 				setShape(this.tracks[s.id], this.timestamp, { ...getShape(this.tracks[s.id], this.timestamp), ...s, timestamp: this.timestamp, labels: this.getDefaultProperties(this.tracks[s.id].category) }, true);
 			}
 		});
-		this.dispatchEvent(new CustomEvent('update-tracks', { detail: Object.values(this.tracks) }));
+		this.dispatchEvent(new CustomEvent('update-tracks', { detail: this.tracks }));
 		this.requestUpdate();
 	}
 
@@ -447,32 +430,43 @@ export class Tracking extends Rectangle {
 
 	async runInterpolation(forwardMode=true){
 		const target0Id = this.selectedTrackId;
-		// Always start from key shape ? --> bouton grisé autrement
+		let stopTracking = false;
+         const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
+             if (evt.key === 'x') {
+                 stopTracking = true;
+             }
+         }
+		 window.addEventListener('keydown', stopTrackingListenerFct);
 		if (forwardMode){
 			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
-			while(this.timestamp < id2 - 1){
+			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
+			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
+			while(this.timestamp < id2 - 1 && !stopTracking){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp + 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp + 1);
 					setShape(this.tracks[target0Id], this.timestamp + 1, shape['shape']!, false);
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
-				await this.delay(10);
+				await this.delay(100);
 			}
 			await this.nextFrame();
 		}else{
 			var [id1,] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
-			while(this.timestamp > id1 + 1){
+			const currentShape = getShape(this.tracks[target0Id], this.timestamp)
+			setShape(this.tracks[target0Id], this.timestamp, currentShape!);
+			while(this.timestamp > id1 + 1 && !stopTracking){
 				if(!isKeyShape(this.tracks[target0Id], this.timestamp - 1)){
 					const shape = interpolate(this.tracks[target0Id], this.timestamp - 1);
 					setShape(this.tracks[target0Id], this.timestamp - 1, shape['shape']!, false);
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
-				await this.delay(10);
+				await this.delay(100);
 			}
 			await this.prevFrame();
 		}
+		window.removeEventListener('keydown', stopTrackingListenerFct);
 				
 	}
 
@@ -531,18 +525,6 @@ export class Tracking extends Rectangle {
 	askDeleteTrack(tId: string) {
 		this.dialog.heading = tId;
 		this.dialog.open = true;
-	}
-
-	/**
-	 * Open track renumber dialog
-	 * @param tId track id
-	 */
-	showTrackRenumberDialog(tId: string) {
-		const trackRenumberDialog = this.shadowRoot!.getElementById("dialog-renumber") as any;
-		const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
-		newNumberTextField!.value = "";
-		trackRenumberDialog!.tId = tId;
-		trackRenumberDialog!.open = true;
 	}
 
 	/**
@@ -625,7 +607,6 @@ export class Tracking extends Rectangle {
 								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
 								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
 								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
-								<mwc-icon-button title="Renumber track" icon="edit" @click=${() => this.showTrackRenumberDialog(t.id)}></mwc-icon-button>
 								<mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
 							</div>
 						</div>
@@ -673,12 +654,12 @@ export class Tracking extends Rectangle {
 		<mwc-icon-button icon="edit"
 						title="New track / Add to track (n)"
 						@click=${() => { this.mode = 'create'; }}></mwc-icon-button>
-		<div class="card" title="track until next keyframe or till the end" style="flex-direction: column; width: 10%">
-			<p>Interpolation
-			<mwc-icon-button title="Backward interpolation" icon="chevron_left"
+		<div class="card" title="track until next keyframe or till the end ('x' to stop tracking)" style="flex-direction: column; width: 10%">
+			<p> Linear propagation
+			<mwc-icon-button title="Backward" icon="chevron_left"
 						?disabled=${disabled2}
 						@click=${() => this.runInterpolation(false)}></mwc-icon-button>
-			<mwc-icon-button title="Forward interpolation" icon="chevron_right"
+			<mwc-icon-button title="Forward" icon="chevron_right"
 						?disabled=${disabled1} 
 						@click=${() => this.runInterpolation(true)}></mwc-icon-button></p>
 		</div>
@@ -717,42 +698,6 @@ export class Tracking extends Rectangle {
 		<mwc-dialog heading="Merge conflict" id="dialog-merge-error">
 			<div id="dialog-merge-error-message"></div>
 			<mwc-button slot="primaryAction" dialogAction="close">Ok</mwc-button>
-		</mwc-dialog>
-		<mwc-dialog heading="Renumber track" id="dialog-renumber">
-			<div>Enter a new number for this track:</div>
-			<mwc-textfield
-				id="new-number"
-				label="New number"
-				@input=${() => {
-					const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
-
-					var constraint = new RegExp("[0-9]+", "");
-					if (!constraint.test(newNumberTextField.value))
-						newNumberTextField.setCustomValidity("Not a valid track id.");
-					else if (newNumberTextField.value in this.tracks)
-						newNumberTextField.setCustomValidity("A track with this id already exists.");
-					else
-						newNumberTextField.setCustomValidity("");
-					newNumberTextField.reportValidity();
-				}}>
-			</mwc-textfield>
-			<mwc-button
-				slot="primaryAction"
-				@click=${() => {
-					const renumberDialog = this.shadowRoot!.getElementById("dialog-renumber") as any;
-					const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
-					const tIdPrevious = renumberDialog.tId;
-					const tIdNew = newNumberTextField.value;
-
-					const isValid = newNumberTextField.checkValidity();
-					if (isValid) {
-						this.renumberTrack(tIdPrevious, tIdNew);
-						renumberDialog.open = false;
-					}
-				}}>
-				Ok
-			</mwc-button>
-			<mwc-button slot="secondaryAction" dialogAction="cancel">Cancel</mwc-button>
 		</mwc-dialog>
 		`;
 	}
