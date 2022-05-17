@@ -1,7 +1,7 @@
 # <img src="images/pixano_logo.png" alt="Pixano" height="100"/>
 
 [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](http://pixano.cea.fr/smart-annotation/)
+[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://pixano.github.io/demo/demo)
 [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d)
 <!--[![Node.js CI](https://github.com/pixano/pixano-elements/workflows/Node.js%20CI/badge.svg)](https://github.com/pixano/pixano-elements/workflows/Node.js%20CI/badge.svg)-->
 
@@ -15,19 +15,16 @@ Pixano Elements
 
 Pixano Elements - Library of web components dedicated to data annotation tasks.
 
-A complete and ready-to-use annotation application is available at `https://github.com/pixano/pixano-app`.
-
 [![Alt text](http://i3.ytimg.com/vi/z5T2HhnugJo/maxresdefault.jpg)](https://www.youtube.com/watch?v=z5T2HhnugJo)
+
+Have a look to our [online demos](https://pixano.github.io/demo/demo) !
+
+Beside Pixano elements, a complete and ready-to-use annotation application is available at `https://github.com/pixano/pixano-app`.
 
 > IMPORTANT: The Pixano Web Components are a work in progress and subject to major changes until 1.0 release.
 
-[Playcode demo](https://playcode.io/709884/) ([smart-segmentation](https://playcode.io/723293/), [cuboid](https://playcode.io/709984/), [rectangle](https://playcode.io/709884/), [smart-rectangle](https://playcode.io/738813/))
+Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.<!-- TODO: is it still true ? => verify -->
 
-[Website demos](https://pixano.github.io/demo/demo)
-
-[Features video](https://www.youtube.com/watch?v=z5T2HhnugJo)
-
-Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.
 
 ## Table of content
   * [Components overview](#components-overview)
@@ -56,17 +53,23 @@ The Pixano Elements are divided into `packages`. Each package can be installed i
 npm install @pixano/graphics-2d
 ```
 
-Each package can contain multiple web components which are regrouped by affinity.
+Each package can contain multiple web components which are grouped by affinity.
 
 
 | Component | Status | Demo |
 | ----------| -------| -----|
+| [`<pxn-classification>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/classification/) |<!-- TODO -->
 | [`<pxn-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/bounding-box/) |
 | [`<pxn-polygon>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) |  [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/polygon/) |
 | [`<pxn-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/pixelwise/) |
 | [`<pxn-keypoints>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/keypoint/) |
+| [`<pxn-tracking>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/tracking/) |<!-- TODO -->
+| [`<pxn-tracking-graph>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/tracking-graph/) |<!-- TODO -->
 | [`<pxn-smart-rectangle>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-annotation/) |
+| [`<pxn-smart-segmentation>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-segmentation/) |<!-- TODO -->
+| [`<pxn-smart-tracking>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-2d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-2d.svg)](https://www.npmjs.com/package/@pixano/graphics-2d) | [demo](http://pixano.cea.fr/smart-tracking/) |<!-- TODO -->
 | [`<pxn-cuboid-editor>`](https://github.com/pixano/pixano-elements/blob/master/packages/graphics-3d) | [![Published on npm](https://img.shields.io/npm/v/@pixano/graphics-3d.svg)](https://www.npmjs.com/package/@pixano/graphics-3d) | [demo](http://pixano.cea.fr/3d-bounding-box/) |
+
 
 
 ## Requirements
