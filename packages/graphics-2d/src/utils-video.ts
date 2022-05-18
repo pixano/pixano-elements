@@ -348,6 +348,27 @@ export function splitTrack(tId: string, fIdx: number, tracks: { [key: string]: T
 	return newTrack;
 }
 
+/**
+ * Renumber a track
+ * @param tIdPrevious previous track id
+ * @param tIdNew new track id
+ * @param tracks the track set
+ */
+ export function renumberTrack(tIdPrevious: string, tIdNew: string, tracks: { [key: string]: TrackData }): TrackData {
+	const t = tracks[tIdPrevious];
+	const ks = [...Object.values(t.keyShapes)];
+	const newTrack = {
+		id: tIdNew,
+		keyShapes: ks.map((k) => ({ ...k, id: tIdNew }))
+			.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {}),
+		category: t.category,
+		labels: t.labels
+	};
+	tracks[tIdNew] = newTrack;
+	delete tracks[tIdPrevious];
+	return newTrack;
+}
+
 // /**
 //  * Switch visibility of current shape.
 //  */

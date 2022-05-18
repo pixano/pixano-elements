@@ -22,6 +22,7 @@ import {
 	switchTrack,
 	trackColors,
 	splitTrack,
+	renumberTrack,
 	getNewTrackId,
 	mergeTracks,
 	getClosestFrames,
@@ -321,6 +322,18 @@ export class Tracking extends Rectangle {
 	}
 
 	/**
+	 * Renumber a track
+	 * @param tIdPrevious previous track id
+	 * @param tIdNew new track id
+	 */
+	 renumberTrack(tIdPrevious: string, tIdNew: string) {
+		renumberTrack(tIdPrevious, tIdNew, this.tracks);
+		this.selectedTrackIds.delete(tIdPrevious)
+		this.selectedTrackIds.add(tIdNew);
+		this.dispatchEvent(new Event('update-tracks'));
+	}
+
+	/**
 	 * Merge two tracks.
 	 * If they do not overlap, do concatenation of keyshapes else display an error message.
 	 * @param tracks tracks to be merged
@@ -521,6 +534,18 @@ export class Tracking extends Rectangle {
 	}
 
 	/**
+	 * Open track renumber dialog
+	 * @param tId track id
+	 */
+	showTrackRenumberDialog(tId: string) {
+		const trackRenumberDialog = this.shadowRoot!.getElementById("dialog-renumber") as any;
+		const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
+		newNumberTextField!.value = "";
+		trackRenumberDialog!.tId = tId;
+		trackRenumberDialog!.open = true;
+	}
+
+	/**
 	 * Merge error dialog
 	 */
 	mergeErrorDialog(t1Id: string, t2Id: string, keysIntersection: string[]) {
@@ -600,6 +625,7 @@ export class Tracking extends Rectangle {
 								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
 								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
 								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
+								<mwc-icon-button title="Renumber track" icon="edit" @click=${() => this.showTrackRenumberDialog(t.id)}></mwc-icon-button>
 								<mwc-icon-button title="Delete entire track" icon="delete_forever" @click=${() => this.askDeleteTrack(t.id)}></mwc-icon-button>
 							</div>
 						</div>
@@ -691,6 +717,42 @@ export class Tracking extends Rectangle {
 		<mwc-dialog heading="Merge conflict" id="dialog-merge-error">
 			<div id="dialog-merge-error-message"></div>
 			<mwc-button slot="primaryAction" dialogAction="close">Ok</mwc-button>
+		</mwc-dialog>
+		<mwc-dialog heading="Renumber track" id="dialog-renumber">
+			<div>Enter a new number for this track:</div>
+			<mwc-textfield
+				id="new-number"
+				label="New number"
+				@input=${() => {
+					const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
+
+					var constraint = new RegExp("[0-9]+", "");
+					if (!constraint.test(newNumberTextField.value))
+						newNumberTextField.setCustomValidity("Not a valid track id.");
+					else if (newNumberTextField.value in this.tracks)
+						newNumberTextField.setCustomValidity("A track with this id already exists.");
+					else
+						newNumberTextField.setCustomValidity("");
+					newNumberTextField.reportValidity();
+				}}>
+			</mwc-textfield>
+			<mwc-button
+				slot="primaryAction"
+				@click=${() => {
+					const renumberDialog = this.shadowRoot!.getElementById("dialog-renumber") as any;
+					const newNumberTextField = this.shadowRoot!.getElementById("new-number") as any;
+					const tIdPrevious = renumberDialog.tId;
+					const tIdNew = newNumberTextField.value;
+
+					const isValid = newNumberTextField.checkValidity();
+					if (isValid) {
+						this.renumberTrack(tIdPrevious, tIdNew);
+						renumberDialog.open = false;
+					}
+				}}>
+				Ok
+			</mwc-button>
+			<mwc-button slot="secondaryAction" dialogAction="cancel">Cancel</mwc-button>
 		</mwc-dialog>
 		`;
 	}
