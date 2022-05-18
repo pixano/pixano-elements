@@ -23,7 +23,7 @@
     "start": "es-dev-server --preserve-symlinks --node-resolve --open ",
     "tslint": "tslint -c tslint.json packages/**/src/*.ts",
     "docs": "rimraf -rf docs && typedoc packages && grep -rl 'globals.html' docs/* | xargs -i@ sed -i 's/globals.html/index.html/g' @ && mv docs/globals.html docs/index.html",
-    "deps": "cd packages/core && npm i && cd ../ai && npm i && cd ../graphics-2d && npm i && cd ../graphics-3d && npm i && cd ../../demo && npm i && cd .. && npm run bootstrap",
+    "deps": "npm i --production=false && cd packages/core && npm i && cd ../ai && npm i && cd ../graphics-2d && npm i && cd ../graphics-3d && npm i && cd ../../demo && npm i && cd .. && npm run bootstrap",
     "installLocalElements": "cd packages/ai && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd - && cd packages/graphics-2d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && npm i ../ai && cd - && cd packages/graphics-3d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd ../.. && npm run bootstrap",
     "installLocalDemo": "cd demo && rimraf -rf node_modules/@pixano package-lock.json && npm i ../packages/core && npm i ../packages/graphics-2d && npm i ../packages/graphics-3d && cd .. && npm run bootstrap"
   },
