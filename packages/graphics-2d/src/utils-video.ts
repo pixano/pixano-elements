@@ -356,11 +356,11 @@ export function splitTrack(tId: string, fIdx: number, tracks: { [key: string]: T
  */
  export function renumberTrack(tIdPrevious: string, tIdNew: string, tracks: { [key: string]: TrackData }): TrackData {
 	const t = tracks[tIdPrevious];
-	const ks = [...Object.values(t.keyShapes)];
+	const ks = [...Object.values(t.shapes)];
 	const newTrack = {
 		id: tIdNew,
-		keyShapes: ks.map((k) => ({ ...k, id: tIdNew }))
-			.reduce((map, obj) => ({ ...map, [obj.timestamp]: obj }), {}),
+		shapes: ks.map((k) => ({ ...k, id: tIdNew }))
+			.reduce((map, obj) => ({ ...map, [obj.timestamp!]: obj }), {}),
 		category: t.category,
 		labels: t.labels
 	};
