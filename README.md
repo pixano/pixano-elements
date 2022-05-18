@@ -8,7 +8,8 @@
 ## What is PIXANO ?
 [Pixano](https://pixano.cea.fr/) is a web-based smart-annotation tool for computer vision applications. The modules are driven by artificial intelligence, which assists the human user with annotation tasks and accelerate the annotation process. Try some of our features [online](https://pixano.github.io/demo/demo.html)!
 
-[![pixano.gif](documentation/pixano.gif)](https://www.youtube.com/watch?v=z5T2HhnugJo)
+![pixano.gif](https://raw.githubusercontent.com/pixano/pixano-app/master/documentation/pixano.gif)
+
 
 Pixano Elements
 ===============
@@ -29,9 +30,6 @@ Automatic build tests on Ubuntu (latest) and node version 10, 12, 14.<!-- TODO: 
 ## Table of content
   * [Components overview](#components-overview)
   * [Requirements](#requirements)
-      - [Node installation on Windows](#node-installation-on-windows)
-      - [Node installation on Ubuntu](#node-installation-on-ubuntu)
-      - [Other Operating Systems](#other-operating-systems)
   * [Build and run the overall demo](#build-and-run-the-overall-demo)
   * [Documentation](#documentation)
   * [How to contribute ?](#how-to-contribute-)
@@ -78,25 +76,11 @@ Pixano requires WebGL to be activated in your browser. If you see the following 
 
 For development, you will only need Node.js installed in your environement.
 
-- #### Node installation on Windows
+For a fresh install, please follow our guide to install it on your system:
+- [Node installation on Windows](./INSTALL.md#windows)
+- [Node installation on Ubuntu](./INSTALL.md#linux)
 
-  Just go on [official Node.js website](https://nodejs.org/) and download the installer.
-Also, be sure to have `git` available in your PATH, `npm` might need it (You can find git [here](https://git-scm.com/)).
-
-- #### Node installation on Ubuntu
-
-  You can install nodejs and npm easily with apt install, just run the following commands.
-    ```bash
-    sudo apt install nodejs
-    sudo apt install npm
-    ```
-  Or install it with snap: `sudo snap install node`
-
-- #### Other Operating Systems
-  You can find more information about the installation on the [official Node.js website](https://nodejs.org/) and the [official NPM website](https://npmjs.org/).
-
-If the installation was successful, you should be able to run the following command.
-
+If the installation was successful, you should be able to run the following command:
 ```bash
 node --version
 # v10.19.0
@@ -104,13 +88,6 @@ node --version
 npm --version
 # 6.10.0
 ```
-#### note about npm version
-If you need to install a specific version of npm, you can use the following command line:
-```bash
-npm install -g npm@6.10.0
-```
-> If you encounter "EACCES: permission denied" error message, please follow [this guide](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
-
 
 ## Build and run the overall demo
 An online serverless demo is available on our dedicated [website](https://pixano.github.io/demo/demo).
@@ -192,6 +169,8 @@ npx serve demo
 ```bash
 	git checkout master
 	git pull upstream master
+	#If needed: merge
+	#If needed: git push origin master
 ```
 2. Create a new branch to work on
 ```bash
@@ -228,7 +207,18 @@ If you modified the dependencies, you better clean the project before rebuilding
 
 	*A green button "Compare & pull request" should appear. If not, click on branches button (https://github.com/$YOURLOGIN/pixano-elements/branches) and then click the "New pull request" button corresponding to your contribution branch.*
 
-9. Complete the merge request message with a meaningfull title and a comprehensive comment : describe how your work is changing Pixano and what modules are impacted.
+9. Complete the merge request message with a meaningfull title and a comprehensive comment: describe how your work is changing Pixano and what modules are impacted. You could use something like:
+```
+	## pxn-$IMPACTED_PLUGIN
+	* file: modifications...
+	* file: modifications...
+	* ...
+	## pxn-$OTHER_IMPACTED_PLUGIN
+	* ...
+
+	Co-authored-by: ...
+```
+
 10. click on "Create pull request" => automatic verifications are made by github
 
 Nice work ! Thank you for contributing to Pixano !
