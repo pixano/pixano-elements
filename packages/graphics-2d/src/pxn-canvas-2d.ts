@@ -265,6 +265,8 @@ export class Canvas2d extends Canvas {
 		if (this.modes[prevMode]) {
 			// Restore default state
 			this.modes[prevMode].deactivate();
+			this.targetShapes.clear();
+			this.notifySelection([]);
 		}
 		// Set up new mode state
 		this.modes[newMode]?.activate();

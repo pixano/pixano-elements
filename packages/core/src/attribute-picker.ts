@@ -233,8 +233,8 @@ export class AttributePicker extends LitElement {
 	}
 
 	get defaultValue() {
-		const options = this.getDefaultAttributesForCategory(this.schema, this.value.category);
-		return { category: this.value.category, options };
+		const options = this.getDefaultAttributesForCategory(this.schema, this.schema.default);
+		return { category: this.schema.default, options };
 	}
 
 	setCategory(newCategory: any) {
@@ -273,14 +273,9 @@ export class AttributePicker extends LitElement {
 		}
 	}
 
-	get getSchema() {
-		return this.schema;
-	}
-
 	reloadSchema(schema: any) {
 		this.schema = schema;
-		const options = this.getDefaultAttributesForCategory(schema, schema.default);
-		this.value = { category: schema.default, options };
+		this.value = this.defaultValue;
 	}
 
 	_notifyUpdate() {
@@ -311,7 +306,6 @@ export class AttributePicker extends LitElement {
 	}
 
 	firstUpdated() {
-		this.reloadSchema(this.schema);
 	}
 
 	htmlProp(prop: any) {
