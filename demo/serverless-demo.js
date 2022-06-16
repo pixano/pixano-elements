@@ -3,7 +3,6 @@
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
 */
-// TODO : fuse selectedShapeIds (canvas2d) and selectedIds (here)
 // TODO: use redux to store history of attributes ? Usefull for ctrl-z.
 
 
@@ -153,73 +152,74 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
-		if (this.element.isSequence) {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
+		// Initialize annotations
+		if (!this.element.isSequence) {
+			this.initAnnotations();
+		} else {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
 			this.setSelectedIds([]);
-			//first time on this video => initialize annotations
-			if (!this.sequence_annotations.length) {
+			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
+			} else {
+				// 1) get previous frame annotations into sequence annotations
+				this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
+				// 2) set new frame annotations to the corresponding annotations in sequence annotations
+				this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
+				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
+				switch (this.chosenPlugin) {
+					case 'classification':
+						/* nothing to do */
+						break;
+					case 'keypoints':
+					case 'rectangle':
+					case 'smart-rectangle':
+					case 'polygon':
+					case 'cuboid-editor':
+						this.element.shapes = this.annotations;
+						this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
+						break;
+					case 'segmentation':
+					case 'smart-segmentation':
+						const maskAnnot = this.annotations.find((a) => a.id===0);
+						if (maskAnnot) this.element.setMask(maskAnnot.mask);
+						else this.element.setEmpty()
+					case 'tracking':
+					case 'tracking-graph':
+					case 'smart-tracking':
+						/* nothing to do: create=update */
+						break;
+					default:
+						console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
+				}
+				// this.selectedIds = evt.detail;// TODO : vérif pour garder la même track ?
+				// console.log("this.selectedIds=",this.selectedIds);
 			}
-			// 1) get previous frame annotations into sequence annotations
-			this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
-			// 2) set new frame annotations to the corresponding annotations in sequence annotations
-			this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
-			// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
-			switch (this.chosenPlugin) {
-				case 'classification':
-					/* nothing to do */
-					break;
-				case 'keypoints':
-				case 'rectangle':
-				case 'smart-rectangle':
-				case 'polygon':
-				case 'cuboid-editor':
-					this.element.shapes = this.annotations;
-					this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
-					break;
-				case 'segmentation':
-				case 'smart-segmentation':
-					const maskAnnot = this.annotations.find((a) => a.id===0);
-					if (maskAnnot) this.element.setMask(maskAnnot.mask);
-					else this.element.setEmpty()
-				case 'tracking':
-				case 'smart-tracking':
-					/* nothing to do: create=update */
-					break;
-				default:
-					console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
-			}
-			// this.selectedIds = evt.detail;// TODO : vérif pour garder la même track ?
-			// console.log("this.selectedIds=",this.selectedIds);
-		} else {
-			// reinitialize annotations
-			this.initAnnotations();
 		}
-		// initialize attributePicker to default
-		if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking') return;// no attribute picker used for tracking
-		console.log("attributePicker ok");
-		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
-		this.attributePicker.setAttributes(this.attributePicker.defaultValue);
-		if (this.chosenPlugin==='classification') this.setSelectedIds(["not used"]);// exception for classification: behave as if something is always selected
-		if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
-			const schema = defaultLabelValues(this.chosenPlugin);
-			this.element.clsMap = new Map(
-				schema.category.map((c) => {
-					const color = colorToRGBA(c.color);
-					return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
-				})
-			);
-			if (!schema.default) schema.default = schema.category[0].name;
-			this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
+		if (this.chosenPlugin==='classification') this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
+		// Initialize attributePicker
+		if ((!this.element.isSequence) || (!this.sequence_annotations.length)) {// do not reinitialize schema nor reset to default inside a sequence
+			if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking' || this.chosenPlugin==='tracking-graph') return;// exception: no attribute picker used for tracking
+			// load default schema (and set attributes to default)
+			this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
+			// exceptions
+			if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
+				const schema = defaultLabelValues(this.chosenPlugin);
+				this.element.clsMap = new Map(
+					schema.category.map((c) => {
+						const color = colorToRGBA(c.color);
+						return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
+					})
+				);
+				if (!schema.default) schema.default = schema.category[0].name;
+				this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
+			}
 		}
 	}
 
 	onCreate(evt) {
 		const newObject = evt.detail;
-		// this.mode = 'edit';
 		console.log("onCreate", evt.detail.id);
-		console.log("this.selectedIds au moment du create=",this.selectedIds);
 		let shapes;
 		switch (this.chosenPlugin) {
 			case 'classification':
@@ -229,18 +229,25 @@ export class ServerlessDemo extends LitElement {
 			case 'rectangle':
 			case 'polygon':
 			case 'cuboid-editor':
+				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
+				// add attributes to object without deep copy
+				Object.entries(this.attributePicker.value).forEach(([key, value]) => {
+					newObject[key] = JSON.parse(JSON.stringify(value));
+				});
+				newObject.color = this.attributePicker._colorFor(newObject.category);
+				// add timestamp to object
+				if (this.element.isSequence) newObject.timestamp = this.targetFrameIdx;
+				// set new shapes
+				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
+				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
+				this.setAnnotations(shapes);
+				break;
 			case 'smart-rectangle':
 				newObject.id = Math.random().toString(36);// TODO: temporary: id not set in all plugins
 				// add attributes to object without deep copy
-				if (this.chosenPlugin==='smart-rectangle') {
-					Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
-						// do not overwrite category if it was automatically found
-						if (key != 'category' || !newObject.category) {
-							newObject[key] = JSON.parse(JSON.stringify(value));
-						}
-					});
-				} else {
-					Object.entries(this.attributePicker.defaultValue).forEach(([key, value]) => {
+				Object.entries(this.attributePicker.value).forEach(([key, value]) => {
+					// do not overwrite category if it was automatically found
+					if (key != 'category' || !newObject.category) {
 						newObject[key] = JSON.parse(JSON.stringify(value));
 					});
 				}
@@ -265,6 +272,7 @@ export class ServerlessDemo extends LitElement {
 			case 'segmentation':
 			case 'smart-segmentation':
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do: create=update */
 				break;
@@ -304,6 +312,7 @@ export class ServerlessDemo extends LitElement {
 				this.setAnnotations(frame);
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do: delete=update */
 				break;
@@ -318,7 +327,6 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onSelection(evt) {
 		console.log("onSelection");
-		console.log("this.selectedIds au moment du select=",this.selectedIds);
 		switch (this.chosenPlugin) {
 			case 'classification':
 				/* nothing to do */
@@ -365,6 +373,7 @@ export class ServerlessDemo extends LitElement {
 				}
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				/* nothing to do */
 				break;
@@ -408,7 +417,7 @@ export class ServerlessDemo extends LitElement {
 					// nothing to do for annotation infos, only the mask has changed
 				} else {// this is a new id
 					// create the new label
-					label = {...this.attributePicker.defaultValue};
+					label = {...this.attributePicker.value};
 					// store the stringified values
 					const value = this.attributePicker.value;
 					Object.keys(label).forEach((key) => {
@@ -423,6 +432,7 @@ export class ServerlessDemo extends LitElement {
 				this.setSelectedIds(updatedIds);
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				// console.log("evt=",evt);
 				// console.log("this.tracks=",this.tracks);
@@ -508,6 +518,7 @@ export class ServerlessDemo extends LitElement {
 				});
 				break;
 			case 'tracking':
+			case 'tracking-graph':
 			case 'smart-tracking':
 				this.setAnnotations(this.tracks)
 				break;
@@ -523,7 +534,7 @@ export class ServerlessDemo extends LitElement {
 		if (this.attributeEditor.style.display==="none") {
 			this.attributeEditor.style.display="block";
 			this.attributePicker.style.display="none";
-			this.attributeEditor.json = this.attributePicker.getSchema;
+			this.attributeEditor.json = this.attributePicker.schema;
 		} else {
 			this.attributeEditor.style.display="none";
 			this.attributePicker.style.display="block";
@@ -554,43 +565,43 @@ export class ServerlessDemo extends LitElement {
 			case 'keypoints':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
-					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Edit" @click=${() => this.element.setMode(this.element.mode,'edit')}>${pointer}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'rectangle':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Add rectangle" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'polygon':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
-					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
+					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.setMode(this.element.mode,'create')}}>${createPencil}</p>
+					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.setMode(this.element.mode,'create')}}>${polyline}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'segmentation':
 				return html`
-					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.setMode(this.element.mode,'create-brush')}>${paintBrush}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.setMode(this.element.mode,'edit')}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.setMode(this.element.mode,'lock')}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'cuboid-editor':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="New instance" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
 					<p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
 				`;
 			case 'smart-rectangle':
@@ -604,17 +615,17 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-segmentation':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.setMode(this.element.mode,'create-brush')}>${paintBrush}</p>
 					<p class="icon" title="Smart instance" @click=${() => {
 						this.element.editionMode=EditionMode.NEW_INSTANCE;
-						this.element.mode = 'smart-create'}}>${borderOuter}</p>
+						this.element.setMode(this.element.mode,'smart-create')}}>${borderOuter}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.setMode(this.element.mode,'edit')}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.setMode(this.element.mode,'lock')}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
@@ -624,8 +635,8 @@ export class ServerlessDemo extends LitElement {
 	}
 	get genericTools() {
 		return html`
-			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
-			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
+			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
+			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
 			<mwc-icon-button title="Hide/Show labels"	icon="tonality"				@click="${() => this.element.toggleLabels()}"></mwc-icon-button>
 		`;
 	}
@@ -644,25 +655,25 @@ export class ServerlessDemo extends LitElement {
 					${this.genericTools}
 				`;
 			case 'polygon':
+				console.log("tools");
 				return html`
 					${this.genericTools}
 					<mwc-icon-button title="Group polygons"		icon="call_merge"	@click="${() => this.element.merge()}"></mwc-icon-button>
 					<mwc-icon-button title="Split polygon"		icon="call_split"	@click="${() => this.element.split()}"></mwc-icon-button>
 					<mwc-icon-button title="Polyline/Polygon"	icon="timeline"
-					style="display: ${this.mode === 'create' ?  "block" : "none"}"
-					?selected=${this.element && this.element.isOpenedPolygon === true}
-					@click="${() => {
-							this.element.isOpenedPolygon = !this.element.isOpenedPolygon;
-							this.requestUpdate();}}"></mwc-icon-button>
+						?selected=${this.element && this.element.isOpenedPolygon === true}
+						@click="${() => {
+								this.element.isOpenedPolygon = !this.element.isOpenedPolygon;
+								this.requestUpdate();}}"></mwc-icon-button>
 				`;
 			case 'segmentation':
 				return html`
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.setMode(this.element.mode,'create-brush')}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.setMode(this.element.mode,'lock')}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
@@ -678,24 +689,23 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 				return html`
 					${this.genericTools}
-					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
+					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.element.setMode(this.element.mode,'smart-create')}"></mwc-icon-button>
 					<mwc-icon-button title="ROI increase (+)"	@click=${() => this.element.roiUp()}>${increase}</mwc-icon-button>
 					<mwc-icon-button title="ROI decrease (-)"	@click=${() => this.element.roiDown()}>${decrease}</mwc-icon-button>
 				`;
 			case 'smart-segmentation':
 				return html`
-					${this.genericTools}
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.setMode(this.element.mode,'create-brush')}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.setMode(this.element.mode,'lock')}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
 						@click="${() => this.maskVisuMode = this.maskVisuMode === 'INSTANCE' ? 'SEMANTIC': 'INSTANCE'}"></mwc-icon-button>
-					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
+					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.element.setMode(this.element.mode,'smart-create')}"></mwc-icon-button>
 				`;
 			default:
 				return html``;
@@ -715,7 +725,6 @@ export class ServerlessDemo extends LitElement {
 	}
 
 	get plugin() {
-		console.log("this.mode=",this.mode);
 		this.input = 'examples/image.jpg';// TODO: temporary
 		switch (this.chosenPlugin) {
 			case 'classification':
@@ -774,6 +783,13 @@ export class ServerlessDemo extends LitElement {
 					<pxn-tracking .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
 								disablefullscreen>
 					</pxn-tracking>`;
+			case 'tracking-graph':
+				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
+				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
+				return html`
+					<pxn-tracking-graph .input=${images} .tracks=${this.tracks} @load=${this.onLoadedInput} @selection-track=${this.onSelection} @update-tracks=${this.onUpdate} @delete-track=${this.onUpdate}
+								disablefullscreen>
+					</pxn-tracking-graph>`;
 			case 'smart-rectangle':
 				return html`
 					<div class="tools">${this.tools}</div>

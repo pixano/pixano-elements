@@ -3,7 +3,7 @@
  * @copyright CEA-LIST/DIASI/SIALV/LVA (2019)
  * @author CEA-LIST/DIASI/SIALV/LVA <pixano@cea.fr>
  * @license CECILL-C
-*/
+ */
 
 import { customElement, property, LitElement, html, css } from 'lit-element';
 import '@material/mwc-icon-button';
@@ -134,7 +134,7 @@ export class AttributePicker extends LitElement {
 		['CTRL + s', 'Save']
 	];
 	@property({ type: Boolean })
-	public showDetail = false;// Boolean, rendering mode for the selected category (showing all attributes or only the category) 
+	public showDetail = false;// Boolean, rendering mode for the selected category (showing all attributes or only the category)
 	@property({ type: Object })
 	// public schema: { category: [ { name: string, color: string, properties: [{ name: string, default: string }] } ], default: string } = { category: [{name:'', color:'', properties:[]}], default: '' };// shema for this annotation (i.e. category and attributes available for each category in this annotation)
 	// public schema: Schema = { category: [{name:'', color:'', properties:[]}], default: '' };// shema for this annotation (i.e. category and attributes available for each category in this annotation)
@@ -210,7 +210,7 @@ export class AttributePicker extends LitElement {
 
 	/**
 	 * Retrieve input text value from change event
-	 * @param {Event} e 
+	 * @param {Event} e
 	 */
 	getValue(e: any) {
 		const path = e.composedPath();
@@ -233,8 +233,8 @@ export class AttributePicker extends LitElement {
 	}
 
 	get defaultValue() {
-		const options = this.getDefaultAttributesForCategory(this.schema, this.value.category);
-		return { category: this.value.category, options };
+		const options = this.getDefaultAttributesForCategory(this.schema, this.schema.default);
+		return { category: this.schema.default, options };
 	}
 
 	setCategory(newCategory: any) {
@@ -265,7 +265,7 @@ export class AttributePicker extends LitElement {
 	}
 
 	setAttributesIdx(idx: any) {
-		if (idx != undefined) {
+		if (idx !== undefined) {
 			this.value = { category: this.schema.category.find((c) => c.idx === idx)!.name, options: {} };
 		} else {
 			const options = this.getDefaultAttributesForCategory(this.schema, this.schema.default);
@@ -273,14 +273,9 @@ export class AttributePicker extends LitElement {
 		}
 	}
 
-	get getSchema() {
-		return this.schema;
-	}
-
 	reloadSchema(schema: any) {
 		this.schema = schema;
-		const options = this.getDefaultAttributesForCategory(schema, schema.default);
-		this.value = { category: schema.default, options };
+		this.value = this.defaultValue;
 	}
 
 	_notifyUpdate() {
@@ -311,7 +306,6 @@ export class AttributePicker extends LitElement {
 	}
 
 	firstUpdated() {
-		this.reloadSchema(this.schema);
 	}
 
 	htmlProp(prop: any) {
@@ -320,7 +314,7 @@ export class AttributePicker extends LitElement {
 			return html`
 				<mwc-select label="${prop.name}" @selected=${(e: any) => {
 						const idx = e.detail.index;
-						if (this.value.options[prop.name] != prop.enum[idx]) {
+						if (this.value.options[prop.name] !== prop.enum[idx]) {
 							this.value.options[prop.name] = prop.enum[idx];
 							this._notifyUpdate();
 						}
@@ -337,7 +331,7 @@ export class AttributePicker extends LitElement {
 				<mwc-checkbox ?checked=${checked} @change=${(evt: any) => {
 						const path = evt.composedPath();
 						const input = path[0];
-						if (checked != input.checked) {
+						if (checked !== input.checked) {
 							this.value.options[prop.name] = !checked;
 							this.value = { ...this.value };
 							this._notifyUpdate();

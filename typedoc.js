@@ -8,16 +8,8 @@ module.exports = {
 				'**/tests/*.ts',
 		],
 		lernaExclude: [
-				'demo-cuboid',
-				'demo-rectangle',
-				'demo-polygon',
-				'demo-polygon-http',
-				'demo-segmentation',
-				'demo-smart-segmentation',
-				'demo-smart-rectangle',
-				'demo-keypoints',
-				'demo-tracking',
-				'demo-smart-tracking'
+				'demo',
+				'serverless_demo'
 		],
 		name: '@pixano',
 		excludePrivate: true,

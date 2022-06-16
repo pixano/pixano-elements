@@ -131,8 +131,7 @@ export class ViewControls extends EventTarget {
 		} else if (this.viewer.s <= this.viewer.smin) {
 			this.viewer.s = this.viewer.smin;
 			// center placeholder if zoom is minimal
-			this.viewer.sx = 0.5 * (1 - this.viewer.s) * this.viewer.rw;
-			this.viewer.sy = 0.5 * (1 - this.viewer.s) * this.viewer.rh;
+			this.viewer.computeDrawableArea(this.viewer.canvasWidth, this.viewer.canvasHeight, this.viewer.imageWidth, this.viewer.imageHeight, true);
 		} else {
 			// apply zoom center (sx and sy are offsets)
 			this.viewer.sx = (this.viewer.sx - center[0]) * (this.viewer.s / oldscale) + center[0];
