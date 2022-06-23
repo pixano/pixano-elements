@@ -9,7 +9,7 @@
 import { html, LitElement, css} from 'lit-element';
 import '@pixano/graphics-2d';
 import '@pixano/graphics-3d';
-import { commonJson, colorToRGBA } from '@pixano/core/lib/utils';
+import { delay, commonJson, colorToRGBA } from '@pixano/core/lib/utils';
 import '@pixano/core/lib/attribute-picker';
 import { demoStyles,
 	fullscreen,
@@ -27,6 +27,8 @@ import { demoStyles,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
 import { pluginsList, defaultLabelValues } from './plugins_index';
+import { interpolate2 } from '@pixano/graphics-2d/lib/utils-video';
+import { observable } from '@pixano/core';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 
@@ -46,7 +48,9 @@ export class ServerlessDemo extends LitElement {
 			// generic properties
 			chosenPlugin: { type: String },
 			theme: { type: String },
+			selectedIds: { type: Array },
 			// specific properties
+			selectedTracknum: { type: Number },//for sequences
 			isOpenedPolygon: { type: Boolean },//for pxn-polygon
 			maskVisuMode: { type: String }//for pxn-segmentation
 		};
@@ -67,15 +71,8 @@ export class ServerlessDemo extends LitElement {
 		this.tracks = {};//for pxn-tracking
 		//when in an image sequence or a video:
 		this.sequence_annotations = [];//overall annotations: each image of the sequence has its own annotations array
-		this.selectedTrackId = -1;//current tracknum
+		this.selectedTracknum = -1;//current tracknum
 		this.sequence_nbTracks = 0;
-
-
-		// @property({ type: Object })
-		// public tracks: { [key: string]: TrackData } = {};
-		// en fait track = [TrackData]
-
-		// track.keyShapes[numframe] = shape;
 	}
 
 	/******************* Utility functions *******************/
@@ -86,6 +83,9 @@ export class ServerlessDemo extends LitElement {
 	 */
 	initAnnotations() {
 		this.setAnnotations([]);
+		this.sequence_annotations = [];
+		this.selectedTracknum = -1;
+		this.sequence_nbTracks = 0;
 		this.setSelectedIds([]);
 		this.tracks = {};//for pxn-tracking
 	}
@@ -97,16 +97,71 @@ export class ServerlessDemo extends LitElement {
 		// console.log("prev nnotation=",this.annotations);
 		// console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
-		if (this.element.isSequence && this.attributePicker) {//attributePicker is null when tracking
-			this.sequence_annotations[this.element.frameIdx].annotations = newAnnotations;
+		if (this.element) if (this.element.isSequence && this.attributePicker) {//attributePicker is null when tracking
+			this.sequence_annotations[this.element.frameIdx] = newAnnotations;
 			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
 		}
 	}
-
+	/**
+	 * Set selected IDs and adapt attribute picker
+	 * @param newIds: ids to select
+	 */
 	setSelectedIds(newIds) {
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
-		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;//null when tracking
+		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;
+	}
+	/**
+	 * Get annotations given its id
+	 * @param id: id of the annotation to search for
+	 * @return the corresponding annotation or undefined if not found
+	 */
+	getAnnotationByID(id) {
+		if (this.element.isSequence) {
+			console.log("this.sequence_annotations=",this.sequence_annotations);
+			const annots = this.sequence_annotations.find( (annots) => { console.log("int annots=",annots); return annots.find( (a) => (a.id === id) ) } );//we assume ids are unique in the whole sequence
+			console.log("annots=",annots);
+			if (annots) return annots.find( (a) => (a.id === id) );
+			else return undefined;
+		} else {
+			return this.annotations.find( (a) => (a.id === id) );
+		}
+	}
+
+	/******************* Functions dedicated to sequences and tracking *******************/
+
+	/* tmp, until tracking class is fully discarded */
+	isTracking() {
+		if (this.chosenPlugin==='tracking' || this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking-graph') return true;
+		else return false;
+	}
+	
+	/**
+	 * Interpolate on selected track, begining on current selected annotation
+	 * @param forwardMode: true to interpolate to the next manually annotated frame, false to interpolate to the previous one
+	 * ATTENTION: we assume here that interpolation is valid
+	 */
+	async runInterpolation(forwardMode, orig_annot, target_annot) {
+		console.log("orig_annot.timestamp=",orig_annot.timestamp);
+		console.log("target_annot.timestamp=",target_annot.timestamp);
+		// goto first frame to interpolate
+		if (forwardMode) await this.element.nextFrame();
+		else await this.element.prevFrame();
+		await delay(10);
+		// run interpolation
+		while ( forwardMode ? this.element.timestamp < target_annot.timestamp : this.element.timestamp > target_annot.timestamp ) {// for each successive timestamp from orig until target
+			// compute interpolation for this frame
+			const rate = (this.element.timestamp - orig_annot.timestamp) / (target_annot.timestamp - orig_annot.timestamp);
+			const newAnnot = interpolate2(orig_annot, target_annot, rate);
+			// add this new annotation
+			this.element.shapes.add(observable(newAnnot));//to the elements shapes
+			this.onCreate({ detail: newAnnot });//export to annotations
+			this.dispatchEvent(new Event('update-tracks'));
+			// goto next frame to interpolate (and display)
+			if (forwardMode) await this.element.nextFrame();
+			else await this.element.prevFrame();
+			await delay(10);
+		}
 	}
 
 	/******************* BUTTONS handlers *******************/
@@ -152,21 +207,29 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
+		// adapt blocks to be displayed
+		if (this.element.isSequence) this.shadowRoot.getElementById('seqtools').style.display="block";
+		else this.shadowRoot.getElementById('seqtools').style.display="none";
+		if (this.isTracking()) this.shadowRoot.getElementById('properties-panel').style.display="none";
+		else this.shadowRoot.getElementById('properties-panel').style.display="block";
 		// Initialize annotations
 		if (!this.element.isSequence) {
 			this.initAnnotations();
 		} else {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
 			console.log("this.sequence_annotations=",this.sequence_annotations);
-			if (this.attributePicker) this.setSelectedIds([]);//not for tracking
 			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
+				this.initAnnotations();
+				if (this.element.shapes) this.element.shapes = [];
+				else if (!this.isTracking()) this.element.setEmpty();// for 'segmentation', should also work for shapes
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
-					this.sequence_annotations.push({ "timestamp" : i, "annotations" : [] });// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
+					this.sequence_annotations.push([]);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
 			} else {
+				if (!this.isTracking()) this.setSelectedIds([]);//not for tracking
 				// 1) get previous frame annotations into sequence annotations
-				this.sequence_annotations[this.element.lastFrameIdx].annotations = this.annotations;
+				this.sequence_annotations[this.element.lastFrameIdx] = this.annotations;
 				// 2) set new frame annotations to the corresponding annotations in sequence annotations
-				this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
+				this.setAnnotations(this.sequence_annotations[this.element.frameIdx]);
 				console.log("this.annotations=",this.annotations);
 				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
 				switch (this.chosenPlugin) {
@@ -185,7 +248,7 @@ export class ServerlessDemo extends LitElement {
 					case 'smart-segmentation':
 						const maskAnnot = this.annotations.find((a) => a.id===0);
 						if (maskAnnot) this.element.setMask(maskAnnot.mask);
-						else this.element.setEmpty()
+						else this.element.setEmpty();
 					case 'tracking':
 					case 'tracking-graph':
 					case 'smart-tracking':
@@ -200,8 +263,8 @@ export class ServerlessDemo extends LitElement {
 		}
 		if (this.chosenPlugin==='classification') this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
 		// Initialize attributePicker
-		if ((!this.element.isSequence) || (!this.sequence_annotations.length)) {// do not reinitialize schema nor reset to default inside a sequence
-			if (this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking' || this.chosenPlugin==='tracking-graph') return;// exception: no attribute picker used for tracking
+		if (!this.element.isSequence) {// do not reinitialize schema nor reset to default inside a sequence until unselection
+			if (this.isTracking()) return;// exception: no attribute picker used for tracking
 			// load default schema (and set attributes to default)
 			this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
 			// exceptions
@@ -219,6 +282,10 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
+	/**
+	 * Called after an annotation was created
+	 * @param evt: event, evt.detail contains the new annotation
+	 */
 	onCreate(evt) {
 		const newObject = evt.detail;
 		console.log("onCreate", evt.detail.id);
@@ -247,13 +314,14 @@ export class ServerlessDemo extends LitElement {
 				if (this.element.isSequence) {
 					newObject.timestamp = this.element.frameIdx;
 					if ((this.selectedIds.length===1) ||//if a previous object was selected OR
-						(this.annotations.find(annotation => annotation.tracknum===this.selectedTrackId)) ||//if a track whith the same track number already exists in this frame OR
-						(this.selectedTrackId === -1))//if no track is selected
+						(this.annotations.find(annotation => annotation.tracknum===this.selectedTracknum)) ||//if a track whith the same track number already exists in this frame OR
+						(this.selectedTracknum === -1))//if no track is selected
 						{// => this is a new track
-							this.selectedTrackId = this.sequence_nbTracks;
+							this.selectedTracknum = this.sequence_nbTracks;
 							this.sequence_nbTracks++;
 					}//else the continue on the same tracklet (i.e. a track was selected and we went to a new image)
-					newObject.tracknum = this.selectedTrackId;
+					newObject.tracknum = this.selectedTracknum;
+					if (!newObject.origin) newObject.origin = { createdBy: 'manual' };// manual by default ? could be 'unkown' ?
 				}
 
 				// set new shapes
@@ -337,11 +405,11 @@ export class ServerlessDemo extends LitElement {
 					if (this.element.isSequence) {
 						if (this.selectedIds.length===1) {
 							const shape = [...this.element.shapes].find(shape => shape.id===this.selectedIds[0]);//get shape by id
-							this.selectedTrackId = shape.tracknum;//TODO: this.element.selectedShapes[0]
-						} else this.selectedTrackId = -1;//if multiple objects are selected or none, deselect track
+							this.selectedTracknum = shape.tracknum;//TODO: this.element.selectedShapes[0]
+						} else this.selectedTracknum = -1;//if multiple objects are selected or none, deselect track
 					}
 
-				} else if (this.element.isSequence) this.selectedTrackId = -1;//if nothing is selected, deselect track
+				} else if (this.element.isSequence) this.selectedTracknum = -1;//if nothing is selected, deselect track
 				break;
 			case 'segmentation':
 			case 'smart-segmentation':
@@ -442,8 +510,9 @@ export class ServerlessDemo extends LitElement {
 		const value =  this.attributePicker.value;
 		switch (this.chosenPlugin) {
 			case 'classification':
-				console.log("clasif setannot attchange");
-				this.setAnnotations([value]);
+				console.log("classif setannot attchange");
+				this.setAnnotations([ {...value, tracknum: 0 } ]);
+				this.selectedTracknum = 0;
 				break;
 			case 'keypoints':
 			case 'rectangle':
@@ -512,21 +581,6 @@ export class ServerlessDemo extends LitElement {
 				break;
 			default:
 				console.error("onAttributeChanged: plugin ${this.chosenPlugin} unknown");
-		}
-	}
-
-	/**
-	 * Implement property panel content
-	 */
-	swapAttributeEditor() {
-		if (this.attributeEditor.style.display==="none") {
-			this.attributeEditor.style.display="block";
-			this.attributePicker.style.display="none";
-			this.attributeEditor.json = this.attributePicker.schema;
-		} else {
-			this.attributeEditor.style.display="none";
-			this.attributePicker.style.display="block";
-			this.attributePicker.reloadSchema(this.attributeEditor.json);
 		}
 	}
 
@@ -643,7 +697,6 @@ export class ServerlessDemo extends LitElement {
 					${this.genericTools}
 				`;
 			case 'polygon':
-				console.log("tools");
 				return html`
 					${this.genericTools}
 					<mwc-icon-button title="Group polygons"		icon="call_merge"	@click="${() => this.element.merge()}"></mwc-icon-button>
@@ -700,16 +753,57 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
+	/**
+	 * Tools dedicated to sequences
+	 */
+	get sequenceTools() {
+		console.log("sequenceTools");
+		// only enable interpolation when possible (i.e. when at least two manual annotations exist in the sequence) and only between manual annotations
+		let disabled_forward = true;
+		let disabled_backward = true;
+		let orig_annot, next_annot, prev_annot;
+		console.log("this.selectedTracknum=",this.selectedTracknum);
+		console.log("this.selectedIds=",this.selectedIds);
+		if ( (this.selectedTracknum !== -1) && (this.selectedIds.length===1) ) {//interpolate on selected track, begining on current selected annotation
+			orig_annot = this.getAnnotationByID(this.selectedIds[0]);
+			console.log("orig_annot=",orig_annot);
+			if ((orig_annot) && (orig_annot.tracknum === this.selectedTracknum) ) {
+				const annot_track = this.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTracknum) && (a.origin.createdBy==='manual') );//get manual annotations linked to the current track
+				console.log("annot_track=",annot_track);
+
+				next_annot = annot_track.find( (a) => a.timestamp > orig_annot.timestamp );
+				prev_annot = annot_track.find( (a) => a.timestamp < orig_annot.timestamp );
+
+				if (next_annot) disabled_forward = false;
+				if (prev_annot) disabled_backward = false;
+				console.log("next_annot=",next_annot);
+				console.log("prev_annot=",prev_annot);
+			}
+		}
+		return html`
+			<div class="tools" id="seqtools" style="display: none" title="track until next keyframe or till the end" style="flex-direction: column; width: 10%">
+				<p>Interpolation
+				<mwc-icon-button title="Backward interpolation" icon="chevron_left"
+							?disabled=${disabled_backward}
+							@click=${() => this.runInterpolation(false, orig_annot, prev_annot) }></mwc-icon-button>
+				<mwc-icon-button title="Forward interpolation" icon="chevron_right"
+							?disabled=${disabled_forward} 
+							@click=${() => this.runInterpolation(true, orig_annot, next_annot) }></mwc-icon-button></p>
+			</div>
+		`;
+	}
+
 	/******************* RENDERING: main and panels to be displayed, especially plugin dependent panel  *******************/
 
 	/**
 	 * Implement property panel content
 	 */
 	get propertyPanel() {
-		console.log("propertyPanel");
 		return html`
-			<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
-			<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>`;
+			<div id="properties-panel" style="display: none">
+				<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
+				<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>
+			</div>`;
 	}
 
 	get plugin() {
@@ -719,51 +813,40 @@ export class ServerlessDemo extends LitElement {
 				return html`
 					<pxn-classification .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate}
 								disablefullscreen>
-					</pxn-classification>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-classification>`;
 			case 'keypoints':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-keypoints .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								enableOutsideDrawing
 								disablefullscreen>
-					</pxn-keypoints>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-keypoints>`;
 			case 'rectangle':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-rectangle .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-rectangle>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-rectangle>`;
 			case 'polygon':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-polygon .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								?isOpenedPolygon="${this.isOpenedPolygon}"
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-polygon>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-polygon>`;
 			case 'segmentation':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-segmentation .input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-segmentation>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-segmentation>`;
 			case 'cuboid-editor':
 				this.input = 'examples/sample_pcl.bin';
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-cuboid-editor .input=${this.input} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-cuboid-editor>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-cuboid-editor>`;
 			case 'tracking':
 				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
@@ -780,20 +863,16 @@ export class ServerlessDemo extends LitElement {
 					</pxn-tracking-graph>`;
 			case 'smart-rectangle':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-smart-rectangle .input=${this.input} mode="smart-create" scale="1" @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection} @create=${this.onCreate}
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-smart-rectangle>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-smart-rectangle>`;
 			case 'smart-segmentation':
 				return html`
-					<div class="tools">${this.tools}</div>
 					<pxn-smart-segmentation .input=${this.input} maskVisuMode=${this.maskVisuMode} @load=${this.onLoadedInput} @update=${this.onUpdate} @selection=${this.onSelection}
 								@delete=${this.onDelete}
 								disablefullscreen>
-					</pxn-smart-segmentation>
-					<div class="properties-panel">${this.propertyPanel}</div>`;
+					</pxn-smart-segmentation>`;
 			case 'smart-tracking':
 				this.input = 'examples/video/';// TODO: the input should be this path, not an array + TODO: / at the end needed, should not be mandatory
 				var images = Array(10).fill(0).map((_, idx) => this.input + `${idx+1}`.padStart(2, '0') + '.png');
@@ -820,7 +899,7 @@ export class ServerlessDemo extends LitElement {
 		`;
 		else return html`
 			<h1>Annotate</h1>
-			<mwc-icon-button icon="exit_to_app" @click=${() => { this.chosenPlugin = ''; this.setAnnotations([]); }} title="Back to plugin choice"></mwc-icon-button>
+			<mwc-icon-button icon="exit_to_app" @click=${() => this.backToPluginChoice()} title="Back to plugin choice"></mwc-icon-button>
 			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload one or more of your images">
 				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
 			</mwc-icon-button>
@@ -829,6 +908,42 @@ export class ServerlessDemo extends LitElement {
 		`;
 	}
 
+	/**
+	 * Reinitialize display to plugin choice
+	 */
+	backToPluginChoice() {
+		this.chosenPlugin = '';
+		this.initAnnotations();
+		this.shadowRoot.getElementById('seqtools').style.display="none";
+		this.shadowRoot.getElementById('properties-panel').style.display="none";
+	}
+	/**
+	 * Implement property panel content
+	 */
+	swapAttributeEditor() {
+		if (this.attributeEditor.style.display==="none") {
+			this.attributeEditor.style.display="block";
+			this.attributePicker.style.display="none";
+			this.attributeEditor.json = this.attributePicker.schema;
+		} else {
+			this.attributeEditor.style.display="none";
+			this.attributePicker.style.display="block";
+			this.attributePicker.reloadSchema(this.attributeEditor.json);
+		}
+	}
+	/**
+	 * Request fullscreen for plugin
+	 */
+	fullScreen() {
+		if (document.fullscreenEnabled) {
+			// this.shadowRoot.querySelector('.main').requestFullscreen();
+			this.shadowRoot.querySelector('.plugin').requestFullscreen();
+		}
+	}
+
+	/**
+	 * MAIN window
+	 */
 	render() {
 		return html`
 			<div class="main ${this.theme}">
@@ -840,15 +955,13 @@ export class ServerlessDemo extends LitElement {
 						${this.headerContent}
 					</div>
 				</div>
-				<div class="plugin">${this.plugin}</div>
+				<div class="plugin">
+					<div class="tools">${this.tools}</div>
+					${this.sequenceTools}
+					${this.plugin}
+					${this.propertyPanel}
+				</div>
 			</div>`;//tool and propertypanel should be declared here
-	}
-
-	fullScreen() {
-		if (document.fullscreenEnabled) {
-			// this.shadowRoot.querySelector('.main').requestFullscreen();
-			this.shadowRoot.querySelector('.plugin').requestFullscreen();
-		}
 	}
 
 	static get styles() {
@@ -982,7 +1095,7 @@ export class ServerlessDemo extends LitElement {
 			align-items: start;
 			padding-top: 60px;
 		}
-		.properties-panel {
+		#properties-panel {
 			flex: 0 0 300px;
 			background: var(--theme-color);
 			overflow: auto;

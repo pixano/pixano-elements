@@ -218,6 +218,11 @@ export class CuboidEditor extends GenericDisplay {
 		}
 	}
 
+	public setMode(prevMode: string, newMode: InteractiveMode) {
+		console.log("prevMode is ont used",prevMode);//TODO
+		this.modeManager.mode = newMode;
+	}
+
 	/**
 	 * Insert a new annotation in the scene.
 	 *

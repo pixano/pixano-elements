@@ -7,6 +7,7 @@
 
 import { css, customElement, html, property } from 'lit-element';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
+import { delay } from '@pixano/core/lib/utils';
 import { Graph } from './pxn-keypoints'
 import { ShapeData, TrackData } from './types';
 import {
@@ -57,7 +58,7 @@ export class TrackingGraph extends Graph {
 	protected isShiftKeyPressed: boolean = false;
 
 	// Getter of the 1st selected track ID
-	protected get selectedTrackId(){
+	protected get selectedTracknum(){
 		return this.selectedTrackIds.values().next().value;
 	}
 
@@ -123,7 +124,7 @@ export class TrackingGraph extends Graph {
 			// if there is a selected track, add keyshape
 			// else create a new track
 			if (this.selectedTrackIds.size) {
-				const target0Id = this.selectedTrackId;
+				const target0Id = this.selectedTracknum;
 				const currentShape = getShape(this.tracks[target0Id], this.timestamp);
 				if (currentShape){
 					this.newTrack(e);
@@ -133,7 +134,7 @@ export class TrackingGraph extends Graph {
 					// add keyshape
 					this.addNewKeyShapes([{// add new keyshape to the current track
 						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: this.selectedTrackId
+						id: this.selectedTracknum
 					}]);
 					this.dispatchEvent(new Event('update-tracks'));
 				}
@@ -429,7 +430,7 @@ export class TrackingGraph extends Graph {
 	}
 
 	async runInterpolation(forwardMode=true){
-		const target0Id = this.selectedTrackId;
+		const target0Id = this.selectedTracknum;
 		let stopTracking = false;
          const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
              if (evt.key === 'x') {
@@ -448,7 +449,7 @@ export class TrackingGraph extends Graph {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
-				await this.delay(100);
+				await delay(100);
 			}
 			await this.nextFrame();
 		}else{
@@ -462,17 +463,13 @@ export class TrackingGraph extends Graph {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
-				await this.delay(100);
+				await delay(100);
 			}
 			await this.prevFrame();
 		}
 		window.removeEventListener('keydown', stopTrackingListenerFct);
 				
 	}
-
-	protected delay(ms: number) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	};
 
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
@@ -643,7 +640,7 @@ export class TrackingGraph extends Graph {
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
-			const target0Id = this.selectedTrackId;
+			const target0Id = this.selectedTracknum;
 			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
 			const [id1, ] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));

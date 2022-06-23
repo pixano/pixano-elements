@@ -36,40 +36,34 @@ npx serve
 	"annotations" = [ annotation1, annotation2, etc ];
 	"annotation" = {
 		"id": "unique id inside this input",
-		"timestamp": value,
-		"tracknum": value,
 		"category": "classname",
 		"geometry": { geometry definition is tool dependent },
 		"labels": {
 			"optionalParameter1": value,
 			"optionalParameter2": value,
 			"etc": "..."
+		},
+		"timestamp": value,
+		"tracknum": value,
+		"origin": {
+			"taskname": "name of the task used to create this annotation",
+			"createdBy": "manual" | "interpolation" | "inference"
 		}
 	};
 
 	"geometry" definition for: (interfaces are defined in Geometry in graphics-2d/src/types.ts and in Cuboid in graphics-3d/src/types.ts)
-	- classification: {}
-	- keypoints: { type: "graph", vertices: [ pts ], edges: [], visibles: [ booleans ] }
-	- rectangle/smart-rectangle: { type: "rectangle", vertices: [ pts ] }
-	- polygon: { type: "polygon", vertices: [ pts ], isOpened: true/false }
-	- segmentation/smart-segmentation: {}
-		Exception for segmentation/smart-segmentation: the first annotation is: { "id": 0, "mask": "..." }
-	- cuboid-editor: { "position": [ values ], size": [ values ], "heading": value }
-	- tracking/smart-tracking: TO BE DETERMINED -> linked to sequences, does class tracking disapear ? or become a subclass of sequence ?
-		=> 3 représentations possibles : basée sur les pistes ou basée sur les images ou basée annotation
-			=> pistes (track based) : fait pour le tracking => actuel; avantage : labels communs et labels distincts faciles
-			=> images (frame based) : fait pour pouvoir servir à n'importe quoi; avantage : générique avec les pxns => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
-				avantage : plus simple dans le code et plus lisible dans le fichier
-				désavantage : pas tout à fait générique puisque çà fait une différence entre vidéo et image
-				+> "sequence_annotations" : {
-					"timestamp" : value,
-					"annotations" : [ annotation1, annotation2, etc ]
-			=> annotation (annotation based) : fait pour pouvoir servir à n'importe quoi; avantage : complètement générique => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
-			===> frame based by default, can be converted easily through our scripts
-
+		- classification: {}
+		- keypoints: { type: "graph", vertices: [ pts ], edges: [], visibles: [ booleans ] }
+		- rectangle/smart-rectangle: { type: "rectangle", vertices: [ pts ] }
+		- polygon: { type: "polygon", vertices: [ pts ], isOpened: true/false }
+		- segmentation/smart-segmentation: {}
+			Exception for segmentation/smart-segmentation: the first annotation is: { "id": 0, "mask": "..." }
+		- cuboid-editor: { "position": [ values ], size": [ values ], "heading": value }
+		- tracking/smart-tracking: TO BE DETERMINED -> linked to sequences, does class tracking disapear ? or become a subclass of sequence ?
+			=> représentations choisie : frame based : fait pour pouvoir servir à n'importe quoi; avantage : complètement générique => demandera une conversion, pas de labels au niveau de la piste, ou alors il faut créer un champs spécifique, mais est-ce utile ?
 	"timestamp" is only present for sequences, it indicates the frame number for a sequence of images and the real timestamp (format/unit TO BE DETERMINED) for videos.
-		=> pas si représentation images
-	"tracknum" is optionnal and only present for sequences, it indicates the track number when the annotation is part of a track. Each tracknum is unique inside a sequence.
+	"tracknum" is only present for sequences, it indicates the track number when the annotation is part of a track. Each tracknum is unique inside a sequence.
+	"origin" and its content is optional
 
 ### Current annotation/export formats in pixano-app:
 	For all plugins except tracking : "annotations" = [ annotation1, annotation2, etc ];
@@ -157,7 +151,7 @@ npx serve
 					"type": "rectangle"
 				},
 				"timestamp": timestamp(=image num if no timestamp),
-				"labels": { optionnal labels }
+				"labels": { optional labels }
 			},
 			"image num": {
 				"geometry": {
@@ -165,14 +159,14 @@ npx serve
 					"type": "rectangle"
 				},
 				"timestamp": timestamp(=image num if no timestamp),
-				"labels": { optionnal labels }
+				"labels": { optional labels }
 				"id": "track id",
 				"color": "a color"
 			},
 			etc
 		},
 		"category": "name of the class",
-		"labels": { optionnal labels }
+		"labels": { optional labels }
 	},
 
-	{ optionnal labels } are of the form as { options }.
+	{ optional labels } are of the form as { options }.

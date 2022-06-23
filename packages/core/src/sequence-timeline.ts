@@ -12,7 +12,7 @@
  */
 // TODO: synchronize width with playback-control OR replace the slider by a modified dataZoom
 // TODO: adapt datazoom or delete it
-// TODO: add a button to expend : only display the current track by default, change height and display 10 or more when clicking on this button
+// TODO: add a button to expend : only display the current track by default, change height and display 10 or more when clicking on this button OR add a slider : https://stackoverflow.com/questions/61228735/how-to-scroll-with-mouse-wheel-and-keyboard-on-vertical-slider-in-echarts
 // TODO: use this.myChart.resize when canvas size changes ?
 
 import { html, customElement, LitElement } from 'lit-element';
@@ -91,9 +91,9 @@ export class SequenceTimeline extends LitElement {
 
 		sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
 			// console.log("frame=",frame);
-			// console.log("annotations=",frame.annotations);
+			// console.log("annotations=",frame);
 			var numFrame = index;
-			frame.annotations.forEach((annotation:any) => {
+			frame.forEach((annotation:any) => {
 				flatData.push([numFrame, annotation.tracknum, frameAuthor.MANUAL, colorForCategory(annotation.category), annotation.id]);
 				if (annotation.tracknum>maxTrackNum) maxTrackNum = annotation.tracknum;
 			});
@@ -109,7 +109,7 @@ export class SequenceTimeline extends LitElement {
 		
 		var series: any[] = [];
 		dataSeries.forEach((data,index) => {
-			series.push({
+			if (data.length) series.push({
 				id: index.toString(),
 				type: 'line',
 				smooth: true,
@@ -119,6 +119,7 @@ export class SequenceTimeline extends LitElement {
 				itemStyle: { color: data[0][3] },//'red';
 				lineStyle: { color: data[0][3] }
 			});
+			else console.log("no data for index",index,"in",sequence_annotations);
 		});
 		this.myChart.setOption({series: series});
 

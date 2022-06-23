@@ -7,6 +7,7 @@
 
 import { css, customElement, html, property } from 'lit-element';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
+import { delay } from '@pixano/core/lib/utils';
 import { Rectangle } from './pxn-rectangle'
 import { ShapeData, TrackData } from './types';
 import {
@@ -58,7 +59,7 @@ export class Tracking extends Rectangle {
 	protected isShiftKeyPressed: boolean = false;
 
 	// Getter of the 1st selected track ID
-	protected get selectedTrackId(){
+	protected get selectedTracknum(){
 		return this.selectedTrackIds.values().next().value;
 	}
 
@@ -124,7 +125,7 @@ export class Tracking extends Rectangle {
 			// if there is a selected track, add keyshape
 			// else create a new track
 			if (this.selectedTrackIds.size) {
-				const target0Id = this.selectedTrackId;
+				const target0Id = this.selectedTracknum;
 				const currentShape = getShape(this.tracks[target0Id], this.timestamp);
 				if (currentShape){
 					this.newTrack(e);
@@ -135,7 +136,7 @@ export class Tracking extends Rectangle {
 					this.addNewKeyShapes([
 						{
 							...JSON.parse(JSON.stringify((e as any).detail)),
-							id: this.selectedTrackId
+							id: this.selectedTracknum
 						}
 					]);
 					this.dispatchEvent(new Event('update-tracks'));
@@ -446,7 +447,7 @@ export class Tracking extends Rectangle {
 	}
 
 	async runInterpolation(forwardMode=true){
-		const target0Id = this.selectedTrackId;
+		const target0Id = this.selectedTracknum;
 		// Always start from key shape ? --> bouton grisé autrement
 		if (forwardMode){
 			var [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
@@ -457,7 +458,7 @@ export class Tracking extends Rectangle {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
-				await this.delay(10);
+				await delay(10);
 			}
 			await this.nextFrame();
 		}else{
@@ -469,16 +470,12 @@ export class Tracking extends Rectangle {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
-				await this.delay(10);
+				await delay(10);
 			}
 			await this.prevFrame();
 		}
 				
 	}
-
-	protected delay(ms: number) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	};
 
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
@@ -662,7 +659,7 @@ export class Tracking extends Rectangle {
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
-			const target0Id = this.selectedTrackId;
+			const target0Id = this.selectedTracknum;
 			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
 			const [id1, ] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));

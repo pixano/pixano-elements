@@ -12,6 +12,8 @@ import {
 	getShape,
 	setShape
 } from './utils-video';
+import { delay } from '@pixano/core/lib/utils';
+
 
 @customElement('pxn-smart-tracking' as any)
 export class SmartTracking extends Tracking {
@@ -66,10 +68,6 @@ export class SmartTracking extends Tracking {
 			});
 		}
 	}
-
-	protected delay(ms: number) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	};
 
 	async trackTillTheEnd(forwardMode:boolean=true) {
 		let stopTracking = false;
@@ -145,7 +143,7 @@ export class SmartTracking extends Tracking {
 		setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
 		this.drawTracks();
 		this.dispatchEvent(new Event('update-tracks'));
-		await this.delay(10);
+		await delay(10);
 	}
 
 	// overide leftPanel to add tracking properties
