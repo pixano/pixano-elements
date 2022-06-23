@@ -4,6 +4,15 @@
  * @license CECILL-C
  */
 
+/**
+ * Wait some time
+ * @param ms delay in millisecond
+ * Usage: await this.delay(10);//wait for 10 ms
+ */
+export function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 // alphabetically ordered color list
 export const colorNames: { [key: string]: string } = {
 	aliceblue: "f0f8ff",
