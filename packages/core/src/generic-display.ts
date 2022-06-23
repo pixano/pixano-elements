@@ -11,7 +11,7 @@ import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
 
 /**
- * Utility class to load images of sequences of images given
+ * Utility class to load images or sequences of images given
  * their sources.
  *
  * @fires CustomEvent#load upon loading input item { detail: input data }
@@ -21,23 +21,7 @@ export abstract class GenericDisplay extends LitElement {
 
 	public loader: Loader | SequenceLoader = new Loader();
 
-	// additionnal properties for sequence loader
-	public maxFrameIdx: number | null = null;
-	public pendingLoad: boolean | null = null;
-
-	@internalProperty()
-	private _targetFrameIdx: number | null = null;
-
-	private _lastTargetFrameIdx: number | null = null;
-
-	// either use list item index as timestamp
-	// or look for timestamp value in filename
-	@property({ type: String })
-	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
-
 	protected authorizedType: 'image' | 'pcl' | 'all' = 'all';
-
-	private _source: string | string[] = '';
 
 	static get properties() {
 		return {
@@ -74,6 +58,10 @@ export abstract class GenericDisplay extends LitElement {
 			this.playback!.disconnectedCallback();
 		});
 	}
+
+	/******************* INPUT management *******************/
+
+	private _source: string | string[] = '';
 
 	@property({ type: String })
 	get input(): string | string[] {
@@ -116,6 +104,26 @@ export abstract class GenericDisplay extends LitElement {
 		}
 		this.requestUpdate();
 	}
+
+	get isSequence() {
+		return this.loader instanceof SequenceLoader;
+	}
+
+	/******************* Sequences management : timestamp, frame index, navigation *******************/
+
+	// additionnal properties for sequence loader
+	public maxFrameIdx: number | null = null;
+	public pendingLoad: boolean | null = null;
+
+	@internalProperty()
+	private _targetFrameIdx: number | null = null;
+
+	private _lastTargetFrameIdx: number | null = null;
+
+	// either use list item index as timestamp
+	// or look for timestamp value in filename
+	@property({ type: String })
+	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
 
 	get timestamp(): number {
 		return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frameIdx].timestamp : 0;
@@ -191,7 +199,6 @@ export abstract class GenericDisplay extends LitElement {
 		});
 	}
 
-
 	public nextFrame(): Promise<void> {
 		return new Promise((resolve) => {
 			if (!this.isSequence) {
@@ -221,6 +228,8 @@ export abstract class GenericDisplay extends LitElement {
 		return false;
 	}
 
+	/******************* EVENTS handlers *******************/
+
 	/**
 	 * Fired on playback slider update.
 	 * @param {CustomEvent} evt
@@ -230,8 +239,6 @@ export abstract class GenericDisplay extends LitElement {
 	}
 
 	onTimelineClick(evt: CustomEvent) {
-		console.log("onTimelineClick appelé !!!!!");
-		console.log("evt=",evt);
 		// 1) go to selected frame
 		this.frameIdx = evt.detail.frame;
 		// 2) select the corresponding shape
@@ -241,10 +248,6 @@ export abstract class GenericDisplay extends LitElement {
 		// this.dispatchEvent(new CustomEvent('selection', { detail:  [evt.detail.id] }));//TODO : does not realy select + wait for frame change = use promise
 	}
 
-	get isSequence() {
-		return this.loader instanceof SequenceLoader;
-	}
-
 	private notifyInputLoaded(data: HTMLImageElement | Float32Array) {
 		this.dispatchEvent(new CustomEvent('load', { detail: data }));
 	}
@@ -252,6 +255,8 @@ export abstract class GenericDisplay extends LitElement {
 	private notifyTimestampChanged() {
 		this.dispatchEvent(new CustomEvent('timestamp', { detail: this._targetFrameIdx }));
 	}
+
+	/******************* RENDERING  *******************/
 
 	display(): TemplateResult {
 		return html``;
