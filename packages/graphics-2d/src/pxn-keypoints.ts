@@ -23,8 +23,8 @@ export class Graph extends Canvas2d {
 
 	constructor() {
 		super();
-		this.setController('create', new GraphCreateController({ ...this }))
-			.setController('edit', new GraphsUpdateController({ ...this }));
+		this.setController('create', new GraphCreateController({ ...this }));
+		this.setController('edit', new GraphsUpdateController({ ...this }));
 	}
 
 	protected keyUpHandler = (evt: KeyboardEvent) => {

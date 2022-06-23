@@ -607,43 +607,43 @@ export class ServerlessDemo extends LitElement {
 			case 'keypoints':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Edit" @click=${() => this.element.setMode(this.element.mode,'edit')}>${pointer}</p>
-					<p class="icon" title="Add keypoints" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
+					<p class="icon" title="Edit" @click=${() => this.element.mode = 'edit'}>${pointer}</p>
+					<p class="icon" title="Add keypoints" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'rectangle':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add rectangle" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
+					<p class="icon" title="Add rectangle" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'polygon':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.setMode(this.element.mode,'create')}}>${createPencil}</p>
-					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.setMode(this.element.mode,'create')}}>${polyline}</p>
+					<p class="icon" title="Add polygon" @click=${() => {this.isOpenedPolygon=false; this.element.mode = 'create'}}>${createPencil}</p>
+					<p class="icon" title="Add line" @click=${() => {this.isOpenedPolygon=true; this.element.mode = 'create'}}>${polyline}</p>
 					<p class="icon" title="Zoom in" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'segmentation':
 				return html`
-					<p class="icon" title="Polygon tool" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.setMode(this.element.mode,'create-brush')}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.setMode(this.element.mode,'edit')}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.setMode(this.element.mode,'lock')}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
 			case 'cuboid-editor':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="New instance" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
+					<p class="icon" title="New instance" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
 					<p class="icon" title="Change instance orientation" @click=${() => this.element.swap()}>${swap}</p>
 				`;
 			case 'smart-rectangle':
@@ -657,17 +657,17 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-segmentation':
 				return html`
 					<p class="icon" title="Fullscreen" @click=${this.fullScreen}>${fullscreen}</p>
-					<p class="icon" title="Polygon tool" @click=${() => this.element.setMode(this.element.mode,'create')}>${createPencil}</p>
-					<p class="icon" title="Brush tool" @click=${() => this.element.setMode(this.element.mode,'create-brush')}>${paintBrush}</p>
+					<p class="icon" title="Polygon tool" @click=${() => this.element.mode = 'create'}>${createPencil}</p>
+					<p class="icon" title="Brush tool" @click=${() => this.element.mode = 'create-brush'}>${paintBrush}</p>
 					<p class="icon" title="Smart instance" @click=${() => {
 						this.element.editionMode=EditionMode.NEW_INSTANCE;
-						this.element.setMode(this.element.mode,'smart-create')}}>${borderOuter}</p>
+						this.element.mode = 'smart-create'}}>${borderOuter}</p>
 					<hr>
-					<p class="icon" title="Select instance" @click=${() => this.element.setMode(this.element.mode,'edit')}>${magicSelect}</p>
+					<p class="icon" title="Select instance" @click=${() => this.element.mode = 'edit'}>${magicSelect}</p>
 					<hr>
 					<p class="icon" title="Remove from instance (Ctrl)" @click=${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}>${subtract}</p>
 					<p class="icon" title="Add to instance (Shift)" @click=${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}>${union}</p>
-					<p class="icon" title="Lock" @click=${() => this.element.setMode(this.element.mode,'lock')}>${lock}</p>
+					<p class="icon" title="Lock" @click=${() => this.element.mode = 'lock'}>${lock}</p>
 					<p class="icon" title="Zoom in (scroll)" @click=${() => this.element.viewControls.zoomIn()}>${zoomIn}</p>
 					<p class="icon" title="Zoom out (scroll)" @click=${() => this.element.viewControls.zoomOut()}>${zoomOut}</p>
 				`;
@@ -677,8 +677,8 @@ export class ServerlessDemo extends LitElement {
 	}
 	get genericTools() {
 		return html`
-			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
-			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
+			<mwc-icon-button title="Select/Edit shape"	icon="navigation"			?selected=${this.mode === 'edit'}	@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+			<mwc-icon-button title="Create"				icon="add_circle_outline"	?selected=${this.mode === 'create'}	@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
 			<mwc-icon-button title="Hide/Show labels"	icon="tonality"				@click="${() => this.element.toggleLabels()}"></mwc-icon-button>
 		`;
 	}
@@ -709,12 +709,12 @@ export class ServerlessDemo extends LitElement {
 				`;
 			case 'segmentation':
 				return html`
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.setMode(this.element.mode,'create-brush')}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.setMode(this.element.mode,'lock')}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
@@ -730,23 +730,23 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 				return html`
 					${this.genericTools}
-					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.element.setMode(this.element.mode,'smart-create')}"></mwc-icon-button>
+					<mwc-icon-button title="Smart mode"			icon="flare" @click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
 					<mwc-icon-button title="ROI increase (+)"	@click=${() => this.element.roiUp()}>${increase}</mwc-icon-button>
 					<mwc-icon-button title="ROI decrease (-)"	@click=${() => this.element.roiDown()}>${decrease}</mwc-icon-button>
 				`;
 			case 'smart-segmentation':
 				return html`
-					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.setMode(this.element.mode,'edit')}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.setMode(this.element.mode,'create')}"></mwc-icon-button>
-					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.setMode(this.element.mode,'create-brush')}"></mwc-icon-button>
+					<mwc-icon-button title="Select/Edit instance"		icon="navigation"			?selected=${this.mode === 'edit'}			@click="${() => this.element.mode = 'edit'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Polygon)"		icon="add_circle_outline"	?selected=${this.mode === 'create'}			@click="${() => this.element.mode = 'create'}"></mwc-icon-button>
+					<mwc-icon-button title="Add instance (Brush)"		icon="brush"				?selected=${this.mode === 'create-brush'}	@click="${() => this.element.mode = 'create-brush'}"></mwc-icon-button>
 					<mwc-icon-button title="Add to instance (Shift)"		?selected=${this.getEditionMode()===EditionMode.ADD_TO_INSTANCE}			@click="${() => this.element.editionMode=EditionMode.ADD_TO_INSTANCE}">${union}</mwc-icon-button>
 					<mwc-icon-button title="Remove from instance (Ctrl)"	?selected=${this.getEditionMode()===EditionMode.REMOVE_FROM_INSTANCE}	@click="${() => this.element.editionMode=EditionMode.REMOVE_FROM_INSTANCE}">${subtract}</mwc-icon-button>
-					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.setMode(this.element.mode,'lock')}"></mwc-icon-button>
+					<mwc-icon-button title="Lock instances on click"	icon="lock"					?selected=${this.mode === 'lock'} @click="${() => this.element.mode = 'lock'}"></mwc-icon-button>
 					<mwc-icon-button title="Switch opacity"				icon="tonality"				@click="${() => this.element.toggleMask()}"></mwc-icon-button>
 					<mwc-icon-button title="Filter isolated"			icon="filter_center_focus"	@click="${() => this.element.filterLittle()}"></mwc-icon-button>
 					<mwc-icon-button title="Switch instance/semantic"	icon="face"					?selected=${this.maskVisuMode === 'INSTANCE'}
 						@click="${() => this.maskVisuMode = this.maskVisuMode === 'INSTANCE' ? 'SEMANTIC': 'INSTANCE'}"></mwc-icon-button>
-					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.element.setMode(this.element.mode,'smart-create')}"></mwc-icon-button>
+					<mwc-icon-button title="Smart create"				icon="add_circle_outline"	?selected=${this.mode === 'smart-create'}	@click="${() => this.element.mode = 'smart-create'}"></mwc-icon-button>
 				`;
 			default:
 				return html``;
