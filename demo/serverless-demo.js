@@ -118,9 +118,7 @@ export class ServerlessDemo extends LitElement {
 	 */
 	getAnnotationByID(id) {
 		if (this.element.isSequence) {
-			console.log("this.sequence_annotations=",this.sequence_annotations);
-			const annots = this.sequence_annotations.find( (annots) => { console.log("int annots=",annots); return annots.find( (a) => (a.id === id) ) } );//we assume ids are unique in the whole sequence
-			console.log("annots=",annots);
+			const annots = this.sequence_annotations.find( (annots) => annots.find( (a) => (a.id === id) ) );//we assume ids are unique in the whole sequence
 			if (annots) return annots.find( (a) => (a.id === id) );
 			else return undefined;
 		} else {
@@ -233,7 +231,8 @@ export class ServerlessDemo extends LitElement {
 				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
 				switch (this.chosenPlugin) {
 					case 'classification':
-						/* nothing to do */
+						if (!this.annotations.length) this.setAnnotations([this.attributePicker.value]);// if it's the first time on this image, apply previous value (default if no previous)
+						this.attributePicker.setAttributes(this.annotations[0]);
 						break;
 					case 'keypoints':
 					case 'rectangle':
@@ -256,11 +255,9 @@ export class ServerlessDemo extends LitElement {
 					default:
 						console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
 				}
-				// this.selectedIds = evt.detail;// TODO : vérif pour garder la même track ?
 				console.log("this.selectedIds=",this.selectedIds);
 			}
 		}
-		if (this.chosenPlugin==='classification') this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
 		// Initialize attributePicker
 		if (!this.element.isSequence) {// do not reinitialize schema nor reset to default inside a sequence until unselection
 			if (this.isTracking()) return;// exception: no attribute picker used for tracking
@@ -278,6 +275,10 @@ export class ServerlessDemo extends LitElement {
 				if (!schema.default) schema.default = schema.category[0].name;
 				this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
 			}
+		}
+		if (this.chosenPlugin==='classification') {
+			this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
+			this.onAttributeChanged();// and apply the current attributes (default if user did nothing)
 		}
 	}
 
@@ -510,8 +511,12 @@ export class ServerlessDemo extends LitElement {
 		switch (this.chosenPlugin) {
 			case 'classification':
 				console.log("classif setannot attchange");
-				this.setAnnotations([ {...value, tracknum: 0 } ]);
-				this.selectedTracknum = 0;
+				if (this.element.isSequence) {
+					this.setAnnotations([{...value, tracknum: 0, timestamp: this.element.timestamp}]);
+					this.selectedTracknum = 0;
+				} else {
+					this.setAnnotations([value]);
+				}
 				break;
 			case 'keypoints':
 			case 'rectangle':
