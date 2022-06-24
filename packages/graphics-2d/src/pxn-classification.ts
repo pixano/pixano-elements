@@ -54,4 +54,11 @@ export class Classification extends Canvas {
 		super();
 		this.annotations = [];
 	}
+
+	/**
+	 * Empy all shapes
+	 */
+	public setEmpty() {
+		this.annotations = [];
+	}
 }

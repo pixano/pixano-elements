@@ -219,8 +219,7 @@ export class ServerlessDemo extends LitElement {
 			console.log("this.sequence_annotations=",this.sequence_annotations);
 			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
 				this.initAnnotations();
-				if (this.element.shapes) this.element.shapes = [];
-				else if (!this.isTracking()) this.element.setEmpty();// for 'segmentation', should also work for shapes
+				if (!this.isTracking()) this.element.setEmpty();// for 'segmentation', should also work for shapes
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push([]);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}

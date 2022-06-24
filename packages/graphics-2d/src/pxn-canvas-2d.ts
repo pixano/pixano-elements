@@ -141,6 +141,13 @@ export class Canvas2d extends Canvas {
 	}
 
 	/**
+	 * Empy all shapes
+	 */
+	public setEmpty() {
+		this.shapes.clear();
+	}
+
+	/**
 	 * Copy selected shapes in clipboard
 	 */
 	onCopy(): string | void {
