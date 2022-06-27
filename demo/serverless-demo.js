@@ -11,6 +11,7 @@ import '@pixano/graphics-2d';
 import '@pixano/graphics-3d';
 import { delay, commonJson, colorToRGBA } from '@pixano/core/lib/utils';
 import '@pixano/core/lib/attribute-picker';
+import '@pixano/core/lib/tracking-panel';
 import { demoStyles,
 	fullscreen,
 	createPencil,
@@ -100,6 +101,7 @@ export class ServerlessDemo extends LitElement {
 		if (this.element) if (this.element.isSequence && this.attributePicker) {//attributePicker is null when tracking
 			this.sequence_annotations[this.element.frameIdx] = newAnnotations;
 			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
+			this.trackingPanel.sequenceAnnotations2trackIds(this.sequence_annotations);
 		}
 	}
 	/**
@@ -217,7 +219,7 @@ export class ServerlessDemo extends LitElement {
 			console.log("this.sequence_annotations=",this.sequence_annotations);
 			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
 				this.initAnnotations();
-				if (!this.isTracking()) this.element.setEmpty();// for 'segmentation', should also work for shapes
+				if (!this.isTracking()) this.element.setEmpty();
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push([]);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
@@ -276,6 +278,9 @@ export class ServerlessDemo extends LitElement {
 				this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
 			}
 		}
+		// Initialize trackingPanel
+		if (this.element.isSequence && !this.isTracking()) this.trackingPanel.style.display="block";
+		else this.trackingPanel.style.display="none";
 		if (this.chosenPlugin==='classification') {
 			this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
 			this.onAttributeChanged();// and apply the current attributes (default if user did nothing)
@@ -588,6 +593,16 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
+	/**
+	 * Sequences only: select a track
+	 * @param {CustomEvent} evt: id of the track to be selected
+	 */
+	onSelectTrack(evt) {
+		this.selectedTracknum = evt.detail;
+		//TODO: select the first object of the track
+	}
+	
+
 	/******************* selector getters *******************/
 	get element() {
 		return this.shadowRoot.querySelector("pxn-"+this.chosenPlugin);
@@ -597,6 +612,9 @@ export class ServerlessDemo extends LitElement {
 	}
 	get attributeEditor() {
 		return this.shadowRoot.querySelector('fleshy-jsoneditor');
+	}
+	get trackingPanel() {
+		return this.shadowRoot.querySelector('tracking-panel');
 	}
 
 	get mode() {
@@ -804,10 +822,12 @@ export class ServerlessDemo extends LitElement {
 	 */
 	get propertyPanel() {
 		return html`
-			<div id="properties-panel" style="display: none">
-				<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
-				<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>
-			</div>`;
+				<div id="properties-panel" style="display: none; flex-direction: column">
+					<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
+					<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>
+					<tracking-panel style="display: none" @tracking-panel-select=${this.onSelectTrack}></tracking-panel>
+				</div>
+			`;
 	}
 
 	get plugin() {
