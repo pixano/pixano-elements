@@ -9,7 +9,7 @@
 import { html, LitElement, css} from 'lit-element';
 import '@pixano/graphics-2d';
 import '@pixano/graphics-3d';
-import { delay, commonJson, colorToRGBA } from '@pixano/core/lib/utils';
+import { commonJson, colorToRGBA } from '@pixano/core/lib/utils';
 import '@pixano/core/lib/attribute-picker';
 import '@pixano/core/lib/tracking-panel';
 import { demoStyles,
@@ -28,10 +28,11 @@ import { demoStyles,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
 import { pluginsList, defaultLabelValues } from './plugins_index';
-import { interpolate2 } from '@pixano/graphics-2d/lib/utils-video';
-import { observable } from '@pixano/core';
+import { observable } from '@pixano/core/lib/observer';
+import  { Annotations } from '@pixano/core/lib/annotations-manager';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
+
 
 // temporary, should be style.ts
 export const camera = html`<svg slot="icon" width="24" height="24" viewBox="0 0 24 24"><g><path d="M 8.46875 3.816406 C 7.988281 3.988281 7.871094 4.128906 7.199219 5.34375 C 6.351562 6.871094 6.652344 6.71875 4.359375 6.75 C 2.179688 6.777344 2.003906 6.832031 1.632812 7.585938 L 1.523438 7.804688 L 1.523438 19.195312 L 1.636719 19.425781 C 1.777344 19.710938 2.042969 19.976562 2.335938 20.117188 L 2.554688 20.226562 L 21.445312 20.226562 L 21.664062 20.117188 C 21.945312 19.980469 22.230469 19.695312 22.367188 19.414062 L 22.476562 19.195312 L 22.476562 7.804688 L 22.367188 7.585938 C 21.996094 6.828125 21.828125 6.777344 19.640625 6.75 C 17.417969 6.722656 17.601562 6.785156 17.074219 5.835938 C 15.800781 3.523438 16.351562 3.75 11.988281 3.753906 C 9.300781 3.753906 8.613281 3.765625 8.46875 3.816406 M 13.148438 7.636719 C 14.902344 8.027344 16.933594 9.773438 16.6875 10.683594 C 16.496094 11.402344 15.738281 11.390625 15.226562 10.65625 C 13.804688 8.636719 10.949219 8.402344 9.308594 10.175781 C 8.988281 10.523438 8.972656 10.503906 9.703125 10.640625 C 10.46875 10.78125 10.652344 10.917969 10.492188 11.21875 C 10.414062 11.371094 7.699219 13.261719 7.5625 13.265625 C 7.375 13.265625 7.234375 13.066406 6.539062 11.789062 C 6.15625 11.09375 5.828125 10.5 5.804688 10.46875 C 5.71875 10.363281 5.78125 10.117188 5.917969 10.015625 L 6.050781 9.917969 L 6.769531 10.058594 L 7.488281 10.203125 L 7.734375 9.828125 C 8.871094 8.109375 11.140625 7.191406 13.148438 7.636719 M 16.628906 12.316406 C 16.703125 12.390625 18.050781 14.796875 18.1875 15.097656 C 18.257812 15.253906 18.144531 15.5 17.984375 15.542969 C 17.925781 15.554688 17.558594 15.507812 17.171875 15.433594 L 16.472656 15.300781 L 16.261719 15.625 C 14.523438 18.347656 10.625 18.761719 8.253906 16.476562 C 7.21875 15.480469 7 14.742188 7.628906 14.378906 C 8 14.160156 8.375 14.296875 8.6875 14.765625 C 10.105469 16.878906 13.296875 17.113281 14.78125 15.210938 C 14.953125 14.988281 14.945312 14.984375 14.25 14.855469 C 13.125 14.648438 13.132812 14.441406 14.296875 13.636719 C 14.644531 13.398438 15.242188 12.984375 15.625 12.71875 C 16.34375 12.222656 16.480469 12.167969 16.628906 12.316406 "/></g></svg>`
@@ -51,7 +52,6 @@ export class ServerlessDemo extends LitElement {
 			theme: { type: String },
 			selectedIds: { type: Array },
 			// specific properties
-			selectedTracknum: { type: Number },//for sequences
 			isOpenedPolygon: { type: Boolean },//for pxn-polygon
 			maskVisuMode: { type: String }//for pxn-segmentation
 		};
@@ -64,6 +64,7 @@ export class ServerlessDemo extends LitElement {
 		this.theme = 'black';
 		this.defaultMode = 'edit';
 		this.chosenPlugin = '';//empty = no plugin chosen
+		this.Annotations = new Annotations();
 		this.annotations = [];
 		this.selectedIds = [];// don't asign directly : always use this.setSelectedIds(...)
 		// specific properties
@@ -73,6 +74,7 @@ export class ServerlessDemo extends LitElement {
 		//when in an image sequence or a video:
 		this.sequence_annotations = [];//overall annotations: each image of the sequence has its own annotations array
 		this.selectedTracknum = -1;//current tracknum
+		this.selectedTrackIds = [];//currently selected track ids
 		this.sequence_nbTracks = 0;
 	}
 
@@ -83,6 +85,7 @@ export class ServerlessDemo extends LitElement {
 	 * @param {Object} newAnnotation
 	 */
 	initAnnotations() {
+		this.Annotations.init();
 		this.setAnnotations([]);
 		this.sequence_annotations = [];
 		this.selectedTracknum = -1;
@@ -95,13 +98,14 @@ export class ServerlessDemo extends LitElement {
 	 * @param {Object} newAnnotations
 	 */
 	setAnnotations(newAnnotations) {
+		if (this.element) this.Annotations.setAnnotations(newAnnotations,this.element.frameIdx);
 		// console.log("prev nnotation=",this.annotations);
 		// console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
 		if (this.element) if (this.element.isSequence && this.attributePicker) {//attributePicker is null when tracking
 			this.sequence_annotations[this.element.frameIdx] = newAnnotations;
 			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
-			this.trackingPanel.sequenceAnnotations2trackIds(this.sequence_annotations);
+			this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
 		}
 	}
 	/**
@@ -109,23 +113,16 @@ export class ServerlessDemo extends LitElement {
 	 * @param newIds: ids to select
 	 */
 	setSelectedIds(newIds) {
+		console.log("serverless setSelectedIds",newIds);
+		this.Annotations.setSelectedIds(newIds);
+		if (newIds.length) {
+			const tracks = newIds.map((id) => this.Annotations.getAnnotationByID(id).tracknum );
+			this.trackingPanel.selectTracks(tracks);//select corresponding track
+		}
+		// this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
 		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
 		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;
-	}
-	/**
-	 * Get annotations given its id
-	 * @param id: id of the annotation to search for
-	 * @return the corresponding annotation or undefined if not found
-	 */
-	getAnnotationByID(id) {
-		if (this.element.isSequence) {
-			const annots = this.sequence_annotations.find( (annots) => annots.find( (a) => (a.id === id) ) );//we assume ids are unique in the whole sequence
-			if (annots) return annots.find( (a) => (a.id === id) );
-			else return undefined;
-		} else {
-			return this.annotations.find( (a) => (a.id === id) );
-		}
 	}
 
 	/******************* Functions dedicated to sequences and tracking *******************/
@@ -134,34 +131,6 @@ export class ServerlessDemo extends LitElement {
 	isTracking() {
 		if (this.chosenPlugin==='tracking' || this.chosenPlugin==='smart-tracking' || this.chosenPlugin==='tracking-graph') return true;
 		else return false;
-	}
-	
-	/**
-	 * Interpolate on selected track, begining on current selected annotation
-	 * @param forwardMode: true to interpolate to the next manually annotated frame, false to interpolate to the previous one
-	 * ATTENTION: we assume here that interpolation is valid
-	 */
-	async runInterpolation(forwardMode, orig_annot, target_annot) {
-		console.log("orig_annot.timestamp=",orig_annot.timestamp);
-		console.log("target_annot.timestamp=",target_annot.timestamp);
-		// goto first frame to interpolate
-		if (forwardMode) await this.element.nextFrame();
-		else await this.element.prevFrame();
-		await delay(10);
-		// run interpolation
-		while ( forwardMode ? this.element.timestamp < target_annot.timestamp : this.element.timestamp > target_annot.timestamp ) {// for each successive timestamp from orig until target
-			// compute interpolation for this frame
-			const rate = (this.element.timestamp - orig_annot.timestamp) / (target_annot.timestamp - orig_annot.timestamp);
-			const newAnnot = interpolate2(orig_annot, target_annot, rate);
-			// add this new annotation
-			this.element.shapes.add(observable(newAnnot));//to the elements shapes
-			this.onCreate({ detail: newAnnot });//export to annotations
-			this.dispatchEvent(new Event('update-tracks'));
-			// goto next frame to interpolate (and display)
-			if (forwardMode) await this.element.nextFrame();
-			else await this.element.prevFrame();
-			await delay(10);
-		}
 	}
 
 	/******************* BUTTONS handlers *******************/
@@ -207,9 +176,10 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
+		this.Annotations.isSequence = this.element.isSequence;
 		// adapt blocks to be displayed
-		if (this.element.isSequence) this.shadowRoot.getElementById('seqtools').style.display="block";
-		else this.shadowRoot.getElementById('seqtools').style.display="none";
+		if (this.element.isSequence) this.trackingPanel.style.display="block";
+		else this.trackingPanel.style.display="none";
 		if (this.isTracking()) this.shadowRoot.getElementById('properties-panel').style.display="none";
 		else this.shadowRoot.getElementById('properties-panel').style.display="block";
 		// Initialize annotations
@@ -279,8 +249,11 @@ export class ServerlessDemo extends LitElement {
 			}
 		}
 		// Initialize trackingPanel
-		if (this.element.isSequence && !this.isTracking()) this.trackingPanel.style.display="block";
-		else this.trackingPanel.style.display="none";
+		if (this.element.isSequence && !this.isTracking()) {
+			this.trackingPanel.style.display="block";
+			this.trackingPanel.element=this.element;
+			this.trackingPanel.annotations=this.Annotations;
+		} else this.trackingPanel.style.display="none";
 		if (this.chosenPlugin==='classification') {
 			this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
 			this.onAttributeChanged();// and apply the current attributes (default if user did nothing)
@@ -594,12 +567,26 @@ export class ServerlessDemo extends LitElement {
 	}
 
 	/**
-	 * Sequences only: select a track
+	 * Sequences only: react on selected tracks
+	 * @param {CustomEvent} evt: id of the selected tracks
+	 */
+	onSelectedTracks(evt) {
+		console.log("onSelectedTracks",evt.detail);
+		// this.selectedTrackIds = evt.detail;
+		// this.selectedTracknum = -2;
+		// //TODO: select the first object of the track and goto the corresponding frame
+		// this.setSelectedIds([]);
+	}
+	
+	/**
+	 * Sequences only: react on updated tracks : create corresponding object and annotation
 	 * @param {CustomEvent} evt: id of the track to be selected
 	 */
-	onSelectTrack(evt) {
-		this.selectedTracknum = evt.detail;
-		//TODO: select the first object of the track
+	onUpdateTracks(evt) {
+		// add this new annotation
+		console.log("onUpdateTracks",evt.detail);
+		this.element.shapes.add(observable(evt.detail));//to the elements shapes
+		this.onCreate({ detail: evt.detail });//export to annotations
 	}
 	
 
@@ -775,46 +762,6 @@ export class ServerlessDemo extends LitElement {
 		}
 	}
 
-	/**
-	 * Tools dedicated to sequences
-	 */
-	get sequenceTools() {
-		console.log("sequenceTools");
-		// only enable interpolation when possible (i.e. when at least two manual annotations exist in the sequence) and only between manual annotations
-		let disabled_forward = true;
-		let disabled_backward = true;
-		let orig_annot, next_annot, prev_annot;
-		console.log("this.selectedTracknum=",this.selectedTracknum);
-		console.log("this.selectedIds=",this.selectedIds);
-		if ( (this.selectedTracknum !== -1) && (this.selectedIds.length===1) ) {//interpolate on selected track, begining on current selected annotation
-			orig_annot = this.getAnnotationByID(this.selectedIds[0]);
-			console.log("orig_annot=",orig_annot);
-			if ((orig_annot) && (orig_annot.tracknum === this.selectedTracknum) ) {
-				const annot_track = this.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTracknum) && (a.origin.createdBy==='manual') );//get manual annotations linked to the current track
-				console.log("annot_track=",annot_track);
-
-				next_annot = annot_track.find( (a) => a.timestamp > orig_annot.timestamp );
-				prev_annot = annot_track.find( (a) => a.timestamp < orig_annot.timestamp );
-
-				if (next_annot) disabled_forward = false;
-				if (prev_annot) disabled_backward = false;
-				console.log("next_annot=",next_annot);
-				console.log("prev_annot=",prev_annot);
-			}
-		}
-		return html`
-			<div class="tools" id="seqtools" style="display: none" title="track until next keyframe or till the end" style="flex-direction: column; width: 10%">
-				<p>Interpolation
-				<mwc-icon-button title="Backward interpolation" icon="chevron_left"
-							?disabled=${disabled_backward}
-							@click=${() => this.runInterpolation(false, orig_annot, prev_annot) }></mwc-icon-button>
-				<mwc-icon-button title="Forward interpolation" icon="chevron_right"
-							?disabled=${disabled_forward} 
-							@click=${() => this.runInterpolation(true, orig_annot, next_annot) }></mwc-icon-button></p>
-			</div>
-		`;
-	}
-
 	/******************* RENDERING: main and panels to be displayed, especially plugin dependent panel  *******************/
 
 	/**
@@ -825,7 +772,7 @@ export class ServerlessDemo extends LitElement {
 				<div id="properties-panel" style="display: none; flex-direction: column">
 					<fleshy-jsoneditor style="display: none" mode="code"></fleshy-jsoneditor>
 					<attribute-picker @update=${this.onAttributeChanged}></attribute-picker>
-					<tracking-panel style="display: none" @tracking-panel-select=${this.onSelectTrack}></tracking-panel>
+					<tracking-panel .element=${this.element} style="display: none" @selection-track=${this.onSelectedTracks} @update-tracks=${this.onUpdateTracks}></tracking-panel>
 				</div>
 			`;
 	}
@@ -938,8 +885,8 @@ export class ServerlessDemo extends LitElement {
 	backToPluginChoice() {
 		this.chosenPlugin = '';
 		this.initAnnotations();
-		this.shadowRoot.getElementById('seqtools').style.display="none";
 		this.shadowRoot.getElementById('properties-panel').style.display="none";
+		this.trackingPanel.style.display="none";
 	}
 	/**
 	 * Implement property panel content

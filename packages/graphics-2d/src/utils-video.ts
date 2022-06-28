@@ -154,25 +154,6 @@ export function getShape(track: TrackData, timestamp: number): ShapeData | null 
 }
 
 /**
- * Interpolate from annot to second_annot
- * @param rate: interpolation rate
- */
-export function interpolate2(annot: any, second_annot: any, rate: number) {
-	// Check input
-	if (annot.tracknum !== second_annot.tracknum) return;
-	// Make a deep copy of previous annotation
-	let newAnnot = JSON.parse(JSON.stringify(annot));
-	// Interpolation case
-	const len_newKS = newAnnot.geometry.vertices.length;
-	for (let i = 0; i < len_newKS; i++) {
-		newAnnot.geometry.vertices[i] = (1 - rate) * annot!.geometry.vertices[i] + rate * second_annot!.geometry.vertices[i];
-	}
-	if (!newAnnot.origin) newAnnot.origin = { createdBy: 'interpolation' };
-	else newAnnot.origin.createdBy = 'interpolation';
-	return newAnnot;
-}
-
-/**
  * Cpoy shape from closest key frames bounding boxes
  * @param track the track processed
  * @param fId the frame timestamp where interpolation takes place

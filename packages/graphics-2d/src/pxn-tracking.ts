@@ -642,13 +642,13 @@ export class Tracking extends Rectangle {
 				<p>${Object.keys(this.tracks).length} tracks</p>
 				<div style="padding: 5px; text-align: center;">
 					${Object.keys(this.tracks).map((id) => {
-			const backgroundColor = trackColors[parseInt(id,10) % trackColors.length];
-			return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
-							@click=${() => {
-					this.selectTrack(id, this.isShiftKeyPressed);
-					this.goToFirstFrame(this.tracks[id]);
-				}}>${id}</div>`;
-		})}
+						const backgroundColor = trackColors[parseInt(id,10) % trackColors.length];
+						return html`<div class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)}"
+										@click=${() => {
+											this.selectTrack(id, this.isShiftKeyPressed);
+											this.goToFirstFrame(this.tracks[id]);
+										}}>${id}</div>`;
+					})}
 				</div>
 			</div>
 		</div>

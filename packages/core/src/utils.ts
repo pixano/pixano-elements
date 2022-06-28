@@ -968,3 +968,22 @@ export function invertColor(rgb: string) {
 	const b = 255 - parseInt(rgb.substring(4, 6), 16)
 	return "#" + colorComponentToHex(r) + colorComponentToHex(g) + colorComponentToHex(b)
 }
+
+/**
+ * Interpolate from annot to second_annot
+ * @param rate: interpolation rate
+ */
+export function interpolate2(annot: any, second_annot: any, rate: number) {
+	// Check input
+	if (annot.tracknum !== second_annot.tracknum) return;
+	// Make a deep copy of previous annotation
+	let newAnnot = JSON.parse(JSON.stringify(annot));
+	// Interpolation case
+	const len_newKS = newAnnot.geometry.vertices.length;
+	for (let i = 0; i < len_newKS; i++) {
+		newAnnot.geometry.vertices[i] = (1 - rate) * annot!.geometry.vertices[i] + rate * second_annot!.geometry.vertices[i];
+	}
+	if (!newAnnot.origin) newAnnot.origin = { createdBy: 'interpolation' };
+	else newAnnot.origin.createdBy = 'interpolation';
+	return newAnnot;
+}
