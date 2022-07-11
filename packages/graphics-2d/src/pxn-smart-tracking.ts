@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement, html, property} from 'lit-element';
+import {html} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
 import {

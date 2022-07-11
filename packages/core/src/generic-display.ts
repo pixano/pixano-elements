@@ -4,7 +4,8 @@
  * @license CECILL-C
  */
 
-import { html, internalProperty, LitElement, property, TemplateResult } from 'lit-element';
+import {LitElement, html} from 'lit';
+import {property} from 'lit/decorators.js';
 import './playback-control';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
@@ -24,7 +25,7 @@ export abstract class GenericDisplay extends LitElement {
 	public maxFrameIdx: number | null = null;
 	public pendingLoad: boolean | null = null;
 
-	@internalProperty()
+	@property()
 	private _targetFrameIdx: number | null = null;
 
 	private _lastTargetFrameIdx: number | null = null;
@@ -234,7 +235,7 @@ export abstract class GenericDisplay extends LitElement {
 		this.dispatchEvent(new CustomEvent('timestamp', { detail: this._targetFrameIdx }));
 	}
 
-	display(): TemplateResult {
+	display() {
 		return html``;
 	}
 

@@ -28,7 +28,7 @@
     "@material/mwc-slider": "0.19.1",
     "@material/mwc-switch": "0.19.1",
     "@material/mwc-textfield": "0.19.1",
-    "lit-element": "2.4.0",
+    "lit": "^2.2.7",
     "on-change": "^2.0.1"
   },
   "scripts": {

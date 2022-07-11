@@ -5,8 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement } from 'lit-element';
-import { Canvas2d } from './pxn-canvas-2d';
+ import {customElement} from 'lit/decorators.js';
+ import { Canvas2d } from './pxn-canvas-2d';
 import { settings, IGraphSettings } from './graphic-graph';
 import { GraphCreateController, GraphsUpdateController } from './controller-graph';
 export { settings };

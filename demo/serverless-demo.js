@@ -6,7 +6,7 @@
 // TODO: use redux to store history of attributes ? Usefull for ctrl-z.
 
 
-import { html, LitElement, css} from 'lit-element';
+import {LitElement, html, css} from 'lit';
 import '@pixano/graphics-2d';
 import '@pixano/graphics-3d';
 import { commonJson, colorToRGBA } from '@pixano/core/lib/utils';

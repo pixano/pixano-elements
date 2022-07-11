@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement, property, LitElement, html, css } from 'lit-element';
+import {LitElement, html, css} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import '@material/mwc-icon-button';
 import '@material/mwc-dialog';
 import '@material/mwc-checkbox';

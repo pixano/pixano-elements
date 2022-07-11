@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { Segmentation } from './pxn-segmentation';
 import { MaskVisuMode } from './graphic-mask';
 import { SmartCreateController } from './controller-smart-mask';

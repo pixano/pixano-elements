@@ -26,6 +26,6 @@
     "@pixano/graphics-3d": "0.7.0",
     "file-saver": "^2.0.5",
     "fleshy-jsoneditor": "^1.3.0",
-    "lit-element": "2.4.0"
+    "lit": "^2.2.7"
   }
 }
