@@ -100,32 +100,84 @@ export class ServerlessDemo extends LitElement {
 		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;
 	}
 
+	/**
+	 * Set current annotations to element: previous annotations in ths Element will be overwritten
+	 * @param {Object} newAnnotations
+	 */
+	setAnnotations2Element() {
+		switch (this.chosenPlugin) {
+			case 'classification':
+				/* nothing to do */
+				break;
+			case 'keypoints':
+			case 'rectangle':
+			case 'smart-rectangle':
+			case 'polygon':
+			case 'cuboid-editor':
+				this.element.shapes = this.annotations;
+				this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
+				break;
+			case 'segmentation':
+			case 'smart-segmentation':
+				const maskAnnot = this.annotations.find((a) => a.id===0);
+				if (maskAnnot) this.element.setMask(maskAnnot.mask);
+				else this.element.setEmpty()
+			case 'tracking':
+			case 'tracking-graph':
+			case 'smart-tracking':
+				/* nothing to do: create=update */
+				break;
+			default:
+				console.error(`setAnnotations2Element: plugin ${this.chosenPlugin} unknown`);
+		}
+	}
+
 	/******************* BUTTONS handlers *******************/
 
 	/**
-	 * Called when using the Save button
+	 * Called when using the Save button : save current annotations to a json file
 	 */
-	onSave() {
+	onSaveJson() {
 		const json_string = this.element.isSequence ? JSON.stringify(this.sequence_annotations, null, 1) : JSON.stringify(this.annotations, null, 1);
 		const blob = new Blob([json_string],{type: "text/plain;charset=utf-8"})
 		FileSaver.saveAs(blob, "my_json.json")
 	}
 
 	/**
-	 * Called when using the Save button
-	 * @param {CustomEvent} evt 
+	 * Called when using the Load button : load existing annotations from a json file
+	 * ATTENTION: overwrites existing annotations
+	 * @param {CustomEvent} evt : event containing the file to load
+	 */
+	onLoadJson(evt) {
+		this.initAnnotations();//overwrite existing annotations
+		try {
+			// get input data
+			if (!evt.target.files.length) throw new Error("No files found");
+			const jsonfile = URL.createObjectURL(evt.target.files[0]);
+			// load new annotations
+			fetch(jsonfile).then(response => response.json()).then(data => {// data is either :
+				console.log("data loading :",data);
+				if (!data.annotations)  {// if imported from elements : an array of annotations
+					this.setAnnotations(data);
+				} else {// if imported from app or elsewhere : contains some information including (mandatory) an "annotations" field containing an array of annotations
+					this.setAnnotations(data.annotations);
+				}
+				this.setAnnotations2Element();
+				// if (!data.annotations) throw new Error("This file is not a valid annotation file");
+			});
+		} catch(err) {
+			console.error(err);
+		}
+	}
+
+	/**
+	 * Called when using the Upload button : Upload one or more images
+	 * @param {CustomEvent} evt : event containing files to load
 	 */
 	onUpload(evt) {
 		try {
 			// get input data
-			var fileList = [];
-			Object.entries(evt.target.files).map(([ts, f], idx) => {
-				fileList.push(URL.createObjectURL(f));
-			});
-			// const mediaInfo = Object.entries(evt.target.files).map(([ts, f], idx) => {
-			// 	const src = URL.createObjectURL(f);
-			// 	return {timestamp: idx, url:[src]}
-			// });
+			const fileList = Object.entries(evt.target.files).map( ([ts, f], idx) => URL.createObjectURL(f) );
 			// load new data
 			if (!fileList.length) throw new Error("No files found");
 			if (fileList.length==1) this.element.input = fileList[0];
@@ -158,31 +210,7 @@ export class ServerlessDemo extends LitElement {
 				// 2) set new frame annotations to the corresponding annotations in sequence annotations
 				this.setAnnotations(this.sequence_annotations[this.element.frameIdx].annotations);
 				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
-				switch (this.chosenPlugin) {
-					case 'classification':
-						/* nothing to do */
-						break;
-					case 'keypoints':
-					case 'rectangle':
-					case 'smart-rectangle':
-					case 'polygon':
-					case 'cuboid-editor':
-						this.element.shapes = this.annotations;
-						this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
-						break;
-					case 'segmentation':
-					case 'smart-segmentation':
-						const maskAnnot = this.annotations.find((a) => a.id===0);
-						if (maskAnnot) this.element.setMask(maskAnnot.mask);
-						else this.element.setEmpty()
-					case 'tracking':
-					case 'tracking-graph':
-					case 'smart-tracking':
-						/* nothing to do: create=update */
-						break;
-					default:
-						console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
-				}
+				this.setAnnotations2Element(this.annotations);
 				// this.selectedIds = evt.detail;// TODO : vérif pour garder la même track ?
 				// console.log("this.selectedIds=",this.selectedIds);
 			}
@@ -803,12 +831,19 @@ export class ServerlessDemo extends LitElement {
 		`;
 		else return html`
 			<h1>Annotate</h1>
-			<mwc-icon-button icon="exit_to_app" @click=${() => { this.chosenPlugin = ''; this.setAnnotations([]); }} title="Back to plugin choice"></mwc-icon-button>
-			<mwc-icon-button icon="upload_file" @click="${() => this.shadowRoot.getElementById('up').click()}" title="Upload one or more of your images">
-				<input id="up" style="display:none;" accept="image/*.jpg|image/*.png" type="file" multiple @change=${this.onUpload}/>
+			<mwc-icon-button icon="collections" @click="${() => this.shadowRoot.getElementById('uploadimages').click()}" title="Upload one or more of your images">
+				<input id="uploadimages" style="display:none;" accept="image/png, image/jpeg" type="file" multiple @change=${this.onUpload}/>
 			</mwc-icon-button>
+			<p class="vertical">|</p>
 			<mwc-icon-button icon="edit_note" @click=${this.swapAttributeEditor} title="Edit attributes"></mwc-icon-button>
-			<mwc-icon-button icon="save" @click="${this.onSave}" title="Save to json file"></mwc-icon-button>
+			<p class="vertical">|</p>
+			<mwc-icon-button icon="upload_file"  @click="${() => this.shadowRoot.getElementById('uploadannotations').click()}"  title="Load annotations from json file">
+				<input id="uploadannotations" style="display:none;" accept="application/JSON, application/json" type="file" @change=${this.onLoadJson}/>
+			</mwc-icon-button>
+			<mwc-icon-button icon="save" @click="${this.onSaveJson}" title="Save annotations to json file"></mwc-icon-button>
+			<p class="vertical">|</p>
+			<mwc-icon-button icon="exit_to_app" @click=${() => { this.chosenPlugin = ''; this.setAnnotations([]); }} title="Back to plugin choice"></mwc-icon-button>
+
 		`;
 	}
 
@@ -876,13 +911,11 @@ export class ServerlessDemo extends LitElement {
 		}
 		.header-menu > mwc-button {
 			margin: 0px;
-			margin-right: 20px;
 			align-items: center;
 			display: flex;
 		}
 		.header-menu > mwc-icon-button {
 			margin: 0px;
-			margin-right: 20px;
 			align-items: center;
 			display: flex;
 		}
@@ -971,8 +1004,17 @@ export class ServerlessDemo extends LitElement {
 			overflow: auto;
 			color: var(--font-color);
 		}
+		.vertical {
+			margin-bottom: 10px;
+			margin-top: 10px;
+			margin-left: 10px;
+			margin-right: 10px;
+			display: flex;
+			color: gray;
+			font-size: 18px;
+		}
 		`];
 	}
-}
+}//<div style="position: absolute; top: 0;	left: 0; opacity: 0.5; background: white; width: 100%; height: 100%; cursor: wait;">
 
 customElements.define('serverless-demo', ServerlessDemo);
