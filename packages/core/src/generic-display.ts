@@ -10,6 +10,7 @@ import './playback-control';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
 
+
 /**
  * Utility class to load images of sequences of images given
  * their sources.
@@ -24,6 +25,11 @@ export abstract class GenericDisplay extends LitElement {
 	// additionnal properties for sequence loader
 	public maxFrameIdx: number | null = null;
 	public pendingLoad: boolean | null = null;
+
+	// additionnal properties for ai
+	private _isAIcomponent: boolean = false;
+	@property()
+	public pendingModelLoad: boolean | null = null;
 
 	@property()
 	private _targetFrameIdx: number | null = null;
@@ -43,6 +49,15 @@ export abstract class GenericDisplay extends LitElement {
 		return {
 			maxFrameIdx: { type: Number }
 		};
+	}
+
+	// additionnal getter/setter for ai
+	get isSmartComponent() { return this._isAIcomponent; }
+	set isSmartComponent(is: boolean) {
+		if (is) {
+			this._isAIcomponent = true;
+			this.pendingModelLoad = true;
+		} else this._isAIcomponent = false;
 	}
 
 	/**
@@ -239,6 +254,16 @@ export abstract class GenericDisplay extends LitElement {
 		return html``;
 	}
 
+	pendingModelLoadScreen() {
+		return html`${this.pendingModelLoad
+			? html`
+				<div style="position: absolute; top: 0;	left: 0; opacity: 0.5; background: white; width: 100%; height: 100%; cursor: wait;">
+					<h1 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+						Smart tool model is loading, please wait...
+					</h1>
+				</div>`
+			: html``}`;
+	}
 	/**
 	 * Generic render that display a playback slider at the bottom
 	 * if the component displays a sequence.
@@ -253,6 +278,7 @@ export abstract class GenericDisplay extends LitElement {
 		return html`
 				<div id="container">
 					${this.display()}
+					${this.pendingModelLoadScreen()}
 					<slot name="slider" id="slot">
 						<div style="display: ${this.isSequence ? 'block' : 'none'};">
 							<playback-control @update=${this.onSliderChange}
