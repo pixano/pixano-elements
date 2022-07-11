@@ -276,7 +276,7 @@ export abstract class GenericDisplay extends LitElement {
 	 */
 	render() {
 		return html`
-				<div id="container">
+				<div id="container" tabIndex="1">
 					${this.display()}
 					${this.pendingModelLoadScreen()}
 					<slot name="slider" id="slot">

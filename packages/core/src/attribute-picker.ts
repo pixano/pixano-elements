@@ -387,10 +387,12 @@ export class AttributePicker extends LitElement {
 	 */
 	render() {
 		return html`
-			${this.shortcutsDialog}
-			<mwc-icon-button class="shortcut" icon="keyboard" @click=${this.openShortcuts}></mwc-icon-button>
-			${this.renderDetail}
-			${this.renderSimple}
+			<div id="attributes_picker" tabIndex="2">
+				${this.shortcutsDialog}
+				<mwc-icon-button class="shortcut" icon="keyboard" @click=${this.openShortcuts}></mwc-icon-button>
+				${this.renderDetail}
+				${this.renderSimple}
+			</div>
 		`;
 	}
 }
