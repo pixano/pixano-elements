@@ -68,18 +68,51 @@ export class Annotations {
 	}
 
 	/**
-	 * Get annotations given its id
+	 * Get an annotation given its id
 	 * @param id: id of the annotation to search for
 	 * @return the corresponding annotation or undefined if not found
 	 */
 	getAnnotationByID(id: string) {
 		if (this.isSequence) {
-			const annots = this.sequence_annotations.find( (annots) => annots.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
-			if (annots) return annots.find( (a: annotation) => (a.id === id) );
+			const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
+			if (annotations) return annotations.find( (a: annotation) => (a.id === id) );
 			else return undefined;
 		} else {
 			return this.annotations.find( (a) => (a.id === id) );
 		}
 	}
+
+	/**
+	 * Get an annotation given its id
+	 * @param id: id of the annotation to search for
+	 * @return the corresponding annotation or undefined if not found
+	 */
+	getAnnotationsByTracknum(tracknum: number) {
+		if (this.isSequence) {
+			let annots: Array<annotation> = [];
+			this.sequence_annotations.forEach((annotations) => {
+				const annotation = annotations.find( (a: annotation) => (a.tracknum === tracknum) );//only one track y timestamp
+				if (annotation) annots.push(annotation);
+			});
+			return annots;
+		} else {
+			return this.annotations.filter( (a) => (a.tracknum === tracknum) );
+		}
+	}
+
+	/**
+	 * Delete an annotation given its id
+	 * @param id: id of the annotation to delete
+	 */
+	deleteAnnotation(id: string) {
+		const annot = this.getAnnotationByID(id);
+		if (this.isSequence) {
+			const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
+			if (annotations) annotations.splice(annotations.indexOf(annot), 1);
+		} else {
+			this.annotations.splice(this.annotations.indexOf(annot), 1);
+		}
+	}
+
 
 }

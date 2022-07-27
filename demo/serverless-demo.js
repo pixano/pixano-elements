@@ -73,9 +73,7 @@ export class ServerlessDemo extends LitElement {
 		this.tracks = {};//for pxn-tracking
 		//when in an image sequence or a video:
 		this.sequence_annotations = [];//overall annotations: each image of the sequence has its own annotations array
-		this.selectedTracknum = -1;//current tracknum
 		this.selectedTrackIds = [];//currently selected track ids
-		this.sequence_nbTracks = 0;
 	}
 
 	/******************* Utility functions *******************/
@@ -86,10 +84,9 @@ export class ServerlessDemo extends LitElement {
 	 */
 	initAnnotations() {
 		this.Annotations.init();
+		if (this.element) this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
 		this.setAnnotations([]);
 		this.sequence_annotations = [];
-		this.selectedTracknum = -1;
-		this.sequence_nbTracks = 0;
 		this.setSelectedIds([]);
 		this.tracks = {};//for pxn-tracking
 	}
@@ -102,7 +99,7 @@ export class ServerlessDemo extends LitElement {
 		// console.log("prev nnotation=",this.annotations);
 		// console.log("newAnnotation=",newAnnotations);
 		this.annotations = newAnnotations;
-		if (this.element) if (this.element.isSequence && this.attributePicker) {//attributePicker is null when tracking
+		if (this.element) if (this.element.isSequence && !this.isTracking()) {//attributePicker is null when tracking
 			this.sequence_annotations[this.element.frameIdx] = newAnnotations;
 			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
 			this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
@@ -111,18 +108,39 @@ export class ServerlessDemo extends LitElement {
 	/**
 	 * Set selected IDs and adapt attribute picker
 	 * @param newIds: ids to select
+	 * @param updateTrackIds: (only for sequences) also update trackIds accordingly (true by default)
 	 */
-	setSelectedIds(newIds) {
+	setSelectedIds(newIds, updateTrackIds=true) {
+		if (!newIds) newIds=[];
 		console.log("serverless setSelectedIds",newIds);
 		this.Annotations.setSelectedIds(newIds);
-		if (newIds.length) {
-			const tracks = newIds.map((id) => this.Annotations.getAnnotationByID(id).tracknum );
-			this.trackingPanel.selectTracks(tracks);//select corresponding track
+		if (this.element.isSequence && updateTrackIds) {
+			if (newIds.length) {
+				const tracks = newIds.map((id) => this.Annotations.getAnnotationByID(id).tracknum );
+				this.trackingPanel.selectTracks(tracks);//select corresponding track
+			} else this.trackingPanel.selectTracks([]);//select corresponding track
 		}
-		// this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
-		if (!newIds) newIds=[];
 		this.selectedIds = newIds;
-		if (this.attributePicker) this.attributePicker.showDetail = this.selectedIds.length;
+		this.attributePicker.showDetail = this.selectedIds.length;
+	}
+	/**
+	 * Initialize / reinitialize attributePicker
+	 */
+	initAttributePicker() {
+		// load default schema (and set attributes to default)
+		this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
+		// exceptions
+		if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
+			const schema = defaultLabelValues(this.chosenPlugin);
+			this.element.clsMap = new Map(
+				schema.category.map((c) => {
+					const color = colorToRGBA(c.color);
+					return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
+				})
+			);
+			if (!schema.default) schema.default = schema.category[0].name;
+			this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
+		}
 	}
 
 	/******************* Functions dedicated to sequences and tracking *******************/
@@ -178,13 +196,18 @@ export class ServerlessDemo extends LitElement {
 		console.log("onLoadedInput");
 		this.Annotations.isSequence = this.element.isSequence;
 		// adapt blocks to be displayed
-		if (this.element.isSequence) this.trackingPanel.style.display="block";
-		else this.trackingPanel.style.display="none";
-		if (this.isTracking()) this.shadowRoot.getElementById('properties-panel').style.display="none";
-		else this.shadowRoot.getElementById('properties-panel').style.display="block";
+		if (this.isTracking()) {
+			this.shadowRoot.getElementById('properties-panel').style.display="none";
+			this.trackingPanel.style.display="none";
+		} else {
+			this.shadowRoot.getElementById('properties-panel').style.display="block";
+			if (this.element.isSequence) this.trackingPanel.style.display="block";
+			else this.trackingPanel.style.display="none";
+		}
 		// Initialize annotations
 		if (!this.element.isSequence) {
 			this.initAnnotations();
+			this.initAttributePicker();
 		} else {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
 			console.log("this.sequence_annotations=",this.sequence_annotations);
 			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
@@ -193,8 +216,9 @@ export class ServerlessDemo extends LitElement {
 				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
 					this.sequence_annotations.push([]);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				}
+				if (!this.isTracking()) this.initAttributePicker();
 			} else {
-				if (!this.isTracking()) this.setSelectedIds([]);//not for tracking
+				if (!this.isTracking()) this.setSelectedIds([],false);//don't update trackIds in order to be able to continue a track
 				// 1) get previous frame annotations into sequence annotations
 				this.sequence_annotations[this.element.lastFrameIdx] = this.annotations;
 				// 2) set new frame annotations to the corresponding annotations in sequence annotations
@@ -230,30 +254,12 @@ export class ServerlessDemo extends LitElement {
 				console.log("this.selectedIds=",this.selectedIds);
 			}
 		}
-		// Initialize attributePicker
-		if (!this.element.isSequence) {// do not reinitialize schema nor reset to default inside a sequence until unselection
-			if (this.isTracking()) return;// exception: no attribute picker used for tracking
-			// load default schema (and set attributes to default)
-			this.attributePicker.reloadSchema(defaultLabelValues(this.chosenPlugin));
-			// exceptions
-			if (this.chosenPlugin==='segmentation' || this.chosenPlugin==='smart-segmentation') {
-				const schema = defaultLabelValues(this.chosenPlugin);
-				this.element.clsMap = new Map(
-					schema.category.map((c) => {
-						const color = colorToRGBA(c.color);
-						return [c.idx, [color[0], color[1], color[2], c.instance ? 1 : 0]]
-					})
-				);
-				if (!schema.default) schema.default = schema.category[0].name;
-				this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
-			}
-		}
 		// Initialize trackingPanel
 		if (this.element.isSequence && !this.isTracking()) {
-			this.trackingPanel.style.display="block";
 			this.trackingPanel.element=this.element;
 			this.trackingPanel.annotations=this.Annotations;
-		} else this.trackingPanel.style.display="none";
+		}
+		//exception
 		if (this.chosenPlugin==='classification') {
 			this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
 			this.onAttributeChanged();// and apply the current attributes (default if user did nothing)
@@ -292,13 +298,13 @@ export class ServerlessDemo extends LitElement {
 				if (this.element.isSequence) {
 					newObject.timestamp = this.element.frameIdx;
 					if ((this.selectedIds.length===1) ||//if a previous object was selected OR
-						(this.annotations.find(annotation => annotation.tracknum===this.selectedTracknum)) ||//if a track whith the same track number already exists in this frame OR
-						(this.selectedTracknum === -1))//if no track is selected
-						{// => this is a new track
-							this.selectedTracknum = this.sequence_nbTracks;
-							this.sequence_nbTracks++;
-					}//else the continue on the same tracklet (i.e. a track was selected and we went to a new image)
-					newObject.tracknum = this.selectedTracknum;
+						(this.annotations.find(annotation => this.trackingPanel.selectedTrackIds.includes(annotation.tracknum))) ||//if a track whith the same track number already exists in this frame OR
+						(this.trackingPanel.selectedTrackIds.length!==1))//if no track or more then one is selected 
+					{// => this is a new track
+						newObject.tracknum = this.trackingPanel.getNextTracknum();
+					} else {// then continue on the same tracklet (i.e. a track was selected and we went to a new image)
+						newObject.tracknum = this.trackingPanel.selectedTrackIds[0];
+					}
 					if (!newObject.origin) newObject.origin = { createdBy: 'manual' };// manual by default ? could be 'unkown' ?
 				}
 
@@ -374,20 +380,11 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-rectangle':
 			case 'polygon':
 				this.setSelectedIds(evt.detail);
-				console.log("evt.detail select=",evt.detail);
 				if (this.selectedIds.length) {
 					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
-
-					if (this.element.isSequence) {
-						if (this.selectedIds.length===1) {
-							const shape = [...this.element.shapes].find(shape => shape.id===this.selectedIds[0]);//get shape by id
-							this.selectedTracknum = shape.tracknum;//TODO: this.element.selectedShapes[0]
-						} else this.selectedTracknum = -1;//if multiple objects are selected or none, deselect track
-					}
-
-				} else if (this.element.isSequence) this.selectedTracknum = -1;//if nothing is selected, deselect track
+				}
 				break;
 			case 'segmentation':
 			case 'smart-segmentation':
@@ -570,12 +567,22 @@ export class ServerlessDemo extends LitElement {
 	 * Sequences only: react on selected tracks
 	 * @param {CustomEvent} evt: id of the selected tracks
 	 */
-	onSelectedTracks(evt) {
-		console.log("onSelectedTracks",evt.detail);
-		// this.selectedTrackIds = evt.detail;
-		// this.selectedTracknum = -2;
-		// //TODO: select the first object of the track and goto the corresponding frame
-		// this.setSelectedIds([]);
+	async onSelectedTracks(evt) {
+		const trackIds = evt.detail;
+		let annotIds = [];
+		let frame = 0;
+		console.log("onSelectedTracks",trackIds);
+		trackIds.forEach((id) => {
+			const annots = this.Annotations.getAnnotationsByTracknum(id);//get corresponding annotations
+			annots.sort((a,b) => a-b);
+			annotIds.push(annots[0].id);
+			frame = annots[0].timestamp;
+		});
+		//goto frame corresponding to selected id
+		if (annotIds.length && frame !== this.element.frameIdx) this.element.frameIdx = frame;
+		// select annotation into element
+		this.element.select(annotIds);
+		this.onSelection({ detail: annotIds });
 	}
 	
 	/**
@@ -583,10 +590,14 @@ export class ServerlessDemo extends LitElement {
 	 * @param {CustomEvent} evt: id of the track to be selected
 	 */
 	onUpdateTracks(evt) {
-		// add this new annotation
-		console.log("onUpdateTracks",evt.detail);
-		this.element.shapes.add(observable(evt.detail));//to the elements shapes
-		this.onCreate({ detail: evt.detail });//export to annotations
+		if (evt.detail) {
+			// add this new annotation
+			console.log("onUpdateTracks",evt.detail);
+			this.element.shapes.add(observable(evt.detail));//to the elements shapes
+			this.onCreate({ detail: evt.detail });//export to annotations
+		} else {
+			console.log("onUpdateTracks annotions:",this.Annotations);
+		}
 	}
 	
 
@@ -928,7 +939,6 @@ export class ServerlessDemo extends LitElement {
 				</div>
 				<div class="plugin">
 					<div class="tools">${this.tools}</div>
-					${this.sequenceTools}
 					${this.plugin}
 					${this.propertyPanel}
 				</div>

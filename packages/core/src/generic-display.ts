@@ -126,12 +126,12 @@ export abstract class GenericDisplay extends LitElement {
 	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
 
 	get timestamp(): number {
-		return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frameIdx].timestamp : 0;
+		return this.isSequence ? (this.loader as SequenceLoader).frames[this.frameIdx].timestamp : 0;
 	}
 
 	set timestamp(timestamp: number) {
-		if (this.loader instanceof SequenceLoader) {
-			const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
+		if (this.isSequence) {
+			const frameIdx = (this.loader as SequenceLoader).frames.findIndex((f) => f.timestamp === timestamp);
 			if (frameIdx !== -1) {
 				this.frameIdx = frameIdx;
 			}
@@ -244,8 +244,7 @@ export abstract class GenericDisplay extends LitElement {
 		// 2) select the corresponding shape
 		console.log("select id ",[evt.detail.id]);
 		console.log("we have to implement a generic slect function in generic-display and call it from here");//TODO
-		// this.notifySelection([evt.detail.id]);
-		// this.dispatchEvent(new CustomEvent('selection', { detail:  [evt.detail.id] }));//TODO : does not realy select + wait for frame change = use promise
+		// this.select([evt.detail.id]);//TODO : make it generic
 	}
 
 	private notifyInputLoaded(data: HTMLImageElement | Float32Array) {

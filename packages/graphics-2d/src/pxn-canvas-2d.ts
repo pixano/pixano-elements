@@ -141,6 +141,14 @@ export class Canvas2d extends Canvas {
 	}
 
 	/**
+	 * Select a set of shapes from their ids
+	 * @param ids Set of ids to be selected
+	 */
+	public select(ids: []) {//TODO: make this function generic for all elements => in core/pxn-canvas + make 3D canvas inherit from pxn-canvas
+		this.selectedShapeIds = ids;
+	}
+
+	/**
 	 * Empy all shapes
 	 */
 	public setEmpty() {

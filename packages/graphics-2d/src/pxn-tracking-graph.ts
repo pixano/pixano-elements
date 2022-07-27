@@ -7,7 +7,7 @@
 
 import { css, customElement, html, property } from 'lit-element';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
-import { delay } from '@pixano/core/lib/utils';
+import { delay, invertColor, trackColors } from '@pixano/core/lib/utils';
 import { Graph } from './pxn-keypoints'
 import { ShapeData, TrackData } from './types';
 import {
@@ -21,12 +21,10 @@ import {
 	removeOrAddKeyShape,
 	// switchVisibility,
 	switchTrack,
-	trackColors,
 	splitTrack,
 	getNewTrackId,
 	mergeTracks,
 	getClosestFrames,
-	invertColor,
 	getNumShapes
 } from './utils-video';
 import { ShapesEditController } from './controller';
@@ -530,7 +528,7 @@ export class TrackingGraph extends Graph {
 	mergeErrorDialog(t1Id: string, t2Id: string, keysIntersection: string[]) {
 		const mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
 		const message = this.shadowRoot!.getElementById("dialog-merge-error-message");
-		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".</br>"
+		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".<br>"
 			+ "Tracks intersect at frames: " + keysIntersection;
 		mergeErrorDialog!.open = true;
 	}
@@ -600,7 +598,7 @@ export class TrackingGraph extends Graph {
 								<mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
 								<mwc-icon-button title="Go to first frame (f)" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
 								<mwc-icon-button title="Go to last frame (l)" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
-								</br>
+								<br>
 								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
 								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
 								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
