@@ -16,7 +16,7 @@
 // TODO: use this.myChart.resize when canvas size changes ?
 
 import { html, customElement, LitElement } from 'lit-element';
-import { Annotations } from './annotations-manager';
+import { annotation, frameAuthor, Annotations } from './annotations-manager';
 // echarts minimal use
 import * as echarts from 'echarts/core';
 import {
@@ -51,21 +51,15 @@ type EChartsOption = echarts.ComposeOption<
 	| LineSeriesOption
 	>;
 
-export enum frameAuthor {
-	MANUAL = 'manual',
-	INTERP = 'interpolated',
-	TRACKED= 'tracked'
-}
-
 /**
  * SequenceTimeline
  * 
- * Some explanation about data format: [numFrame, tracknum, frameAuthor]
- * - numFrame: number, num of the frame this data bellongs to
- * - tracknum: number, num of the track this data bellongs to
- * - frameAuthor: frameAuthor, source/author of this data
+ * Some explanation about data format:
+ * - value contains [numFrame, tracknum] interpreted as x,y for display
+ * 		- numFrame: number, num of the frame this data bellongs to
+ * 		- tracknum: number, num of the track this data bellongs to
+ * - createdBy: source/author of this data
  * - color: color of the track
- * - id: unique identifier of this annotation
  */
 @customElement('pxn-sequence-timeline' as any)
 export class SequenceTimeline extends LitElement {
@@ -87,38 +81,34 @@ export class SequenceTimeline extends LitElement {
 	updateData(colorForCategory: Function) {
 
 		// 1) extract data to be displayed form annotations
-		var flatData: any[] = [];
-		var maxTrackNum = 0;
+		let flatData: any[] = [];
+		let maxTrackNum = 0;
 
 		this.annotations.sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
-			// console.log("frame=",frame);
-			// console.log("annotations=",frame);
-			var numFrame = index;
-			frame.forEach((annotation:any) => {
-				flatData.push([numFrame, annotation.tracknum, frameAuthor.MANUAL, colorForCategory(annotation.category), annotation.id]);
-				if (annotation.tracknum>maxTrackNum) maxTrackNum = annotation.tracknum;
+			let numFrame = index;
+			frame.forEach((annotation: annotation) => {
+				flatData.push({value: [numFrame, annotation.tracknum], createdBy: annotation.origin?.createdBy, color: colorForCategory(annotation.category), itemStyle: { color: colorForCategory(annotation.category) } });//a local itemStyle.color enbables to separate color of each point form the whole serie
+				if (annotation.tracknum!>maxTrackNum) maxTrackNum = annotation.tracknum!;
 			});
 		});
 		// separate by track
-		var dataSeries: any[] = [];
-		for (var i=0; i<=maxTrackNum ; i++) {
-			const datai = flatData.filter(d => d[1]===i);
-			dataSeries.push(datai);
+		let dataSeries: any[] = [];
+		for (let i=0; i<=maxTrackNum ; i++) {
+			const dataTrack = flatData.filter(d => d.value[1]===i);// data for track i
+			dataSeries.push(dataTrack);
 		}
-		// console.log("flatData=",flatData);
-		// console.log("dataSeries=",dataSeries);
 		
-		var series: any[] = [];
-		dataSeries.forEach((data,index) => {
-			if (data.length) series.push({
+		let series: any[] = [];
+		dataSeries.forEach((dataTrack,index) => {
+			if (dataTrack.length) series.push({
 				id: index.toString(),
 				type: 'line',
 				smooth: true,
 				symbol: this.callback_symbol,
 				symbolSize: this.symbolSize,
-				data: data,
-				itemStyle: { color: data[0][3] },//'red';
-				lineStyle: { color: data[0][3] }
+				data: dataTrack,
+				itemStyle: { color: dataTrack[0].color },//default color of each item is the first item's color, will be overwritten for each item
+				lineStyle: { color: dataTrack[0].color }//default color of the line is the first item's color
 			});
 			else console.log("no data for index",index,"in",this.annotations.sequence_annotations);
 		});
@@ -129,7 +119,7 @@ export class SequenceTimeline extends LitElement {
 			graphic: flatData.map(d => {//for each data : create an invisible circle on wich we attach callback functions
 				return {
 					type: 'circle',
-					position: this.myChart.convertToPixel('grid', d), //convertToPixel can only be used in a 'graphic' context
+					position: this.myChart.convertToPixel('grid', d.value), //convertToPixel can only be used in a 'graphic' context
 					shape: {
 						cx: 0,
 						cy: 0,
@@ -137,8 +127,8 @@ export class SequenceTimeline extends LitElement {
 					},
 					invisible: true,
 					draggable: false,
-					onclick: () => this.onPointClick(d),
-					onmousemove: () => this.showTooltip(d),
+					onclick: () => this.onPointClick(d.value),
+					onmousemove: () => this.showTooltip(d.value),
 					onmouseout: () => this.hideTooltip(),
 					z: 100
 				};
@@ -158,13 +148,11 @@ export class SequenceTimeline extends LitElement {
 		tooltip: {
 			triggerOn: 'none',
 			formatter: function (params: any) {
+				console.log("params",params);
 				var message =
-					'Click to view this annotation' +
-					'<br>frame: ' +
-					params.data[0] +
-					'<br>track id: ' +
-					params.data[1];
-				if (params.data[2]) message += '<br>KeyFrame';
+					'Click to view this annotation'
+					+'<br>frame: '+params.value[0]+' tracknum: '+params.value[1]
+					+'<br>createdBy: '+params.data.createdBy;
 				return message;
 			}
 		},
@@ -217,8 +205,8 @@ export class SequenceTimeline extends LitElement {
 	 * Symbol view definition
 	 * => a different symbol is used depending on the frame author
 	 */
-	callback_symbol(value: any[], _params: Object) {//on pourrait aussi mettre ici une image via url ('image://url') ou datauri ('image://data:image/gif;base64,R0lG...AAAAAAA')
-		switch (value[2]) {
+	callback_symbol(_value: any[], params: any) {//on pourrait aussi mettre ici une image via url ('image://url') ou datauri ('image://data:image/gif;base64,R0lG...AAAAAAA')
+		switch (params.data.createdBy) {
 			case frameAuthor.MANUAL://keyframe
 				return 'circle';
 			case frameAuthor.INTERP:
@@ -226,8 +214,8 @@ export class SequenceTimeline extends LitElement {
 			case frameAuthor.TRACKED:
 				return 'emptyRect';
 			default:
-				console.error(`unknown frameAuthor ${value[2]}, should not happen`);
-				return 'none';
+				console.error(`unknown frameAuthor ${params.data.createdBy}, should not happen`);
+				return 'emptyTriangle';
 		}
 	}
 

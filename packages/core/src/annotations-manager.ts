@@ -4,6 +4,11 @@
  * @license CECILL-C
  */
 
+export enum frameAuthor {
+	MANUAL = 'manual',
+	INTERP = 'interpolation',
+	TRACKED= 'inference'
+}
 
 export interface annotation {
 	id: string;// unique id inside this input
@@ -14,7 +19,7 @@ export interface annotation {
 	tracknum?: number;// is only present for sequences, it indicates the track number when the annotation is part of a track. Each tracknum is unique inside a sequence.
 	origin?: {
 		taskname?: string;// name of the task used to create this annotation
-		createdBy?: "manual" | "interpolation" | "inference";// who created this annotation
+		createdBy?: frameAuthor;// who created this annotation
 	},
 };
 

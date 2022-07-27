@@ -29,7 +29,7 @@ import { demoStyles,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
 import { pluginsList, defaultLabelValues } from './plugins_index';
 import { observable } from '@pixano/core/lib/observer';
-import  { Annotations } from '@pixano/core/lib/annotations-manager';
+import  { annotation, frameAuthor, Annotations } from '@pixano/core/lib/annotations-manager';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 
@@ -294,7 +294,7 @@ export class ServerlessDemo extends LitElement {
 					} else {// then continue on the same tracklet (i.e. a track was selected and we went to a new image)
 						newObject.tracknum = this.trackingPanel.selectedTrackIds[0];
 					}
-					if (!newObject.origin) newObject.origin = { createdBy: 'manual' };// manual by default ? could be 'unkown' ?
+					if (!newObject.origin) newObject.origin = { createdBy: frameAuthor.MANUAL };// manual by default ? could be 'unkown' ?
 				}
 
 				// set new shapes
