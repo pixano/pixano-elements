@@ -25,32 +25,27 @@ export interface annotation {
 export class Annotations {
 
 	public isSequence: boolean = false;
-	public annotations = new Array<annotation>();//current annotations, i.e. annotations of the current frame
-	public sequence_annotations = new Array();//overall annotations: each image of the sequence has its own annotations array
+	public currentFrameIdx: number = 0;
+	public sequence_annotations = new Array<Array<annotation>>();//overall annotations: each image of the sequence has its own annotations array. If this is not a sequence, only sequence_annotations[0] will be used.
 	protected selectedIds = new Array<string>();
 
 	init() {
-		this.annotations = [];
 		this.sequence_annotations = [];
 		this.selectedIds = [];// don't asign directly : always use this.setSelectedIds(...)
+	}
+
+	get() {
+		return this.sequence_annotations[this.currentFrameIdx];
 	}
 
 	/**
 	 * Set annotations: previous annotations will be overwritten
 	 * @param {Object} newAnnotations
-	 * @param {Object} frameIdx: the frame index (only used for sequences)
+	 * @param {Object} frameIdx: the frame index (only used for sequences). If frameIdx is not given, the current index will be used
 	 */
 	setAnnotations(newAnnotations: Array<annotation>, frameIdx?: number) {
-		console.log("prev nnotation=",this.annotations);
-		console.log("newAnnotation=",newAnnotations);
-		this.annotations = newAnnotations;
-		if (this.isSequence) {
-			if (typeof frameIdx === 'undefined') {
-				console.error("should never happen");
-				return;
-			}
-			this.sequence_annotations[frameIdx] = newAnnotations;
-		}
+		if (typeof frameIdx === 'undefined') this.sequence_annotations[this.currentFrameIdx] = newAnnotations;
+		else this.sequence_annotations[frameIdx] = newAnnotations;
 	}
 	/**
 	 * Set selected IDs and adapt attribute picker
@@ -73,31 +68,23 @@ export class Annotations {
 	 * @return the corresponding annotation or undefined if not found
 	 */
 	getAnnotationByID(id: string) {
-		if (this.isSequence) {
-			const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
-			if (annotations) return annotations.find( (a: annotation) => (a.id === id) );
-			else return undefined;
-		} else {
-			return this.annotations.find( (a) => (a.id === id) );
-		}
+		const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
+		if (annotations) return annotations.find( (a: annotation) => (a.id === id) );
+		else return undefined;
 	}
 
 	/**
-	 * Get an annotation given its id
-	 * @param id: id of the annotation to search for
+	 * Get an annotation given its tracknum
+	 * @param tracknum: tracknum of the annotation to search for
 	 * @return the corresponding annotation or undefined if not found
 	 */
 	getAnnotationsByTracknum(tracknum: number) {
-		if (this.isSequence) {
-			let annots: Array<annotation> = [];
-			this.sequence_annotations.forEach((annotations) => {
-				const annotation = annotations.find( (a: annotation) => (a.tracknum === tracknum) );//only one track y timestamp
-				if (annotation) annots.push(annotation);
-			});
-			return annots;
-		} else {
-			return this.annotations.filter( (a) => (a.tracknum === tracknum) );
-		}
+		let annots: Array<annotation> = [];
+		this.sequence_annotations.forEach((annotations) => {
+			const annotation = annotations.find( (a: annotation) => (a.tracknum === tracknum) );//only one track y timestamp
+			if (annotation) annots.push(annotation);
+		});
+		return annots;
 	}
 
 	/**
@@ -106,12 +93,12 @@ export class Annotations {
 	 */
 	deleteAnnotation(id: string) {
 		const annot = this.getAnnotationByID(id);
-		if (this.isSequence) {
-			const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
-			if (annotations) annotations.splice(annotations.indexOf(annot), 1);
-		} else {
-			this.annotations.splice(this.annotations.indexOf(annot), 1);
+		if (!annot) {
+			console.error("getAnnotationByID failed !!");
+			return;
 		}
+		const annotations = this.sequence_annotations.find( (annotations) => annotations.find( (a: annotation) => (a.id === id) ) );//we assume ids are unique in the whole sequence
+		if (annotations) annotations.splice(annotations.indexOf(annot), 1);
 	}
 
 

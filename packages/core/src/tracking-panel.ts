@@ -46,13 +46,12 @@ export class TrackingPanel extends LitElement {
 
 	@property({ type: Array })
 	public trackIds = new Array<number>();//list of track ids
-	@property({ type: Number })
-	nbTracks = 0;//... only to force render update (does not update for arrays...)
 
 	@property({ type: Array })
 	public selectedTrackIds = new Array<number>();//currently selected track ids
 
 	protected isShiftKeyPressed: boolean = false;
+
 	public element: GenericDisplayImpl = new GenericDisplayImpl();
 	public annotations: Annotations= new Annotations();
 
@@ -74,24 +73,19 @@ export class TrackingPanel extends LitElement {
 
 	protected keyDownHandler = (evt: KeyboardEvent) => { console.log("evt.shiftKey down=",evt.shiftKey); this.isShiftKeyPressed = evt.shiftKey; }
 	protected keyUpHandler = (evt: KeyboardEvent) => { console.log("evt.shiftKey up=",evt.shiftKey); this.isShiftKeyPressed = evt.shiftKey; }
-	protected onCreate = (evt: Event) => { console.log("onCreate !!!!",evt); }
 
 
 	/******************* Utility functions *******************/
 
 	/**
-	 * Update data to be displayed
-	 * @param {Object} sequence_annotations: annotations of whole sequence
+	 * Update data to be displayed (synchronize with annotations manager)
 	 */
-	sequenceAnnotations2tracking(A: Annotations) {
-		this.annotations = A;
-		console.log("sequenceAnnotations2tracking this.annotations=",this.annotations);
-		A.sequence_annotations.forEach((frame:any) => {//for each frame annotations
+	updateData() {
+		this.annotations.sequence_annotations.forEach((frame:any) => {//for each frame annotations
 			frame.forEach((annotation:any) => {
 				if (!this.trackIds.includes(annotation.tracknum)) this.trackIds.push(annotation.tracknum);
 			});
 		});
-		this.nbTracks = this.trackIds.length;
 	}
 
 	/**
@@ -173,7 +167,7 @@ export class TrackingPanel extends LitElement {
 				const annot = annotations.find((annotation: annotation)=> { annotation.tracknum===trackIds[i] })
 				if (annot) {
 					if (found) {
-						overlap.push(annot.timestamp);
+						overlap.push(annot.timestamp!);
 						break;
 					} else found=true;
 				}
@@ -207,7 +201,7 @@ export class TrackingPanel extends LitElement {
 			console.error("switchTrack called with",trackIds.length,"tracks");
 			return;
 		}
-		let timestamp = this.annotations.annotations[0].timestamp!;// current timestamp, start switch from here including this one
+		let timestamp = this.annotations.get()[0].timestamp!;// current timestamp, start switch from here including this one
 		console.log("switch",trackIds[0],"and",trackIds[1],"at timestamp",timestamp);
 		for (let i = timestamp; i < this.annotations.sequence_annotations.length - 1; i++) {
 			let annotations = this.annotations.sequence_annotations[i];//annotations for this frame
@@ -228,7 +222,7 @@ export class TrackingPanel extends LitElement {
 		this.trackIds.sort();
 		const newTrackId = this.trackIds[-1]+1;
 		console.error("splitTrack called for track",trackId,". New track will be",newTrackId);
-		let timestamp = this.annotations.annotations[0].timestamp!;// current timestamp, split here
+		let timestamp = this.annotations.get()[0].timestamp!;// current timestamp, split here
 		for (let i = timestamp; i < this.annotations.sequence_annotations.length - 1; i++) {
 			let annotations = this.annotations.sequence_annotations[i];//annotations for this frame
 			annotations.forEach((annotation: annotation) => {
@@ -256,7 +250,6 @@ export class TrackingPanel extends LitElement {
 			// delete the track
 			this.trackIds.splice(this.trackIds.indexOf(id), 1);
 		});
-		this.nbTracks = this.trackIds.length;
 		//update selection
 		console.log("this.trackIds2=",this.trackIds);
 		this.dispatchEvent(new CustomEvent('selection-track', { detail: [] }));
@@ -351,16 +344,20 @@ export class TrackingPanel extends LitElement {
 		let disabled_mergeTracks = true;
 		let disabled_onetrackselected = true;
 		let disabled_oneormoretrackselected = true;
-		let orig_annot: annotation, next_annot: annotation, prev_annot: annotation;
+		let orig_annot: annotation|undefined, next_annot: annotation|undefined, prev_annot: annotation|undefined;
 		if (this.selectedTrackIds.length>=1) disabled_oneormoretrackselected = false;
 		if (this.selectedTrackIds.length===1) {
 			disabled_onetrackselected = false;
 			//is it possible to interpolate on selected track, begining on current selected annotation
 			orig_annot = this.annotations.getAnnotationByID(this.annotations.getSelectedIds[0]);
-			if ((orig_annot) && (orig_annot.tracknum === this.selectedTrackIds[0]) ) {
-				const annot_track = this.annotations.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTrackIds[0]) && (a.origin.createdBy==='manual') );//get manual annotations linked to the current track
-				next_annot = annot_track.find( (a) => a.timestamp > orig_annot.timestamp! );
-				prev_annot = annot_track.find( (a) => a.timestamp < orig_annot.timestamp! );
+			if (!orig_annot) {
+				disabled_forward = false;
+				disabled_backward = false;
+			}
+			else if (orig_annot.tracknum === this.selectedTrackIds[0]) {
+				const annot_track = this.annotations.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTrackIds[0]) && (a.origin!.createdBy==='manual') );//get manual annotations linked to the current track
+				next_annot = annot_track.find( (a) => a.timestamp! > orig_annot!.timestamp! );
+				prev_annot = annot_track.find( (a) => a.timestamp! < orig_annot!.timestamp! );
 				if (next_annot) disabled_forward = false;
 				if (prev_annot) disabled_backward = false;
 			}
@@ -374,8 +371,8 @@ export class TrackingPanel extends LitElement {
 				<label style="margin-left: 10px">Tracking tools</label>
 				<span style="text-align: center">Interpolation</span>
 				<div style="display:flex; flex-direction: row">
-					<mwc-icon-button ?disabled=${disabled_backward} title="Backward interpolation" icon="switch_right" @click=${() => this.runInterpolation(false, orig_annot, prev_annot) }></mwc-icon-button>
-					<mwc-icon-button ?disabled=${disabled_forward} title="Forward interpolation" icon="switch_left" @click=${() => this.runInterpolation(true, orig_annot, next_annot) }></mwc-icon-button>
+					<mwc-icon-button ?disabled=${disabled_backward} title="Backward interpolation" icon="switch_right" @click=${() => this.runInterpolation(false, orig_annot!, prev_annot!) }></mwc-icon-button>
+					<mwc-icon-button ?disabled=${disabled_forward} title="Forward interpolation" icon="switch_left" @click=${() => this.runInterpolation(true, orig_annot!, next_annot!) }></mwc-icon-button>
 				</div>
 				<label style="text-align: center">Selected tracks tools</label>
 				<div style="display:flex; flex-direction: row">
@@ -399,18 +396,14 @@ export class TrackingPanel extends LitElement {
 
 	// <mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?on=${isKeyShape(t, this.timestamp)} @click=${() => {console.log("TODO");}}></mwc-icon-button-toggle>
 	// <mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
-
-	/******************* RENDERING: main tracking panel  *******************/
-
 	/**
-	 * Render the element template.
+	 * Display and selection of tracks
 	 */
-	render() {
+	get tracksSelector() {
+		console.log("tracksSelector");
 		return html`
-			<hr>
-			${this.sequenceTools}
 			<div class="card">
-				<p>${this.nbTracks} tracks</p>
+				<p>${this.trackIds.length} tracks</p>
 				<div style="padding: 5px; text-align: center;">
 					${this.trackIds.map((id) => {
 						const backgroundColor = trackColors[id % trackColors.length];
@@ -419,6 +412,20 @@ export class TrackingPanel extends LitElement {
 					})}
 				</div>
 			</div>
+			${this.dialogs}
+		`;
+	}
+	/******************* RENDERING: main tracking panel  *******************/
+
+	/**
+	 * Render the element template.
+	 */
+	render() {
+		console.log("render");
+		return html`
+			<hr>
+			${this.sequenceTools}
+			${this.tracksSelector}
 			${this.dialogs}
 		`;
 	}

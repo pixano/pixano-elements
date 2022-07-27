@@ -16,6 +16,7 @@
 // TODO: use this.myChart.resize when canvas size changes ?
 
 import { html, customElement, LitElement } from 'lit-element';
+import { Annotations } from './annotations-manager';
 // echarts minimal use
 import * as echarts from 'echarts/core';
 import {
@@ -76,20 +77,20 @@ export class SequenceTimeline extends LitElement {
 	private nbTracksToBeDisplayed = 3;
 	private symbolSize = 20;
 
+	public annotations: Annotations= new Annotations();
+
 	/**
-	 * Compute data to be displayed by the timeline from the full sequence_annotations
+	 * Compute data to be displayed by the timeline from the annotations manager
 	 * 
-	 * update data to be displayed
-	 * @param {Object} sequence_annotations: annotations of whole sequence
 	 * @param {Object} colorForCategory: function to be called to get a color linked to a category
 	 */
-	sequenceAnnotations2timelineData(sequence_annotations: [], colorForCategory: Function) {
+	updateData(colorForCategory: Function) {
 
 		// 1) extract data to be displayed form annotations
 		var flatData: any[] = [];
 		var maxTrackNum = 0;
 
-		sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
+		this.annotations.sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
 			// console.log("frame=",frame);
 			// console.log("annotations=",frame);
 			var numFrame = index;
@@ -119,7 +120,7 @@ export class SequenceTimeline extends LitElement {
 				itemStyle: { color: data[0][3] },//'red';
 				lineStyle: { color: data[0][3] }
 			});
-			else console.log("no data for index",index,"in",sequence_annotations);
+			else console.log("no data for index",index,"in",this.annotations.sequence_annotations);
 		});
 		this.myChart.setOption({series: series});
 

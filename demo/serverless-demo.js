@@ -65,15 +65,11 @@ export class ServerlessDemo extends LitElement {
 		this.defaultMode = 'edit';
 		this.chosenPlugin = '';//empty = no plugin chosen
 		this.Annotations = new Annotations();
-		this.annotations = [];
 		this.selectedIds = [];// don't asign directly : always use this.setSelectedIds(...)
 		// specific properties
 		this.isOpenedPolygon = true;//for pxn-polygon
 		this.maskVisuMode = 'SEMANTIC';//for pxn-segmentation
 		this.tracks = {};//for pxn-tracking
-		//when in an image sequence or a video:
-		this.sequence_annotations = [];//overall annotations: each image of the sequence has its own annotations array
-		this.selectedTrackIds = [];//currently selected track ids
 	}
 
 	/******************* Utility functions *******************/
@@ -84,9 +80,6 @@ export class ServerlessDemo extends LitElement {
 	 */
 	initAnnotations() {
 		this.Annotations.init();
-		if (this.element) this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
-		this.setAnnotations([]);
-		this.sequence_annotations = [];
 		this.setSelectedIds([]);
 		this.tracks = {};//for pxn-tracking
 	}
@@ -95,14 +88,12 @@ export class ServerlessDemo extends LitElement {
 	 * @param {Object} newAnnotations
 	 */
 	setAnnotations(newAnnotations) {
-		if (this.element) this.Annotations.setAnnotations(newAnnotations,this.element.frameIdx);
-		// console.log("prev nnotation=",this.annotations);
-		// console.log("newAnnotation=",newAnnotations);
-		this.annotations = newAnnotations;
-		if (this.element) if (this.element.isSequence && !this.isTracking()) {//attributePicker is null when tracking
-			this.sequence_annotations[this.element.frameIdx] = newAnnotations;
-			this.element.timeLine.sequenceAnnotations2timelineData(this.sequence_annotations, this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
-			this.trackingPanel.sequenceAnnotations2tracking(this.Annotations);
+		if (this.element) {
+			this.Annotations.setAnnotations(newAnnotations,this.element.frameIdx);
+			if (this.element.isSequence && !this.isTracking()) {//attributePicker is null when tracking
+				this.element.timeLine.updateData(this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
+				this.trackingPanel.updateData();
+			}
 		}
 	}
 	/**
@@ -157,13 +148,13 @@ export class ServerlessDemo extends LitElement {
 	 * Called when using the Save button
 	 */
 	onSave() {
-		const json_string = this.element.isSequence ? JSON.stringify(this.sequence_annotations, null, 1) : JSON.stringify(this.annotations, null, 1);
+		const json_string = this.element.isSequence ? JSON.stringify(this.Annotations.sequence_annotations, null, 1) : JSON.stringify(this.Annotations.get(), null, 1);
 		const blob = new Blob([json_string],{type: "text/plain;charset=utf-8"})
 		FileSaver.saveAs(blob, "my_json.json")
 	}
 
 	/**
-	 * Called when using the Save button
+	 * Called when using the Upload button
 	 * @param {CustomEvent} evt 
 	 */
 	onUpload(evt) {
@@ -179,6 +170,7 @@ export class ServerlessDemo extends LitElement {
 			// });
 			// load new data
 			if (!fileList.length) throw new Error("No files found");
+			this.initAnnotations();//ensure cleaning previous annotations
 			if (fileList.length==1) this.element.input = fileList[0];
 			else this.element.input = fileList;
 		} catch(err) {
@@ -194,7 +186,6 @@ export class ServerlessDemo extends LitElement {
 	 */
 	onLoadedInput() {
 		console.log("onLoadedInput");
-		this.Annotations.isSequence = this.element.isSequence;
 		// adapt blocks to be displayed
 		if (this.isTracking()) {
 			this.shadowRoot.getElementById('properties-panel').style.display="none";
@@ -209,38 +200,35 @@ export class ServerlessDemo extends LitElement {
 			this.initAnnotations();
 			this.initAttributePicker();
 		} else {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
-			console.log("this.sequence_annotations=",this.sequence_annotations);
-			if (!this.sequence_annotations.length) {//first time on this video => initialize annotations
+			console.log("this.sequence_annotations=",this.Annotations.sequence_annotations);
+			if (!this.Annotations.isSequence) {//first time on this video => initialize annotations
+				this.Annotations.isSequence = true;
 				this.initAnnotations();
+				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) this.Annotations.setAnnotations([],i);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 				if (!this.isTracking()) this.element.setEmpty();
-				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) {
-					this.sequence_annotations.push([]);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
-				}
 				if (!this.isTracking()) this.initAttributePicker();
 			} else {
 				if (!this.isTracking()) this.setSelectedIds([],false);//don't update trackIds in order to be able to continue a track
-				// 1) get previous frame annotations into sequence annotations
-				this.sequence_annotations[this.element.lastFrameIdx] = this.annotations;
-				// 2) set new frame annotations to the corresponding annotations in sequence annotations
-				this.setAnnotations(this.sequence_annotations[this.element.frameIdx]);
-				console.log("this.annotations=",this.annotations);
+				// update frame index in annotations manager
+				this.Annotations.currentFrameIdx = this.element.frameIdx;
+				console.log("this.annotations=",this.Annotations.get());
 				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
 				switch (this.chosenPlugin) {
 					case 'classification':
-						if (!this.annotations.length) this.setAnnotations([this.attributePicker.value]);// if it's the first time on this image, apply previous value (default if no previous)
-						this.attributePicker.setAttributes(this.annotations[0]);
+						if (!this.Annotations.get().length) this.setAnnotations([this.attributePicker.value]);// if it's the first time on this image, apply previous value (default if no previous)
+						this.attributePicker.setAttributes(this.Annotations.get()[0]);
 						break;
 					case 'keypoints':
 					case 'rectangle':
 					case 'smart-rectangle':
 					case 'polygon':
 					case 'cuboid-editor':
-						this.element.shapes = this.annotations;
+						this.element.shapes = this.Annotations.get();
 						this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
 						break;
 					case 'segmentation':
 					case 'smart-segmentation':
-						const maskAnnot = this.annotations.find((a) => a.id===0);
+						const maskAnnot = this.Annotations.get().find((a) => a.id===0);
 						if (maskAnnot) this.element.setMask(maskAnnot.mask);
 						else this.element.setEmpty();
 					case 'tracking':
@@ -258,6 +246,7 @@ export class ServerlessDemo extends LitElement {
 		if (this.element.isSequence && !this.isTracking()) {
 			this.trackingPanel.element=this.element;
 			this.trackingPanel.annotations=this.Annotations;
+			this.element.timeLine.annotations=this.Annotations;
 		}
 		//exception
 		if (this.chosenPlugin==='classification') {
@@ -298,7 +287,7 @@ export class ServerlessDemo extends LitElement {
 				if (this.element.isSequence) {
 					newObject.timestamp = this.element.frameIdx;
 					if ((this.selectedIds.length===1) ||//if a previous object was selected OR
-						(this.annotations.find(annotation => this.trackingPanel.selectedTrackIds.includes(annotation.tracknum))) ||//if a track whith the same track number already exists in this frame OR
+						(this.Annotations.get().find(annotation => this.trackingPanel.selectedTrackIds.includes(annotation.tracknum))) ||//if a track whith the same track number already exists in this frame OR
 						(this.trackingPanel.selectedTrackIds.length!==1))//if no track or more then one is selected 
 					{// => this is a new track
 						newObject.tracknum = this.trackingPanel.getNextTracknum();
@@ -345,7 +334,7 @@ export class ServerlessDemo extends LitElement {
 			case 'segmentation':
 			case 'smart-segmentation':
 				const ids = evt.detail;
-				let frame = this.annotations;
+				let frame = this.Annotations.get();
 				// 1) update the mask (always id 0)
 				// get the new mask and store it
 				let mask = frame.find((l) => l.id === 0);
@@ -381,7 +370,7 @@ export class ServerlessDemo extends LitElement {
 			case 'polygon':
 				this.setSelectedIds(evt.detail);
 				if (this.selectedIds.length) {
-					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
+					const shapes = this.Annotations.get().filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
 				}
@@ -390,7 +379,7 @@ export class ServerlessDemo extends LitElement {
 			case 'smart-segmentation':
 				this.setSelectedIds(evt.detail);
 				if (this.selectedIds.length) {//only one id at a time for segmentation
-					const annot = this.annotations.filter((a) => JSON.stringify(this.selectedIds)===(a.id));// search the corresponding id 
+					const annot = this.Annotations.get().filter((a) => JSON.stringify(this.selectedIds)===(a.id));// search the corresponding id 
 					const common = commonJson(annot);
 					this.attributePicker.setAttributes(common);
 				}
@@ -398,7 +387,7 @@ export class ServerlessDemo extends LitElement {
 			case 'cuboid-editor':
 				this.setSelectedIds(evt.detail.map((p) => p.id));
 				if (this.selectedIds.length) {
-					const shapes = this.annotations.filter((s) => this.selectedIds.includes(s.id));
+					const shapes = this.Annotations.get().filter((s) => this.selectedIds.includes(s.id));
 					const common = commonJson(shapes);
 					this.attributePicker.setAttributes(common);
 				}
@@ -433,7 +422,7 @@ export class ServerlessDemo extends LitElement {
 			case 'segmentation':
 			case 'smart-segmentation':
 				const updatedIds = evt.detail;
-				let frame = this.annotations;
+				let frame = this.Annotations.get();
 				// 1) update the mask (always id 0)
 				let mask = frame.find((l) => l.id === 0);
 				if (!mask) {
@@ -520,7 +509,7 @@ export class ServerlessDemo extends LitElement {
 					this.element.targetClass = category.idx;
 					break;
 				}
-				let frame = this.annotations;
+				let frame = this.Annotations.get();
 				// 1) update the mask (always id 0)
 				// change category in element
 				const category =  this.attributePicker.selectedCategory;
