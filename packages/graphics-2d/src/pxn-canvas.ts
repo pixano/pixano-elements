@@ -6,7 +6,8 @@
  * @license CECILL-C
  */
 
-import { html, property } from 'lit-element';
+import {html} from 'lit';
+import {property} from 'lit/decorators.js';
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { GenericDisplay } from '@pixano/core/lib/generic-display';
 import { Renderer } from './renderer';

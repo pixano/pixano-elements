@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement, property, LitElement, html, css } from 'lit-element';
+import {html, css, LitElement} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 import { GenericDisplayImpl } from './generic-display-impl';
 import { interpolate2, delay, invertColor, trackColors } from './utils';
 import { cutTrack, mergeTracks as mergeTracksIcon } from './style';

@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement, html, property} from 'lit-element';
+import {html} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
 import {
@@ -29,6 +30,7 @@ export class SmartTracking extends Tracking {
 
 	constructor() {
 		super();
+		this.isSmartComponent = true;
 	}
 
 	protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } }
@@ -61,10 +63,8 @@ export class SmartTracking extends Tracking {
 		super.updated(changedProperties);
 		if (changedProperties.has('model')) {
 			// load the model
-			this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
 			this.tracker.loadModel(this.model).then(() => {
-				this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
-				this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
+				this.pendingModelLoad = false;
 			});
 		}
 	}

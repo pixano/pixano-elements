@@ -6,7 +6,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
 import { ShapesEditController } from './controller';

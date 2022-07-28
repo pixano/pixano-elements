@@ -1,4 +1,4 @@
-import { css } from 'lit-element';
+import {css} from 'lit';
 import { genericStyles } from '@pixano/core/lib/style';
 
 export const style2d = [genericStyles, css`

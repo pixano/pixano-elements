@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, property } from 'lit-element';
+import {html, css} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
 import { delay, invertColor, trackColors } from '@pixano/core/lib/utils';
 import { Rectangle } from './pxn-rectangle'

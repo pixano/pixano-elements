@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@pixano/core": "0.7.0",
-    "lit-element": "2.4.0",
+    "lit": "^2.2.7",
     "three": "0.115.0"
   },
   "scripts": {

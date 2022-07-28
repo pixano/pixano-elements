@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement } from 'lit-element';
+import {customElement} from 'lit/decorators.js';
 import { Canvas } from './pxn-canvas';
 
 /**

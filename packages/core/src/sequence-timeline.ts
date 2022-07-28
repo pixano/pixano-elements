@@ -15,7 +15,8 @@
 // TODO: add a button to expend : only display the current track by default, change height and display 10 or more when clicking on this button OR add a slider : https://stackoverflow.com/questions/61228735/how-to-scroll-with-mouse-wheel-and-keyboard-on-vertical-slider-in-echarts
 // TODO: use this.myChart.resize when canvas size changes ?
 
-import { html, customElement, LitElement } from 'lit-element';
+import {html, LitElement} from 'lit';
+import {customElement} from 'lit/decorators.js';
 import { annotation, frameAuthor, Annotations } from './annotations-manager';
 // echarts minimal use
 import * as echarts from 'echarts/core';

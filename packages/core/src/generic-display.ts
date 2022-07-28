@@ -4,11 +4,13 @@
  * @license CECILL-C
  */
 
-import { html, internalProperty, LitElement, property, TemplateResult } from 'lit-element';
+import {LitElement, html} from 'lit';
+import {property} from 'lit/decorators.js';
 import './playback-control';
 import './sequence-timeline';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
+
 
 /**
  * Utility class to load images or sequences of images given
@@ -21,12 +23,26 @@ export abstract class GenericDisplay extends LitElement {
 
 	public loader: Loader | SequenceLoader = new Loader();
 
+	// additionnal properties for ai
+	private _isAIcomponent: boolean = false;
+	@property()
+	public pendingModelLoad: boolean | null = null;
+
 	protected authorizedType: 'image' | 'pcl' | 'all' = 'all';
 
 	static get properties() {
 		return {
 			maxFrameIdx: { type: Number }
 		};
+	}
+
+	// additionnal getter/setter for ai
+	get isSmartComponent() { return this._isAIcomponent; }
+	set isSmartComponent(is: boolean) {
+		if (is) {
+			this._isAIcomponent = true;
+			this.pendingModelLoad = true;
+		} else this._isAIcomponent = false;
 	}
 
 	/**
@@ -115,7 +131,7 @@ export abstract class GenericDisplay extends LitElement {
 	public maxFrameIdx: number | null = null;
 	public pendingLoad: boolean | null = null;
 
-	@internalProperty()
+	@property()
 	private _targetFrameIdx: number | null = null;
 
 	private _lastTargetFrameIdx: number | null = null;
@@ -257,10 +273,20 @@ export abstract class GenericDisplay extends LitElement {
 
 	/******************* RENDERING  *******************/
 
-	display(): TemplateResult {
+	display() {
 		return html``;
 	}
 
+	pendingModelLoadScreen() {
+		return html`${this.pendingModelLoad
+			? html`
+				<div style="position: absolute; top: 0;	left: 0; opacity: 0.5; background: white; width: 100%; height: 100%; cursor: wait;">
+					<h1 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+						Smart tool model is loading, please wait...
+					</h1>
+				</div>`
+			: html``}`;
+	}
 	/**
 	 * Generic render that display a playback slider at the bottom
 	 * if the component displays a sequence.
@@ -273,8 +299,9 @@ export abstract class GenericDisplay extends LitElement {
 	 */
 	render() {
 		return html`
-			<div id="container">
+			<div id="container" tabIndex="1">
 				${this.display()}
+				${this.pendingModelLoadScreen()}
 				<slot name="slider" id="slot">
 					${this.sequenceControl}
 				</slot>
