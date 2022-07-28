@@ -28,8 +28,7 @@ import { demoStyles,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
 import { pluginsList, defaultLabelValues } from './plugins_index';
-import { observable } from '@pixano/core/lib/observer';
-import  { annotation, frameAuthor, Annotations } from '@pixano/core/lib/annotations-manager';
+import { annotation, frameAuthor, Annotations } from '@pixano/core/lib/annotations-manager';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 
@@ -103,7 +102,6 @@ export class ServerlessDemo extends LitElement {
 	 */
 	setSelectedIds(newIds, updateTrackIds=true) {
 		if (!newIds) newIds=[];
-		console.log("serverless setSelectedIds",newIds);
 		this.Annotations.setSelectedIds(newIds);
 		if (this.element.isSequence && updateTrackIds) {
 			if (newIds.length) {
@@ -131,6 +129,38 @@ export class ServerlessDemo extends LitElement {
 			);
 			if (!schema.default) schema.default = schema.category[0].name;
 			this.element.targetClass = schema.category.find((c) => c.name === schema.default).idx;
+		}
+	}
+
+	/**
+	 * Update annotations for element
+	 */
+	updateElementAnnotations() {
+		switch (this.chosenPlugin) {
+			case 'classification':
+				if (!this.Annotations.get().length) this.setAnnotations([this.attributePicker.value]);// if it's the first time on this image, apply previous value (default if no previous)
+				this.attributePicker.setAttributes(this.Annotations.get()[0]);
+				break;
+			case 'keypoints':
+			case 'rectangle':
+			case 'smart-rectangle':
+			case 'polygon':
+			case 'cuboid-editor':
+				this.element.shapes = this.Annotations.get();
+				this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
+				break;
+			case 'segmentation':
+			case 'smart-segmentation':
+				const maskAnnot = this.Annotations.get().find((a) => a.id===0);
+				if (maskAnnot) this.element.setMask(maskAnnot.mask);
+				else this.element.setEmpty();
+			case 'tracking':
+			case 'tracking-graph':
+			case 'smart-tracking':
+				/* nothing to do: create=update */
+				break;
+			default:
+				console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
 		}
 	}
 
@@ -213,32 +243,7 @@ export class ServerlessDemo extends LitElement {
 				this.Annotations.currentFrameIdx = this.element.frameIdx;
 				console.log("this.annotations=",this.Annotations.get());
 				// 3) set shapes to annotations // TODO : when standard annotations will be used by all pxns, this will disapear
-				switch (this.chosenPlugin) {
-					case 'classification':
-						if (!this.Annotations.get().length) this.setAnnotations([this.attributePicker.value]);// if it's the first time on this image, apply previous value (default if no previous)
-						this.attributePicker.setAttributes(this.Annotations.get()[0]);
-						break;
-					case 'keypoints':
-					case 'rectangle':
-					case 'smart-rectangle':
-					case 'polygon':
-					case 'cuboid-editor':
-						this.element.shapes = this.Annotations.get();
-						this.element.shapes.forEach( shape => shape.color = this.attributePicker._colorFor(shape.category));
-						break;
-					case 'segmentation':
-					case 'smart-segmentation':
-						const maskAnnot = this.Annotations.get().find((a) => a.id===0);
-						if (maskAnnot) this.element.setMask(maskAnnot.mask);
-						else this.element.setEmpty();
-					case 'tracking':
-					case 'tracking-graph':
-					case 'smart-tracking':
-						/* nothing to do: create=update */
-						break;
-					default:
-						console.error(`onLoadedInput: plugin ${this.chosenPlugin} unknown`);
-				}
+				this.updateElementAnnotations();
 				console.log("this.selectedIds=",this.selectedIds);
 			}
 		}
@@ -246,6 +251,7 @@ export class ServerlessDemo extends LitElement {
 		if (this.element.isSequence && !this.isTracking()) {
 			this.trackingPanel.element=this.element;
 			this.trackingPanel.annotations=this.Annotations;
+			this.trackingPanel.updateData();
 			this.element.timeLine.annotations=this.Annotations;
 		}
 		//exception
@@ -556,7 +562,7 @@ export class ServerlessDemo extends LitElement {
 	 * Sequences only: react on selected tracks
 	 * @param {CustomEvent} evt: id of the selected tracks
 	 */
-	async onSelectedTracks(evt) {
+	onSelectedTracks(evt) {
 		const trackIds = evt.detail;
 		let annotIds = [];
 		let frame = 0;
@@ -575,18 +581,11 @@ export class ServerlessDemo extends LitElement {
 	}
 	
 	/**
-	 * Sequences only: react on updated tracks : create corresponding object and annotation
-	 * @param {CustomEvent} evt: id of the track to be selected
+	 * Sequences only: react on updated tracks : update all annotations in element
 	 */
-	onUpdateTracks(evt) {
-		if (evt.detail) {
-			// add this new annotation
-			console.log("onUpdateTracks",evt.detail);
-			this.element.shapes.add(observable(evt.detail));//to the elements shapes
-			this.onCreate({ detail: evt.detail });//export to annotations
-		} else {
-			console.log("onUpdateTracks annotions:",this.Annotations);
-		}
+	onUpdateTracks() {
+		this.updateElementAnnotations();
+		this.element.timeLine.updateData(this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
 	}
 	
 

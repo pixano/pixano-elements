@@ -81,6 +81,7 @@ export class TrackingPanel extends LitElement {
 	 * Update data to be displayed (synchronize with annotations manager)
 	 */
 	updateData() {
+		this.trackIds = [];// force full sync, not only merge
 		this.annotations.sequence_annotations.forEach((frame:any) => {//for each frame annotations
 			frame.forEach((annotation:any) => {
 				if (!this.trackIds.includes(annotation.tracknum)) this.trackIds.push(annotation.tracknum);
@@ -93,7 +94,7 @@ export class TrackingPanel extends LitElement {
 	 * @param trackIds: array containing the track ids to select
 	 */
 	selectTracks(trackIds: Array<number>) {
-		console.log("select trackId",trackIds);
+		console.log("select trackIds",trackIds);
 		if (this.isShiftKeyPressed) {
 			trackIds.forEach((id) => {
 				if (!this.selectedTrackIds.includes(id)) this.selectedTrackIds.push(id);
@@ -135,12 +136,14 @@ export class TrackingPanel extends LitElement {
 		else await this.element.prevFrame();
 		await delay(10);
 		// run interpolation
-		while ( forwardMode ? this.element.timestamp < target_annot.timestamp! : this.element.timestamp > target_annot.timestamp! ) {// for each successive timestamp from orig until target
+		while ( forwardMode ? this.element.frameIdx < target_annot.timestamp! : this.element.timestamp > target_annot.timestamp! ) {// for each successive timestamp from orig until target
 			// compute interpolation for this frame
 			const rate = (this.element.timestamp - orig_annot.timestamp!) / (target_annot.timestamp! - orig_annot.timestamp!);
 			const newAnnot = interpolate2(orig_annot, target_annot, rate);
 			// add this new annotation
-			this.dispatchEvent(new CustomEvent('update-tracks', { detail: newAnnot }));
+			this.annotations.addAnnotation(newAnnot,this.element.frameIdx);
+			//update element
+			this.dispatchEvent(new CustomEvent('update-tracks'));
 			// goto next frame to interpolate (and display)
 			if (forwardMode) await this.element.nextFrame();
 			else await this.element.prevFrame();
@@ -151,7 +154,7 @@ export class TrackingPanel extends LitElement {
 	/**
 	 * Merge two tracks.
 	 * If they do not overlap, do concatenation of keyshapes else display an error message.
-	 * @param tracks tracks to be merged
+	 * @param trackIds tracks to be merged
 	 */
 	mergeTracks(trackIds: Array<number>) {
 		if (trackIds.length<2) {
@@ -180,14 +183,15 @@ export class TrackingPanel extends LitElement {
 			return;
 		}
 		// merge
+		const mergedTrackId = trackIds[0];
 		this.annotations.sequence_annotations.forEach((annotations) => {
 			annotations.forEach((annotation: annotation) => {
-				if (trackIds.includes(annotation.tracknum!)) annotation.tracknum = trackIds[0];
+				if (trackIds.includes(annotation.tracknum!)) annotation.tracknum = mergedTrackId;
 			});
 		});
 		//update trackIds and selection
-		for (let i=0; i<trackIds.length; i++) this.trackIds.splice(this.trackIds.indexOf(trackIds[i]), 1);
-		this.dispatchEvent(new CustomEvent('selection-track', { detail: trackIds[0] }));
+		for (let i=1; i<trackIds.length; i++) this.trackIds.splice(this.trackIds.indexOf(trackIds[i]), 1);//delete all selected trackIds except the first one = merged
+		this.dispatchEvent(new CustomEvent('selection-track', { detail: [mergedTrackId] }));
 		console.log("mergeTracks annotions après:",this.annotations);
 		this.dispatchEvent(new Event('update-tracks'));
 	}
@@ -196,21 +200,19 @@ export class TrackingPanel extends LitElement {
 	 * Switch two tracks at current timestamp.
 	 * @param trackIds the two tracks to be switched at the current timestamp
 	 */
-	switchTrack(trackIds: Array<number>) {
+	switchTracks(trackIds: Array<number>) {
 		if (trackIds.length!==2) {
-			console.error("switchTrack called with",trackIds.length,"tracks");
+			console.error("switchTracks called with",trackIds.length,"tracks");
 			return;
 		}
 		let timestamp = this.annotations.get()[0].timestamp!;// current timestamp, start switch from here including this one
 		console.log("switch",trackIds[0],"and",trackIds[1],"at timestamp",timestamp);
-		for (let i = timestamp; i < this.annotations.sequence_annotations.length - 1; i++) {
-			let annotations = this.annotations.sequence_annotations[i];//annotations for this frame
+		this.annotations.sequence_annotations.forEach((annotations) => {//annotations for this frame
 			annotations.forEach((annotation: annotation) => {
 				if (annotation.tracknum===trackIds[0]) annotation.tracknum = trackIds[1];
 				else if (annotation.tracknum===trackIds[1]) annotation.tracknum = trackIds[0];
 			});
-		}
-		console.log("switchTrack annotions après:",this.annotations);
+		});
 		this.dispatchEvent(new Event('update-tracks'));
 	}
 
@@ -219,21 +221,22 @@ export class TrackingPanel extends LitElement {
 	 * @param trackId the track to be split
 	 */
 	splitTrack(trackId: number) {
-		this.trackIds.sort();
-		const newTrackId = this.trackIds[-1]+1;
-		console.error("splitTrack called for track",trackId,". New track will be",newTrackId);
+		const newTrackId = this.getNextTracknum();
+		console.log("splitTrack called for track",trackId,". New track will be",newTrackId);
 		let timestamp = this.annotations.get()[0].timestamp!;// current timestamp, split here
-		for (let i = timestamp; i < this.annotations.sequence_annotations.length - 1; i++) {
+		for (let i = timestamp; i < this.annotations.sequence_annotations.length; i++) {
 			let annotations = this.annotations.sequence_annotations[i];//annotations for this frame
 			annotations.forEach((annotation: annotation) => {
 				if (annotation.tracknum===trackId) annotation.tracknum = newTrackId;
 			});
 		}
-		//update trackIds and selection
+		//update trackIds
 		this.trackIds.push(newTrackId);
-		this.dispatchEvent(new CustomEvent('selection-track', { detail: [newTrackId] }));
-		console.log("switchTrack annotions après:",this.annotations);
-		this.dispatchEvent(new Event('update-tracks'));
+		// update element
+		//... this.element.shapes = this.annotations.get();
+		this.dispatchEvent(new Event('update-tracks'));//TODO : should be done directly in elements, but we need to implement generic setAnnotations first
+		//update selection
+		this.dispatchEvent(new CustomEvent('selection-track', { detail: [] }));
 	}
 
 	/**
@@ -241,8 +244,7 @@ export class TrackingPanel extends LitElement {
 	 * @param delTrackIds the tracks to be deleted
 	 */
 	deleteTrack(delTrackIds: Array<number>) {
-		console.log("delTrackIds=",delTrackIds);
-		console.log("this.trackIds=",this.trackIds);
+		console.log("deleteTrack");
 		delTrackIds.forEach((id) => {
 			//delete all annotations in the track
 			const annots = this.annotations.getAnnotationsByTracknum(id);
@@ -250,11 +252,11 @@ export class TrackingPanel extends LitElement {
 			// delete the track
 			this.trackIds.splice(this.trackIds.indexOf(id), 1);
 		});
+		// update element
+		//... this.element.shapes = this.annotations.get();
+		this.dispatchEvent(new Event('update-tracks'));//TODO : should be done directly in elements, but we need to implement generic setAnnotations first
 		//update selection
-		console.log("this.trackIds2=",this.trackIds);
 		this.dispatchEvent(new CustomEvent('selection-track', { detail: [] }));
-		console.log("deleteTrack annotions après:",this.annotations);
-		this.dispatchEvent(new CustomEvent('delete-track', { detail: delTrackIds }));//récup l'évènement pour renouveller l'affichage
 	}
 
 	/**
@@ -340,7 +342,7 @@ export class TrackingPanel extends LitElement {
 		// only enable interpolation when possible (i.e. when at least two manual annotations exist in the sequence) and only between manual annotations
 		let disabled_forward = true;
 		let disabled_backward = true;
-		let disabled_switchTrack = true;
+		let disabled_switchTracks = true;
 		let disabled_mergeTracks = true;
 		let disabled_onetrackselected = true;
 		let disabled_oneormoretrackselected = true;
@@ -350,19 +352,21 @@ export class TrackingPanel extends LitElement {
 			disabled_onetrackselected = false;
 			//is it possible to interpolate on selected track, begining on current selected annotation
 			orig_annot = this.annotations.getAnnotationByID(this.annotations.getSelectedIds[0]);
-			if (!orig_annot) {
-				disabled_forward = false;
-				disabled_backward = false;
-			}
-			else if (orig_annot.tracknum === this.selectedTrackIds[0]) {
-				const annot_track = this.annotations.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTrackIds[0]) && (a.origin!.createdBy==='manual') );//get manual annotations linked to the current track
-				next_annot = annot_track.find( (a) => a.timestamp! > orig_annot!.timestamp! );
-				prev_annot = annot_track.find( (a) => a.timestamp! < orig_annot!.timestamp! );
-				if (next_annot) disabled_forward = false;
-				if (prev_annot) disabled_backward = false;
+			if ((orig_annot) && (orig_annot.tracknum === this.selectedTrackIds[0])) {
+				//let annot_track = this.annotations.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTrackIds[0]) && (a.origin!.createdBy==='manual') );//get manual annotations linked to the current track
+				let annot_track = this.annotations.sequence_annotations.flat().filter( (a) => (a.tracknum === this.selectedTrackIds[0]) );//get all annotations linked to the current track
+				// search for all next/previous annotations on this track
+				let nexts = annot_track.filter( (a) => a.timestamp! > orig_annot!.timestamp! );
+				let prevs = annot_track.filter( (a) => a.timestamp! < orig_annot!.timestamp! );
+				// search the nearest one : sort in growing/decreasing order and take the first one
+				if (nexts.length) next_annot = nexts.sort((a,b) => a.timestamp!-b.timestamp! )[0];
+				if (prevs.length) prev_annot = prevs.sort((a,b) => b.timestamp!-a.timestamp! )[0];
+				// desable if nothing to do
+				if (next_annot && next_annot.timestamp! > orig_annot.timestamp!+1) disabled_forward = false;
+				if (prev_annot && prev_annot.timestamp! < orig_annot.timestamp!-1) disabled_backward = false;
 			}
 		} else {
-			disabled_switchTrack = this.selectedTrackIds.length!==2;
+			disabled_switchTracks = this.selectedTrackIds.length!==2;
 			disabled_mergeTracks = this.selectedTrackIds.length<2;
 		}
 
@@ -376,8 +380,8 @@ export class TrackingPanel extends LitElement {
 				</div>
 				<label style="text-align: center">Selected tracks tools</label>
 				<div style="display:flex; flex-direction: row">
-					<mwc-icon-button title="Switch track" ?disabled=${disabled_switchTrack} @click=${() => this.switchTrack(this.selectedTrackIds)} icon="shuffle"></mwc-icon-button>
-					<mwc-icon-button title="Merge track" ?disabled=${disabled_mergeTracks} @click=${() => this.mergeTracks(this.selectedTrackIds)}>${mergeTracksIcon}</mwc-icon-button>
+					<mwc-icon-button title="Switch selected tracks" ?disabled=${disabled_switchTracks} @click=${() => this.switchTracks(this.selectedTrackIds)} icon="shuffle"></mwc-icon-button>
+					<mwc-icon-button title="Merge selected tracks" ?disabled=${disabled_mergeTracks} @click=${() => this.mergeTracks(this.selectedTrackIds)}>${mergeTracksIcon}</mwc-icon-button>
 				</div>
 				<label style="text-align: center">Navigation</label>
 				<div style="display:flex; flex-direction: row">
@@ -408,7 +412,7 @@ export class TrackingPanel extends LitElement {
 					${this.trackIds.map((id) => {
 						const backgroundColor = trackColors[id % trackColors.length];
 						return html`<div id="track-button-${id}" class="track-button" style="background: ${backgroundColor}; color: ${invertColor(backgroundColor)};"
-										@click=${() => this.dispatchEvent(new CustomEvent('selection-track', { detail: [id] }))}>${id}</div>`;
+										@click=${() => { this.selectTracks([id]); this.dispatchEvent(new CustomEvent('selection-track', { detail: this.selectedTrackIds })); } }>${id}</div>`;
 					})}
 				</div>
 			</div>

@@ -82,12 +82,12 @@ export class SequenceTimeline extends LitElement {
 
 		// 1) extract data to be displayed form annotations
 		let flatData: any[] = [];
-		let maxTrackNum = 0;
+		let maxTrackNum = -1;
 
 		this.annotations.sequence_annotations.forEach((frame:any, index) => {//for each frame annotations
 			let numFrame = index;
 			frame.forEach((annotation: annotation) => {
-				flatData.push({value: [numFrame, annotation.tracknum], createdBy: annotation.origin?.createdBy, color: colorForCategory(annotation.category), itemStyle: { color: colorForCategory(annotation.category) } });//a local itemStyle.color enbables to separate color of each point form the whole serie
+				flatData.push({value: [numFrame, annotation.tracknum], createdBy: annotation.origin?.createdBy, color: colorForCategory(annotation.category), id: annotation.id, itemStyle: { color: colorForCategory(annotation.category) } });//a local itemStyle.color enbables to separate color of each point form the whole serie
 				if (annotation.tracknum!>maxTrackNum) maxTrackNum = annotation.tracknum!;
 			});
 		});
@@ -112,6 +112,7 @@ export class SequenceTimeline extends LitElement {
 			});
 			else console.log("no data for index",index,"in",this.annotations.sequence_annotations);
 		});
+		this.myChart.setOption(this.option,true);//force update even when removing data
 		this.myChart.setOption({series: series});
 
 		// 2) Add shadow circles (which are not visible) to enable interaction
@@ -127,7 +128,7 @@ export class SequenceTimeline extends LitElement {
 					},
 					invisible: true,
 					draggable: false,
-					onclick: () => this.onPointClick(d.value),
+					onclick: () => this.onPointClick(d),
 					onmousemove: () => this.showTooltip(d.value),
 					onmouseout: () => this.hideTooltip(),
 					z: 100
@@ -148,7 +149,6 @@ export class SequenceTimeline extends LitElement {
 		tooltip: {
 			triggerOn: 'none',
 			formatter: function (params: any) {
-				console.log("params",params);
 				var message =
 					'Click to view this annotation'
 					+'<br>frame: '+params.value[0]+' tracknum: '+params.value[1]
@@ -246,9 +246,9 @@ export class SequenceTimeline extends LitElement {
 	 * Called when click on a symbol, i.e. on a precise annotation data point
 	 * => dispatches event clickOnData
 	 */
-	onPointClick(data: any[]) {
+	onPointClick(data: any) {
 		// console.log('clic : data =', data);
-		this.dispatchEvent(new CustomEvent('clickOnData', { detail: {frame: data[0], id: data[4]} }));
+		this.dispatchEvent(new CustomEvent('clickOnData', { detail: {frame: data.value[0], id: data.id} }));
 	}
 	
 	/******** render functions ************/

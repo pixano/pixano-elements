@@ -53,6 +53,15 @@ export class Annotations {
 		else this.sequence_annotations[frameIdx] = newAnnotations;
 	}
 	/**
+	 * Set annotations: previous annotations will be overwritten
+	 * @param {Object} newAnnotations
+	 * @param {Object} frameIdx: the frame index (only used for sequences). If frameIdx is not given, the current index will be used
+	 */
+	addAnnotation(newAnnotation: annotation, frameIdx?: number) {
+		if (typeof frameIdx === 'undefined') this.sequence_annotations[this.currentFrameIdx].push(newAnnotation);
+		else this.sequence_annotations[frameIdx].push(newAnnotation);
+	}
+	/**
 	 * Set selected IDs and adapt attribute picker
 	 * @param newIds: ids to select
 	 */
