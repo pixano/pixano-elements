@@ -4,13 +4,16 @@
  * @license CECILL-C
  */
 
-import { html, internalProperty, LitElement, property, TemplateResult } from 'lit-element';
+import {LitElement, html} from 'lit';
+import {property} from 'lit/decorators.js';
 import './playback-control';
+import './sequence-timeline';
 import { SequenceLoader, Loader } from './data-loader';
 import { genericStyles } from './style';
 
+
 /**
- * Utility class to load images of sequences of images given
+ * Utility class to load images or sequences of images given
  * their sources.
  *
  * @fires CustomEvent#load upon loading input item { detail: input data }
@@ -20,23 +23,12 @@ export abstract class GenericDisplay extends LitElement {
 
 	public loader: Loader | SequenceLoader = new Loader();
 
-	// additionnal properties for sequence loader
-	public maxFrameIdx: number | null = null;
-	public pendingLoad: boolean | null = null;
-
-	@internalProperty()
-	private _targetFrameIdx: number | null = null;
-
-	private _lastTargetFrameIdx: number | null = null;
-
-	// either use list item index as timestamp
-	// or look for timestamp value in filename
-	@property({ type: String })
-	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
+	// additionnal properties for ai
+	private _isAIcomponent: boolean = false;
+	@property()
+	public pendingModelLoad: boolean | null = null;
 
 	protected authorizedType: 'image' | 'pcl' | 'all' = 'all';
-
-	private _source: string | string[] = '';
 
 	static get properties() {
 		return {
@@ -44,11 +36,26 @@ export abstract class GenericDisplay extends LitElement {
 		};
 	}
 
+	// additionnal getter/setter for ai
+	get isSmartComponent() { return this._isAIcomponent; }
+	set isSmartComponent(is: boolean) {
+		if (is) {
+			this._isAIcomponent = true;
+			this.pendingModelLoad = true;
+		} else this._isAIcomponent = false;
+	}
+
 	/**
 	 * Returns video playback slider element.
 	 */
 	get playback() {
 		return this.shadowRoot?.querySelector('playback-control');
+	}
+	/**
+	 * Returns the timeline element.
+	 */
+	get timeLine() {
+		return this.shadowRoot?.querySelector('pxn-sequence-timeline');
 	}
 
 	public static get styles() {
@@ -67,6 +74,10 @@ export abstract class GenericDisplay extends LitElement {
 			this.playback!.disconnectedCallback();
 		});
 	}
+
+	/******************* INPUT management *******************/
+
+	private _source: string | string[] = '';
 
 	@property({ type: String })
 	get input(): string | string[] {
@@ -110,13 +121,33 @@ export abstract class GenericDisplay extends LitElement {
 		this.requestUpdate();
 	}
 
+	get isSequence() {
+		return this.loader instanceof SequenceLoader;
+	}
+
+	/******************* Sequences management : timestamp, frame index, navigation *******************/
+
+	// additionnal properties for sequence loader
+	public maxFrameIdx: number | null = null;
+	public pendingLoad: boolean | null = null;
+
+	@property()
+	private _targetFrameIdx: number | null = null;
+
+	private _lastTargetFrameIdx: number | null = null;
+
+	// either use list item index as timestamp
+	// or look for timestamp value in filename
+	@property({ type: String })
+	public timestampRule: 'index' | 'filename' = 'index';// TODO : not used
+
 	get timestamp(): number {
-		return (this.loader instanceof SequenceLoader) ? this.loader.frames[this.frameIdx].timestamp : 0;
+		return this.isSequence ? (this.loader as SequenceLoader).frames[this.frameIdx].timestamp : 0;
 	}
 
 	set timestamp(timestamp: number) {
-		if (this.loader instanceof SequenceLoader) {
-			const frameIdx = this.loader.frames.findIndex((f) => f.timestamp === timestamp);
+		if (this.isSequence) {
+			const frameIdx = (this.loader as SequenceLoader).frames.findIndex((f) => f.timestamp === timestamp);
 			if (frameIdx !== -1) {
 				this.frameIdx = frameIdx;
 			}
@@ -184,7 +215,6 @@ export abstract class GenericDisplay extends LitElement {
 		});
 	}
 
-
 	public nextFrame(): Promise<void> {
 		return new Promise((resolve) => {
 			if (!this.isSequence) {
@@ -214,6 +244,8 @@ export abstract class GenericDisplay extends LitElement {
 		return false;
 	}
 
+	/******************* EVENTS handlers *******************/
+
 	/**
 	 * Fired on playback slider update.
 	 * @param {CustomEvent} evt
@@ -222,8 +254,13 @@ export abstract class GenericDisplay extends LitElement {
 		this.frameIdx = evt.detail;
 	}
 
-	get isSequence() {
-		return this.loader instanceof SequenceLoader;
+	onTimelineClick(evt: CustomEvent) {
+		// 1) go to selected frame
+		this.frameIdx = evt.detail.frame;
+		// 2) select the corresponding shape
+		console.log("select id ",[evt.detail.id]);
+		console.log("we have to implement a generic slect function in generic-display and call it from here");//TODO
+		// this.select([evt.detail.id]);//TODO : make it generic
 	}
 
 	private notifyInputLoaded(data: HTMLImageElement | Float32Array) {
@@ -234,10 +271,22 @@ export abstract class GenericDisplay extends LitElement {
 		this.dispatchEvent(new CustomEvent('timestamp', { detail: this._targetFrameIdx }));
 	}
 
-	display(): TemplateResult {
+	/******************* RENDERING  *******************/
+
+	display() {
 		return html``;
 	}
 
+	pendingModelLoadScreen() {
+		return html`${this.pendingModelLoad
+			? html`
+				<div style="position: absolute; top: 0;	left: 0; opacity: 0.5; background: white; width: 100%; height: 100%; cursor: wait;">
+					<h1 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+						Smart tool model is loading, please wait...
+					</h1>
+				</div>`
+			: html``}`;
+	}
 	/**
 	 * Generic render that display a playback slider at the bottom
 	 * if the component displays a sequence.
@@ -250,16 +299,21 @@ export abstract class GenericDisplay extends LitElement {
 	 */
 	render() {
 		return html`
-				<div id="container">
-					${this.display()}
-					<slot name="slider" id="slot">
-						<div style="display: ${this.isSequence ? 'block' : 'none'};">
-							<playback-control @update=${this.onSliderChange}
-																		style="display: ${this.isSequence ? 'flex' : 'none'};"
-																		max=${this.maxFrameIdx}></playback-control>
-						</div>
-					</slot>
-				</div>
-				`;
+			<div id="container" tabIndex="1">
+				${this.display()}
+				${this.pendingModelLoadScreen()}
+				<slot name="slider" id="slot">
+					${this.sequenceControl}
+				</slot>
+			</div>
+			`;
+	}
+
+	get sequenceControl() {
+		if (this.isSequence) return html`
+				<pxn-sequence-timeline @clickOnData=${this.onTimelineClick} ></pxn-sequence-timeline>
+				<playback-control @update=${this.onSliderChange} max=${this.maxFrameIdx}></playback-control>
+			`;
+		else return html``;
 	}
 }

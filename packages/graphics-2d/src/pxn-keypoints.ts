@@ -5,8 +5,8 @@
  * @license CECILL-C
  */
 
-import { customElement } from 'lit-element';
-import { Canvas2d } from './pxn-canvas-2d';
+ import {customElement} from 'lit/decorators.js';
+ import { Canvas2d } from './pxn-canvas-2d';
 import { settings, IGraphSettings } from './graphic-graph';
 import { GraphCreateController, GraphsUpdateController } from './controller-graph';
 export { settings };
@@ -23,8 +23,8 @@ export class Graph extends Canvas2d {
 
 	constructor() {
 		super();
-		this.setController('create', new GraphCreateController({ ...this }))
-			.setController('edit', new GraphsUpdateController({ ...this }));
+		this.setController('create', new GraphCreateController({ ...this }));
+		this.setController('edit', new GraphsUpdateController({ ...this }));
 	}
 
 	protected keyUpHandler = (evt: KeyboardEvent) => {

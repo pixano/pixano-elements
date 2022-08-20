@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { Controller } from './controller-base';
 import {
 	CreateBrushController,

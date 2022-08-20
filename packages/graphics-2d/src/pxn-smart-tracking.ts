@@ -5,13 +5,16 @@
  * @license CECILL-C
  */
 
-import { customElement, html, property} from 'lit-element';
+import {html} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { Tracking } from './pxn-tracking'
 import { Tracker } from '@pixano/ai/lib/tracker';
 import {
 	getShape,
 	setShape
 } from './utils-video';
+import { delay } from '@pixano/core/lib/utils';
+
 
 @customElement('pxn-smart-tracking' as any)
 export class SmartTracking extends Tracking {
@@ -27,6 +30,7 @@ export class SmartTracking extends Tracking {
 
 	constructor() {
 		super();
+		this.isSmartComponent = true;
 	}
 
 	protected keyDownHandler = (evt: KeyboardEvent) => { if (evt.key === 't') { this.runTracking(); } }
@@ -59,17 +63,11 @@ export class SmartTracking extends Tracking {
 		super.updated(changedProperties);
 		if (changedProperties.has('model')) {
 			// load the model
-			this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
 			this.tracker.loadModel(this.model).then(() => {
-				this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
-				this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
+				this.pendingModelLoad = false;
 			});
 		}
 	}
-
-	protected delay(ms: number) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	};
 
 	async trackTillTheEnd(forwardMode:boolean=true) {
 		let stopTracking = false;
@@ -145,7 +143,7 @@ export class SmartTracking extends Tracking {
 		setShape(this.tracks[currentTrackId], this.timestamp, newShape, false);
 		this.drawTracks();
 		this.dispatchEvent(new Event('update-tracks'));
-		await this.delay(10);
+		await delay(10);
 	}
 
 	// overide leftPanel to add tracking properties

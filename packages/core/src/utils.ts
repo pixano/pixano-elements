@@ -4,6 +4,15 @@
  * @license CECILL-C
  */
 
+/**
+ * Wait some time
+ * @param ms delay in millisecond
+ * Usage: await this.delay(10);//wait for 10 ms
+ */
+export function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 // alphabetically ordered color list
 export const colorNames: { [key: string]: string } = {
 	aliceblue: "f0f8ff",
@@ -935,4 +944,46 @@ export function checkPathExists(path: string) {
 	} else {
 		return true;
 	}
+}
+
+/****************** for sequences ********************/
+
+// export const trackColors = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+export const trackColors = ['#ff1100', '#ff867d', '#ffe0de', '#a89594', '#ad514c', '#ad0900', '#610500', '#59302e', '#61504f',
+	'#ff9500', '#ffc778', '#ffe0ad', '#b36f00', '#b38d50', '#5e3e0b', '#fffb00', '#8f8d00', '#f2f188',
+	'#6fff00', '#ceffa8', '#3c8a00', '#173600', '#5f8544', '#00ffcc', '#00997a', '#004a3b', '#409483',
+	'#00b7ff', '#0077a6', '#004b69', '#96e1ff', '#3c7f99', '#002aff', '#001891', '#2a387d', '#7a91ff',
+	'#4400ff', '#230085', '#15014d', '#533b96', '#b296ff', '#895eff', '#ff00fb', '#850083', '#360035',
+	'#fc95fb', '#8f278e', '#a86da8', '#873587', '#ff0062', '#bf2e66', '#73002c'];
+
+function colorComponentToHex(c: number) {
+	const hex = c.toString(16);
+	return hex.length === 1 ? "0" + hex : hex;
+}
+
+export function invertColor(rgb: string) {
+	rgb = rgb.substring(1);
+	const r = 255 - parseInt(rgb.substring(0, 2), 16)
+	const g = 255 - parseInt(rgb.substring(2, 4), 16)
+	const b = 255 - parseInt(rgb.substring(4, 6), 16)
+	return "#" + colorComponentToHex(r) + colorComponentToHex(g) + colorComponentToHex(b)
+}
+
+/**
+ * Interpolate from annot to second_annot
+ * @param rate: interpolation rate
+ */
+export function interpolate2(annot: any, second_annot: any, rate: number) {
+	// Check input
+	if (annot.tracknum !== second_annot.tracknum) return;
+	// Make a deep copy of previous annotation
+	let newAnnot = JSON.parse(JSON.stringify(annot));
+	// Interpolation case
+	const len_newKS = newAnnot.geometry.vertices.length;
+	for (let i = 0; i < len_newKS; i++) {
+		newAnnot.geometry.vertices[i] = (1 - rate) * annot!.geometry.vertices[i] + rate * second_annot!.geometry.vertices[i];
+	}
+	if (!newAnnot.origin) newAnnot.origin = { createdBy: 'interpolation' };
+	else newAnnot.origin.createdBy = 'interpolation';
+	return newAnnot;
 }

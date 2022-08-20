@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { observable } from '@pixano/core';
 import { Canvas2d } from './pxn-canvas-2d';
 import { ShapeData } from './types';

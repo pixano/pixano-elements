@@ -4,7 +4,8 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, property, CSSResult, TemplateResult } from 'lit-element';
+import {css, html} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { ObservableSet, observable } from "@pixano/core";
 import { copyClipboard, pasteClipboard } from '@pixano/core/lib/utils';
 import { GenericDisplay } from '@pixano/core/lib/generic-display';
@@ -95,8 +96,9 @@ export class CuboidEditor extends GenericDisplay {
 	}
 
 	// LitElement implementation
-	static get styles(): CSSResult[] {
-		return super.styles.concat([
+	static get styles() {
+		return [
+			...super.styles,
 			css`
 			:host {
 				width: 100%;
@@ -115,8 +117,7 @@ export class CuboidEditor extends GenericDisplay {
 				margin: 0px;
 				overflow: hidden;
 			}
-			`
-		]);
+			`];
 	}
 
 	firstUpdated() {
@@ -129,7 +130,7 @@ export class CuboidEditor extends GenericDisplay {
 		this.addEventListener('mode', () => this.mode = this.modeManager.mode);
 	}
 
-	display(): TemplateResult {
+	display() {
 		return html`<div id="root"></div>`;
 	}
 
@@ -216,6 +217,11 @@ export class CuboidEditor extends GenericDisplay {
 		} else {
 			this.modeManager.editTarget = null;
 		}
+	}
+
+	public setMode(prevMode: string, newMode: InteractiveMode) {
+		console.log("prevMode is ont used",prevMode);//TODO
+		this.modeManager.mode = newMode;
 	}
 
 	/**

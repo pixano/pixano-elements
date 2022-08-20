@@ -22,6 +22,7 @@ export class SmartRectangle extends Rectangle {
 
 	constructor() {
 		super();
+		this.isSmartComponent = true;
 		this.setController('smart-create', new SmartRectangleCreateController({ ...this }));
 	}
 
@@ -36,6 +37,7 @@ export class SmartRectangle extends Rectangle {
 			// Alternative: only load on mode change to smart-create
 			this.smartController.load(this.modelPath).then(() => {
 				this.dispatchEvent(new Event("ready"));
+				this.pendingModelLoad = false;
 			});
 		}
 	}

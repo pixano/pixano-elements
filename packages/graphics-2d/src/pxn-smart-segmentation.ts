@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { Segmentation } from './pxn-segmentation';
 import { MaskVisuMode } from './graphic-mask';
 import { SmartCreateController } from './controller-smart-mask';
@@ -26,6 +26,7 @@ export class SmartSegmentation extends Segmentation {
 
 	constructor() {
 		super();
+		this.isSmartComponent = true;
 		this.maskVisuMode = MaskVisuMode.INSTANCE;
 		// add smart segmentation creation controller
 		this.modes['smart-create'] = new SmartCreateController({ ...this } as any);
@@ -36,7 +37,7 @@ export class SmartSegmentation extends Segmentation {
 		if (changedProperties.has('model')) {
 			// Current behavior: load DL model on modelPath
 			// Alternative: only load on mode change to smart-create
-			(this.modes['smart-create'] as SmartCreateController).load(this.model);
+			(this.modes['smart-create'] as SmartCreateController).load(this.model).then(() => { this.pendingModelLoad = false });
 		}
 	}
 }
