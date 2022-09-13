@@ -27,5 +27,7 @@
     "installLocalElements": "cd packages/ai && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd - && cd packages/graphics-2d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && npm i ../ai && cd - && cd packages/graphics-3d && rimraf -rf node_modules/@pixano package-lock.json && npm i ../core && cd ../.. && npm run bootstrap",
     "installLocalDemo": "cd demo && rimraf -rf node_modules/@pixano package-lock.json && npm i ../packages/core && npm i ../packages/graphics-2d && npm i ../packages/graphics-3d && cd .. && npm run bootstrap"
   },
-  "dependencies": {}
+  "dependencies": {
+    "serve": "^10.1.2"
+  }
 }
