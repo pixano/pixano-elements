@@ -28,7 +28,7 @@ import { demoStyles,
 	zoomIn,
 	zoomOut } from '@pixano/core/lib/style';// TODO: change local icons to mwc-icon-button
 import { pluginsList, defaultLabelValues } from './plugins_index';
-import { annotation, frameAuthor, Annotations } from '@pixano/core/lib/annotations-manager';
+import { frameAuthor, Annotations } from '@pixano/core/lib/annotations-manager';
 import 'fleshy-jsoneditor/fleshy-jsoneditor.js';
 var FileSaver = require('file-saver');
 
@@ -75,11 +75,15 @@ export class ServerlessDemo extends LitElement {
 
 	/**
 	 * Initialize / reinitialize annotations
-	 * @param {Object} newAnnotation
+	 * @param numFrame: 0 to clear annotations (default), 1 for a single image, number of frames for a sequence, 
 	 */
-	initAnnotations() {
-		this.Annotations.init();
+	initAnnotations(numFrame=0) {
+		this.Annotations.init(numFrame);
 		this.setSelectedIds([]);
+		if (this.element) if (this.element.isSequence && !this.isTracking()) {//attributePicker is null when tracking
+			this.element.timeLine.updateData(this.attributePicker._colorFor.bind(this.attributePicker));//update timeline
+			this.trackingPanel.updateData();
+		}
 		this.tracks = {};//for pxn-tracking
 	}
 	/**
@@ -248,14 +252,12 @@ export class ServerlessDemo extends LitElement {
 		}
 		// Initialize annotations
 		if (!this.element.isSequence) {
-			this.initAnnotations();
+			this.initAnnotations(1);
 			this.initAttributePicker();
 		} else {//each time we go from one image to another (or at sequence initialization), update sequence annotations accordingly
 			console.log("this.sequence_annotations=",this.Annotations.sequence_annotations);
 			if (!this.Annotations.isSequence) {//first time on this video => initialize annotations
-				this.Annotations.isSequence = true;
-				this.initAnnotations();
-				for (var i=0; i<this.element.maxFrameIdx + 1 ; i++) this.Annotations.setAnnotations([],i);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
+				this.initAnnotations(this.element.maxFrameIdx+1);
 				if (!this.isTracking()) this.element.setEmpty();
 				if (!this.isTracking()) this.initAttributePicker();
 			} else {

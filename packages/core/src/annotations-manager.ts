@@ -34,8 +34,15 @@ export class Annotations {
 	public sequence_annotations = new Array<Array<annotation>>();//overall annotations: each image of the sequence has its own annotations array. If this is not a sequence, only sequence_annotations[0] will be used.
 	protected selectedIds = new Array<string>();
 
-	init() {
+	/**
+	 * Init/reinit annotations
+	 * @param numFrame: 0 to clear annotations, 1 for a single image, number of frames for a sequence, 
+	 */
+	init(numFrame: number) {
 		this.sequence_annotations = [];
+		if (numFrame>1) this.isSequence = true;
+		else this.isSequence = false;
+		for (var i=0; i<numFrame ; i++) this.setAnnotations([],i);// TODO : timestamps should be set from the loader (see core/src/generic-display.ts)
 		this.selectedIds = [];// don't asign directly : always use this.setSelectedIds(...)
 	}
 
