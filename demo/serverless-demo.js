@@ -279,8 +279,8 @@ export class ServerlessDemo extends LitElement {
 		}
 		//exception
 		if (this.chosenPlugin==='classification') {
-			this.setSelectedIds(["not used"]);// only for classification: behave as if something is always selected
-			this.onAttributeChanged();// and apply the current attributes (default if user did nothing)
+			this.onAttributeChanged();// apply the current attributes (default if user did nothing)
+			this.setSelectedIds(["classification"]);// only for classification: behave as if something is always selected
 		}
 	}
 
@@ -330,6 +330,7 @@ export class ServerlessDemo extends LitElement {
 				if (this.chosenPlugin==='cuboid-editor') shapes = [...this.element.editableCuboids].map(({color, ...s}) => s);
 				else shapes = [...this.element.shapes].map(({color, ...s}) => s);
 				this.setAnnotations(shapes);
+				this.setSelectedIds([newObject.id]);//select new object and track
 				break;
 			case 'segmentation':
 			case 'smart-segmentation':
@@ -503,9 +504,8 @@ export class ServerlessDemo extends LitElement {
 		const value =  this.attributePicker.value;
 		switch (this.chosenPlugin) {
 			case 'classification':
-				console.log("classif setannot attchange");
 				if (this.element.isSequence) {
-					this.setAnnotations([{...value, tracknum: 0, timestamp: this.element.timestamp}]);
+					this.setAnnotations([{...value, tracknum: 0, id: "classification", timestamp: this.element.timestamp, origin: { createdBy: frameAuthor.MANUAL} }]);
 					this.selectedTracknum = 0;
 				} else {
 					this.setAnnotations([value]);
