@@ -28,12 +28,7 @@ export class SmartRectangleCreateController extends ShapeCreateController {
 	}
 
 	async load(modelPath: string) {
-		this.roi.visible = false;
-		this.renderer.renderer.plugins.interaction.cursorStyles.default = 'wait';
 		await this.boundingBoxCreator.loadModel(modelPath);
-		this.renderer.renderer.plugins.interaction.cursorStyles.default = 'inherit';
-		this.renderer.renderer.plugins.interaction.currentCursorMode = "inherit";
-		this.roi.visible = true;
 	}
 
 	setScale(value: number) {

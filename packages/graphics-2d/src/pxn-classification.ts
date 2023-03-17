@@ -5,7 +5,7 @@
  * @license CECILL-C
  */
 
-import { customElement } from 'lit-element';
+import {customElement} from 'lit/decorators.js';
 import { Canvas } from './pxn-canvas';
 
 /**
@@ -52,6 +52,13 @@ export class Classification extends Canvas {
 
 	constructor() {
 		super();
+		this.annotations = [];
+	}
+
+	/**
+	 * Empy all shapes
+	 */
+	public setEmpty() {
 		this.annotations = [];
 	}
 }

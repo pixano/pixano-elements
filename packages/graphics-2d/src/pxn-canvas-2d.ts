@@ -6,7 +6,7 @@
  * @license CECILL-C
  */
 
-import { customElement, property } from 'lit-element';
+import {property, customElement} from 'lit/decorators.js';
 import { ObservableSet, observe } from '@pixano/core';
 import { ShapeData } from './types';
 import { ShapesEditController } from './controller';
@@ -138,6 +138,21 @@ export class Canvas2d extends Canvas {
 	set shapes(value) {
 		// to observe its property changes.
 		this._shapes.set((value as any).map(observable));
+	}
+
+	/**
+	 * Select a set of shapes from their ids
+	 * @param ids Set of ids to be selected
+	 */
+	public select(ids: []) {//TODO: make this function generic for all elements => in core/pxn-canvas + make 3D canvas inherit from pxn-canvas
+		this.selectedShapeIds = ids;
+	}
+
+	/**
+	 * Empy all shapes
+	 */
+	public setEmpty() {
+		this.shapes.clear();
 	}
 
 	/**

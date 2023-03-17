@@ -5,7 +5,8 @@
  * @license CECILL-C
  */
 
-import { LitElement, html, css, customElement, property } from 'lit-element';
+import {LitElement, html, css} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import "@material/mwc-slider/mwc-slider";
 import { triLeft, triRight } from './style';
 

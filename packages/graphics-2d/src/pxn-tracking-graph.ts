@@ -5,8 +5,10 @@
  * @license CECILL-C
  */
 
-import { css, customElement, html, property } from 'lit-element';
+import {html, css} from 'lit';
+import {property, customElement} from 'lit/decorators.js';
 import { mergeTracks as mergeTracksIcon, cutTrack } from '@pixano/core/lib/style';
+import { delay, invertColor, trackColors } from '@pixano/core/lib/utils';
 import { Graph } from './pxn-keypoints'
 import { ShapeData, TrackData } from './types';
 import {
@@ -20,12 +22,10 @@ import {
 	removeOrAddKeyShape,
 	// switchVisibility,
 	switchTrack,
-	trackColors,
 	splitTrack,
 	getNewTrackId,
 	mergeTracks,
 	getClosestFrames,
-	invertColor,
 	getNumShapes
 } from './utils-video';
 import { ShapesEditController } from './controller';
@@ -57,7 +57,7 @@ export class TrackingGraph extends Graph {
 	protected isShiftKeyPressed: boolean = false;
 
 	// Getter of the 1st selected track ID
-	protected get selectedTrackId(){
+	protected get selectedTracknum(){
 		return this.selectedTrackIds.values().next().value;
 	}
 
@@ -123,7 +123,7 @@ export class TrackingGraph extends Graph {
 			// if there is a selected track, add keyshape
 			// else create a new track
 			if (this.selectedTrackIds.size) {
-				const target0Id = this.selectedTrackId;
+				const target0Id = this.selectedTracknum;
 				const currentShape = getShape(this.tracks[target0Id], this.timestamp);
 				if (currentShape){
 					this.newTrack(e);
@@ -133,7 +133,7 @@ export class TrackingGraph extends Graph {
 					// add keyshape
 					this.addNewKeyShapes([{// add new keyshape to the current track
 						...JSON.parse(JSON.stringify((e as any).detail)),
-						id: this.selectedTrackId
+						id: this.selectedTracknum
 					}]);
 					this.dispatchEvent(new Event('update-tracks'));
 				}
@@ -429,7 +429,7 @@ export class TrackingGraph extends Graph {
 	}
 
 	async runInterpolation(forwardMode=true){
-		const target0Id = this.selectedTrackId;
+		const target0Id = this.selectedTracknum;
 		let stopTracking = false;
          const stopTrackingListenerFct = function stopTrackingListener (evt: KeyboardEvent) {
              if (evt.key === 'x') {
@@ -448,7 +448,7 @@ export class TrackingGraph extends Graph {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.nextFrame();	// display
-				await this.delay(100);
+				await delay(100);
 			}
 			await this.nextFrame();
 		}else{
@@ -462,17 +462,13 @@ export class TrackingGraph extends Graph {
 				}
 				this.dispatchEvent(new Event('update-tracks'));
 				await this.prevFrame();
-				await this.delay(100);
+				await delay(100);
 			}
 			await this.prevFrame();
 		}
 		window.removeEventListener('keydown', stopTrackingListenerFct);
 				
 	}
-
-	protected delay(ms: number) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	};
 
 	deleteTrack(tId: string) {
 		const t = this.tracks[tId];
@@ -533,7 +529,7 @@ export class TrackingGraph extends Graph {
 	mergeErrorDialog(t1Id: string, t2Id: string, keysIntersection: string[]) {
 		const mergeErrorDialog = this.shadowRoot!.getElementById("dialog-merge-error") as any;
 		const message = this.shadowRoot!.getElementById("dialog-merge-error-message");
-		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".</br>"
+		message!.innerHTML = "Impossible to merge tracks " + t1Id + " and " + t2Id + ".<br>"
 			+ "Tracks intersect at frames: " + keysIntersection;
 		mergeErrorDialog!.open = true;
 	}
@@ -603,7 +599,7 @@ export class TrackingGraph extends Graph {
 								<mwc-icon-button title="Go to next keyframe" @click=${() => this.goToNextKeyFrame(t)} icon="keyboard_arrow_right"></mwc-icon-button>
 								<mwc-icon-button title="Go to first frame (f)" @click=${() => this.goToFirstFrame(t)} icon="first_page"></mwc-icon-button>
 								<mwc-icon-button title="Go to last frame (l)" @click=${() => this.goToLastFrame(t)} icon="last_page"></mwc-icon-button>
-								</br>
+								<br>
 								<mwc-icon-button-toggle title="Keyframe" id="keyshape" onIcon="star" offIcon="star_border" ?disabled=${disabled} ?on=${isKeyShape(t, this.timestamp)} @click=${() => this.removeOrAddKeyShape(t)}></mwc-icon-button-toggle>
 								<mwc-icon-button-toggle title="Hidden" id="hiddenKeyshape" ?on=${!isHidden} ?disabled=${disabled}  onIcon="visibility" offIcon="visibility_off"></mwc-icon-button-toggle>
 								<mwc-icon-button title="Split track" ?disabled=${disabled} @click=${() => this.splitTrack(t.id)}>${cutTrack}</mwc-icon-button>
@@ -643,7 +639,7 @@ export class TrackingGraph extends Graph {
 		var disabled1 = true;
 		var disabled2 = true;
 		if (this.selectedTrackIds.size){
-			const target0Id = this.selectedTrackId;
+			const target0Id = this.selectedTracknum;
 			const [, id2] = getClosestFrames(this.tracks[target0Id], this.timestamp + 1);
 			const [id1, ] = getClosestFrames(this.tracks[target0Id], this.timestamp - 1);
 			disabled2 = !(id1!= -1 && isKeyShape(this.tracks[target0Id], this.timestamp));

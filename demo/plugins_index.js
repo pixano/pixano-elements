@@ -70,19 +70,6 @@ export const defaultLabelValues = (pluginName) => {
 			};
 
 		case 'classification':
-			return {
-				category: [
-					{
-						name: 'classification', color: "black", properties: [
-							{ name: 'checkbox example', type: 'checkbox', default: false },
-							{ name: 'dropdown example', type: 'dropdown', enum: ['something', 'something else', 'anything else'], default: 'something' },
-							{ name: 'textfield example', type: 'textfield', default: 'some text' }
-						]
-					}
-				],
-				default: 'classification'
-			};
-
 		case 'smart-rectangle':
 		case 'rectangle':
 		case 'cuboid-editor':
