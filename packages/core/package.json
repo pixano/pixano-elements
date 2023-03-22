@@ -11,7 +11,7 @@
     "directory": "packages/core"
   },
   "devDependencies": {
-    "typescript": "3.8.3"
+    "typescript": "^5.0.2"
   },
   "dependencies": {
     "@material/mwc-button": "0.19.1",
@@ -29,7 +29,7 @@
     "@material/mwc-switch": "0.19.1",
     "@material/mwc-textfield": "0.19.1",
     "echarts": "^5.3.0",
-    "lit": "^2.2.7",
+    "lit": "^2.6.1",
     "on-change": "^2.0.1"
   },
   "scripts": {

@@ -1,6 +1,7 @@
 {
 	"extends": "../../tsconfig.common.json",
 	"compilerOptions": {
+		"sourceMap": true,
 		"lib": ["esnext.array", "es2018", "dom"],
 		"composite": true,
 		"rootDir": "src",

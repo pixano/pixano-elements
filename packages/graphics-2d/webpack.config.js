@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 const TerserPlugin = require("terser-webpack-plugin");
-const { CheckerPlugin } = require('awesome-typescript-loader');
+// const { CheckerPlugin } = require('awesome-typescript-loader');
 // const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
@@ -12,13 +12,13 @@ module.exports = {
 		rules: [
 			{
 				test: /\.tsx?$/,
-				loader: 'awesome-typescript-loader',
+				loader: 'ts-loader',
 				exclude: /node_modules/,
 			}
 		]
 	},
 	plugins: [
-		new CheckerPlugin(),
+		// new CheckerPlugin(),
 		// new CopyPlugin([
 		//				{ from: '../../node_modules/pixi.js/dist/pixi.min.js', to: resolve(__dirname, 'dist')},
 		//			]),

@@ -185,7 +185,7 @@ export class ShapesEditController extends Controller {
 		this.graphics.forEach((s) => {
 			s.state = 'none';
 			this.setShapeInteraction(s);
-			s.interactive = false;
+			s.setInteractive(false);
 			s.buttonMode = false;
 			s.removeAllListeners();
 		});

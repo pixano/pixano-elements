@@ -3,11 +3,11 @@
 	"private": true,
 	"description": "Pseudo-package containing tests for the Pixano project",
 	"dependencies": {
-		"typescript": "^3.4.3",
+		"typescript": "^5.0.2",
 		"jest": "^24.9.0",
 		"@types/jest": "^24.0.23",
 		"ts-jest": "^24.2.0",
-		"@pixano/core": "0.5.0"
+		"@pixano/core": "0.7.0"
 	},
 	"scripts": {
 		"test": "jest --config=jest.config.js"

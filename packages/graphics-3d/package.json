@@ -12,11 +12,11 @@
     "directory": "packages/graphics-3d"
   },
   "devDependencies": {
-    "typescript": "3.8.3"
+    "typescript": "^5.0.2"
   },
   "dependencies": {
     "@pixano/core": "0.7.0",
-    "lit": "^2.2.7",
+    "lit": "^2.6.1",
     "three": "0.115.0"
   },
   "scripts": {

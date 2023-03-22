@@ -12,16 +12,16 @@
     "directory": "packages/graphics-2d"
   },
   "devDependencies": {
-    "awesome-typescript-loader": "5.2.1",
+    "ts-loader": "9.4.2",
     "terser-webpack-plugin": "4.2.2",
-    "typescript": "3.8.3",
-    "webpack": "4.44.2",
-    "webpack-cli": "3.3.12"
+    "typescript": "^5.0.2",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0"
   },
   "dependencies": {
     "@pixano/ai": "0.7.0",
     "@pixano/core": "0.7.0",
-    "lit": "^2.2.7",
+    "lit": "^2.6.1",
     "on-change": "^2.0.1",
     "pixi.js": "5.3.3"
   },

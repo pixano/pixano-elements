@@ -131,7 +131,7 @@ export abstract class Graphic extends PIXIContainer {
 		return [xMin, yMin, xMax, yMax];
 	}
 
-	set interactive(isInteractive: boolean) {
+	setInteractive(isInteractive: boolean) {
 		for (const child of this.children) {
 			child.interactive = isInteractive;
 			child.buttonMode = true;

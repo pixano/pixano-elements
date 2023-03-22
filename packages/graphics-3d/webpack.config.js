@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 const TerserPlugin = require("terser-webpack-plugin");
-const { CheckerPlugin } = require('awesome-typescript-loader');
+//const { CheckerPlugin } = require('awesome-typescript-loader');
 
 module.exports = {
 	resolve: {
@@ -11,7 +11,7 @@ module.exports = {
 		rules: [
 			{
 				test: /\.tsx?$/,
-				loader: 'awesome-typescript-loader',
+				loader: 'ts-loader',
 				exclude: /node_modules/,
 			}
 		]

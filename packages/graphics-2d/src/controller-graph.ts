@@ -30,7 +30,7 @@ export class GraphsUpdateController extends ShapesEditController {
 		// handle update mode for each shape
 		this.graphics.forEach((s) => {
 			if (s instanceof GraphicGraph) {
-				s.interactive = true;
+				s.setInteractive(true);
 				s.buttonMode = true;
 				s.on('pointerdown', this.onObjectDown.bind(this));
 				s.state = 'none';

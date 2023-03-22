@@ -316,7 +316,7 @@ export class SequenceLoader extends EventTarget {
 		} else {
 			this.loadStop = true;
 			const self = this;
-			return new Promise((resolve) => {
+			return new Promise<void>((resolve) => {
 				self.addEventListener('cancel_completed', () => {
 					resolve();
 				})

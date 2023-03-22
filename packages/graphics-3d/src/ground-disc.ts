@@ -10,20 +10,20 @@ import { Destructible } from '@pixano/core';
 /** A simple colored disk */
 export class GroundDisc extends THREE.Mesh implements Destructible {
 
-	get material() {
+	getMaterial() {
 		return super.material as THREE.MeshBasicMaterial;
 	}
 
-	set material(material) {
+	setMaterial(material) {
 		super.material = material;
 	}
 
 	get color() {
-		return this.material.color.getHex();
+		return this.getMaterial().color.getHex();
 	}
 
 	set color(value: number) {
-		this.material.color.set(value);
+		this.getMaterial().color.set(value);
 	}
 
 	constructor(radius = 1., color = 0xffffff) {
@@ -36,6 +36,6 @@ export class GroundDisc extends THREE.Mesh implements Destructible {
 
 	destroy() {
 		this.geometry.dispose();
-		this.material.dispose();
+		this.getMaterial().dispose();
 	}
 }
