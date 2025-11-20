@@ -1,3 +1,5 @@
+# This repo is deprecated. Please have a look to [the new pixano](https://github.com/pixano/pixano).
+
 # <img src="images/pixano_logo.png" alt="Pixano" height="100"/>
 
 [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)
